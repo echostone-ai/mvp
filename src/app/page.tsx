@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
 "use client"
 
+import Image from "next/image"
 import { useState, useEffect } from "react"
 
 type Particle = { id: number; left: number; size: number; delay: number }
@@ -13,14 +13,14 @@ export default function Page() {
   const [listening, setListening] = useState(false)
   const [particles, setParticles] = useState<Particle[]>([])
 
-  // Floating particles on mic active
+  // Floating particles when mic is active
   useEffect(() => {
     if (!listening) return
     const newParticles = Array.from({ length: 15 }).map((_, i) => ({
       id: i,
       left: Math.random() * 80 + 10,
       size: Math.random() * 6 + 4,
-      delay: Math.random() * 0.5
+      delay: Math.random() * 0.5,
     }))
     setParticles(newParticles)
     const timer = setTimeout(() => setParticles([]), 2500)
@@ -41,7 +41,7 @@ export default function Page() {
         borderRadius: "50%",
         pointerEvents: "none",
         transform: "translate(-50%, -50%)",
-        animation: "fadeOutDot 1.5s forwards"
+        animation: "fadeOutDot 1.5s forwards",
       })
       document.body.append(dot)
       dot.addEventListener("animationend", () => dot.remove())
@@ -66,7 +66,7 @@ export default function Page() {
     }
     setLoading(false)
 
-    // Speak
+    // Speak via ElevenLabs
     try {
       const voiceRes = await fetch("/api/voice", {
         method: "POST",
@@ -92,7 +92,7 @@ export default function Page() {
     recognition.onend = () => setListening(false)
   }
 
-  // Mic button styles
+  // Mic button dynamic styles
   const micStyle: React.CSSProperties = {
     background: listening ? "#dc2626" : "#444",
     color: "white",
@@ -101,9 +101,7 @@ export default function Page() {
     borderRadius: "6px",
     cursor: "pointer",
     transform: listening ? "scale(1.05)" : "scale(1)",
-    boxShadow: listening
-      ? "0 0 0 4px rgba(220,38,38,0.5)"
-      : "none",
+    boxShadow: listening ? "0 0 0 4px rgba(220,38,38,0.5)" : "none",
     transition: "all 0.2s ease",
     fontSize: "1rem",
   }
@@ -166,7 +164,7 @@ export default function Page() {
           }}
         />
 
-        {/* floating particles on mic */}
+        {/* floating particles */}
         {particles.map((p) => (
           <div
             key={p.id}
@@ -185,18 +183,13 @@ export default function Page() {
         ))}
 
         {/* logo with pulse */}
-       import Image from "next/image"
-
-…
-
-<Image
-  src="/logo.png"
-  alt="EchoStone Logo"
-  width={160}
-  height={160}
-  style={{ marginBottom: "2rem", zIndex: 1, animation: "pulse 3s ease-in-out infinite" }}
-/>
-
+        <Image
+          src="/logo.png"
+          alt="EchoStone Logo"
+          width={160}
+          height={160}
+          style={{ marginBottom: "2rem", position: "relative", zIndex: 1, animation: "pulse 3s ease-in-out infinite" }}
+        />
 
         {/* form */}
         <form
