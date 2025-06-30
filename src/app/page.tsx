@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -183,17 +185,18 @@ export default function Page() {
         ))}
 
         {/* logo with pulse */}
-        <img
-          src="/logo.png"
-          alt="EchoStone Logo"
-          style={{
-            width: "160px",
-            marginBottom: "2rem",
-            position: "relative",
-            zIndex: 1,
-            animation: "pulse 3s ease-in-out infinite",
-          }}
-        />
+       import Image from "next/image"
+
+…
+
+<Image
+  src="/logo.png"
+  alt="EchoStone Logo"
+  width={160}
+  height={160}
+  style={{ marginBottom: "2rem", zIndex: 1, animation: "pulse 3s ease-in-out infinite" }}
+/>
+
 
         {/* form */}
         <form
