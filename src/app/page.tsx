@@ -4,6 +4,7 @@
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 
+// Intro text constant
 const INTRO_TEXT = "👋 Hi there! I'm EchoStone — ask me anything or click 🎤 to speak!";
 
 type Particle = { id: number; left: number; size: number; delay: number };
@@ -40,13 +41,18 @@ export default function Page() {
   // Floating particles when mic is active
   useEffect(() => {
     if (!listening) return;
-    const newParticles = Array.from({ length: 15 }).map((_, i) => ({ id: i, left: Math.random() * 80 + 10, size: Math.random() * 6 + 4, delay: Math.random() * 0.5 }));
+    const newParticles = Array.from({ length: 15 }).map((_, i) => ({
+      id: i,
+      left: Math.random() * 80 + 10,
+      size: Math.random() * 6 + 4,
+      delay: Math.random() * 0.5,
+    }));
     setParticles(newParticles);
     const timer = setTimeout(() => setParticles([]), 2500);
     return () => clearTimeout(timer);
   }, [listening]);
 
-  // Parallax glow motes
+  // Parallax glow motes on mouse move
   useEffect(() => {
     const onMouseMove = (e: MouseEvent) => {
       const dot = document.createElement("div");
@@ -85,7 +91,7 @@ export default function Page() {
     }
     setLoading(false);
 
-    // Play voice response
+    // Play response voice and show graphic
     try {
       const voiceRes = await fetch("/api/voice", {
         method: "POST",
@@ -137,7 +143,7 @@ export default function Page() {
   };
 
   return (
-    <>
+    <div>
       <style jsx>{`
         @keyframes fadeOutDot { to { opacity: 0; transform: translate(-50%, -50%) scale(2); } }
         @keyframes floatUp { to { transform: translateY(-80px) scale(0.5); opacity: 0; } }
@@ -215,4 +221,47 @@ export default function Page() {
           {INTRO_TEXT}
         </div>
         {/* form */}
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem", width: "100%", maxWidth: "500px", zIndex: 1 }}>
+        <form
+          onSubmit={handleSubmit}
+          style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem", width: "100%", maxWidth: "500px", zIndex: 1 }}
+        >
+          <input
+            type="text"
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            placeholder="Ask Jonathan anything..."
+            style={{ width: "100%", padding: "1rem", fontSize: "1rem", borderRadius: "8px", border: "1px solid #333", background: "#1f1f1f", color: "white", outline: "none" }}
+          />
+          <div style={{ display: "flex", gap: "1rem" }}>
+            <button
+              type="submit"
+              style={{ background: "#7e22ce", color: "white", padding: "0.75rem 1.5rem", border: "none", borderRadius: "6px", cursor: "pointer", fontSize: "1rem", transition: "background 0.2s ease" }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "#9d4edd")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "#7e22ce")}
+            >
+              {loading ? "Thinking…" : "Ask"}
+            </button>
+            <button type="button" onClick={startListening} style={micStyle}>
+              {listening ? "🎤 Listening…" : "🎤 Speak"}
+            </button>
+          </div>
+        </form>
+        {/* sound graphic */}
+        {playing && (
+          <div className="sound-graphic">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} style={{ animationDelay: `${i * 0.1}s` }} />
+            ))}
+          </div>
+        )}
+        {/* answer */}
+        {answer && (
+          <div style={{ marginTop: "2.5rem", textAlign: "center", maxWidth: "600px", zIndex: 1 }}>
+            <h2 style={{ marginBottom: "1rem", fontSize: "1.2rem" }}>Jonathan says:</h2>
+            <p style={{ fontSize: "1rem", lineHeight: 1.6, color: "#ddd" }}>{answer}</p>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
