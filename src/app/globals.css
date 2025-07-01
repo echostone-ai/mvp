@@ -1,149 +1,156 @@
-/* src/app/globals.css */
+/* fonts & resets */
+body, input, button {
+  font-family: 'Inter', sans-serif;
+}
+h1, h2 {
+  font-family: 'Playfair Display', serif;
+}
 
-/* 1) Page wrapper */
+/* main container */
 .page-container {
   min-height: 100vh;
   padding: 2rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: radial-gradient(circle at center, #8b5cf6 0%, #4c1d95 40%, #000 100%);
-  color: white;
+  background: radial-gradient(circle at center, #6b21a8 0%, #4c1d95 60%, #1e1b29 100%);
+  color: #f3f4f6;
   position: relative;
   overflow: hidden;
-}
-
-/* 2) Gradient & grain overlays */
-.page-container::before,
-.page-container::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-.page-container::before {
-  background: linear-gradient(
-    120deg,
-    rgba(139, 92, 246, 0.2),
-    rgba(76, 29, 149, 0.2),
-    rgba(0, 0, 0, 0.2)
-  );
-  background-size: 300% 300%;
-  animation: shift 15s ease infinite;
-  z-index: 0;
-}
-.page-container::after {
-  background-image: url("/grain.svg");
-  opacity: 0.08;
-  z-index: 1;
-}
-
-/* 3) Intro banner text */
-.intro-banner {
-  margin: 1rem 0 2rem;
-  color: #ddd;
   text-align: center;
-  max-width: 400px;
 }
 
-/* 4) Ask form */
+/* logo */
+.logo-wrap {
+  margin-bottom: 1rem;
+}
+
+/* intro text */
+.intro {
+  max-width: 500px;
+  margin: 0.5rem 0 2rem;
+  color: #d1d5db;
+}
+
+/* form */
 .ask-form {
   display: flex;
   gap: 0.5rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 .ask-form input {
   flex: 1;
   padding: 0.75rem;
-  border-radius: 4px;
-  border: 1px solid #333;
-  background: #121214;
-  color: white;
+  border-radius: 6px;
+  border: none;
+  background: #2a203c;
+  color: #f9fafb;
 }
 .ask-form button {
-  padding: 0.75rem 1rem;
-  background: #7e22ce;
+  padding: 0.75rem 1.25rem;
+  background: #9333ea;
   border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-/* 5) Microphone button */
-.mic-button {
-  padding: 0.75rem 1.5rem;
-  background: #444;
-  border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   color: white;
   cursor: pointer;
-  transition: all 0.2s ease;
 }
-.mic-button.listening {
+
+/* mic */
+.mic-btn {
+  padding: 0.75rem 1.5rem;
+  background: #3f3c46;
+  border: none;
+  border-radius: 6px;
+  color: #e5e7eb;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 2rem;
+}
+.mic-btn.active {
   background: #dc2626;
   transform: scale(1.05);
-  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.5);
+  box-shadow: 0 0 0 4px rgba(220,38,38,0.4);
 }
 
-/* 6) Answer box */
-.answer-box {
-  margin-top: 2rem;
-  text-align: center;
+/* answer */
+.answer {
+  margin: 2rem 0;
 }
-.answer-box p {
-  color: #ddd;
-}
-
-/* 7) Avatar section */
-.avatar-section {
-  margin-top: 3rem;
-  width: 100%;
+.answer p {
   max-width: 600px;
+  margin: 0 auto;
+  color: #e5e7eb;
 }
 
-/* 8) Sound-graphic bars */
-.sound-graphic {
-  display: flex;
-  gap: 4px;
-  align-items: flex-end;
-  height: 25px;
-  margin-top: 1rem;
+/* avatar section */
+.avatar-section h2 {
+  margin-bottom: 1rem;
 }
-.sound-graphic div {
-  width: 4px;
-  background: #7e22ce;
+
+/* sound bars */
+.sound-bars {
+  display: flex;
+  gap: 5px;
+  align-items: flex-end;
+  margin-top: 1.5rem;
+}
+.sound-bars div {
+  width: 5px;
+  background: #a855f7;
   animation: bar 0.8s infinite ease-in-out;
 }
 
-/* 9) Floating particles */
+/* particles & glow */
 .particle {
   position: absolute;
-  bottom: 10%;
-  background: rgba(255, 255, 255, 0.7);
+  bottom: 8%;
+  background: rgba(255,255,255,0.6);
   border-radius: 50%;
   animation: floatUp 2s ease-out forwards;
 }
-
-/* 10) Glow motes on mousemove */
 .glow-dot {
   position: fixed;
   width: 6px;
   height: 6px;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255,255,255,0.15);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   animation: fadeOutDot 1.5s forwards;
 }
 
-/* 11) Keyframes */
+/* overlays */
+.page-container::before,
+.page-container::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.page-container::before {
+  background: linear-gradient(120deg,
+    rgba(123,31,162,0.3),
+    rgba(55,0,179,0.3),
+    rgba(30,27,41,0.3)
+  );
+  background-size: 300% 300%;
+  animation: shift 20s ease infinite;
+  z-index: 0;
+}
+.page-container::after {
+  background-image: url('/grain.svg');
+  opacity: 0.05;
+  z-index: 1;
+}
+
+/* keyframes */
 @keyframes shift {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
 @keyframes bar {
-  0%   { height: 5px; }
-  50%  { height: 25px; }
-  100% { height: 5px; }
+  0%,100% { height: 6px; }
+  50%      { height: 24px; }
 }
 @keyframes floatUp {
   to { transform: translateY(-80px) scale(0.5); opacity: 0; }

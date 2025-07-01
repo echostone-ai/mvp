@@ -1,36 +1,33 @@
-// file: src/app/page.tsx
+'use client';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-"use client";
+import Image from 'next/image';
+import { useState, useEffect, useRef } from 'react';
+import AvatarCanvas from '@/components/AvatarCanvas';
 
-import Image from "next/image";
-import { useState, useEffect, useRef } from "react";
-import AvatarCanvas from "@/components/AvatarCanvas";
-
-// Intro text
-const INTRO_TEXT = "👋 Hi there! I'm EchoStone — ask me anything or click 🎤 to speak!";
+const INTRO = `👋 Hi there! I'm EchoStone — ask me anything or click 🎤 to speak!`;
 
 type Particle = { id: number; left: number; size: number; delay: number };
 
 export default function Page() {
-  const [question, setQuestion] = useState<string>("");
-  const [answer, setAnswer] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
-  const [listening, setListening] = useState<boolean>(false);
-  const [playing, setPlaying] = useState<boolean>(false);
+  const [q, setQ] = useState('');
+  const [ans, setAns] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [listening, setListening] = useState(false);
+  const [playing, setPlaying] = useState(false);
   const [particles, setParticles] = useState<Particle[]>([]);
-  const recognitionRef = useRef<any>(null);
-  const introPlayed = useRef<boolean>(false);
+  const recog = useRef<any>(null);
+  const introPlayed = useRef(false);
 
+  // play intro once
   const playIntro = async () => {
     if (introPlayed.current) return;
     introPlayed.current = true;
     setPlaying(true);
     try {
-      const res = await fetch("/api/voice", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: INTRO_TEXT }),
+      const res = await fetch('/api/voice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: INTRO }),
       });
       const blob = await res.blob();
       const audio = new Audio(URL.createObjectURL(blob));
@@ -41,115 +38,117 @@ export default function Page() {
     }
   };
 
-  const handleSubmit = async (e?: React.FormEvent) => {
+  // chat submit
+  const submit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setLoading(true);
     try {
-      const chatRes = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question }),
+      const r = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: q }),
       });
-      const { answer } = await chatRes.json();
-      setAnswer(answer);
+      const { answer } = await r.json();
+      setAns(answer);
     } catch {
-      setAnswer("Sorry, something went wrong.");
+      setAns('Oops, something went wrong.');
     }
     setLoading(false);
 
-    // play voice response
+    // voice reply
     try {
-      const voiceRes = await fetch("/api/voice", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: answer }),
+      const vr = await fetch('/api/voice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: ans }),
       });
-      const blob = await voiceRes.blob();
+      const blob = await vr.blob();
       const audio = new Audio(URL.createObjectURL(blob));
       setPlaying(true);
       audio.onended = () => setPlaying(false);
-      audio.play();
+      await audio.play();
     } catch {
       setPlaying(false);
     }
   };
 
+  // speech recog
   const startListening = () => {
     playIntro();
-    if (listening && recognitionRef.current) {
-      recognitionRef.current.stop();
+    if (listening && recog.current) {
+      recog.current.stop();
       return;
     }
-    const Recognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
-    const recognition = new Recognition();
-    recognitionRef.current = recognition;
-    recognition.lang = "en-US";
+    const SR = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+    const r = new SR();
+    recog.current = r;
+    r.lang = 'en-US';
     setListening(true);
-    recognition.start();
-    recognition.onresult = (evt: any) => {
-      const transcript = evt.results[0][0].transcript;
-      setQuestion(transcript);
-      handleSubmit();
+    r.start();
+    r.onresult = (e: any) => {
+      setQ(e.results[0][0].transcript);
+      submit();
     };
-    recognition.onend = () => {
+    r.onend = () => {
       setListening(false);
-      recognitionRef.current = null;
+      recog.current = null;
     };
   };
 
-  // Floating particles
+  // floating particles
   useEffect(() => {
     if (!listening) return;
-    const newParticles = Array.from({ length: 15 }).map((_, i) => ({
+    const arr = Array.from({ length: 12 }, (_, i) => ({
       id: i,
       left: Math.random() * 80 + 10,
-      size: Math.random() * 6 + 4,
+      size: Math.random() * 8 + 4,
       delay: Math.random() * 0.5,
     }));
-    setParticles(newParticles);
-    const timer = setTimeout(() => setParticles([]), 2500);
-    return () => clearTimeout(timer);
+    setParticles(arr);
+    const t = setTimeout(() => setParticles([]), 2500);
+    return () => clearTimeout(t);
   }, [listening]);
 
-  // Glow motes
+  // glow motes
   useEffect(() => {
-    const onMouseMove = (e: MouseEvent) => {
-      const dot = document.createElement('div');
-      dot.className = 'glow-dot';
-      dot.style.top = `${e.clientY}px`;
-      dot.style.left = `${e.clientX}px`;
-      document.body.append(dot);
-      dot.addEventListener('animationend', () => dot.remove());
+    const m = (e: MouseEvent) => {
+      const d = document.createElement('div');
+      d.className = 'glow-dot';
+      d.style.top = `${e.clientY}px`;
+      d.style.left = `${e.clientX}px`;
+      document.body.append(d);
+      d.addEventListener('animationend', () => d.remove());
     };
-    window.addEventListener('mousemove', onMouseMove);
-    return () => window.removeEventListener('mousemove', onMouseMove);
+    window.addEventListener('mousemove', m);
+    return () => window.removeEventListener('mousemove', m);
   }, []);
 
   return (
     <main className="page-container">
-      <Image src="/logo.png" alt="EchoStone Logo" width={140} height={140} />
+      <div className="logo-wrap">
+        <Image src="/echostone_logo.png" alt="EchoStone" width={80} height={80} />
+      </div>
       <h1>EchoStone — Ask Jonathan</h1>
-      <p className="intro-banner">{INTRO_TEXT}</p>
+      <p className="intro">{INTRO}</p>
 
-      <form onSubmit={handleSubmit} className="ask-form">
+      <form onSubmit={submit} className="ask-form">
         <input
-          type="text"
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
+          value={q}
+          onChange={e => setQ(e.target.value)}
           placeholder="Ask anything…"
         />
-        <button type="submit">{loading ? 'Thinking…' : 'Ask'}</button>
+        <button type="submit">{loading ? '…Thinking' : 'Ask'}</button>
       </form>
 
-      <button onClick={startListening} className={`mic-button ${listening ? 'listening' : ''}`}>
+      <button onClick={startListening} className={`mic-btn ${listening ? 'active' : ''}`}>
         {listening ? '🎤 Listening…' : '🎤 Speak'}
       </button>
 
-      {answer && (
-        <div className="answer-box">
+      {ans && (
+        <section className="answer">
           <h2>Jonathan says:</h2>
-          <p>{answer}</p>
-        </div>
+          <p>{ans}</p>
+        </section>
       )}
 
       <section className="avatar-section">
@@ -158,14 +157,12 @@ export default function Page() {
       </section>
 
       {playing && (
-        <div className="sound-graphic">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} style={{ animationDelay: `${i * 0.1}s` }} />
-          ))}
+        <div className="sound-bars">
+          {[...Array(5)].map((_, i) => <div key={i} style={{ animationDelay: `${i * 0.1}s` }} />)}
         </div>
       )}
 
-      {particles.map((p) => (
+      {particles.map(p => (
         <div
           key={p.id}
           className="particle"
