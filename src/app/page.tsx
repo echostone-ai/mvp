@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
+import Image from 'next/image';
 import { useState, useRef } from 'react';
 
 export default function Page() {
@@ -24,7 +25,7 @@ export default function Page() {
       const data = await res.json();
       setAnswer(data.answer);
 
-      // play voice
+      // play voice via ElevenLabs
       const vr = await fetch('/api/voice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -73,12 +74,20 @@ export default function Page() {
       alignItems: 'center',
       justifyContent: 'center',
       padding: '2rem',
-      textAlign: 'center'
+      textAlign: 'center',
+      fontFamily: 'Merriweather, serif'
     }}>
-      <h1 style={{ marginBottom: '1rem' }}>EchoStone — Ask Jonathan</h1>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', width: '100%', maxWidth: '600px' }}>
+      {/* Logo */}
+      <div style={{ marginBottom: '1rem' }}>
+        <Image src="/echostone_logo.png" alt="EchoStone Logo" width={96} height={96} />
+      </div>
+      {/* Title */}
+      <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>EchoStone — Ask Jonathan</h1>
+
+      {/* Ask form */}
+      <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', width: '100%', maxWidth: '600px' }}>
         <input
-          style={{ flex: 1, padding: '0.75rem', borderRadius: '4px', border: 'none' }}
+          style={{ flex: 1, padding: '0.75rem', borderRadius: '8px', border: '2px solid #ccc', outline: 'none', fontSize: '1rem' }}
           type="text"
           value={question}
           onChange={e => setQuestion(e.target.value)}
@@ -86,42 +95,49 @@ export default function Page() {
         />
         <button
           type="submit"
-          style={{ padding: '0.75rem 1.25rem', border: 'none', borderRadius: '4px', background: '#9333ea', color: 'white', cursor: 'pointer' }}
+          style={{ padding: '0.75rem 1.25rem', background: '#9333ea', border: 'none', borderRadius: '8px', color: 'white', fontSize: '1rem', cursor: 'pointer' }}
         >
           {loading ? '…Thinking' : 'Ask'}
         </button>
       </form>
+
+      {/* Mic button */}
       <button
         onClick={startListening}
         style={{
           padding: '0.75rem 1.5rem',
-          marginBottom: '1.5rem',
+          marginTop: '1.5rem',
           background: listening ? '#dc2626' : '#444',
           border: 'none',
-          borderRadius: '4px',
+          borderRadius: '8px',
           color: 'white',
+          fontSize: '1rem',
           cursor: 'pointer',
           transform: listening ? 'scale(1.05)' : 'none',
-          boxShadow: listening ? '0 0 0 4px rgba(220,38,38,0.5)' : 'none',
+          boxShadow: listening ? '0 0 0 6px rgba(220,38,38,0.5)' : 'none',
           transition: 'all 0.2s ease'
         }}
       >
         {listening ? '🎤 Listening…' : '🎤 Speak'}
       </button>
+
+      {/* Answer */}
       {answer && (
-        <div style={{ maxWidth: '600px' }}>
-          <h2>Jonathan says:</h2>
-          <p style={{ color: '#ddd' }}>{answer}</p>
+        <div style={{ marginTop: '2rem', maxWidth: '600px' }}>
+          <h2 style={{ fontSize: '1.75rem', marginBottom: '0.5rem' }}>Jonathan says:</h2>
+          <p style={{ fontSize: '1.125rem', lineHeight: '1.6', color: '#e0d7f5' }}>{answer}</p>
         </div>
       )}
+
+      {/* Sound bars */}
       {playing && (
-        <div style={{ display: 'flex', gap: '4px', alignItems: 'flex-end', height: '30px', marginTop: '1rem' }}>
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'flex-end', height: '32px', marginTop: '1rem' }}>
           {[...Array(5)].map((_, i) => (
             <div
               key={i}
               style={{
-                width: '6px',
-                background: '#a855f7',
+                width: '8px',
+                background: '#c084fc',
                 animation: 'bar 0.8s infinite ease-in-out',
                 animationDelay: `${i * 0.1}s`
               }}
@@ -129,8 +145,10 @@ export default function Page() {
           ))}
         </div>
       )}
+
       <style jsx>{`
-        @keyframes bar { 0%,100% { height: 6px; } 50% { height: 24px; } }
+        @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&display=swap');
+        @keyframes bar { 0%,100% { height: 8px; } 50% { height: 28px; } }
       `}</style>
     </main>
   );
