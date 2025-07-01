@@ -12,7 +12,7 @@ export default function Page() {
   const [loading, setLoading] = useState(false)
   const [listening, setListening] = useState(false)
   const [particles, setParticles] = useState<Particle[]>([])
-  const recognitionRef = useRef<SpeechRecognition | null>(null)
+  const recognitionRef = useRef<any>(null)
 
   // Floating particles when mic is active
   useEffect(() => {
@@ -89,7 +89,8 @@ export default function Page() {
     }
 
     // Setup new recognition
-    const recognition = new (window as any).webkitSpeechRecognition()
+    const Recognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition
+    const recognition = new Recognition()
     recognitionRef.current = recognition
     recognition.lang = "en-US"
     setListening(true)
