@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
-import Image from 'next/image'
 import { useState, useRef, useEffect } from 'react'
 
 export default function Page() {
@@ -12,7 +11,7 @@ export default function Page() {
   const [playing, setPlaying] = useState<boolean>(false)
   const recognitionRef = useRef<any>(null)
 
-  // submit question → chat API → setAnswer + speak
+  // ask → Chat API → speak
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
     if (!question.trim()) return
@@ -26,7 +25,7 @@ export default function Page() {
       const { answer } = await res.json()
       setAnswer(answer)
 
-      // speak with ElevenLabs
+      // ElevenLabs TTS
       const vr = await fetch('/api/voice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -50,7 +49,9 @@ export default function Page() {
       recognitionRef.current.stop()
       return
     }
-    const Rec = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition
+    const Rec =
+      (window as any).webkitSpeechRecognition ||
+      (window as any).SpeechRecognition
     const recognition = new Rec()
     recognitionRef.current = recognition
     recognition.lang = 'en-US'
@@ -66,11 +67,11 @@ export default function Page() {
     recognition.start()
   }
 
-  // particles on mic click
+  // floating particles while mic is active
   useEffect(() => {
     if (!listening) return
     const dots: HTMLDivElement[] = []
-    const interval = setInterval(() => {
+    const iv = setInterval(() => {
       const dot = document.createElement('div')
       dot.style.cssText = `
         position:absolute;
@@ -89,109 +90,212 @@ export default function Page() {
       }
     }, 150)
     return () => {
-      clearInterval(interval)
+      clearInterval(iv)
       dots.forEach(d => document.body.removeChild(d))
     }
   }, [listening])
 
   return (
-    <main style={{
-      position: 'relative',
-      overflow: 'hidden',
-      minHeight: '100vh',
-      background: 'radial-gradient(circle at center, #8b5cf6 0%, #4c1d95 40%, #000 100%)',
-      color: 'white',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '2rem',
-      textAlign: 'center',
-      fontFamily: 'Inter, sans-serif'
-    }}>
-      {/* subtle parallax overlay */}
-      <div style={{
-        position: 'absolute', inset: 0,
-        background: 'linear-gradient(120deg, rgba(123,31,162,0.3), rgba(55,0,179,0.3), rgba(30,27,41,0.3))',
-        backgroundSize: '300% 300%',
-        animation: 'shift 20s ease infinite',
-        pointerEvents: 'none'
-      }} />
+    <main
+      style={{
+        position: 'relative',
+        overflow: 'hidden',
+        minHeight: '100vh',
+        background:
+          'radial-gradient(circle at center, #8b5cf6 0%, #4c1d95 40%, #000 100%)',
+        color: 'white',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '2rem',
+        textAlign: 'center',
+        fontFamily: 'Inter, sans-serif',
+      }}
+    >
+      {/* parallax overlay */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background:
+            'linear-gradient(120deg, rgba(123,31,162,0.3), rgba(55,0,179,0.3), rgba(30,27,41,0.3))',
+          backgroundSize: '300% 300%',
+          animation: 'shift 20s ease infinite',
+          pointerEvents: 'none',
+        }}
+      />
 
       {/* grain */}
-      <div style={{
-        position: 'absolute', inset: 0,
-        backgroundImage: 'url(/grain.svg)',
-        opacity: 0.05,
-        pointerEvents: 'none'
-      }} />
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundImage: 'url(/grain.svg)',
+          opacity: 0.05,
+          pointerEvents: 'none',
+        }}
+      />
 
-      {/* logo */}
+      {/* logo (unsquished) */}
       <div style={{ marginBottom: '1rem', zIndex: 1 }}>
-        <Image src="/echostone_logo.png" alt="EchoStone" width={96} height={96} />
+        <img
+          src="/echostone_logo.png"
+          alt="EchoStone Logo"
+          style={{ width: '120px', height: 'auto', display: 'block' }}
+        />
       </div>
 
       {/* title */}
-      <h1 style={{
-        fontFamily: 'Playfair Display, serif',
-        fontSize: '2.5rem', margin: 0, zIndex: 1
-      }}>
+      <h1
+        style={{
+          fontFamily: 'Playfair Display, serif',
+          fontSize: '2.5rem',
+          margin: 0,
+          zIndex: 1,
+        }}
+      >
         EchoStone — Ask Jonathan
       </h1>
 
-      {/* form */}
-      <form onSubmit={handleSubmit} style={{
-        display: 'flex', gap: '0.5rem', marginTop: '1.5rem', width: '100%', maxWidth: '600px', zIndex: 1
-      }}>
+      {/* ask form */}
+      <form
+        onSubmit={handleSubmit}
+        style={{
+          display: 'flex',
+          gap: '0.5rem',
+          marginTop: '1.5rem',
+          width: '100%',
+          maxWidth: '600px',
+          zIndex: 1,
+        }}
+      >
         <input
           type="text"
           value={question}
-          onChange={e => setQuestion(e.target.value)}
+          onChange={(e) => setQuestion(e.target.value)}
           placeholder="Ask anything…"
           style={{
-            flex: 1, padding: '0.75rem', borderRadius: '6px', border: 'none', fontSize: '1rem', outline: 'none'
+            flex: 1,
+            padding: '0.75rem',
+            borderRadius: '6px',
+            border: 'none',
+            fontSize: '1rem',
+            outline: 'none',
           }}
         />
-        <button type="submit" style={{
-          padding: '0.75rem 1.25rem', background: '#9333ea', border: 'none', borderRadius: '6px', color: 'white', cursor: 'pointer', fontSize: '1rem', zIndex: 1
-        }}>
+        <button
+          type="submit"
+          style={{
+            padding: '0.75rem 1.25rem',
+            background: '#9333ea',
+            border: 'none',
+            borderRadius: '6px',
+            color: 'white',
+            cursor: 'pointer',
+            fontSize: '1rem',
+            zIndex: 1,
+          }}
+        >
           {loading ? '…Thinking' : 'Ask'}
         </button>
       </form>
 
-      {/* mic */}
-      <button onClick={startListening} style={{
-        marginTop: '1.5rem', padding: '0.75rem 1.5rem', background: listening ? '#dc2626' : '#444', border: 'none', borderRadius: '6px', color: 'white', cursor: 'pointer', fontSize: '1rem', transform: listening ? 'scale(1.05)' : 'none', boxShadow: listening ? '0 0 0 6px rgba(220,38,38,0.5)' : 'none', transition: 'all 0.2s ease', zIndex: 1
-      }}>
+      {/* mic toggle */}
+      <button
+        onClick={startListening}
+        style={{
+          marginTop: '1.5rem',
+          padding: '0.75rem 1.5rem',
+          background: listening ? '#dc2626' : '#444',
+          border: 'none',
+          borderRadius: '6px',
+          color: 'white',
+          cursor: 'pointer',
+          fontSize: '1rem',
+          transform: listening ? 'scale(1.05)' : 'none',
+          boxShadow: listening
+            ? '0 0 0 6px rgba(220,38,38,0.5)'
+            : 'none',
+          transition: 'all 0.2s ease',
+          zIndex: 1,
+        }}
+      >
         {listening ? '🎤 Listening…' : '🎤 Speak'}
       </button>
 
       {/* answer */}
       {answer && (
         <div style={{ marginTop: '2rem', maxWidth: '600px', zIndex: 1 }}>
-          <h2 style={{ fontFamily: 'Playfair Display, serif', fontSize: '1.75rem', marginBottom: '0.5rem' }}>
+          <h2
+            style={{
+              fontFamily: 'Playfair Display, serif',
+              fontSize: '1.75rem',
+              marginBottom: '0.5rem',
+            }}
+          >
             Jonathan says:
           </h2>
-          <p style={{ fontSize: '1.125rem', lineHeight: 1.6, color: '#e0d7f5' }}>{answer}</p>
+          <p style={{ fontSize: '1.125rem', lineHeight: 1.6, color: '#e0d7f5' }}>
+            {answer}
+          </p>
         </div>
       )}
 
       {/* sound bars */}
       {playing && (
-        <div style={{ display: 'flex', gap: '6px', alignItems: 'flex-end', height: '32px', marginTop: '1rem', zIndex: 1 }}>
+        <div
+          style={{
+            display: 'flex',
+            gap: '6px',
+            alignItems: 'flex-end',
+            height: '32px',
+            marginTop: '1rem',
+            zIndex: 1,
+          }}
+        >
           {[...Array(5)].map((_, i) => (
-            <div key={i} style={{
-              width: '8px', background: '#c084fc', animation: 'bar 0.8s infinite ease-in-out', animationDelay: `${i * 0.1}s`
-            }} />
+            <div
+              key={i}
+              style={{
+                width: '8px',
+                background: '#c084fc',
+                animation: 'bar 0.8s infinite ease-in-out',
+                animationDelay: `${i * 0.1}s`,
+              }}
+            />
           ))}
         </div>
       )}
 
       {/* keyframes */}
       <style jsx>{`
-        @keyframes shift { 0% { background-position:0% 50% } 50% { background-position:100% 50% } 100% { background-position:0% 50% } }
-        @keyframes bar { 0%,100% { height:8px } 50% { height:28px } }
-        @keyframes floatUp { to { transform: translateY(-80px) scale(0.5); opacity:0; } }
+        @keyframes shift {
+          0% {
+            background-position: 0% 50%;
+          }
+          50% {
+            background-position: 100% 50%;
+          }
+          100% {
+            background-position: 0% 50%;
+          }
+        }
+        @keyframes bar {
+          0%,
+          100% {
+            height: 8px;
+          }
+          50% {
+            height: 28px;
+          }
+        }
+        @keyframes floatUp {
+          to {
+            transform: translateY(-80px) scale(0.5);
+            opacity: 0;
+          }
+        }
       `}</style>
     </main>
   )
