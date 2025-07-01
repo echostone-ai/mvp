@@ -2,7 +2,7 @@
 "use client"
 
 import Image from "next/image"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 
 type Particle = { id: number; left: number; size: number; delay: number }
 
@@ -12,6 +12,7 @@ export default function Page() {
   const [loading, setLoading] = useState(false)
   const [listening, setListening] = useState(false)
   const [particles, setParticles] = useState<Particle[]>([])
+  const recognitionRef = useRef<SpeechRecognition | null>(null)
 
   // Floating particles when mic is active
   useEffect(() => {
@@ -81,15 +82,27 @@ export default function Page() {
   }
 
   const startListening = () => {
+    // Toggle off if already listening
+    if (listening && recognitionRef.current) {
+      recognitionRef.current.stop()
+      return
+    }
+
+    // Setup new recognition
     const recognition = new (window as any).webkitSpeechRecognition()
+    recognitionRef.current = recognition
     recognition.lang = "en-US"
     setListening(true)
     recognition.start()
+
     recognition.onresult = (evt: any) => {
       setQuestion(evt.results[0][0].transcript)
       handleSubmit()
     }
-    recognition.onend = () => setListening(false)
+    recognition.onend = () => {
+      setListening(false)
+      recognitionRef.current = null
+    }
   }
 
   // Mic button dynamic styles
