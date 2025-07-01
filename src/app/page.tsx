@@ -76,10 +76,8 @@ export default function Page() {
       recognitionRef.current.stop();
       return;
     }
-    const Recognition =
-      (window as any).webkitSpeechRecognition ||
-      (window as any).SpeechRecognition;
-    const recognition = new Recognition();
+    const SR = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+    const recognition = new SR();
     recognitionRef.current = recognition;
     recognition.lang = 'en-US';
     setListening(true);
@@ -96,15 +94,10 @@ export default function Page() {
 
   useEffect(() => {
     if (!listening) return;
-    const p = Array.from({ length: 12 }).map((_, i) => ({
-      id: i,
-      left: Math.random() * 80 + 10,
-      size: Math.random() * 8 + 4,
-      delay: Math.random() * 0.5,
-    }));
-    setParticles(p);
-    const t = setTimeout(() => setParticles([]), 2500);
-    return () => clearTimeout(t);
+    const newParticles = Array.from({ length: 12 }).map((_, i) => ({ id: i, left: Math.random() * 80 + 10, size: Math.random() * 8 + 4, delay: Math.random() * 0.5 }));
+    setParticles(newParticles);
+    const timer = setTimeout(() => setParticles([]), 2500);
+    return () => clearTimeout(timer);
   }, [listening]);
 
   useEffect(() => {
@@ -131,7 +124,7 @@ export default function Page() {
       <form onSubmit={handleSubmit} className="ask-form">
         <input
           value={question}
-          onChange={e => setQuestion(e.target.value)}
+          onChange={(e) => setQuestion(e.target.value)}
           placeholder="Ask anything…"
         />
         <button type="submit">{loading ? '…Thinking' : 'Ask'}</button>
@@ -155,12 +148,16 @@ export default function Page() {
 
       {playing && (
         <div className="sound-bars">
-          {[...Array(5)].map((_, i) => (<div key={i} style={{ animationDelay: `${i * 0.1}s` }} />))}
+          {[...Array(5)].map((_, i) => (
+            <div key={i} style={{ animationDelay: `${i * 0.1}s` }} />
+          ))}
         </div>
       )}
 
-      {particles.map(p => (
-        <div key={p.id} className="particle"
+      {particles.map((p) => (
+        <div
+          key={p.id}
+          className="particle"
           style={{ left: `${p.left}%`, width: `${p.size}px`, height: `${p.size}px`, animationDelay: `${p.delay}s` }}
         />
       ))}
