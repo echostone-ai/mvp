@@ -149,7 +149,7 @@ export default function Page() {
       {/* title */}
       <h1
         style={{
-          fontFamily: 'Playfair Display, serif',
+          fontFamily: 'Poppins', sans-serif;,
           fontSize: '2.5rem',
           margin: 0,
           zIndex: 1,
@@ -229,7 +229,7 @@ export default function Page() {
         <div style={{ marginTop: '2rem', maxWidth: '600px', zIndex: 1 }}>
           <h2
             style={{
-              fontFamily: 'Playfair Display, serif',
+              fontFamily: 'Poppins', sans-serif;
               fontSize: '1.75rem',
               marginBottom: '0.5rem',
             }}
