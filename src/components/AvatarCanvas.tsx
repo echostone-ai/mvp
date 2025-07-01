@@ -14,13 +14,8 @@ export default function AvatarCanvas() {
     >
       <ambientLight intensity={0.7} />
       <directionalLight position={[5, 10, 5]} intensity={1.2} castShadow />
-      <PresentationControls
-        global
-        config={{ mass: 2, tension: 500 }}
-        snap
-        rotation={[0, 0, 0]}
-        polar={[-0.4, Math.PI / 4]}
-      >
+      <PresentationControls global rotation={[0, 0, 0]}>
+
         <Center>
           <AvatarModel />
         </Center>
