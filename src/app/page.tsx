@@ -1,11 +1,12 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+// file: src/app/page.tsx
+
 "use client";
 
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import AvatarCanvas from "@/components/AvatarCanvas";
 
-// Intro text constant
+// Intro text
 const INTRO_TEXT = "👋 Hi there! I'm EchoStone — ask me anything or click 🎤 to speak!";
 
 type Particle = { id: number; left: number; size: number; delay: number };
@@ -54,6 +55,8 @@ export default function Page() {
       setAnswer("Sorry, something went wrong.");
     }
     setLoading(false);
+
+    // play voice response
     try {
       const voiceRes = await fetch("/api/voice", {
         method: "POST",
@@ -83,7 +86,8 @@ export default function Page() {
     setListening(true);
     recognition.start();
     recognition.onresult = (evt: any) => {
-      setQuestion(evt.results[0][0].transcript);
+      const transcript = evt.results[0][0].transcript;
+      setQuestion(transcript);
       handleSubmit();
     };
     recognition.onend = () => {
@@ -92,14 +96,21 @@ export default function Page() {
     };
   };
 
+  // Floating particles
   useEffect(() => {
     if (!listening) return;
-    const newParticles = Array.from({ length: 15 }).map((_, i) => ({ id: i, left: Math.random()*80+10, size: Math.random()*6+4, delay: Math.random()*0.5 }));
+    const newParticles = Array.from({ length: 15 }).map((_, i) => ({
+      id: i,
+      left: Math.random() * 80 + 10,
+      size: Math.random() * 6 + 4,
+      delay: Math.random() * 0.5,
+    }));
     setParticles(newParticles);
     const timer = setTimeout(() => setParticles([]), 2500);
     return () => clearTimeout(timer);
   }, [listening]);
 
+  // Glow motes
   useEffect(() => {
     const onMouseMove = (e: MouseEvent) => {
       const dot = document.createElement('div');
@@ -115,20 +126,56 @@ export default function Page() {
 
   return (
     <main className="page-container">
-      <Image src="/logo.png" alt="EchoStone Logo" width={120} height={120} />
+      <Image src="/logo.png" alt="EchoStone Logo" width={140} height={140} />
       <h1>EchoStone — Ask Jonathan</h1>
       <p className="intro-banner">{INTRO_TEXT}</p>
+
       <form onSubmit={handleSubmit} className="ask-form">
-        <input type="text" value={question} onChange={e => setQuestion(e.target.value)} placeholder="Ask anything…" />
-        <button type="submit">{loading? 'Thinking…':'Ask'}</button>
+        <input
+          type="text"
+          value={question}
+          onChange={(e) => setQuestion(e.target.value)}
+          placeholder="Ask anything…"
+        />
+        <button type="submit">{loading ? 'Thinking…' : 'Ask'}</button>
       </form>
-      <button onClick={startListening} className={listening? 'mic-button listening':'mic-button'}>
-        {listening? '🎤 Listening…':'🎤 Speak'}
+
+      <button onClick={startListening} className={`mic-button ${listening ? 'listening' : ''}`}>
+        {listening ? '🎤 Listening…' : '🎤 Speak'}
       </button>
-      {answer && <div className="answer-box"><h2>Jonathan says:</h2><p>{answer}</p></div>}
-      <section className="avatar-section"><h2>Your 3D Avatar</h2><AvatarCanvas/></section>
-      {playing && <div className="sound-graphic">{[...Array(5)].map((_,i)=><div key={i} style={{animationDelay:`${i*0.1}s`}}/> )}</div>}
-      {particles.map(p=><div key={p.id} className="particle" style={{left:`${p.left}%`,width:`${p.size}px`,height:`${p.size}px`,animationDelay:`${p.delay}s`}}/>)}
+
+      {answer && (
+        <div className="answer-box">
+          <h2>Jonathan says:</h2>
+          <p>{answer}</p>
+        </div>
+      )}
+
+      <section className="avatar-section">
+        <h2>Your 3D Avatar</h2>
+        <AvatarCanvas />
+      </section>
+
+      {playing && (
+        <div className="sound-graphic">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} style={{ animationDelay: `${i * 0.1}s` }} />
+          ))}
+        </div>
+      )}
+
+      {particles.map((p) => (
+        <div
+          key={p.id}
+          className="particle"
+          style={{
+            left: `${p.left}%`,
+            width: `${p.size}px`,
+            height: `${p.size}px`,
+            animationDelay: `${p.delay}s`,
+          }}
+        />
+      ))}
     </main>
   );
 }
