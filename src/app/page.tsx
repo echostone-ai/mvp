@@ -4,26 +4,6 @@
 import Image from 'next/image';
 import { useState, useRef } from 'react';
 
-// src/app/page.tsx
-
-export const metadata = {
-  title: 'EchoStone — Ask Jonathan',
-  description:
-    'Interact with your AI-powered legacy avatar of Jonathan Braden—ask questions by typing or speaking!',
-  icons: {
-    icon: '/echostone_logo.png',
-  },
-  openGraph: {
-    title: 'EchoStone — Ask Jonathan',
-    description:
-      "Chat live with Jonathan's AI.",
-    url: 'https://app.echostone.ai',
-    siteName: 'EchoStone',
-    images: ['/og-image.png'],  // create/upload a social-preview at this path
-    type: 'website',
-  },
-}
-
 export default function Page() {
   const [question, setQuestion] = useState<string>('');
   const [answer, setAnswer] = useState<string>('');
@@ -67,7 +47,9 @@ export default function Page() {
       recognitionRef.current.stop();
       return;
     }
-    const Rec = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+    const Rec =
+      (window as any).webkitSpeechRecognition ||
+      (window as any).SpeechRecognition;
     const recognition = new Rec();
     recognitionRef.current = recognition;
     recognition.lang = 'en-US';
@@ -85,37 +67,71 @@ export default function Page() {
   };
 
   return (
-    <main style={{
-      minHeight: '100vh',
-      background: 'radial-gradient(circle at center, #8b5cf6 0%, #4c1d95 40%, #000 100%)',
-      color: 'white',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '2rem',
-      textAlign: 'center',
-      fontFamily: 'Merriweather, serif'
-    }}>
+    <main
+      style={{
+        minHeight: '100vh',
+        background:
+          'radial-gradient(circle at center, #8b5cf6 0%, #4c1d95 40%, #000 100%)',
+        color: 'white',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '2rem',
+        textAlign: 'center',
+        fontFamily: 'Merriweather, serif',
+      }}
+    >
       {/* Logo */}
       <div style={{ marginBottom: '1rem' }}>
-        <Image src="/echostone_logo.png" alt="EchoStone Logo" width={96} height={96} />
+        <Image
+          src="/echostone_logo.png"
+          alt="EchoStone Logo"
+          width={96}
+          height={96}
+        />
       </div>
       {/* Title */}
-      <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>EchoStone — Ask Jonathan</h1>
+      <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>
+        EchoStone — Ask Jonathan
+      </h1>
 
       {/* Ask form */}
-      <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', width: '100%', maxWidth: '600px' }}>
+      <form
+        onSubmit={handleSubmit}
+        style={{
+          display: 'flex',
+          gap: '0.5rem',
+          marginTop: '1rem',
+          width: '100%',
+          maxWidth: '600px',
+        }}
+      >
         <input
-          style={{ flex: 1, padding: '0.75rem', borderRadius: '8px', border: '2px solid #ccc', outline: 'none', fontSize: '1rem' }}
+          style={{
+            flex: 1,
+            padding: '0.75rem',
+            borderRadius: '8px',
+            border: '2px solid #ccc',
+            outline: 'none',
+            fontSize: '1rem',
+          }}
           type="text"
           value={question}
-          onChange={e => setQuestion(e.target.value)}
+          onChange={(e) => setQuestion(e.target.value)}
           placeholder="Ask anything…"
         />
         <button
           type="submit"
-          style={{ padding: '0.75rem 1.25rem', background: '#9333ea', border: 'none', borderRadius: '8px', color: 'white', fontSize: '1rem', cursor: 'pointer' }}
+          style={{
+            padding: '0.75rem 1.25rem',
+            background: '#9333ea',
+            border: 'none',
+            borderRadius: '8px',
+            color: 'white',
+            fontSize: '1rem',
+            cursor: 'pointer',
+          }}
         >
           {loading ? '…Thinking' : 'Ask'}
         </button>
@@ -134,8 +150,10 @@ export default function Page() {
           fontSize: '1rem',
           cursor: 'pointer',
           transform: listening ? 'scale(1.05)' : 'none',
-          boxShadow: listening ? '0 0 0 6px rgba(220,38,38,0.5)' : 'none',
-          transition: 'all 0.2s ease'
+          boxShadow: listening
+            ? '0 0 0 6px rgba(220,38,38,0.5)'
+            : 'none',
+          transition: 'all 0.2s ease',
         }}
       >
         {listening ? '🎤 Listening…' : '🎤 Speak'}
@@ -144,14 +162,32 @@ export default function Page() {
       {/* Answer */}
       {answer && (
         <div style={{ marginTop: '2rem', maxWidth: '600px' }}>
-          <h2 style={{ fontSize: '1.75rem', marginBottom: '0.5rem' }}>Jonathan says:</h2>
-          <p style={{ fontSize: '1.125rem', lineHeight: '1.6', color: '#e0d7f5' }}>{answer}</p>
+          <h2 style={{ fontSize: '1.75rem', marginBottom: '0.5rem' }}>
+            Jonathan says:
+          </h2>
+          <p
+            style={{
+              fontSize: '1.125rem',
+              lineHeight: '1.6',
+              color: '#e0d7f5',
+            }}
+          >
+            {answer}
+          </p>
         </div>
       )}
 
       {/* Sound bars */}
       {playing && (
-        <div style={{ display: 'flex', gap: '6px', alignItems: 'flex-end', height: '32px', marginTop: '1rem' }}>
+        <div
+          style={{
+            display: 'flex',
+            gap: '6px',
+            alignItems: 'flex-end',
+            height: '32px',
+            marginTop: '1rem',
+          }}
+        >
           {[...Array(5)].map((_, i) => (
             <div
               key={i}
@@ -159,7 +195,7 @@ export default function Page() {
                 width: '8px',
                 background: '#c084fc',
                 animation: 'bar 0.8s infinite ease-in-out',
-                animationDelay: `${i * 0.1}s`
+                animationDelay: `${i * 0.1}s`,
               }}
             />
           ))}
@@ -168,7 +204,15 @@ export default function Page() {
 
       <style jsx>{`
         @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&display=swap');
-        @keyframes bar { 0%,100% { height: 8px; } 50% { height: 28px; } }
+        @keyframes bar {
+          0%,
+          100% {
+            height: 8px;
+          }
+          50% {
+            height: 28px;
+          }
+        }
       `}</style>
     </main>
   );
