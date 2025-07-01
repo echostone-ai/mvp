@@ -11,10 +11,11 @@ export default function Page() {
   const [answer, setAnswer] = useState("")
   const [loading, setLoading] = useState(false)
   const [listening, setListening] = useState(false)
+  const [playing, setPlaying] = useState(false)
   const [particles, setParticles] = useState<Particle[]>([])
   const recognitionRef = useRef<any>(null)
 
-  // Floating particles when mic is active
+  // Spawn floating particles when mic is active
   useEffect(() => {
     if (!listening) return
     const newParticles = Array.from({ length: 15 }).map((_, i) => ({
@@ -67,7 +68,7 @@ export default function Page() {
     }
     setLoading(false)
 
-    // Speak via ElevenLabs
+    // Play voice and show graphic
     try {
       const voiceRes = await fetch("/api/voice", {
         method: "POST",
@@ -75,27 +76,26 @@ export default function Page() {
         body: JSON.stringify({ text: answer }),
       })
       const blob = await voiceRes.blob()
-      new Audio(URL.createObjectURL(blob)).play()
+      const audio = new Audio(URL.createObjectURL(blob))
+      setPlaying(true)
+      audio.onended = () => setPlaying(false)
+      audio.play()
     } catch {
-      /* ignore */
+      setPlaying(false)
     }
   }
 
   const startListening = () => {
-    // Toggle off if already listening
     if (listening && recognitionRef.current) {
       recognitionRef.current.stop()
       return
     }
-
-    // Setup new recognition
     const Recognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition
     const recognition = new Recognition()
     recognitionRef.current = recognition
     recognition.lang = "en-US"
     setListening(true)
     recognition.start()
-
     recognition.onresult = (evt: any) => {
       setQuestion(evt.results[0][0].transcript)
       handleSubmit()
@@ -106,7 +106,6 @@ export default function Page() {
     }
   }
 
-  // Mic button dynamic styles
   const micStyle: React.CSSProperties = {
     background: listening ? "#dc2626" : "#444",
     color: "white",
@@ -123,21 +122,13 @@ export default function Page() {
   return (
     <>
       <style jsx>{`
-        @keyframes fadeOutDot {
-          to { opacity: 0; transform: translate(-50%, -50%) scale(2); }
-        }
-        @keyframes floatUp {
-          to { transform: translateY(-80px) scale(0.5); opacity: 0; }
-        }
-        @keyframes shift {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
-        @keyframes pulse {
-          0%,100% { transform: scale(1); }
-          50% { transform: scale(1.05); }
-        }
+        @keyframes fadeOutDot { to { opacity: 0; transform: translate(-50%, -50%) scale(2); } }
+        @keyframes floatUp { to { transform: translateY(-80px) scale(0.5); opacity: 0; } }
+        @keyframes shift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        @keyframes bar { 0% { height: 5px; } 50% { height: 25px; } 100% { height: 5px; } }
+        .sound-graphic { display: flex; gap: 4px; align-items: flex-end; height: 25px; margin-top: 1rem; }
+        .sound-graphic div { width: 4px; background: #7e22ce; animation: bar 0.8s infinite ease-in-out; }
       `}</style>
 
       <main
@@ -179,7 +170,7 @@ export default function Page() {
         />
 
         {/* floating particles */}
-        {particles.map((p) => (
+        {particles.map(p => (
           <div
             key={p.id}
             style={{
@@ -207,64 +198,41 @@ export default function Page() {
 
         {/* form */}
         <form
-          onSubmit={(e) => handleSubmit(e)}
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: "1rem",
-            width: "100%",
-            maxWidth: "500px",
-            zIndex: 1,
-          }}
+          onSubmit={e => handleSubmit(e)}
+          style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem", width: "100%", maxWidth: "500px", zIndex: 1 }}
         >
           <input
             type="text"
             value={question}
-            onChange={(e) => setQuestion(e.target.value)}
+            onChange={e => setQuestion(e.target.value)}
             placeholder="Ask Jonathan anything..."
-            style={{
-              width: "100%",
-              padding: "1rem",
-              fontSize: "1rem",
-              borderRadius: "8px",
-              border: "1px solid #333",
-              background: "#1f1f1f",
-              color: "white",
-              outline: "none",
-            }}
+            style={{ width: "100%", padding: "1rem", fontSize: "1rem", borderRadius: "8px", border: "1px solid #333", background: "#1f1f1f", color: "white", outline: "none" }}
           />
-
           <div style={{ display: "flex", gap: "1rem" }}>
             <button
               type="submit"
-              style={{
-                background: "#7e22ce",
-                color: "white",
-                padding: "0.75rem 1.5rem",
-                border: "none",
-                borderRadius: "6px",
-                cursor: "pointer",
-                fontSize: "1rem",
-                transition: "background 0.2s ease",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "#9d4edd")}
-              onMouseLeave={(e) => (e.currentTarget.style.background = "#7e22ce")}
+              style={{ background: "#7e22ce", color: "white", padding: "0.75rem 1.5rem", border: "none", borderRadius: "6px", cursor: "pointer", fontSize: "1rem", transition: "background 0.2s ease" }}
+              onMouseEnter={e => e.currentTarget.style.background = "#9d4edd"}
+              onMouseLeave={e => e.currentTarget.style.background = "#7e22ce"}
             >
               {loading ? "Thinking…" : "Ask"}
             </button>
-
-            <button
-              type="button"
-              onClick={startListening}
-              style={micStyle}
-            >
+            <button type="button" onClick={startListening} style={micStyle}>
               {listening ? "🎤 Listening…" : "🎤 Speak"}
             </button>
           </div>
         </form>
 
-        {/* answer */}
+        {/* sound graphic */}
+        {playing && (
+          <div className="sound-graphic">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} style={{ animationDelay: `${i * 0.1}s` }} />
+            ))}
+          </div>
+        )}
+
+        {/* answer text */}
         {answer && (
           <div style={{ marginTop: "2.5rem", textAlign: "center", maxWidth: "600px", zIndex: 1 }}>
             <h2 style={{ marginBottom: "1rem", fontSize: "1.2rem" }}>Jonathan says:</h2>
