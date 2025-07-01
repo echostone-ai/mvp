@@ -54,7 +54,6 @@ export default function Page() {
     }
     setLoading(false);
 
-    // play voice
     try {
       const res = await fetch('/api/voice', {
         method: 'POST',
@@ -86,8 +85,7 @@ export default function Page() {
     setListening(true);
     recognition.start();
     recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      setQuestion(transcript);
+      setQuestion(event.results[0][0].transcript);
       handleSubmit();
     };
     recognition.onend = () => {
@@ -98,19 +96,19 @@ export default function Page() {
 
   useEffect(() => {
     if (!listening) return;
-    const newParticles: Particle[] = Array.from({ length: 12 }).map((_, i) => ({
+    const p = Array.from({ length: 12 }).map((_, i) => ({
       id: i,
       left: Math.random() * 80 + 10,
       size: Math.random() * 8 + 4,
       delay: Math.random() * 0.5,
     }));
-    setParticles(newParticles);
-    const timer = setTimeout(() => setParticles([]), 2500);
-    return () => clearTimeout(timer);
+    setParticles(p);
+    const t = setTimeout(() => setParticles([]), 2500);
+    return () => clearTimeout(t);
   }, [listening]);
 
   useEffect(() => {
-    const onMouseMove = (e: MouseEvent) => {
+    const onMove = (e: MouseEvent) => {
       const dot = document.createElement('div');
       dot.className = 'glow-dot';
       dot.style.top = `${e.clientY}px`;
@@ -118,39 +116,28 @@ export default function Page() {
       document.body.append(dot);
       dot.addEventListener('animationend', () => dot.remove());
     };
-    window.addEventListener('mousemove', onMouseMove);
-    return () => window.removeEventListener('mousemove', onMouseMove);
+    window.addEventListener('mousemove', onMove);
+    return () => window.removeEventListener('mousemove', onMove);
   }, []);
 
   return (
     <main className="page-container">
       <div className="logo-wrap">
-        <Image
-          src="/echostone_logo.png"
-          alt="EchoStone"
-          width={80}
-          height={80}
-        />
+        <Image src="/echostone_logo.png" alt="EchoStone" width={80} height={80} />
       </div>
       <h1>EchoStone — Ask Jonathan</h1>
       <p className="intro">{INTRO}</p>
 
       <form onSubmit={handleSubmit} className="ask-form">
         <input
-          type="text"
           value={question}
-          onChange={(e) => setQuestion(e.target.value)}
+          onChange={e => setQuestion(e.target.value)}
           placeholder="Ask anything…"
         />
-        <button type="submit">
-          {loading ? '…Thinking' : 'Ask'}
-        </button>
+        <button type="submit">{loading ? '…Thinking' : 'Ask'}</button>
       </form>
 
-      <button
-        onClick={startListening}
-        className={`mic-btn ${listening ? 'active' : ''}`}
-      >
+      <button onClick={startListening} className={`mic-btn ${listening ? 'active' : ''}`}>
         {listening ? '🎤 Listening…' : '🎤 Speak'}
       </button>
 
@@ -168,22 +155,13 @@ export default function Page() {
 
       {playing && (
         <div className="sound-bars">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} style={{ animationDelay: `${i * 0.1}s` }} />
-          ))}
+          {[...Array(5)].map((_, i) => (<div key={i} style={{ animationDelay: `${i * 0.1}s` }} />))}
         </div>
       )}
 
-      {particles.map((p) => (
-        <div
-          key={p.id}
-          className="particle"
-          style={{
-            left: `${p.left}%`,
-            width: `${p.size}px`,
-            height: `${p.size}px`,
-            animationDelay: `${p.delay}s`,
-          }}
+      {particles.map(p => (
+        <div key={p.id} className="particle"
+          style={{ left: `${p.left}%`, width: `${p.size}px`, height: `${p.size}px`, animationDelay: `${p.delay}s` }}
         />
       ))}
     </main>
