@@ -4,6 +4,26 @@
 import Image from 'next/image';
 import { useState, useRef } from 'react';
 
+// src/app/page.tsx
+
+export const metadata = {
+  title: 'EchoStone — Ask Jonathan',
+  description:
+    'Interact with your AI-powered legacy avatar of Jonathan Braden—ask questions by typing or speaking!',
+  icons: {
+    icon: '/echostone_logo.png',
+  },
+  openGraph: {
+    title: 'EchoStone — Ask Jonathan',
+    description:
+      "Chat live with Jonathan's AI.",
+    url: 'https://app.echostone.ai',
+    siteName: 'EchoStone',
+    images: ['/og-image.png'],  // create/upload a social-preview at this path
+    type: 'website',
+  },
+}
+
 export default function Page() {
   const [question, setQuestion] = useState<string>('');
   const [answer, setAnswer] = useState<string>('');
