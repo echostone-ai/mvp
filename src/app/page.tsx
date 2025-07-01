@@ -11,7 +11,7 @@ export default function Page() {
   const [playing, setPlaying] = useState<boolean>(false)
   const recognitionRef = useRef<any>(null)
 
-  // ask → Chat API → speak
+  // send to chat API and then TTS
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
     if (!question.trim()) return
@@ -25,7 +25,6 @@ export default function Page() {
       const { answer } = await res.json()
       setAnswer(answer)
 
-      // ElevenLabs TTS
       const vr = await fetch('/api/voice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -43,7 +42,7 @@ export default function Page() {
     setLoading(false)
   }
 
-  // toggle speech recognition
+  // toggle mic listening
   const startListening = () => {
     if (listening && recognitionRef.current) {
       recognitionRef.current.stop()
@@ -110,10 +109,10 @@ export default function Page() {
         justifyContent: 'center',
         padding: '2rem',
         textAlign: 'center',
-        fontFamily: 'Inter, sans-serif',
+        fontFamily: 'Poppins, sans-serif',
       }}
     >
-      {/* parallax overlay */}
+      {/* Parallax overlay */}
       <div
         style={{
           position: 'absolute',
@@ -126,7 +125,7 @@ export default function Page() {
         }}
       />
 
-      {/* grain */}
+      {/* Grain texture */}
       <div
         style={{
           position: 'absolute',
@@ -137,7 +136,7 @@ export default function Page() {
         }}
       />
 
-      {/* logo (unsquished) */}
+      {/* Logo */}
       <div style={{ marginBottom: '1rem', zIndex: 1 }}>
         <img
           src="/echostone_logo.png"
@@ -146,10 +145,10 @@ export default function Page() {
         />
       </div>
 
-      {/* title */}
+      {/* Title */}
       <h1
         style={{
-          fontFamily: 'Poppins', sans-serif;,
+          fontFamily: 'Poppins, sans-serif',
           fontSize: '2.5rem',
           margin: 0,
           zIndex: 1,
@@ -158,7 +157,7 @@ export default function Page() {
         EchoStone — Ask Jonathan
       </h1>
 
-      {/* ask form */}
+      {/* Ask form */}
       <form
         onSubmit={handleSubmit}
         style={{
@@ -201,7 +200,7 @@ export default function Page() {
         </button>
       </form>
 
-      {/* mic toggle */}
+      {/* Mic button */}
       <button
         onClick={startListening}
         style={{
@@ -224,12 +223,12 @@ export default function Page() {
         {listening ? '🎤 Listening…' : '🎤 Speak'}
       </button>
 
-      {/* answer */}
+      {/* Answer */}
       {answer && (
         <div style={{ marginTop: '2rem', maxWidth: '600px', zIndex: 1 }}>
           <h2
             style={{
-              fontFamily: 'Poppins', sans-serif;
+              fontFamily: 'Poppins, sans-serif',
               fontSize: '1.75rem',
               marginBottom: '0.5rem',
             }}
@@ -242,7 +241,7 @@ export default function Page() {
         </div>
       )}
 
-      {/* sound bars */}
+      {/* Sound bars */}
       {playing && (
         <div
           style={{
@@ -268,7 +267,7 @@ export default function Page() {
         </div>
       )}
 
-      {/* keyframes */}
+      {/* Keyframes */}
       <style jsx>{`
         @keyframes shift {
           0% {
@@ -286,17 +285,4 @@ export default function Page() {
           100% {
             height: 8px;
           }
-          50% {
-            height: 28px;
-          }
-        }
-        @keyframes floatUp {
-          to {
-            transform: translateY(-80px) scale(0.5);
-            opacity: 0;
-          }
-        }
-      `}</style>
-    </main>
-  )
-}
+         
