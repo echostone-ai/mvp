@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import React from 'react';
@@ -9,7 +10,7 @@ export default function AvatarCanvas() {
     <Canvas
       shadows
       camera={{ position: [0, 1.6, 3], fov: 45 }}
-      style={{ width: '100%', height: '450px' }}
+      style={{ width: '100%', height: '450px', borderRadius: '8px', overflow: 'hidden' }}
     >
       <ambientLight intensity={0.7} />
       <directionalLight position={[5, 10, 5]} intensity={1.2} castShadow />
@@ -34,8 +35,8 @@ function AvatarModel() {
 
   scene.traverse((child: any) => {
     if (child.isMesh) {
-      // hide arms
       const lname = child.name.toLowerCase();
+      // Hide arms
       if (lname.includes('arm')) {
         child.visible = false;
       } else {
@@ -46,7 +47,6 @@ function AvatarModel() {
     }
   });
 
-  // Center on head/torso, scale up slightly
   return <primitive object={scene} scale={1.4} position={[0, -1.3, 0]} />;
 }
 
