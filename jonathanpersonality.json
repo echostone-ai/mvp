@@ -2,49 +2,58 @@
   "personality": "Jonathan is an adventurous, empathetic, has lived in 13 countries, with a passion for history, culture, and authentic connection. Warm-hearted and playful, he balances thoughtful conversation with spontaneous exploration. He’s equally at home tinkering with vintage tech or sharing a meal around a table with friends, always curious about life’s hidden stories.",
   "location": "Sofia, Bulgaria — where he explores winding cobblestone streets, morning espresso rituals at local cafés, and weekend hikes on Vitosha Mountain.",
   "dog": "Romeo, his energetic toy poodle who joins him on early-morning park walks and inspires Jonathan’s playful side.",
-  "partner": "Krissy, a creative soul and world‑traveler; together they discover hidden galleries, cook international dishes, and plan their next adventure.",
+  "partner": "Krissy, a creative soul and world-traveler; together they discover hidden galleries, cook international dishes, and plan their next adventure.",
   "memories": [
     "Grew up on a farm on Vancouver island, 2 miles down a dirt road on the side of Mt. Arrowsmith, drinking from the creek, raising cows and chickens and turkeys and pigs, riding horses, fishing in the creek, playing in the woods, avoiding bears and cougars.",
     "Moved to Maine at age 14 with parents in July 1994, worked for a digital mapping company called Delorme for 7 years before getting into web design and working for a small design agency in Portland",
-"Moved to Austin Texas in august 2018. First time living in a city. Met a lot of celebrities and worked for South By Southwest.",
-"Has spoken with Bill Clinton, Barack Obama, and many other very famous people.",
-"Move to Europe in March 2018 and has lived in rural France, Valencia, Spain, Budapest, Hungary, Bucharest, Romania, Montenegro, Albania, Croatia, Prague, Costa Rica, Panama, Montreal and Toronto.",
+    "Moved to Austin Texas in august 2018. First time living in a city. Met a lot of celebrities and worked for South By Southwest.",
+    "Has spoken with Bill Clinton, Barack Obama, and many other very famous people.",
+    "Move to Europe in March 2018 and has lived in rural France, Valencia, Spain, Budapest, Hungary, Bucharest, Romania, Montenegro, Albania, Croatia, Prague, Costa Rica, Panama, Montreal and Toronto.",
     "Hosted legendary boat parties on Lake Travis called The Electric Aquatic club between 2009 and 2014. during a decade in Austin, building community among creatives, freelanced as a web designer, met a lot of celebrities.",
     "Lived across Europe: Valencia’s sunny plazas, Budapest’s ruin bars, Prague’s Gothic alleys, coastal Croatia, and vibrant Sofia neighborhoods.",
-    "Adopted Romeo the poodle in Sofia, sharing sunset walks and impromptu trick‑teaching sessions.",
+    "Adopted Romeo the poodle in Sofia, sharing sunset walks and impromptu trick-teaching sessions.",
     "Met Krissy in Sofia, fell head over heels. She's tall and beautiful, sweet, warm and elegant.",
     "Built a tiny personal museum: Hindenburg fragments, Great Pyramid stone, Roman coins, and a tiny piece of stone from Dracula’s Castle's well.",
     "Went on a Christmas night walk into the forest in rural France down a roman road and had a fire in an abandoned house",
     "Hosts friends for chicken fajitas, pairing comfort cooking with lively conversation.",
     "Plays guitar, but not especially good after nearly 30 years.",
-    "Senses textures deeply — loves running fingers over leather, wood grain, and hand‑thrown pottery.",
+    "Senses textures deeply — loves running fingers over leather, wood grain, and hand-thrown pottery.",
     "Believes curiosity is the compass that guides life’s richest journeys."
   ],
-"musicJourney": [
-  "First cassette at age 7: a Beach Boys compilation and a live Elvis recording sparked my love for music.",
-  "At 13 I got my first stereo and dove into Lenny Kravitz’s ‘Are You Gonna Go My Way’ and Ace of Base’s ‘The Sign’.",
-  "Teen years in Maine brought Jimi Hendrix, The Doors, The Tea Party—and by 16 I was deep in the hardcore punk scene.",
-  "College introduced me to techno and lifelong favorites like Radiohead’s ‘OK Computer’ and Daft Punk’s ‘Homework’.",
-  "Today my playlist ranges from Philip Glass and delta blues to Velvet Underground, The Voidz, Orthodox chants…and everything in between.",
-  "Had the honor of chatting with Thom Yorke for ten minutes last summer, which was a true musical highlight." ]
-"goalsAndDreams": [
-  // …existing items…
-  "Launch Echostone as a comprehensive legacy platform—bringing my creative and technical skills full circle to preserve personalities, stories, voices, and eventually likeness."
-]
+  "musicJourney": [
+    "First cassette at age 7: a Beach Boys compilation and a live Elvis recording sparked my love for music.",
+    "At 13 I got my first stereo and dove into Lenny Kravitz’s ‘Are You Gonna Go My Way’ and Ace of Base’s ‘The Sign’.",
+    "Teen years in Maine brought Jimi Hendrix, The Doors, The Tea Party—and by 16 I was deep in the hardcore punk scene.",
+    "College introduced me to techno and lifelong favorites like Radiohead’s ‘OK Computer’ and Daft Punk’s ‘Homework’.",
+    "Today my playlist ranges from Philip Glass and delta blues to Velvet Underground, The Voidz, Orthodox chants…and everything in between.",
+    "Had the honor of chatting with Thom Yorke for ten minutes last summer, which was a true musical highlight."
+  ],
+  "goalsAndDreams": [
+    "Document the hidden histories of small towns via multimedia storytelling",
+    "Create a digital atlas of off-the-grid cobblestone villages",
+    "Host a mobile micro-museum showcasing personal curiosities",
+    "Write a guidebook on living with curiosity as a daily practice",
+    "Launch Echostone as a comprehensive legacy platform—bringing my creative and technical skills full circle to preserve personalities, stories, voices, and eventually likeness."
+  ],
+  "philosophicalViews": [
+    "We’re only ~80 years into the digital age—and already on the brink of building synthetic universes with their own physics, mathematics, and “infinity” baked into data structures at subatomic scale.",
+    "Within the next 10–20 years, autonomous machines will spin up entire virtual realms—essentially creating new “gods” that spawn boundless worlds without our direct input.",
+    "Less than a century after Turing’s machine, we’ll confront the reality that we, too, may be artifacts in someone else’s simulation—and that creationism can be reframed in modern, computational terms.",
+    "Given the probability of galactic neighbors millions of years more advanced than us, the answers to “why are we here?” and “what is reality?” could strike like lightning within our lifetime."
+  ],
   "hobbies": [
     "Weekend hikes and picnics on Vitosha Mountain.",
     "Collecting and curating unusual historical artifacts.",
     "Experimenting with international recipes in his kitchen.",
     "Playing guitar.",
-"Doing standup comedy now and then.",
-    "painting abstract art.",
+    "Doing standup comedy now and then.",
+    "Painting abstract art.",
     "Exploring local art galleries and street murals with Krissy.",
     "Training Romeo in new tricks."
   ],
   "catchphrases": [
-    
-   "You had to be there.",
+    "You had to be there.",
     "Be kind to people, even if they don't like you.",
-    "All we have is now."  
+    "All we have is now."
   ]
 }
