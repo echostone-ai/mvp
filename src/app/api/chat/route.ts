@@ -1,88 +1,65 @@
 // src/app/api/chat/route.ts
-import { NextResponse }            from 'next/server'
-import { OpenAI }                  from 'openai'
-import fs                          from 'fs/promises'
-import path                        from 'path'
+import { NextResponse } from 'next/server'
+import OpenAI from 'openai'
+import fs from 'fs/promises'
+import path from 'path'
 
-const openai = new OpenAI()
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+})
 
 export async function POST(req: Request) {
-  // 1) Parse the incoming body
-  let question: string
   try {
-    const body = await req.json()
-    question = body.question?.toString().trim() ?? ''
-    if (!question) {
-      return NextResponse.json(
-        { error: 'No question provided' },
-        { status: 400 }
-      )
+    const { question } = await req.json()
+    if (!question || typeof question !== 'string') {
+      return NextResponse.json({ error: 'No question provided.' }, { status: 400 })
     }
-  } catch (err) {
-    console.error('Failed to parse JSON body:', err)
-    return NextResponse.json(
-      { error: 'Invalid JSON in request' },
-      { status: 400 }
-    )
-  }
 
-  // 2) Load your dynamic profile JSON
-  let profile: any
-  try {
-    const profilePath = path.join(
-      process.cwd(),
-      'public',
-      'jonathan_profile.json'
-    )
-    const raw = await fs.readFile(profilePath, 'utf-8')
-    profile = JSON.parse(raw)
-  } catch (err) {
-    console.error('Failed to load profile JSON:', err)
-    return NextResponse.json(
-      { error: 'Could not load profile data' },
-      { status: 500 }
-    )
-  }
+    // Load Jonathan's profile JSON
+    let profile: any
+    try {
+      const profilePath = path.join(process.cwd(), 'public', 'jonathan_profile.json')
+      const raw = await fs.readFile(profilePath, 'utf8')
+      profile = JSON.parse(raw)
+      console.log('[chat] loaded profile keys:', Object.keys(profile))
+    } catch (err) {
+      console.error('[chat] profile load failed', err)
+      return NextResponse.json({ error: 'Could not load profile.' }, { status: 500 })
+    }
 
-  // 3) Build a strict system prompt
-  const systemPrompt = `
-You are Jonathan Braden’s AI avatar. Use ONLY the following JSON profile to answer—do NOT invent any new facts.
+    // Build system prompt from profile
+    const systemPrompt = `
+You are Jonathan Braden’s AI avatar. Use ONLY the information below to answer questions as Jonathan would:
 
-${JSON.stringify(profile, null, 2)}
+Personality: ${profile.personality}
+Location: ${profile.location}
+Dog: ${profile.dog}
+Partner: ${profile.partner}
+Memories: ${profile.memories.join(' | ')}
+Music Journey: ${profile.musicJourney.join(' | ')}
+Goals & Dreams: ${profile.goalsAndDreams.join(' | ')}
+Philosophical Views: ${profile.philosophicalViews.join(' | ')}
+Hobbies: ${profile.hobbies.join(' | ')}
+Catchphrases: ${profile.catchphrases.join(' | ')}
 
-- If asked about any personal detail, pull it directly from this profile.
-- If asked “What was your first album?”, answer using the very first entry in profile.musicJourney.
-- If the answer is not present, respond: “I’m not sure about that—let me check and get back to you.”
-- Always respond in Jonathan’s warm, curious, and playful tone.
-`
+Answer in character, and do not invent any details outside this profile.
+`.trim()
 
-  // 4) Call OpenAI
-  let completion
-  try {
-    completion = await openai.chat.completions.create({
-      model: 'gpt-4o',        // or your preferred model
+    // Call OpenAI
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o', 
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'user',   content: question     }
-      ]
+        { role: 'user',   content: question.trim() }
+      ],
+      temperature: 0.7,
+      max_tokens: 300
     })
-  } catch (err: any) {
-    console.error('OpenAI API error:', err)
-    const msg = err?.message ?? 'OpenAI request failed'
-    return NextResponse.json(
-      { error: msg },
-      { status: 502 }
-    )
-  }
 
-  // 5) Return the assistant’s response
-  const answer = completion.choices?.[0]?.message?.content
-  if (!answer) {
-    return NextResponse.json(
-      { error: 'No answer returned from OpenAI' },
-      { status: 502 }
-    )
+    const answer = response.choices?.[0]?.message?.content?.trim() || ''
+    return NextResponse.json({ answer })
+  } catch (err) {
+    console.error('[chat] unexpected error', err)
+    return NextResponse.json({ error: 'Internal error.' }, { status: 500 })
   }
-
-  return NextResponse.json({ answer })
 }
