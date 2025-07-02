@@ -111,7 +111,7 @@ export default function Page() {
         <Image
           src="/echostone_logo.png"
           alt="EchoStone Logo"
-          width={120}
+          width={auto}
           height={120}
         />
       </div>
