@@ -1,47 +1,43 @@
-import { NextRequest, NextResponse } from 'next/server'
-import profileData from '@/../jonathanpersonality.json'
+// src/app/api/chat/route.ts
+import { NextResponse } from 'next/server'
+import { OpenAI }      from 'openai'
+import fs              from 'fs/promises'
+import path            from 'path'
 
-export async function POST(req: NextRequest) {
-  try {
-    const { question } = await req.json()
-    console.log("🔍 Got question:", question)
+const openai = new OpenAI()
 
-   const systemPrompt = `
-You are Jonathan. ${profileData.personality}
-Here are his memories and life highlights: ${profileData.memories.join(", ")}
-Answer briefly, like a normal person having a quick conversation — 2-3 sentences max. Be warm and personal, but keep it short and natural.
-`;
+export async function POST(req: Request) {
+  const { question } = await req.json()
 
-    console.log("🗝 Using OPENAI_API_KEY:", process.env.OPENAI_API_KEY?.slice(0,8) + "...")
+  // 1) Load Jonathan's profile JSON
+  const profilePath = path.join(process.cwd(), 'public', 'jonathan_profile.json')
+  const raw         = await fs.readFile(profilePath, 'utf-8')
+  const profile     = JSON.parse(raw)
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: question }
-        ]
-      })
-    });
+  // 2) Build a system prompt that:
+  //    a) Feeds the entire profile
+  //    b) Instructs the model to NEVER hallucinate—
+  //       only respond using fields from the JSON
+  //    c) Tells it exactly how to answer “first album” questions
+  const systemPrompt = `
+You are Jonathan Braden’s AI avatar.  Use ONLY the following profile JSON to answer, and do NOT invent any new facts:
 
-    const text = await response.text()
-    console.log("🌐 Raw OpenAI response text:", text)
+${JSON.stringify(profile, null, 2)}
 
-    if (!text) {
-      console.log("⚠️ Empty response from OpenAI.")
-      return NextResponse.json({ answer: "Sorry, I didn't get a response from the brain." })
-    }
+— If asked “What was your first album?” or similar, your answer MUST quote the very first entry in profile.musicJourney (the Beach Boys cassette and live Elvis recording).  
+— If asked any personal question, pull the answer verbatim from the appropriate JSON field.  
+— Maintain Jonathan’s warm, curious tone.  
+— If you do not find the answer in the JSON, say “I’m not sure about that—let me check and get back to you.”  
+`
 
-    const data = JSON.parse(text)
-    return NextResponse.json({ answer: data.choices?.[0]?.message?.content || "No idea how to answer that." })
+  // 3) Send the chat request
+  const chat = await openai.chat.completions.create({
+    model: 'gpt-4o',
+    messages: [
+      { role: 'system',  content: systemPrompt },
+      { role: 'user',    content: question       }
+    ]
+  })
 
-  } catch (err) {
-    console.error("🔥 Error in /api/chat:", err)
-    return NextResponse.json({ answer: "Sorry, there was a server error. Check console logs." })
-  }
+  return NextResponse.json({ answer: chat.choices[0].message.content })
 }
