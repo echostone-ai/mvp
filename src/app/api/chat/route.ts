@@ -14,20 +14,23 @@ export async function POST(req: Request) {
     // 2) Parse & validate incoming question
     const { question } = await req.json()
     if (!question || typeof question !== 'string') {
-      return NextResponse.json({ error: 'No question provided' }, { status: 400 })
+      return NextResponse.json(
+        { error: 'No question provided. Please include a `question` field in your JSON.' },
+        { status: 400 }
+      )
     }
 
-    // 3) Load profile JSON (replace 'jonathan_profile.json' as needed)
-    let profile = {}
+    // 3) Load profile JSON (falls back to empty if missing or invalid)
+    let profile: any = {}
     try {
       const profilePath = path.join(process.cwd(), 'public', 'jonathan_profile.json')
       const raw = await fs.readFile(profilePath, 'utf-8')
       profile = JSON.parse(raw)
     } catch (err) {
-      console.warn('[chat] could not load profile, using empty:', err)
+      console.warn('[api/chat] could not load profile, using empty object:', err)
     }
 
-    // 4) Compute current date & time
+    // 4) Compute current date & time for contextual awareness
     const now = new Date()
     const dateString = now.toLocaleDateString('en-US', {
       year: 'numeric',
@@ -40,16 +43,16 @@ export async function POST(req: Request) {
       hour12: true
     })
 
-    // 5) Build messages array
+    // 5) Build the messages array for the chat completion
     const messages = [
       {
         role: 'system',
         content: [
-          `You are Jonathan Braden, an AI speaking as Jonathan.`,
+          `You are EchoStone, the AI avatar of Jonathan Braden.`,
           `Current date: ${dateString}`,
           `Current time: ${timeString}`,
           ``,
-          `Here is Jonathan’s profile data:`,
+          `Here is Jonathan’s profile data (use this to inform tone & facts):`,
           JSON.stringify(profile, null, 2)
         ].join('\n')
       },
@@ -59,19 +62,23 @@ export async function POST(req: Request) {
       }
     ]
 
-    // 6) Ask OpenAI for a completion
+    // 6) Call OpenAI Chat Completion
     const resp = await openai.chat.completions.create({
-      model: 'gpt-4o-2024-08-06',    // or your preferred model
-      messages
+      model: 'gpt-4o-2024-08-06',
+      messages,
+      temperature: 0.7
     })
 
     const answer = resp.choices?.[0]?.message?.content ?? 'Sorry, I had no response.'
 
-    // 7) Return JSON
+    // 7) Return the answer
     return NextResponse.json({ answer })
 
   } catch (err: any) {
-    console.error('[chat] error', err)
-    return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 })
+    console.error('[api/chat] unexpected error →', err)
+    return NextResponse.json(
+      { error: err.message || 'Unknown server error' },
+      { status: 500 }
+    )
   }
 }
