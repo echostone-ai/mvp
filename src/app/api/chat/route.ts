@@ -61,7 +61,7 @@ export async function POST(req: Request) {
         content: question
       }
     ]
-
+ 
     // 5) Ask OpenAI
     const resp = await openai.chat.completions.create({
       model: 'gpt-4o-2024-08-06',
