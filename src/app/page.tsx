@@ -10,15 +10,12 @@ export default function HomePage() {
   const [listening, setListening] = useState(false)
   const [playing, setPlaying] = useState(false)
   const recognitionRef = useRef<any>(null)
+  const mediaRecorderRef = useRef<any>(null)
+  const audioChunksRef = useRef<any[]>([])
 
-  // iOS check for Web Speech API support
-  const isIOS = () => {
-    if (typeof navigator === 'undefined') return false
-    return (
-      /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-      (navigator.userAgent.includes('Macintosh') && 'ontouchend' in document)
-    )
-  }
+  // Check if Web Speech API is available
+  const hasSpeechRecognition = typeof window !== 'undefined' &&
+    ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition)
 
   const askQuestion = async (text: string) => {
     if (!text.trim()) return
@@ -52,13 +49,10 @@ export default function HomePage() {
     askQuestion(question)
   }
 
-  const startListening = () => {
-    if (listening && recognitionRef.current) {
-      recognitionRef.current.stop()
-      return
-    }
+  // Web Speech API (desktop/Android)
+  const startWebSpeech = () => {
     const Rec = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
-    if (!Rec) return alert('Speech-to-text not supported on this browser.')
+    if (!Rec) return alert('SpeechRecognition not supported')
     const recognition = new Rec()
     recognitionRef.current = recognition
     recognition.continuous = false
@@ -76,6 +70,61 @@ export default function HomePage() {
     recognition.start()
   }
 
+  // Audio recording for iOS/unsupported browsers
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      audioChunksRef.current = []
+      const mediaRecorder = new (window as any).MediaRecorder(stream)
+      mediaRecorderRef.current = mediaRecorder
+      setListening(true)
+      mediaRecorder.ondataavailable = (e: any) => {
+        audioChunksRef.current.push(e.data)
+      }
+      mediaRecorder.onstop = async () => {
+        setListening(false)
+        stream.getTracks().forEach((track: any) => track.stop())
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
+        // Upload blob to backend for transcription
+        const formData = new FormData()
+        formData.append('audio', audioBlob)
+        const res = await fetch('/api/transcribe', { method: 'POST', body: formData })
+        const { transcript, error } = await res.json()
+        if (error) {
+          alert('Transcription failed: ' + error)
+        } else {
+          setQuestion(transcript)
+          askQuestion(transcript)
+        }
+      }
+      mediaRecorder.start()
+      // Record for max 10 seconds (auto-stop)
+      setTimeout(() => {
+        if (mediaRecorder.state !== 'inactive') mediaRecorder.stop()
+      }, 10000)
+    } catch (err: any) {
+      setListening(false)
+      alert('Mic error: ' + err.message)
+    }
+  }
+
+  const handleMicClick = () => {
+    if (listening) {
+      // Stop both recognition or recording if active
+      if (recognitionRef.current) recognitionRef.current.stop()
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+        mediaRecorderRef.current.stop()
+      }
+      setListening(false)
+      return
+    }
+    if (hasSpeechRecognition) {
+      startWebSpeech()
+    } else {
+      startRecording()
+    }
+  }
+
   return (
     <main className="page-container">
       {/* Logo */}
@@ -88,11 +137,9 @@ export default function HomePage() {
         />
       </div>
 
-      {/* Title & intro */}
       <h1 className="site-title">Speak with Jonathan</h1>
       <br />
 
-      {/* Ask form */}
       <form className="ask-form" onSubmit={handleSubmit}>
         <input
           type="text"
@@ -105,21 +152,18 @@ export default function HomePage() {
         </button>
       </form>
 
-      {/* Mic Button: Disabled on iOS */}
-      {isIOS() ? (
-        <button className="mic-btn" disabled style={{ opacity: 0.6 }}>
-          🎤 Speak (not supported on iOS)
-        </button>
-      ) : (
-        <button
-          className={listening ? 'mic-btn active' : 'mic-btn'}
-          onClick={startListening}
-        >
-          {listening ? '🎤 Listening…' : '🎤 Speak'}
-        </button>
-      )}
+      <button
+        className={listening ? 'mic-btn active' : 'mic-btn'}
+        onClick={handleMicClick}
+      >
+        {listening ? '🎤 Listening…' : '🎤 Speak'}
+      </button>
+      <div style={{ fontSize: 13, opacity: 0.7, margin: '0.5em 0' }}>
+        {hasSpeechRecognition
+          ? 'Speech recognition supported on this device.'
+          : 'On this device, your voice will be transcribed after recording.'}
+      </div>
 
-      {/* Answer */}
       {answer && (
         <div className="answer">
           <h2>Jonathan says:</h2>
@@ -127,7 +171,6 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* Sound bars */}
       {playing && (
         <div className="sound-bars">
           {Array.from({ length: 5 }).map((_, i) => (
