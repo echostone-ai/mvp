@@ -1,34 +1,56 @@
-import { NextRequest, NextResponse } from 'next/server'
+// src/app/api/voice/route.ts
+import { NextResponse } from 'next/server'
 
-export async function POST(req: NextRequest) {
+export const runtime = 'edge'
+
+export async function POST(req: Request) {
   try {
     const { text } = await req.json()
-    console.log("🗣 Received text to speak:", text)
 
-    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${process.env.ELEVENLABS_VOICE_ID}`, {
-      method: 'POST',
-      headers: {
-        'xi-api-key': process.env.ELEVENLABS_API_KEY!,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        text,
-        voice_settings: { stability: 0.5, similarity_boost: 0.75 }
-      })
-    })
+    // wrap SSML around any mention of “Krissy” to bump pitch +10%
+    const outgoingText = text.includes('Krissy')
+      ? `<speak><prosody pitch="+10%">${text}</prosody></speak>`
+      : text
 
-    console.log("🎧 ElevenLabs response status:", response.status)
+    const apiKey = process.env.ELEVENLABS_API_KEY!
+    const voiceId = process.env.ELEVENLABS_VOICE_ID!
 
-    const audio = await response.arrayBuffer()
+    const apiRes = await fetch(
+      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'xi-api-key': apiKey,
+        },
+        body: JSON.stringify({
+          text: outgoingText,
+          voice_settings: { stability: 0.5, similarity_boost: 0.75 },
+        }),
+      }
+    )
 
-    return new NextResponse(Buffer.from(audio), {
+    if (!apiRes.ok) {
+      const err = await apiRes.text().catch(() => 'Unknown error')
+      console.error('ElevenLabs error:', err)
+      return NextResponse.json({ error: err }, { status: apiRes.status })
+    }
+
+    // get raw MP3 bytes
+    const buffer = await apiRes.arrayBuffer()
+
+    return new NextResponse(buffer, {
       status: 200,
       headers: {
-        'Content-Type': 'audio/mpeg'
-      }
+        'Content-Type': 'audio/mpeg',
+        'Cache-Control': 'no-store',
+      },
     })
-  } catch (err) {
-    console.error("🔥 ElevenLabs error:", err)
-    return NextResponse.json({ error: "Voice generation failed." })
+  } catch (e) {
+    console.error('Voice route failed:', e)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
   }
 }

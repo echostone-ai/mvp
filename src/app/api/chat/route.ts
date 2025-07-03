@@ -1,65 +1,77 @@
 // src/app/api/chat/route.ts
 import { NextResponse } from 'next/server'
-import OpenAI from 'openai'
+import { OpenAI } from 'openai'
 import fs from 'fs/promises'
 import path from 'path'
 
+// 1) Initialize OpenAI client
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 })
 
 export async function POST(req: Request) {
   try {
+    // 2) Parse & validate incoming question
     const { question } = await req.json()
     if (!question || typeof question !== 'string') {
-      return NextResponse.json({ error: 'No question provided.' }, { status: 400 })
+      return NextResponse.json({ error: 'No question provided' }, { status: 400 })
     }
 
-    // Load Jonathan's profile JSON
-    let profile: any
+    // 3) Load profile JSON (replace 'jonathan_profile.json' as needed)
+    let profile = {}
     try {
       const profilePath = path.join(process.cwd(), 'public', 'jonathan_profile.json')
-      const raw = await fs.readFile(profilePath, 'utf8')
+      const raw = await fs.readFile(profilePath, 'utf-8')
       profile = JSON.parse(raw)
-      console.log('[chat] loaded profile keys:', Object.keys(profile))
     } catch (err) {
-      console.error('[chat] profile load failed', err)
-      return NextResponse.json({ error: 'Could not load profile.' }, { status: 500 })
+      console.warn('[chat] could not load profile, using empty:', err)
     }
 
-    // Build system prompt from profile
-    const systemPrompt = `
-You are Jonathan Braden’s AI avatar. Use ONLY the information below to answer questions as Jonathan would:
-
-Personality: ${profile.personality}
-Location: ${profile.location}
-Dog: ${profile.dog}
-Partner: ${profile.partner}
-Memories: ${profile.memories.join(' | ')}
-Music Journey: ${profile.musicJourney.join(' | ')}
-Goals & Dreams: ${profile.goalsAndDreams.join(' | ')}
-Philosophical Views: ${profile.philosophicalViews.join(' | ')}
-Hobbies: ${profile.hobbies.join(' | ')}
-Catchphrases: ${profile.catchphrases.join(' | ')}
-
-Answer in character, and do not invent any details outside this profile.
-`.trim()
-
-    // Call OpenAI
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o', 
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user',   content: question.trim() }
-      ],
-      temperature: 0.7,
-      max_tokens: 300
+    // 4) Compute current date & time
+    const now = new Date()
+    const dateString = now.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
+    const timeString = now.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
     })
 
-    const answer = response.choices?.[0]?.message?.content?.trim() || ''
+    // 5) Build messages array
+    const messages = [
+      {
+        role: 'system',
+        content: [
+          `You are Jonathan Braden, an AI speaking as Jonathan.`,
+          `Current date: ${dateString}`,
+          `Current time: ${timeString}`,
+          ``,
+          `Here is Jonathan’s profile data:`,
+          JSON.stringify(profile, null, 2)
+        ].join('\n')
+      },
+      {
+        role: 'user',
+        content: question
+      }
+    ]
+
+    // 6) Ask OpenAI for a completion
+    const resp = await openai.chat.completions.create({
+      model: 'gpt-4o-2024-08-06',    // or your preferred model
+      messages
+    })
+
+    const answer = resp.choices?.[0]?.message?.content ?? 'Sorry, I had no response.'
+
+    // 7) Return JSON
     return NextResponse.json({ answer })
-  } catch (err) {
-    console.error('[chat] unexpected error', err)
-    return NextResponse.json({ error: 'Internal error.' }, { status: 500 })
+
+  } catch (err: any) {
+    console.error('[chat] error', err)
+    return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 })
   }
 }

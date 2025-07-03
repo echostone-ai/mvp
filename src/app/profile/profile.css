@@ -1,0 +1,72 @@
+/* profile.css */
+
+.page-container {
+  min-height: 100vh;
+  padding: 2rem;
+  background: radial-gradient(
+    circle at center,
+    #6b21a8 0%,
+    #4c1d95 60%,
+    #1e1b29 100%
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Poppins', sans-serif;
+}
+
+.form-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  padding: 2rem;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.form-title {
+  font-weight: 600;
+  font-size: 1.75rem;
+  margin-bottom: 0.5rem;
+  color: #f3f4f6;
+}
+
+.form-question {
+  font-weight: 300;
+  font-size: 1.125rem;
+  margin-bottom: 1.5rem;
+  color: #d1d5db;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 6px;
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+  background: #2a203c;
+  color: #f9fafb;
+}
+
+.form-button {
+  width: 100%;
+  padding: 0.75rem;
+  background: #9333ea;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  color: white;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.form-button:hover {
+  background: #7e22ce;
+  transform: translateY(-2px);
+}
+
+.form-button:active {
+  transform: translateY(0);
+}
