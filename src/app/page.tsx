@@ -11,6 +11,15 @@ export default function HomePage() {
   const [playing, setPlaying] = useState(false)
   const recognitionRef = useRef<any>(null)
 
+  // iOS check for Web Speech API support
+  const isIOS = () => {
+    if (typeof navigator === 'undefined') return false
+    return (
+      /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.userAgent.includes('Macintosh') && 'ontouchend' in document)
+    )
+  }
+
   const askQuestion = async (text: string) => {
     if (!text.trim()) return
     setLoading(true)
@@ -23,7 +32,7 @@ export default function HomePage() {
     setAnswer(data.answer || '😕 No answer.')
     setLoading(false)
 
-    // voice
+    // voice playback
     if (data.answer) {
       const vr = await fetch('/api/voice', {
         method: 'POST',
@@ -49,7 +58,7 @@ export default function HomePage() {
       return
     }
     const Rec = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
-    if (!Rec) return alert('SpeechRecognition not supported')
+    if (!Rec) return alert('Speech-to-text not supported on this browser.')
     const recognition = new Rec()
     recognitionRef.current = recognition
     recognition.continuous = false
@@ -81,7 +90,8 @@ export default function HomePage() {
 
       {/* Title & intro */}
       <h1 className="site-title">Speak with Jonathan</h1>
-<br></br>
+      <br />
+
       {/* Ask form */}
       <form className="ask-form" onSubmit={handleSubmit}>
         <input
@@ -95,25 +105,19 @@ export default function HomePage() {
         </button>
       </form>
 
-      {/* Mic */}
-      async function handleSpeakClick() {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    // Use the audio stream for your recording/transcription logic
-    // For now, you can just stop the stream immediately for testing:
-    stream.getTracks().forEach(track => track.stop());
-    alert('Mic is working!'); // Replace with your actual mic logic
-  } catch (err) {
-    alert("Mic error: " + err.name + ": " + err.message);
-  }
-}
-
-      <button
-        className={listening ? 'mic-btn active' : 'mic-btn'}
-        onClick={startListening}
-      >
-        {listening ? '🎤 Listening…' : '🎤 Speak'}
-      </button>
+      {/* Mic Button: Disabled on iOS */}
+      {isIOS() ? (
+        <button className="mic-btn" disabled style={{ opacity: 0.6 }}>
+          🎤 Speak (not supported on iOS)
+        </button>
+      ) : (
+        <button
+          className={listening ? 'mic-btn active' : 'mic-btn'}
+          onClick={startListening}
+        >
+          {listening ? '🎤 Listening…' : '🎤 Speak'}
+        </button>
+      )}
 
       {/* Answer */}
       {answer && (
