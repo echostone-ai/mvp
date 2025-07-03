@@ -96,6 +96,18 @@ export default function HomePage() {
       </form>
 
       {/* Mic */}
+      async function handleSpeakClick() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    // Use the audio stream for your recording/transcription logic
+    // For now, you can just stop the stream immediately for testing:
+    stream.getTracks().forEach(track => track.stop());
+    alert('Mic is working!'); // Replace with your actual mic logic
+  } catch (err) {
+    alert("Mic error: " + err.name + ": " + err.message);
+  }
+}
+
       <button
         className={listening ? 'mic-btn active' : 'mic-btn'}
         onClick={startListening}
