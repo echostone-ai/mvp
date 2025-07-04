@@ -13,14 +13,36 @@ export default function HomePage() {
   const mediaRecorderRef = useRef<any>(null)
   const audioChunksRef = useRef<any[]>([])
   const timeoutRef = useRef<any>(null)
+  const audioUrlRef = useRef<string | null>(null)
 
   // Check if Web Speech API is available
   const hasSpeechRecognition = typeof window !== 'undefined' &&
     ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition)
 
+  const playAudioBlob = (blob: Blob) => {
+    if (audioUrlRef.current) {
+      URL.revokeObjectURL(audioUrlRef.current)
+      audioUrlRef.current = null
+    }
+    const url = URL.createObjectURL(blob)
+    audioUrlRef.current = url
+    const audio = new Audio(url)
+    setPlaying(true)
+    audio.onended = () => {
+      setPlaying(false)
+      URL.revokeObjectURL(url)
+      audioUrlRef.current = null
+    }
+    // iOS Safari: play() must be called soon after user gesture
+    setTimeout(() => {
+      audio.play().catch(() => setPlaying(false))
+    }, 0)
+  }
+
   const askQuestion = async (text: string) => {
     if (!text.trim()) return
     setLoading(true)
+    setAnswer('')
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -32,16 +54,17 @@ export default function HomePage() {
 
     // voice playback
     if (data.answer) {
-      const vr = await fetch('/api/voice', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: data.answer })
-      })
-      const blob = await vr.blob()
-      const audio = new Audio(URL.createObjectURL(blob))
-      setPlaying(true)
-      audio.onended = () => setPlaying(false)
-      audio.play()
+      try {
+        const vr = await fetch('/api/voice', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: data.answer })
+        })
+        const blob = await vr.blob()
+        playAudioBlob(blob)
+      } catch {
+        setPlaying(false)
+      }
     }
   }
 
@@ -90,7 +113,6 @@ export default function HomePage() {
           timeoutRef.current = null
         }
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
-        // Upload blob to backend for transcription
         if (audioBlob.size === 0) return alert('No audio captured.')
         const formData = new FormData()
         formData.append('audio', audioBlob)
@@ -138,6 +160,22 @@ export default function HomePage() {
     }
   }
 
+  const handleReplay = async () => {
+    if (!answer) return
+    setPlaying(true)
+    try {
+      const vr = await fetch('/api/voice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: answer })
+      })
+      const blob = await vr.blob()
+      playAudioBlob(blob)
+    } catch {
+      setPlaying(false)
+    }
+  }
+
   return (
     <main className="page-container">
       {/* Logo */}
@@ -160,7 +198,7 @@ export default function HomePage() {
           value={question}
           onChange={e => setQuestion(e.target.value)}
         />
-        <button type="submit">
+        <button type="submit" disabled={loading}>
           {loading ? '…Thinking' : 'Ask'}
         </button>
       </form>
@@ -168,6 +206,7 @@ export default function HomePage() {
       <button
         className={listening ? 'mic-btn active' : 'mic-btn'}
         onClick={handleMicClick}
+        type="button"
       >
         {listening ? '🎤 Listening… (tap to stop)' : '🎤 Speak'}
       </button>
@@ -181,6 +220,11 @@ export default function HomePage() {
         <div className="answer">
           <h2>Jonathan says:</h2>
           <p>{answer}</p>
+          {!playing && (
+            <button onClick={handleReplay} style={{ marginTop: 8 }}>
+              🔊 Play Again
+            </button>
+          )}
         </div>
       )}
 
