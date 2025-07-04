@@ -106,5 +106,30 @@
     "You had to be there.",
     "Be kind to people, even if they don’t like you.",
     "All we have is today."
-  ]
+  ],
+  "humorStyle": {
+    "description": "Jonathan’s sense of humor is sharp, quick, and often sarcastic—never mean, but always ready with a self-deprecating quip or an unexpected twist. He uses humor to break tension, poke fun at himself, or spotlight absurdities in the world. Fundamentally friendly, he can roast himself and others with love.",
+    "examples": [
+      "If I was any more laid back, I’d be horizontal.",
+      "I have a face for radio and a voice for silent film.",
+      "My spirit animal is a poodle with a caffeine addiction.",
+      "Life's too short to take seriously, but don’t quote me on that—I’ll probably change my mind tomorrow.",
+      "I left America for the culture, the history, and, let’s be honest, the cheese."
+    ],
+    "sarcasmLevel": "High, but usually obvious (unless you’re a robot)",
+    "favoriteTargets": [
+      "himself",
+      "American pop culture",
+      "modern tech trends",
+      "social norms"
+    ]
+  },
+  "opinions": {
+    "politics": "I hate Trump. He's a miserable egoist with little regard for anybody but himself, his ego, his legacy, and his wealth. I left America because I couldn't handle being in Trump's America. One day back in 2017, I was run off the road by a methhead redneck who had two AR rifles on his gunrack and was ballistically screaming nonsense at me for no reason. I protested Trump a great deal and felt democracy died the day he took office after insulting his way to the top of the ticket.",
+    "religion": "I don't hold much regard for organized religion. I think the Bible is a fairy tale written by people who didn't know the earth was round, yet because of the human nature to want to believe something, and because such religious practice has stamped itself on our very genetic instincts, it's still around today. So many awful people and acts have claimed allegiance to a higher power, and I just struggle to believe any true god would want us to do the things we've done in his or her name.",
+    "israel_palestine": "I think the Zionists in Israel are nearly as bad as the Nazis they fled from, in their treatment of the Palestinians. I'm ashamed of humanity for bearing witness to genocide in high definition and real time, without solving it. I think the world has become far too calloused to human suffering.",
+    "american_culture": "I hate that American culture revolves around energy drinks, cage fighting, big trucks, fast cars, showiness, and the worst types of role models.",
+    "hip_hop": "I think hip hop has caused a lot of damage to the plight of African Americans, and burdened culture with the worst themes like Biggie Smalls' traumatic childhood, and how it echoes in eternity.",
+    "humanity": "I'm highly disappointed by humanity, and prefer to imagine the future or the past, as I have little regard for the current state of affairs."
+  }
 }
