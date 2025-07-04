@@ -12,6 +12,7 @@ export default function HomePage() {
   const recognitionRef = useRef<any>(null)
   const mediaRecorderRef = useRef<any>(null)
   const audioChunksRef = useRef<any[]>([])
+  const timeoutRef = useRef<any>(null)
 
   // Check if Web Speech API is available
   const hasSpeechRecognition = typeof window !== 'undefined' &&
@@ -49,7 +50,7 @@ export default function HomePage() {
     askQuestion(question)
   }
 
-  // Web Speech API (desktop/Android)
+  // Web Speech API (desktop/Android/Chrome)
   const startWebSpeech = () => {
     const Rec = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
     if (!Rec) return alert('SpeechRecognition not supported')
@@ -84,8 +85,13 @@ export default function HomePage() {
       mediaRecorder.onstop = async () => {
         setListening(false)
         stream.getTracks().forEach((track: any) => track.stop())
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current)
+          timeoutRef.current = null
+        }
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
         // Upload blob to backend for transcription
+        if (audioBlob.size === 0) return alert('No audio captured.')
         const formData = new FormData()
         formData.append('audio', audioBlob)
         const res = await fetch('/api/transcribe', { method: 'POST', body: formData })
@@ -98,8 +104,8 @@ export default function HomePage() {
         }
       }
       mediaRecorder.start()
-      // Record for max 10 seconds (auto-stop)
-      setTimeout(() => {
+      // Allow up to 10 seconds, user can tap mic to end sooner
+      timeoutRef.current = setTimeout(() => {
         if (mediaRecorder.state !== 'inactive') mediaRecorder.stop()
       }, 10000)
     } catch (err: any) {
@@ -112,8 +118,15 @@ export default function HomePage() {
     if (listening) {
       // Stop both recognition or recording if active
       if (recognitionRef.current) recognitionRef.current.stop()
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      if (
+        mediaRecorderRef.current &&
+        mediaRecorderRef.current.state === 'recording'
+      ) {
         mediaRecorderRef.current.stop()
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current)
+          timeoutRef.current = null
+        }
       }
       setListening(false)
       return
@@ -156,7 +169,7 @@ export default function HomePage() {
         className={listening ? 'mic-btn active' : 'mic-btn'}
         onClick={handleMicClick}
       >
-        {listening ? '🎤 Listening…' : '🎤 Speak'}
+        {listening ? '🎤 Listening… (tap to stop)' : '🎤 Speak'}
       </button>
       <div style={{ fontSize: 13, opacity: 0.7, margin: '0.5em 0' }}>
         {hasSpeechRecognition
