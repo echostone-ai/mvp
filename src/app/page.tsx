@@ -6,6 +6,7 @@ import { useState, useRef } from 'react'
 export default function HomePage() {
   const [question, setQuestion] = useState('')
   const [answer, setAnswer] = useState('')
+  const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([])
   const [loading, setLoading] = useState(false)
   const [listening, setListening] = useState(false)
   const [playing, setPlaying] = useState(false)
@@ -16,7 +17,8 @@ export default function HomePage() {
   const audioUrlRef = useRef<string | null>(null)
 
   // Check if Web Speech API is available
-  const hasSpeechRecognition = typeof window !== 'undefined' &&
+  const hasSpeechRecognition =
+    typeof window !== 'undefined' &&
     ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition)
 
   const playAudioBlob = (blob: Blob) => {
@@ -33,7 +35,6 @@ export default function HomePage() {
       URL.revokeObjectURL(url)
       audioUrlRef.current = null
     }
-    // iOS Safari: play() must be called soon after user gesture
     setTimeout(() => {
       audio.play().catch(() => setPlaying(false))
     }, 0)
@@ -43,34 +44,51 @@ export default function HomePage() {
     if (!text.trim()) return
     setLoading(true)
     setAnswer('')
-    const res = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question: text })
-    })
-    const data = await res.json()
-    setAnswer(data.answer || '😕 No answer.')
-    setLoading(false)
 
-    // voice playback
-    if (data.answer) {
-      try {
-        const vr = await fetch('/api/voice', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: data.answer })
-        })
-        const blob = await vr.blob()
-        playAudioBlob(blob)
-      } catch {
-        setPlaying(false)
+    // Append user question to history
+    const newHistory = [...messages, { role: 'user', content: text }]
+    setMessages(newHistory)
+
+    try {
+      // Send question + full history
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: text, history: newHistory })
+      })
+      const data = await res.json()
+      const aiAnswer = data.answer || '😕 No answer.'
+      setAnswer(aiAnswer)
+
+      // Append AI answer to history
+      const updatedHistory = [...newHistory, { role: 'assistant', content: aiAnswer }]
+      setMessages(updatedHistory)
+
+      // Voice playback
+      if (data.answer) {
+        try {
+          const vr = await fetch('/api/voice', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: data.answer })
+          })
+          const blob = await vr.blob()
+          playAudioBlob(blob)
+        } catch {
+          setPlaying(false)
+        }
       }
+    } catch (err: any) {
+      setAnswer('Error: ' + (err.message || err))
+    } finally {
+      setLoading(false)
     }
   }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     askQuestion(question)
+    setQuestion('')
   }
 
   // Web Speech API (desktop/Android/Chrome)
@@ -126,7 +144,6 @@ export default function HomePage() {
         }
       }
       mediaRecorder.start()
-      // Allow up to 10 seconds, user can tap mic to end sooner
       timeoutRef.current = setTimeout(() => {
         if (mediaRecorder.state !== 'inactive') mediaRecorder.stop()
       }, 10000)
@@ -138,7 +155,6 @@ export default function HomePage() {
 
   const handleMicClick = () => {
     if (listening) {
-      // Stop both recognition or recording if active
       if (recognitionRef.current) recognitionRef.current.stop()
       if (
         mediaRecorderRef.current &&
@@ -178,7 +194,6 @@ export default function HomePage() {
 
   return (
     <main className="page-container">
-      {/* Logo */}
       <div className="logo-wrap">
         <Image
           src="/echostone_logo.png"
@@ -187,10 +202,8 @@ export default function HomePage() {
           height={140}
         />
       </div>
-
       <h1 className="site-title">Speak with Jonathan</h1>
       <br />
-
       <form className="ask-form" onSubmit={handleSubmit}>
         <input
           type="text"
@@ -202,7 +215,6 @@ export default function HomePage() {
           {loading ? '…Thinking' : 'Ask'}
         </button>
       </form>
-
       <button
         className={listening ? 'mic-btn active' : 'mic-btn'}
         onClick={handleMicClick}
@@ -215,7 +227,6 @@ export default function HomePage() {
           ? 'Speech recognition supported on this device.'
           : 'On this device, your voice will be transcribed after recording.'}
       </div>
-
       {answer && (
         <div className="answer">
           <h2>Jonathan says:</h2>
@@ -227,7 +238,6 @@ export default function HomePage() {
           )}
         </div>
       )}
-
       {playing && (
         <div className="sound-bars">
           {Array.from({ length: 5 }).map((_, i) => (
