@@ -6,7 +6,7 @@ import { useState, useRef } from 'react'
 export default function HomePage() {
   const [question, setQuestion] = useState('')
   const [answer, setAnswer] = useState('')
-  const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([])
+  const [messages, setMessages] = useState<{ role: string; content: string }[]>([]) // history entries{ role: string; content: string }[]>([]) // history entries{ role: 'user' | 'assistant'; content: string }[]>([])
   const [loading, setLoading] = useState(false)
   const [listening, setListening] = useState(false)
   const [playing, setPlaying] = useState(false)
