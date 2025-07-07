@@ -6,17 +6,14 @@ import { useState, useRef } from 'react'
 export default function HomePage() {
   const [question, setQuestion] = useState('')
   const [answer, setAnswer] = useState('')
-  const [messages, setMessages] = useState<{ role: string; content: string }[]>([]) // history entries{ role: string; content: string }[]>([]) // history entries{ role: 'user' | 'assistant'; content: string }[]>([])
+  const [messages, setMessages] = useState<{ role: string; content: string }[]>([])
   const [loading, setLoading] = useState(false)
   const [listening, setListening] = useState(false)
   const [playing, setPlaying] = useState(false)
   const recognitionRef = useRef<any>(null)
   const mediaRecorderRef = useRef<any>(null)
-  const audioChunksRef = useRef<any[]>([])
-  const timeoutRef = useRef<any>(null)
   const audioUrlRef = useRef<string | null>(null)
 
-  // Check if Web Speech API is available
   const hasSpeechRecognition =
     typeof window !== 'undefined' &&
     ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition)
@@ -24,7 +21,6 @@ export default function HomePage() {
   const playAudioBlob = (blob: Blob) => {
     if (audioUrlRef.current) {
       URL.revokeObjectURL(audioUrlRef.current)
-      audioUrlRef.current = null
     }
     const url = URL.createObjectURL(blob)
     audioUrlRef.current = url
@@ -35,22 +31,17 @@ export default function HomePage() {
       URL.revokeObjectURL(url)
       audioUrlRef.current = null
     }
-    setTimeout(() => {
-      audio.play().catch(() => setPlaying(false))
-    }, 0)
+    audio.play().catch(() => setPlaying(false))
   }
 
   const askQuestion = async (text: string) => {
     if (!text.trim()) return
     setLoading(true)
     setAnswer('')
-
-    // Append user question to history
     const newHistory = [...messages, { role: 'user', content: text }]
     setMessages(newHistory)
 
     try {
-      // Send question + full history
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -59,24 +50,16 @@ export default function HomePage() {
       const data = await res.json()
       const aiAnswer = data.answer || '😕 No answer.'
       setAnswer(aiAnswer)
+      setMessages([...newHistory, { role: 'assistant', content: aiAnswer }])
 
-      // Append AI answer to history
-      const updatedHistory = [...newHistory, { role: 'assistant', content: aiAnswer }]
-      setMessages(updatedHistory)
-
-      // Voice playback
       if (data.answer) {
-        try {
-          const vr = await fetch('/api/voice', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text: data.answer })
-          })
-          const blob = await vr.blob()
-          playAudioBlob(blob)
-        } catch {
-          setPlaying(false)
-        }
+        const vr = await fetch('/api/voice', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: data.answer })
+        })
+        const blob = await vr.blob()
+        playAudioBlob(blob)
       }
     } catch (err: any) {
       setAnswer('Error: ' + (err.message || err))
@@ -91,88 +74,73 @@ export default function HomePage() {
     setQuestion('')
   }
 
-  // Web Speech API (desktop/Android/Chrome)
   const startWebSpeech = () => {
     const Rec = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
     if (!Rec) return alert('SpeechRecognition not supported')
     const recognition = new Rec()
     recognitionRef.current = recognition
-    recognition.continuous = false
-    recognition.interimResults = false
+    recognition.continuous = true
+    recognition.interimResults = true
     recognition.lang = 'en-US'
     recognition.onstart = () => setListening(true)
     recognition.onresult = (ev: any) => {
-      const transcript = ev.results[0][0].transcript.trim()
+      let transcript = ''
+      for (let i = ev.resultIndex; i < ev.results.length; ++i) {
+        transcript += ev.results[i][0].transcript
+      }
       setQuestion(transcript)
-      recognition.stop()
-      setListening(false)
-      askQuestion(transcript)
     }
-    recognition.onend = () => setListening(false)
+    recognition.onerror = () => setListening(false)
+    recognition.onend = () => {
+      if (listening) recognition.start()
+    }
     recognition.start()
   }
 
-  // Audio recording for iOS/unsupported browsers
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      audioChunksRef.current = []
-      const mediaRecorder = new (window as any).MediaRecorder(stream)
+      const mediaRecorder = new MediaRecorder(stream)
       mediaRecorderRef.current = mediaRecorder
       setListening(true)
-      mediaRecorder.ondataavailable = (e: any) => {
-        audioChunksRef.current.push(e.data)
-      }
-      mediaRecorder.onstop = async () => {
-        setListening(false)
-        stream.getTracks().forEach((track: any) => track.stop())
-        if (timeoutRef.current) {
-          clearTimeout(timeoutRef.current)
-          timeoutRef.current = null
-        }
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
-        if (audioBlob.size === 0) return alert('No audio captured.')
-        const formData = new FormData()
-        formData.append('audio', audioBlob)
-        const res = await fetch('/api/transcribe', { method: 'POST', body: formData })
-        const { transcript, error } = await res.json()
-        if (error) {
-          alert('Transcription failed: ' + error)
-        } else {
-          setQuestion(transcript)
-          askQuestion(transcript)
+
+      mediaRecorder.ondataavailable = async (e: any) => {
+        if (e.data.size > 0) {
+          const formData = new FormData()
+          formData.append('audio', e.data, 'audio.webm')
+          const res = await fetch('/api/transcribe', { method: 'POST', body: formData })
+          const { transcript, error } = await res.json()
+          if (error) {
+            console.error('Transcription failed:', error)
+          } else {
+            setQuestion(transcript)
+            askQuestion(transcript)
+          }
         }
       }
-      mediaRecorder.start()
-      timeoutRef.current = setTimeout(() => {
-        if (mediaRecorder.state !== 'inactive') mediaRecorder.stop()
-      }, 10000)
+
+      mediaRecorder.start(2000) // chunk every 2s
     } catch (err: any) {
+      console.error('Mic error:', err)
       setListening(false)
       alert('Mic error: ' + err.message)
     }
   }
 
+  const stopAllRecording = () => {
+    setListening(false)
+    recognitionRef.current?.stop()
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      mediaRecorderRef.current.stop()
+      mediaRecorderRef.current.stream.getTracks().forEach((track: any) => track.stop())
+    }
+  }
+
   const handleMicClick = () => {
     if (listening) {
-      if (recognitionRef.current) recognitionRef.current.stop()
-      if (
-        mediaRecorderRef.current &&
-        mediaRecorderRef.current.state === 'recording'
-      ) {
-        mediaRecorderRef.current.stop()
-        if (timeoutRef.current) {
-          clearTimeout(timeoutRef.current)
-          timeoutRef.current = null
-        }
-      }
-      setListening(false)
-      return
-    }
-    if (hasSpeechRecognition) {
-      startWebSpeech()
+      stopAllRecording()
     } else {
-      startRecording()
+      hasSpeechRecognition ? startWebSpeech() : startRecording()
     }
   }
 
