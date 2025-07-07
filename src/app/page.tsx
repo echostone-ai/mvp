@@ -121,16 +121,13 @@ export default function HomePage() {
       }
 
       mediaRecorder.onstop = () => {
-        if (listening) {
-          console.log("Restarting recorder with longer iOS-friendly cycle...")
-          startRecording()
-        }
+        if (listening) startRecording()
       }
 
-      mediaRecorder.start(5000) // bigger chunk for iOS stability
+      mediaRecorder.start(5000)
       setTimeout(() => {
         if (mediaRecorder.state !== 'inactive') mediaRecorder.stop()
-      }, 12000) // longer forced stop to restart
+      }, 12000)
 
     } catch (err: any) {
       console.error('Mic error:', err)
