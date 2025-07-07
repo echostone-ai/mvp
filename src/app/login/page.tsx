@@ -1,58 +1,56 @@
 'use client'
 
-import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import './login.css'
+import './profile.css'
 
-export default function LoginPage() {
-  const supabase = createClientComponentClient()
+export default function ProfilePage() {
   const router = useRouter()
-  const [email, setEmail] = useState('')
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
-  const [sent, setSent] = useState(false)
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setErrorMsg(null)
-
-    const { error } = await supabase.auth.signInWithOtp({ email })
-
-    if (error) {
-      setErrorMsg(error.message)
-    } else {
-      setSent(true)
-    }
-  }
 
   return (
-    <main className="login-container">
-      <div className="login-card">
-        <h1>Sign In</h1>
-        {sent ? (
-          <p className="login-info">
-            ✔️ Magic link sent to <strong>{email}</strong>.<br/>
-            Check your inbox and click it to continue.
-          </p>
-        ) : (
-          <form onSubmit={handleSubmit}>
-            <label htmlFor="email">Email address</label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              required
-            />
-            <button type="submit">Send Magic Link</button>
-          </form>
-        )}
-        {errorMsg && <p className="login-error">{errorMsg}</p>}
-        <p>
-          Don’t have an account?{' '}
-          <a onClick={() => router.push('/sign-up')}>Sign up</a>
-        </p>
-      </div>
+    <main className="profile-hub" style={{
+      minHeight: '100vh',
+      background: 'radial-gradient(circle at center, #1e0033, #000000)',
+      color: '#e0d4f7',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontFamily: '"Garamond", serif'
+    }}>
+      <h1 style={{
+        fontSize: '3rem',
+        marginBottom: '0.5em',
+        textShadow: '0 0 10px #6a00ff'
+      }}>
+        Your EchoStone Profile
+      </h1>
+      <p style={{
+        maxWidth: '600px',
+        textAlign: 'center',
+        fontSize: '1.3rem',
+        opacity: 0.85
+      }}>
+        This is your personal sanctum within EchoStone. Here your experiences, preferences, and echoes are woven together.
+      </p>
+      <button
+        onClick={() => router.push('/profile/form')}
+        style={{
+          marginTop: '2em',
+          background: '#6a00ff',
+          border: 'none',
+          padding: '1em 2em',
+          fontSize: '1.2rem',
+          borderRadius: '8px',
+          color: '#fff',
+          cursor: 'pointer',
+          boxShadow: '0 0 15px #6a00ff',
+          transition: 'transform 0.2s'
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
+        onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+      >
+        Reveal Your Echo
+      </button>
     </main>
   )
 }
