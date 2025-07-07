@@ -3,10 +3,12 @@
 import Image from 'next/image'
 import { useState, useRef } from 'react'
 
+type ChatMessage = { role: 'user' | 'assistant'; content: string }
+
 export default function HomePage() {
   const [question, setQuestion] = useState('')
   const [answer, setAnswer] = useState('')
-  const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([])
+  const [messages, setMessages] = useState<ChatMessage[]>([])
   const [loading, setLoading] = useState(false)
   const [listening, setListening] = useState(false)
   const [playing, setPlaying] = useState(false)
