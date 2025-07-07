@@ -40,7 +40,7 @@ export default function HomePage() {
     if (!text.trim()) return
     setLoading(true)
     setAnswer('')
-    const newHistory = [...messages, { role: 'user', content: text }]
+    const newHistory = [...messages, { role: 'user', content: text } as ChatMessage]
     setMessages(newHistory)
 
     try {
@@ -52,7 +52,7 @@ export default function HomePage() {
       const data = await res.json()
       const aiAnswer = data.answer || '😕 No answer.'
       setAnswer(aiAnswer)
-      setMessages([...newHistory, { role: 'assistant', content: aiAnswer }])
+      setMessages([...newHistory, { role: 'assistant', content: aiAnswer } as ChatMessage])
 
       if (data.answer) {
         const vr = await fetch('/api/voice', {
