@@ -6,7 +6,7 @@ import { useState, useRef } from 'react'
 export default function HomePage() {
   const [question, setQuestion] = useState('')
   const [answer, setAnswer] = useState('')
-  const [messages, setMessages] = useState<{ role: string; content: string }[]>([])
+  const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([])
   const [loading, setLoading] = useState(false)
   const [listening, setListening] = useState(false)
   const [playing, setPlaying] = useState(false)
@@ -119,15 +119,15 @@ export default function HomePage() {
 
       mediaRecorder.onstop = () => {
         if (listening) {
-          console.log("Restarting recorder for continuous fallback...")
+          console.log("Restarting recorder with longer iOS-friendly cycle...")
           startRecording()
         }
       }
 
-      mediaRecorder.start(2000) // get data every 2s
+      mediaRecorder.start(5000) // bigger chunk for iOS stability
       setTimeout(() => {
         if (mediaRecorder.state !== 'inactive') mediaRecorder.stop()
-      }, 8000) // force stop after 8s to auto-restart
+      }, 12000) // longer forced stop to restart
 
     } catch (err: any) {
       console.error('Mic error:', err)
