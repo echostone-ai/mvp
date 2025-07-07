@@ -110,16 +110,25 @@ export default function HomePage() {
           formData.append('audio', e.data, 'audio.webm')
           const res = await fetch('/api/transcribe', { method: 'POST', body: formData })
           const { transcript, error } = await res.json()
-          if (error) {
-            console.error('Transcription failed:', error)
-          } else {
+          if (!error) {
             setQuestion(transcript)
             askQuestion(transcript)
           }
         }
       }
 
-      mediaRecorder.start(2000) // chunk every 2s
+      mediaRecorder.onstop = () => {
+        if (listening) {
+          console.log("Restarting recorder for continuous fallback...")
+          startRecording()
+        }
+      }
+
+      mediaRecorder.start(2000) // get data every 2s
+      setTimeout(() => {
+        if (mediaRecorder.state !== 'inactive') mediaRecorder.stop()
+      }, 8000) // force stop after 8s to auto-restart
+
     } catch (err: any) {
       console.error('Mic error:', err)
       setListening(false)
