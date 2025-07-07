@@ -91,6 +91,7 @@ export default function HomePage() {
         transcript += ev.results[i][0].transcript
       }
       setQuestion(transcript)
+      askQuestion(transcript)
     }
     recognition.onerror = () => setListening(false)
     recognition.onend = () => {
