@@ -14,10 +14,11 @@ export default function EditSectionPage() {
 
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [saved, setSaved] = useState(false)
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false, skipSnaps: false })
   const [selectedIndex, setSelectedIndex] = useState(0)
+  // No skipSnaps! Just use loop: false for natural UX
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false })
 
-  // Load answers from localStorage
+  // Set/restore answers
   useEffect(() => {
     const stored = localStorage.getItem(`echostone_profile_${section}`)
     if (stored) {
@@ -28,8 +29,23 @@ export default function EditSectionPage() {
       setAnswers(initial)
     }
   }, [section, questions])
-
-  // Save current answers and go back to profile overview
+  // Arrow key navigation for Embla
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (!emblaApi) return
+      if (e.key === 'ArrowRight') {
+        emblaApi.scrollNext()
+        e.preventDefault()
+      }
+      if (e.key === 'ArrowLeft') {
+        emblaApi.scrollPrev()
+        e.preventDefault()
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [emblaApi])
+  // Save & route
   const handleSave = useCallback(() => {
     localStorage.setItem(`echostone_profile_${section}`, JSON.stringify(answers))
     setSaved(true)
@@ -39,28 +55,28 @@ export default function EditSectionPage() {
     }, 800)
   }, [answers, section, router])
 
-  // Change answer
+  // Answer edit
   const handleChange = (key: string, value: string) => {
     setAnswers(a => ({ ...a, [key]: value }))
     setSaved(false)
   }
 
-  // Handle Embla slide select
+  // Slide selection
   useEffect(() => {
     if (!emblaApi) return
-    const onSelect = () => {
-      setSelectedIndex(emblaApi.selectedScrollSnap())
-    }
+    const onSelect = () => setSelectedIndex(emblaApi.selectedScrollSnap())
     emblaApi.on('select', onSelect)
     onSelect()
-    return () => {
-      emblaApi.off('select', onSelect)
-    }
+    return () => { emblaApi.off('select', onSelect) }
   }, [emblaApi])
 
-  // Go to previous/next slide
-  const scrollPrev = () => emblaApi && emblaApi.scrollPrev()
-  const scrollNext = () => emblaApi && emblaApi.scrollNext()
+  // Always go to first slide when changing section
+  useEffect(() => {
+    if (emblaApi) emblaApi.scrollTo(0)
+  }, [section, emblaApi])
+
+  const scrollPrev = () => emblaApi?.scrollPrev()
+  const scrollNext = () => emblaApi?.scrollNext()
 
   if (!questions.length) {
     return (
@@ -91,32 +107,22 @@ export default function EditSectionPage() {
       <h1 style={{ margin: '1em 0 0.5em 0', fontSize: '1.8rem', color: '#fff' }}>
         {section.replace(/_/g, ' ')}
       </h1>
-      <div ref={emblaRef} style={{
-        width: '100%',
-        maxWidth: 600,
-        overflow: 'hidden',
-        margin: '2em 0 1em 0',
-        borderRadius: 16,
-        background: 'rgba(40,20,90,0.85)',
-        boxShadow: '0 2px 24px #0006'
-      }}>
-        <div className="embla__container" style={{
-          display: 'flex',
-          flexDirection: 'row',
-        }}>
+      <div
+        ref={emblaRef}
+        className="embla"
+        style={{
+          width: '100%',
+          maxWidth: 600,
+          overflow: 'hidden',
+          margin: '2em 0 1em 0',
+          borderRadius: 16,
+          background: 'rgba(40,20,90,0.85)',
+          boxShadow: '0 2px 24px #0006'
+        }}
+      >
+        <div className="embla__container">
           {questions.map((q, idx) => (
-            <div
-              className="embla__slide"
-              key={q.key}
-              style={{
-                minWidth: '100%',
-                padding: '2em 1em',
-                boxSizing: 'border-box',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center'
-              }}
-            >
+            <div className="embla__slide" key={q.key}>
               <div style={{ marginBottom: 24 }}>
                 <span style={{
                   display: 'inline-block',
@@ -219,8 +225,21 @@ export default function EditSectionPage() {
         Use ← / → or swipe to move between questions
       </div>
       <style>{`
-        .embla__container { will-change: transform; }
-        .embla__slide { user-select: text; }
+        .embla { overflow: hidden; }
+        .embla__container {
+          display: flex;
+        }
+        .embla__slide {
+          flex: 0 0 100%;
+          width: 100%;
+          min-width: 0;
+          box-sizing: border-box;
+          padding: 2em 1em;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          user-select: text;
+        }
         textarea:focus { outline: 2px solid #9d7af2; }
       `}</style>
     </main>

@@ -6,27 +6,35 @@ import LogoHeader from '@/components/LogoHeader'
 import { useState, useEffect } from 'react'
 import { QUESTIONS } from '@/data/questions'
 
+type Progress = {
+  total: number
+  answered: number
+  isComplete: boolean
+}
 
 export default function ProfilePage() {
-  const [completion, setCompletion] = useState<Record<string, boolean>>({})
+  const [progress, setProgress] = useState<Record<string, Progress>>({})
 
   useEffect(() => {
-    const comp: Record<string, boolean> = {}
+    const prog: Record<string, Progress> = {}
     for (const section of Object.keys(QUESTIONS)) {
       const saved = localStorage.getItem(`echostone_profile_${section}`)
+      let answered = 0
+      let total = QUESTIONS[section].length
+      let isComplete = false
+
       if (saved) {
         try {
           const answers = JSON.parse(saved)
-          const allAnswered = QUESTIONS[section].every(q => answers[q.key]?.trim())
-          comp[section] = allAnswered
+          answered = QUESTIONS[section].filter(q => answers[q.key]?.trim()).length
+          isComplete = answered === total && total > 0
         } catch {
-          comp[section] = false
+          answered = 0
         }
-      } else {
-        comp[section] = false
       }
+      prog[section] = { total, answered, isComplete }
     }
-    setCompletion(comp)
+    setProgress(prog)
   }, [])
 
   return (
@@ -72,7 +80,7 @@ export default function ProfilePage() {
         }}
       >
         {Object.entries(QUESTIONS).map(([section, qs]) => {
-          const isComplete = completion[section]
+          const prog = progress[section] || { answered: 0, total: qs.length, isComplete: false }
           return (
             <Link
               key={section}
@@ -83,11 +91,11 @@ export default function ProfilePage() {
                 style={{
                   padding: '1.2em',
                   borderRadius: '16px',
-                  background: isComplete
+                  background: prog.isComplete
                     ? 'rgba(30,10,60,0.96)'
                     : 'rgba(30,10,60,0.7)',
                   boxShadow: '0 2px 12px #0006',
-                  opacity: isComplete ? 1 : 0.8,
+                  opacity: prog.isComplete ? 1 : 0.8,
                   transition: 'background 0.3s, opacity 0.3s',
                 }}
               >
@@ -108,9 +116,9 @@ export default function ProfilePage() {
                     color: '#c2b8e0',
                   }}
                 >
-                  {qs.length} questions
+                  {prog.answered} of {prog.total} answered
                 </p>
-                {isComplete && (
+                {prog.isComplete && (
                   <span style={{ color: '#7fffab', fontSize: '1.5rem' }}>
                     ✓
                   </span>
