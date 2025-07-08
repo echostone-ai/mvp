@@ -99,7 +99,10 @@ export default function HomePage() {
     if (!text.trim()) return
     setLoading(true)
     setAnswer('')
-    const newHistory = [...messages, { role: 'user', content: text }]
+    const newHistory: ChatMessage[] = [
+      ...messages,
+      { role: 'user', content: text }
+    ]
     setMessages(newHistory)
 
     try {
@@ -111,7 +114,16 @@ export default function HomePage() {
       const data = await res.json()
       const aiAnswer = data.answer || '😕 No answer.'
       setAnswer(aiAnswer)
-      setMessages([...newHistory, { role: 'assistant', content: aiAnswer }])
+
+      // Only allow user/assistant messages (fix for build error)
+      const safeHistory: ChatMessage[] = [
+        ...newHistory,
+        { role: 'assistant', content: aiAnswer }
+      ].filter(
+        (m): m is ChatMessage =>
+          m.role === 'user' || m.role === 'assistant'
+      )
+      setMessages(safeHistory)
 
       if (data.answer) {
         try {
