@@ -2,21 +2,32 @@
 
 import { useRouter } from 'next/navigation'
 import { QUESTIONS } from '@/data/questions'
+import { useEffect, useState } from 'react'
+
+type AnsweredMap = Record<string, number>
 
 export default function ProfilePage() {
   const router = useRouter()
+  const [answered, setAnswered] = useState<AnsweredMap>({})
 
-  // Helper: get how many are answered for a section
-  const getAnsweredCount = (section: string, qs: any[]) => {
-    const saved = localStorage.getItem(`echostone_profile_${section}`)
-    if (!saved) return 0
-    try {
-      const answers = JSON.parse(saved)
-      return qs.filter(q => answers[q.key] && answers[q.key].trim()).length
-    } catch {
-      return 0
-    }
-  }
+  useEffect(() => {
+    // Only runs on client
+    const counts: AnsweredMap = {}
+    Object.entries(QUESTIONS).forEach(([section, qs]) => {
+      const saved = localStorage.getItem(`echostone_profile_${section}`)
+      if (!saved) {
+        counts[section] = 0
+        return
+      }
+      try {
+        const answers = JSON.parse(saved)
+        counts[section] = qs.filter((q: any) => answers[q.key] && answers[q.key].trim()).length
+      } catch {
+        counts[section] = 0
+      }
+    })
+    setAnswered(counts)
+  }, [])
 
   return (
     <main
@@ -118,7 +129,7 @@ export default function ProfilePage() {
               {section.replace(/_/g, ' ')}
             </div>
             <div style={{ color: '#b7b0d8', fontSize: '0.96em', margin: '0.1em 0' }}>
-              {getAnsweredCount(section, qs)} of {qs.length} answered
+              {answered[section] || 0} of {qs.length} answered
             </div>
           </button>
         ))}
