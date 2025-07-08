@@ -1,10 +1,23 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { QUESTIONS } from '@/data/questions'  // <-- FIXED
+import { QUESTIONS } from '@/data/questions'
 
 export default function ProfilePage() {
   const router = useRouter()
+
+  // Helper: get how many are answered for a section
+  const getAnsweredCount = (section: string, qs: any[]) => {
+    const saved = localStorage.getItem(`echostone_profile_${section}`)
+    if (!saved) return 0
+    try {
+      const answers = JSON.parse(saved)
+      return qs.filter(q => answers[q.key] && answers[q.key].trim()).length
+    } catch {
+      return 0
+    }
+  }
+
   return (
     <main
       style={{
@@ -71,10 +84,10 @@ export default function ProfilePage() {
           width: '90vw'
         }}
       >
-        {QUESTIONS.map(({ id, title }) => (
+        {Object.entries(QUESTIONS).map(([section, qs]: [string, any[]]) => (
           <button
-            key={id}
-            onClick={() => router.push(`/profile/edit/${id}`)}
+            key={section}
+            onClick={() => router.push(`/profile/edit/${section}`)}
             style={{
               background: 'rgba(34, 24, 56, 0.85)',
               borderRadius: '1.7em',
@@ -99,9 +112,14 @@ export default function ProfilePage() {
               e.currentTarget.style.boxShadow = '0 4px 24px #6a00ff33'
               e.currentTarget.style.transform = 'scale(1)'
             }}
-            aria-label={`Edit section: ${title}`}
+            aria-label={`Edit section: ${section.replace(/_/g, ' ')}`}
           >
-            {title}
+            <div style={{ fontWeight: 700, fontSize: '1.18em', marginBottom: 6 }}>
+              {section.replace(/_/g, ' ')}
+            </div>
+            <div style={{ color: '#b7b0d8', fontSize: '0.96em', margin: '0.1em 0' }}>
+              {getAnsweredCount(section, qs)} of {qs.length} answered
+            </div>
           </button>
         ))}
       </div>
