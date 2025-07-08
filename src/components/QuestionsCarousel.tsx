@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import React, { useEffect, useState } from 'react'
 import useEmblaCarousel from 'embla-carousel-react'
 import styles from './QuestionsCarousel.module.css'
+
 
 interface Question {
   key: string
