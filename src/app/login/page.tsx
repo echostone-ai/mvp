@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { QUESTIONS } from '../questions'
+import { QUESTIONS } from '@/data/questions'  // <-- FIXED
 
 export default function ProfilePage() {
   const router = useRouter()
