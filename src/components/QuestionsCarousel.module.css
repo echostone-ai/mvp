@@ -1,0 +1,71 @@
+.carouselOuter {
+  max-width: 520px;
+  margin: 0 auto;
+  position: relative;
+  background: rgba(36,22,60,0.98);
+  border-radius: 18px;
+  box-shadow: 0 8px 32px #0008;
+  padding: 24px 0 0 0;
+}
+.embla {
+  overflow: hidden;
+}
+.emblaContainer {
+  display: flex;
+}
+.emblaSlide {
+  min-width: 100%;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.questionCard {
+  width: 100%;
+}
+.questionTitle {
+  font-size: 1.15em;
+  font-weight: 700;
+  color: #e7e3fc;
+  margin-bottom: 1em;
+}
+.textarea {
+  width: 100%;
+  min-height: 90px;
+  font-size: 1em;
+  background: #311c5b;
+  border-radius: 10px;
+  border: 1px solid #7c3aed;
+  color: #fff;
+  padding: 1em;
+  margin-bottom: 12px;
+  resize: vertical;
+  outline: none;
+}
+.navButtons {
+  display: flex;
+  justify-content: space-between;
+  margin: 16px 24px 8px 24px;
+}
+.navBtn {
+  background: #7c3aed;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.05em;
+  font-weight: 600;
+  padding: 0.8em 2.2em;
+  cursor: pointer;
+  box-shadow: 0 1px 8px #0004;
+  transition: background 0.2s;
+}
+.navBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.progress {
+  text-align: center;
+  color: #9fe2fa;
+  font-size: 1em;
+  margin-bottom: 16px;
+}

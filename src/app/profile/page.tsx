@@ -1,87 +1,124 @@
-// src/app/profile/page.tsx
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import './profile.css'   // your styles from before
+import Link from 'next/link'
+import Image from 'next/image'
+import LogoHeader from '@/components/LogoHeader'
+import { useState, useEffect } from 'react'
+import { QUESTIONS } from '@/data/questions'
 
-const QUESTIONS = [
-  { key: 'mem1', text: 'What’s your earliest childhood memory?' },
-  { key: 'mem2', text: 'Where did you grow up?' },
-  /* …add the rest of your 150 questions here… */
-]
 
 export default function ProfilePage() {
-  const supabase = createClientComponentClient()
-  const router   = useRouter()
-  const [step, setStep]         = useState(0)
-  const [answers, setAnswers]   = useState<Record<string,string>>({})
-  const q = QUESTIONS[step]!
+  const [completion, setCompletion] = useState<Record<string, boolean>>({})
 
-  const handleNext = () =>
-    setStep((s) => Math.min(s + 1, QUESTIONS.length - 1))
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setAnswers((a) => ({ ...a, [q.key]: e.target.value }))
-  }
-
-  const handleSubmit = async () => {
-    // 1) get the logged-in user
-    const {
-      data: { user }
-    } = await supabase.auth.getUser()
-
-    if (!user) {
-      alert('Please log in first')
-      return
-    }
-
-    // 2) upsert into your `profiles` table, into the JSONB column `profile_data`
-    const { error } = await supabase
-      .from('profiles')
-      .upsert(
-        {
-          user_id:      user.id,
-          profile_data: answers
-        },
-        {
-          onConflict: 'user_id'
+  useEffect(() => {
+    const comp: Record<string, boolean> = {}
+    for (const section of Object.keys(QUESTIONS)) {
+      const saved = localStorage.getItem(`echostone_profile_${section}`)
+      if (saved) {
+        try {
+          const answers = JSON.parse(saved)
+          const allAnswered = QUESTIONS[section].every(q => answers[q.key]?.trim())
+          comp[section] = allAnswered
+        } catch {
+          comp[section] = false
         }
-      )
-
-    if (error) {
-      alert('Failed to save: ' + error.message)
-      return
+      } else {
+        comp[section] = false
+      }
     }
-
-    // 3) on success, redirect back to your chat/ask page
-    router.push(`/ask/${user.id}`)
-  }
+    setCompletion(comp)
+  }, [])
 
   return (
-    <main className="page-container">
-      <div className="form-card">
-        <h1 className="form-title">
-          Question {step + 1} of {QUESTIONS.length}
-        </h1>
-        <p className="form-question">{q.text}</p>
-        <input
-          className="form-input"
-          type="text"
-          value={answers[q.key] || ''}
-          onChange={handleChange}
+    <main
+      style={{
+        minHeight: '100vh',
+        width: '100vw',
+        background: 'radial-gradient(circle, #8b5cf6 0%, #4c1d95 40%, #000 100%)',
+        color: '#f0eaff',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: '40px 20px',
+        fontFamily: 'Inter, Arial, sans-serif',
+      }}
+    >
+      <div style={{ marginBottom: '32px' }}>
+        <Image
+          src="/echostone_logo.png"
+          width={100}
+          height={100}
+          alt="EchoStone Logo"
+          priority
         />
-
-        {step < QUESTIONS.length - 1 ? (
-          <button className="form-button" onClick={handleNext}>
-            Next →
-          </button>
-        ) : (
-          <button className="form-button" onClick={handleSubmit}>
-            Save Profile
-          </button>
-        )}
+      </div>
+      <h1
+        style={{
+          fontSize: '2rem',
+          marginBottom: '24px',
+          color: '#fff',
+          textShadow: '0 2px 12px #0006',
+        }}
+      >
+        Your Profile
+      </h1>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill,minmax(240px,1fr))',
+          gap: '16px',
+          width: '100%',
+          maxWidth: 960,
+        }}
+      >
+        {Object.entries(QUESTIONS).map(([section, qs]) => {
+          const isComplete = completion[section]
+          return (
+            <Link
+              key={section}
+              href={`/profile/edit/${section}`}
+              style={{ textDecoration: 'none' }}
+            >
+              <div
+                style={{
+                  padding: '1.2em',
+                  borderRadius: '16px',
+                  background: isComplete
+                    ? 'rgba(30,10,60,0.96)'
+                    : 'rgba(30,10,60,0.7)',
+                  boxShadow: '0 2px 12px #0006',
+                  opacity: isComplete ? 1 : 0.8,
+                  transition: 'background 0.3s, opacity 0.3s',
+                }}
+              >
+                <h2
+                  style={{
+                    margin: 0,
+                    fontSize: '1.2rem',
+                    color: '#fff',
+                    textTransform: 'capitalize',
+                  }}
+                >
+                  {section.replace(/_/g, ' ')}
+                </h2>
+                <p
+                  style={{
+                    margin: '0.5em 0',
+                    fontSize: '0.9rem',
+                    color: '#c2b8e0',
+                  }}
+                >
+                  {qs.length} questions
+                </p>
+                {isComplete && (
+                  <span style={{ color: '#7fffab', fontSize: '1.5rem' }}>
+                    ✓
+                  </span>
+                )}
+              </div>
+            </Link>
+          )
+        })}
       </div>
     </main>
   )

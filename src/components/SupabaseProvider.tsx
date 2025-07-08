@@ -1,19 +1,17 @@
 'use client'
 
 import { ReactNode, useState } from 'react'
-import {
-  createBrowserSupabaseClient
-} from '@supabase/auth-helpers-nextjs'
-import {
-  SessionContextProvider
-} from '@supabase/auth-helpers-react'
+import { SessionContextProvider } from '@supabase/auth-helpers-react'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
-export default function SupabaseProvider({ children }: { children: ReactNode }) {
-  // create supabase client in browser, using cookie for auth
-  const [supabase] = useState(() => createBrowserSupabaseClient())
+interface SupabaseProviderProps {
+  children: ReactNode
+}
 
+export default function SupabaseProvider({ children }: SupabaseProviderProps) {
+  const [supabaseClient] = useState(() => createClientComponentClient())
   return (
-    <SessionContextProvider supabaseClient={supabase}>
+    <SessionContextProvider supabaseClient={supabaseClient}>
       {children}
     </SessionContextProvider>
   )
