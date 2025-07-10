@@ -1,41 +1,33 @@
 // src/components/PageShell.tsx
-'use client'
+import React from 'react'
+import AccountMenu from './AccountMenu'
 
-import React, { ReactNode, useEffect } from 'react'
-import Head from 'next/head'
-
-interface PageShellProps {
-  title: string
-  children: ReactNode
-}
-
-export default function PageShell({ title, children }: PageShellProps) {
-  useEffect(() => {
-    document.title = title
-  }, [title])
-
+export default function PageShell({ children }: { children: React.ReactNode }) {
   return (
-    <>
-      <Head>
-        <meta name="description" content="EchoStone — ask Jonathan anything" />
-      </Head>
-      <main
+    <div className="page-shell" style={{ minHeight: '100vh', width: '100vw', position: 'relative' }}>
+      {/* Absolutely position the AccountMenu in top-right */}
+      <div
         style={{
-          minHeight: '100vh',
-          background: 'radial-gradient(circle at center, #6b21a8 0%, #4c1d95 60%, #1e1b29 100%)',
-          color: '#f3f4f6',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          padding: '2rem',
-          textAlign: 'center',
-          fontFamily: 'Poppins, sans-serif',
-          position: 'relative',
-          overflow: 'hidden',
+          position: 'fixed',
+          top: '2.2rem',
+          right: '2.2rem',
+          zIndex: 1000,
         }}
       >
+        <AccountMenu />
+      </div>
+      <main className="main-content" style={{
+        minHeight: '100vh',
+        width: '100vw',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 0,
+        margin: 0,
+      }}>
         {children}
       </main>
-    </>
+    </div>
   )
 }

@@ -5,6 +5,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { QUESTIONS, Question } from '@/data/questions'
 import useEmblaCarousel from 'embla-carousel-react'
 import LogoHeader from '@/components/LogoHeader'
+import { supabase } from '@/components/supabaseClient'
 
 export default function EditSectionPage() {
   const params = useParams() as { section: string }
@@ -15,6 +16,8 @@ export default function EditSectionPage() {
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [saved, setSaved] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(0)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string|null>(null)
   // No skipSnaps! Just use loop: false for natural UX
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false })
 
@@ -46,13 +49,47 @@ export default function EditSectionPage() {
     return () => window.removeEventListener('keydown', handler)
   }, [emblaApi])
   // Save & route
-  const handleSave = useCallback(() => {
-    localStorage.setItem(`echostone_profile_${section}`, JSON.stringify(answers))
-    setSaved(true)
-    setTimeout(() => {
-      setSaved(false)
-      router.push('/profile')
-    }, 800)
+  const handleSave = useCallback(async () => {
+    setSaving(true)
+    setError(null)
+    try {
+      // Save to localStorage as backup
+      localStorage.setItem(`echostone_profile_${section}`, JSON.stringify(answers))
+
+      // Fetch session & user info
+      const { data: { session } } = await supabase.auth.getSession()
+      const user = session?.user
+      if (!user) throw new Error('Not logged in!')
+
+      // Fetch current profile_data for this user (if it exists)
+      const { data: profileData, error: profileErr } = await supabase
+        .from('profiles')
+        .select('profile_data')
+        .eq('user_id', user.id)
+        .maybeSingle()
+      if (profileErr) throw profileErr
+
+      // Merge updated answers for this section with previous data
+      const prevData = profileData?.profile_data || {}
+      const newProfileData = { ...prevData, [section]: answers }
+
+      // Update the profile_data column in Supabase
+      const { error: updateErr } = await supabase
+        .from('profiles')
+        .update({ profile_data: newProfileData })
+        .eq('user_id', user.id)
+      if (updateErr) throw updateErr
+
+      setSaved(true)
+      setTimeout(() => {
+        setSaved(false)
+        router.push('/profile')
+      }, 800)
+    } catch (err: any) {
+      setError(err.message || 'Failed to save.')
+    } finally {
+      setSaving(false)
+    }
   }, [answers, section, router])
 
   // Answer edit
@@ -224,6 +261,11 @@ export default function EditSectionPage() {
       <div style={{ marginTop: 16, color: '#fff', opacity: 0.7, fontSize: 15 }}>
         Use ← / → or swipe to move between questions
       </div>
+      {error && (
+        <div style={{ color: 'salmon', marginTop: 8, fontWeight: 600 }}>
+          {error}
+        </div>
+      )}
       <style>{`
         .embla { overflow: hidden; }
         .embla__container {

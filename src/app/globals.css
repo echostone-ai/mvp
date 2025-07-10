@@ -1,230 +1,482 @@
-/* 1. Import Google Fonts – must come first */
+/* 1. Import Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
 
-/* 2. Reset & box-sizing */
-*,
-*::before,
-*::after {
+:root {
+  --color-bg-voice: #160C23;
+  --color-bg-personality: #142933;
+  --color-text: #E2E2F6;
+  --color-primary: #6a41f1;
+  --color-secondary: #392e4c;
+  --color-danger: #ff214f;
+  --color-btn-gradient: linear-gradient(90deg, #6a00ff 65%, #9147ff 100%);
+}
+
+html, body {
+  height: 100%;
   margin: 0;
+  padding: 0;
+  font-family: 'Poppins', sans-serif;
+  color: var(--color-text);
+  background: linear-gradient(120deg, #232946 0%, #413076 50%, #af7ea8 100%);
+  background-attachment: fixed;
+  background-size: 400% 400%;
+  animation: body-gradient-move 28s ease-in-out infinite;
+  min-height: 100vh;
+  width: 100vw;
+  overflow-x: hidden;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  width: 100vw;
+  max-width: 100vw;
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+.page-shell, .main-content, .profile-main {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
   padding: 0;
   box-sizing: border-box;
 }
 
-/* 3. Base typography & background resets */
-html,
-body {
-  height: 100%;
-  font-family: 'Poppins', sans-serif;
-  background: none; /* The page-container will handle the gradient */
-  color: #fff;
+.account-menu {
+  position: fixed;
+  top: 28px;
+  right: 32px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  background: none;
+  border-radius: 50%;
+  box-shadow: none;
+  padding: 0;
+}
+.account-menu button,
+.account-menu .avatar,
+.account-menu > * {
+  background: #251a33;
+  border-radius: 50%;
+  box-shadow: 0 2px 12px #0007;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  transition: box-shadow 0.2s, background 0.2s;
+  cursor: pointer;
+}
+.account-menu button:hover,
+.account-menu .avatar:hover {
+  box-shadow: 0 6px 28px #000b;
+  background: #372850;
 }
 
-/* 4. Main container */
-.page-container {
-  min-height: 100vh;
-  padding: 2rem;
+/* LOGO PULSE ANIMATION */
+.logo-pulse {
+  animation: logo-pulse 2.4s infinite ease-in-out;
+}
+@keyframes logo-pulse {
+  0%   { transform: scale(1);}
+  45%  { transform: scale(1.06);}
+  60%  { transform: scale(0.97);}
+  80%  { transform: scale(1.02);}
+  100% { transform: scale(1);}
+}
+
+/* MODERN FORM STYLES */
+.ask-form {
+  display: flex;
+  gap: 18px;
+  width: 100%;
+  max-width: 640px;
+  margin: 28px auto 0 auto;
+  align-items: center;
+}
+.ask-form input[type="text"] {
+  flex: 1;
+  padding: 1.2em 1em;
+  font-size: 1.15em;
+  border-radius: 16px;
+  border: 2.5px solid #6a00ff55;
+  background: #2d2543;
+  color: #e2e2f6;
+  font-family: 'Poppins', sans-serif;
+  outline: none;
+  box-shadow: 0 2px 12px #6a00ff13;
+  transition: border 0.18s, box-shadow 0.18s;
+}
+.ask-form input[type="text"]:focus {
+  border: 2.5px solid #9147ff;
+  box-shadow: 0 4px 24px #9147ff22;
+}
+.ask-form button[type="submit"] {
+  background: var(--color-btn-gradient);
+  color: #fff;
+  font-size: 1.12em;
+  font-weight: 700;
+  border: none;
+  border-radius: 14px;
+  padding: 1em 2.2em;
+  cursor: pointer;
+  box-shadow: 0 4px 20px #6a00ff22;
+  transition: background 0.2s, box-shadow 0.2s;
+  font-family: 'Poppins', sans-serif;
+  min-width: 110px;
+  margin-left: 0.3em;
+  margin-right: 0;
+}
+.ask-form button[type="submit"]:hover, .ask-form button[type="submit"]:focus {
+  background: linear-gradient(90deg, #9147ff 0%, #6a00ff 100%);
+  box-shadow: 0 8px 28px #6a00ff33;
+}
+
+/* Mic button styling */
+.mic-btn {
+  margin-top: 22px;
+  font-size: 1.16em;
+  padding: 1em 2.3em;
+  background: #22204c;
+  border: none;
+  border-radius: 14px;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 24px #9147ff17;
+  transition: background 0.18s, box-shadow 0.18s;
+  font-family: 'Poppins', sans-serif;
+}
+.mic-btn.active, .mic-btn:hover {
+  background: #5e42b1;
+  box-shadow: 0 8px 28px #6a00ff33;
+}
+
+.answer {
+  margin-top: 38px;
+  margin-bottom: 24px;
+  max-width: 700px;
+  background: rgba(30, 23, 57, 0.82);
+  border-radius: 18px;
+  padding: 2em 2.2em 1.5em 2.2em;
+  box-shadow: 0 2px 28px #6a00ff1a;
+  color: #e2e2f6;
+  font-size: 1.15em;
+  line-height: 1.7;
+  border-left: 5px solid var(--color-primary);
+  word-break: break-word;
+  text-align: left;
+}
+.answer h2 {
+  font-size: 1.19em;
+  margin: 0 0 0.7em 0;
+  color: #9b7cff;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+.answer p {
+  margin: 0;
+  font-size: 1em;
+}
+
+.main-content {
+  flex: 1 1 auto;
+  width: 100vw !important;
+  max-width: 100vw !important;
+  min-width: 0;
+  margin: 0 !important;
+  padding: 0 !important;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  background: radial-gradient(
-    circle at center,
-    #8b5cf6 0%,
-    #4c1d95 40%,
-    #000 100%
-  );
-  text-align: center;
-  position: relative;
-  overflow: hidden;
+  justify-content: flex-start;
+  box-sizing: border-box;
+  background: transparent;
 }
 
-/* 5. Logo — make it bigger and keep aspect */
-.logo-wrap {
-  margin-bottom: 1rem;
+header.header {
+  display: none !important;
 }
-.logo-wrap img {
-  width: 180px;
-  height: auto;
-  opacity: 1;
+.page-container {
+  background: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  min-height: 0 !important;
+  position: static !important;
+  overflow: visible !important;
 }
-
-/* 6. Intro text */
-.intro {
-  max-width: 500px;
-  margin-bottom: 2rem;
-  color: #d1d5db;
+body, .page-shell, .main-content {
+  overflow-x: hidden !important;
+  max-width: 100vw !important;
 }
-
-/* 7. Ask form */
-.ask-form {
-  display: flex;
-  gap: 0.5rem;
-  width: 100%;
-  max-width: 600px;
-  margin-bottom: 1.5rem;
-}
-.ask-form input {
-  flex: 1;
-  padding: 0.75rem;
-  border-radius: 8px;
-  border: 2px solid #ccc;
-  outline: none;
-  font-size: 1rem;
-  font-family: 'Poppins', sans-serif;
-}
-.ask-form button {
-  padding: 0.75rem 1.5rem;
-  background: #9333ea;
-  border: none;
-  border-radius: 8px;
-  color: #fff;
-  font-size: 1rem;
-  font-family: 'Poppins', sans-serif;
-  cursor: pointer;
-  transition: background 0.2s ease, transform 0.1s ease;
-}
-.ask-form button:hover {
-  background: #7e22ce;
-  transform: translateY(-1px);
-}
-.ask-form button:active {
-  transform: translateY(0);
-}
-
-/* 8. Mic button */
-.mic-btn {
-  padding: 0.75rem 1.5rem;
-  background: #444;
-  border: none;
-  border-radius: 8px;
-  color: #fff;
-  font-size: 1rem;
-  font-family: 'Poppins', sans-serif;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  margin-bottom: 2rem;
-}
-.mic-btn.active {
-  background: #dc2626;
-  transform: scale(1.05);
-  box-shadow: 0 0 0 6px rgba(220,38,38,0.5);
-}
-
-/* 9. Answer display */
-.answer {
-  margin-top: 2rem;
-  max-width: 600px;
-}
-.answer h2 {
-  font-size: 1.75rem;
-  margin-bottom: 0.5rem;
-}
-.answer p {
-  font-size: 1.125rem;
-  line-height: 1.6;
-  color: #e0d7f5;
-}
-
-/* 10. Sound bars */
-.sound-bars {
-  display: flex;
-  gap: 6px;
-  align-items: flex-end;
-  height: 32px;
-  margin-top: 1rem;
-}
-.sound-bars div {
-  width: 8px;
-  background: #c084fc;
-  animation: bar 0.8s infinite ease-in-out;
-}
-
-/* 11. Particles & glow dots */
-.particle {
-  position: absolute;
-  bottom: 8%;
-  background: rgba(255,255,255,0.6);
-  border-radius: 50%;
-  animation: floatUp 2s ease-out forwards;
-}
-.glow-dot {
-  position: fixed;
-  width: 6px;
-  height: 6px;
-  background: rgba(255,255,255,0.15);
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  animation: fadeOutDot 1.5s forwards;
-}
-
-/* 12. Overlays for subtle motion & noise */
-.page-container::before,
-.page-container::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-.page-container::before {
-  background: linear-gradient(
-    120deg,
-    rgba(123,31,162,0.3),
-    rgba(55,0,179,0.3),
-    rgba(30,27,41,0.3)
-  );
-  background-size: 300% 300%;
-  animation: shift 20s ease infinite;
-  z-index: 0;
-}
-.page-container::after {
-  background-image: url('/grain.svg');
-  opacity: 0.05;
-  z-index: 1;
-}
-
-/* 13. Keyframes */
-@keyframes shift {
+@keyframes body-gradient-move {
   0%   { background-position: 0% 50%; }
+  25%  { background-position: 50% 100%; }
   50%  { background-position: 100% 50%; }
+  75%  { background-position: 50% 0%; }
   100% { background-position: 0% 50%; }
 }
-@keyframes bar {
-  0%,100% { height: 8px; }
-  50%     { height: 28px; }
+.menu-btn-fixed {
+  position: fixed;
+  top: 32px;
+  right: 32px;
+  z-index: 9999;
+  background: #18122e;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px #6a00ff22;
+  padding: 0.7em 0.9em;
+  cursor: pointer;
+  border: none;
+  transition: box-shadow 0.2s;
 }
-@keyframes floatUp {
-  to { transform: translateY(-80px) scale(0.5); opacity: 0; }
+.menu-btn-fixed:hover {
+  box-shadow: 0 8px 28px #6a00ff44;
 }
-@keyframes fadeOutDot {
-  to { opacity: 0; transform: translate(-50%, -50%) scale(2); }
+.profile-wizard-container {
+  max-width: 950px;
+  width: 90vw;
+  margin: 0 auto;
+  padding-top: 2.7em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
-/* 1) Ensure your content sits above the overlays */
-.page-container > * {
-  position: relative;
-  z-index: 2;
-}
-
-/* 2) Reduce the grain overlay so it’s more subtle */
-.page-container::after {
-  opacity: 0.02;    /* was 0.05 */
-}
-
-/* 3) (Optional) If you want the gradient overlay even lighter */
-.page-container::before {
-  opacity: 0.2;     /* was full-strength 1.0 on that pseudo-element */
-}
-/* 4) Pulse animation for the logo */
-@keyframes pulse-logo {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.07);
+@media (max-width: 800px) {
+  .profile-wizard-container {
+    max-width: 98vw;
+    padding: 1em;
   }
 }
-
-.logo-wrap {
-  /* ensure we have a wrapper around your <Image> in page.tsx */
+/* ---- Profile Page Styling ---- */
+.profile-main {
+  min-height: 100vh;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0;
+  max-width: 100vw;
+}
+.profile-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 2em 0 0.5em 0;
+}
+.profile-logo {
+  width: 120px !important;
+  height: auto;
+  margin-bottom: 1.5em;
+  animation: logo-pulse 2.5s infinite ease-in-out;
+}
+@keyframes logo-pulse {
+  0%, 100% { filter: drop-shadow(0 0 0 #9147ff55); }
+  50% { filter: drop-shadow(0 0 24px #9147ffcc); }
+}
+.profile-title {
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin: 0 0 1.2em 0;
+  text-shadow: 0 2px 18px #6a00ff33;
+}
+.profile-tabs {
+  display: flex;
+  gap: 0.7em;
+  margin-bottom: 1.5em;
+}
+.profile-tab {
+  background: #3b3059;
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  font-size: 1.15em;
+  padding: 0.8em 2.1em;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 12px #0004;
+  transition: background 0.22s;
+}
+.profile-tab.active {
+  background: var(--color-primary, #6a41f1);
+  color: #fff;
+}
+.profile-content {
+  max-width: 1100px;
+  width: 94vw;
+  margin: 0 auto 3em auto;
+}
+.profile-error {
+  color: salmon;
+  background: #21132e;
+  padding: 1em 1.5em;
+  border-radius: 12px;
+  margin-bottom: 1.2em;
+  font-size: 1.07em;
+  text-align: center;
+  font-weight: 500;
+}
+.profile-voice-panel {
+  background: rgba(34,24,56,0.93);
+  border-radius: 1.4em;
+  padding: 2.1em 2em;
+  box-shadow: 0 4px 24px #a884ff44;
+  margin-bottom: 1.8em;
+  max-width: 520px;
+  margin-left: auto;
+  margin-right: auto;
+  display: flex;
+  flex-direction: column;
+}
+.profile-label {
+  color: #fff;
+  font-size: 1.1em;
+  font-weight: 600;
+  margin-bottom: 0.5em;
+  margin-top: 0.3em;
+  letter-spacing: 0.01em;
+}
+.profile-input {
+  width: 100%;
+  font-size: 1.11em;
+  padding: 0.8em;
+  border-radius: 12px;
+  border: 1.7px solid #4c366d;
+  background: #180e33;
+  color: #fff;
+  margin-bottom: 1.1em;
+  box-shadow: 0 1px 8px #6a00ff10;
+  outline: none;
+  transition: border 0.18s;
+}
+.profile-input:focus {
+  border-color: #a884ff;
+}
+.profile-btn {
+  background: var(--color-primary, #6a41f1);
+  color: #fff;
+  border: none;
+  border-radius: 13px;
+  font-size: 1.08em;
+  font-weight: 700;
+  padding: 0.9em 2.1em;
+  cursor: pointer;
+  box-shadow: 0 2px 14px #6a00ff2d;
+  margin-bottom: 0.2em;
+  margin-right: 0.3em;
+  margin-left: 0.3em;
+  transition: background 0.18s, opacity 0.18s;
   display: inline-block;
-  animation: pulse-logo 4s ease-in-out infinite;
+}
+.profile-btn.secondary {
+  background: #3a3264;
+  color: #fff;
+}
+.profile-btn.danger {
+  background: #ff214f;
+}
+.profile-btn.disabled, .profile-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.profile-or {
+  color: #eee;
+  text-align: center;
+  margin: 0.5em 0 1.1em 0;
+  font-size: 1.09em;
+  opacity: 0.78;
+}
+.profile-preview-row {
+  display: flex;
+  align-items: center;
+  gap: 0.9em;
+  justify-content: center;
+  margin-top: 0.8em;
+}
+.profile-status {
+  font-size: 1.06em;
+  margin-top: 1em;
+  text-align: center;
+}
+.profile-status.uploading { color: #ff7b00; }
+.profile-status.success { color: #7fffab; }
+
+/* ----------- THIS SECTION CHANGED: 4-WIDE GRID ----------- */
+.profile-sections {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.3em;
+  margin-top: 1.7em;
+  max-width: 1100px;
+  width: 100%;
+}
+@media (max-width: 1350px) {
+  .profile-sections {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (max-width: 1000px) {
+  .profile-sections {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 700px) {
+  .profile-sections {
+    grid-template-columns: 1fr;
+  }
+}
+/* --------------------------------------------------------- */
+
+.profile-section-link {
+  text-decoration: none;
+  color: inherit;
+}
+.profile-section-card {
+  padding: 1.3em 1.1em 1.1em 1.1em;
+  border-radius: 1.2em;
+  background: rgba(30,10,60,0.74);
+  box-shadow: 0 2px 12px #0003;
+  opacity: 0.93;
+  transition: background 0.17s, box-shadow 0.18s;
+  text-align: left;
+  min-height: 94px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+.profile-section-card.complete {
+  background: rgba(30,10,60,0.97);
+  box-shadow: 0 4px 22px #7fffab22;
+  opacity: 1;
+}
+.profile-section-card h2 {
+  margin: 0;
+  font-size: 1.23rem;
+  font-weight: 600;
+  color: #fff;
+  text-transform: capitalize;
+  margin-bottom: 0.4em;
+  line-height: 1.19;
+}
+.profile-section-card p {
+  margin: 0 0 0.3em 0;
+  font-size: 0.99rem;
+  color: #c2b8e0;
+}
+.profile-section-check {
+  color: #7fffab;
+  font-size: 1.4rem;
+  position: absolute;
+  top: 1em;
+  right: 1em;
 }

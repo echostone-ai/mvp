@@ -4,6 +4,7 @@ import React, { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 
+
 const menuItem: React.CSSProperties = {
   display: "block",
   padding: "0.6em 1.2em",
@@ -22,7 +23,7 @@ export default function AccountMenu() {
   const [open, setOpen] = useState(false)
   const [imgError, setImgError] = useState(false)
   return (
-    <div style={{ position: "relative" }}>
+    <div>
       <button
         onClick={() => setOpen(o => !o)}
         style={{ border: "none", background: "transparent", cursor: "pointer", padding: 0 }}

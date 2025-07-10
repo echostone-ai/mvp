@@ -5,54 +5,6 @@ import Image from 'next/image'
 
 type ChatMessage = { role: 'user' | 'assistant'; content: string }
 
-// Inline account menu component
-function AccountMenu() {
-  const [open, setOpen] = useState(false)
-  return (
-    <div style={{ position: 'relative' }}>
-      <button
-        onClick={() => setOpen(o => !o)}
-        style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 0 }}
-        aria-label="Account menu"
-      >
-        <Image src="/user-avatar.png" alt="Your avatar" width={36} height={36} style={{ borderRadius: '50%' }} />
-      </button>
-      {open && (
-        <div style={{
-          position: 'absolute',
-          right: 0,
-          marginTop: 8,
-          background: 'rgba(30,10,60,0.95)',
-          borderRadius: 8,
-          boxShadow: '0 4px 24px #0008',
-          padding: '0.5em 0',
-          zIndex: 50,
-        }}>
-          <a href="/profile" style={menuItem}>My Profile</a>
-          <a href="/profile/overview" style={menuItem}>Overview</a>
-          <a href="/profile/settings" style={menuItem}>Settings</a>
-          <a href="/profile/billing" style={menuItem}>Billing & Plan</a>
-          <button onClick={() => {}} style={menuItem}>Sign Out</button>
-        </div>
-      )}
-    </div>
-  )
-}
-
-const menuItem: React.CSSProperties = {
-  display: 'block',
-  padding: '0.6em 1.2em',
-  color: '#e0d4f7',
-  textDecoration: 'none',
-  fontSize: '0.95rem',
-  whiteSpace: 'nowrap',
-  cursor: 'pointer',
-  background: 'transparent',
-  border: 'none',
-  textAlign: 'left',
-  width: '100%',
-}
-
 export default function HomePage() {
   // Chat state
   const [question, setQuestion] = useState('')
@@ -115,7 +67,6 @@ export default function HomePage() {
       const aiAnswer = data.answer || '😕 No answer.'
       setAnswer(aiAnswer)
 
-      // Only allow user/assistant messages (fix for build error)
       const safeHistory: ChatMessage[] = [
         ...newHistory,
         { role: 'assistant', content: aiAnswer }
@@ -164,7 +115,7 @@ export default function HomePage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     askQuestion(question)
-    setQuestion('')
+    // Do not clear question, keep it in the input
   }
 
   const startWebSpeech = () => {
@@ -238,54 +189,96 @@ export default function HomePage() {
   }
 
   return (
-    <>
-      <main className="page-container" style={{ position:'relative' }}>
-        <header style={{position:'absolute',top:16,right:24,zIndex:20}}><AccountMenu/></header>
-        <div className="logo-wrap"><Image src="/echostone_logo.png" alt="EchoStone Logo" width={140} height={140}/></div>
-        <h1 className="site-title">Speak with Jonathan</h1>
-        <div style={{ height: 50 }} /> {/* <-- 50px vertical space added */}
+    <main
+      style={{
+        minHeight: '100vh',
+        width: '100vw',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'hidden',
+        padding: 0,
+        margin: 0,
+        background: 'none',
+        boxShadow: 'none',
+        position: 'relative',
+      }}
+    >
+      <div className="logo-wrap" style={{ textAlign: 'center', marginBottom: 24 }}>
+        <Image src="/echostone_logo.png" alt="EchoStone Logo" width={140} height={140} className="logo-pulse" />
+        <div style={{ fontWeight: 700, fontSize: '2.1em', color: '#fff', letterSpacing: '0.02em', marginTop: '0.2em' }}>ECHOSTONE</div>
+      </div>
+      <h1 className="site-title" style={{ textAlign: 'center', margin: '12px 0 32px', fontWeight: 700, fontSize: '2.5em', letterSpacing: '0.01em' }}>Speak with Jonathan</h1>
 
-        <form className="ask-form" onSubmit={handleSubmit}>
-          <input type="text" placeholder="Ask me anything…" value={question}
-            onChange={e=>setQuestion(e.target.value)}/>
-          <button type="submit" disabled={loading}>{loading?'…Thinking':'Ask'}</button>
-        </form>
+      <form className="ask-form" onSubmit={handleSubmit}>
+        <input type="text" placeholder="Ask me anything…" value={question}
+          onChange={e=>setQuestion(e.target.value)}/>
+        <button type="submit" disabled={loading}>{loading?'…Thinking':'Ask'}</button>
+      </form>
 
-        <button className={listening?'mic-btn active':'mic-btn'} onClick={handleMicClick} type="button">
-          {listening?'🎤 Listening… (tap to stop)':'🎤 Speak'}
-        </button>
+      <button className={listening?'mic-btn active':'mic-btn'} onClick={handleMicClick} type="button">
+        {listening?'🎤 Listening… (tap to stop)':'🎤 Speak'}
+      </button>
 
-        {isClient && (
-          <div style={{fontSize:13,opacity:0.7,margin:'0.5em 0'}}>
-            {hasSpeechRecognition
-              ? 'Speech recognition supported on this device.'
-              : 'On this device, your voice will be transcribed after recording.'}
-          </div>
-        )}
+      {isClient && (
+        <div style={{fontSize:15,opacity:0.7,margin:'1em 0 0.4em 0', textAlign: 'center'}}>
+          {hasSpeechRecognition
+            ? 'Speech recognition supported on this device.'
+            : 'On this device, your voice will be transcribed after recording.'}
+        </div>
+      )}
 
-        {answer && (
-          <div className="answer">
-            <h2>Jonathan says:</h2>
-            <p>{answer}</p>
-            {!playing && <button onClick={handleReplay} style={{marginTop:8}}>🔊 Play Again</button>}
-          </div>
-        )}
+      {answer && (
+        <div className="answer">
+          <h2>Jonathan says:</h2>
+          <p>{answer}</p>
+          {!playing && <button onClick={handleReplay} style={{
+            marginTop: 16,
+            background: '#221942',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 10,
+            padding: '0.7em 1.4em',
+            fontWeight: 700,
+            fontSize: '1em',
+            boxShadow: '0 2px 10px #6a00ff12',
+            cursor: 'pointer'
+          }}>🔊 Play Again</button>}
+        </div>
+      )}
 
         {playing && (
-          <div className="sound-bars">
-            {Array.from({length:5}).map((_,i)=><div key={i} style={{animationDelay:`${i*0.1}s`}}/>)}
-          </div>
-        )}
+        <div className="sound-bars">
+          {Array.from({length: 5}).map((_, i) => (
+            <div key={i} style={{animationDelay: `${i * 0.1}s`}} />
+          ))}
+        </div>
+      )}
 
-        {voiceError && <div style={{color:'#ff6b6b',fontSize:14,marginTop:8}}>{voiceError}</div>}
-      </main>
+      {voiceError && <div style={{color:'#ff6b6b',fontSize:14,marginTop:8}}>{voiceError}</div>}
+
       <style jsx>{`
-        .sound-bars{display:flex;align-items:flex-end;height:24px;margin-top:12px}
-        .sound-bars div{flex:1;margin:0 2px;background:#6a00ff;height:50%;animation:sound 0.8s infinite ease-in-out}
-        .sound-bars div:nth-child(odd){animation-duration:0.7s}
-        .sound-bars div:nth-child(even){animation-duration:0.9s}
-        @keyframes sound{0%,100%{transform:scaleY(0.5)}50%{transform:scaleY(1)}}
+        .sound-bars {
+          display: flex;
+          align-items: flex-end;
+          height: 24px;
+          margin-top: 12px;
+        }
+        .sound-bars div {
+          flex: 1;
+          margin: 0 2px;
+          background: #6a00ff;
+          height: 50%;
+          animation: sound 0.8s infinite ease-in-out;
+        }
+        .sound-bars div:nth-child(odd) { animation-duration: 0.7s }
+        .sound-bars div:nth-child(even) { animation-duration: 0.9s }
+        @keyframes sound {
+          0%,100%{ transform:scaleY(0.5);}
+          50%{ transform:scaleY(1);}
+        }
       `}</style>
-    </>
+    </main>
   )
 }
