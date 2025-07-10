@@ -84,14 +84,14 @@ body {
 
 /* LOGO PULSE ANIMATION */
 .logo-pulse {
-  animation: logo-pulse 2.4s infinite ease-in-out;
+  animation: logo-pulse 2.6s cubic-bezier(0.7,0,0.2,1) infinite;
 }
 @keyframes logo-pulse {
-  0%   { transform: scale(1);}
-  45%  { transform: scale(1.06);}
-  60%  { transform: scale(0.97);}
-  80%  { transform: scale(1.02);}
-  100% { transform: scale(1);}
+  0%   { transform: scale(1);     filter: drop-shadow(0 0 0 #9147ff44);}
+  30%  { transform: scale(1.05);  filter: drop-shadow(0 0 22px #9147ff66);}
+  55%  { transform: scale(0.98);  filter: drop-shadow(0 0 7px #9147ff22);}
+  70%  { transform: scale(1.05);  filter: drop-shadow(0 0 14px #9147ff44);}
+  100% { transform: scale(1);     filter: drop-shadow(0 0 0 #9147ff44);}
 }
 
 /* MODERN FORM STYLES */
@@ -274,14 +274,10 @@ body, .page-shell, .main-content {
   margin: 2em 0 0.5em 0;
 }
 .profile-logo {
-  width: 120px !important;
+  width: 220px !important;
   height: auto;
   margin-bottom: 1.5em;
-  animation: logo-pulse 2.5s infinite ease-in-out;
-}
-@keyframes logo-pulse {
-  0%, 100% { filter: drop-shadow(0 0 0 #9147ff55); }
-  50% { filter: drop-shadow(0 0 24px #9147ffcc); }
+  animation: logo-pulse 3.6s cubic-bezier(0.7,0,0.2,1) infinite;
 }
 .profile-title {
   font-size: 2.2rem;

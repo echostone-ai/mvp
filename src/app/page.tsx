@@ -28,10 +28,24 @@ export default function HomePage() {
 
   useEffect(() => {
     setIsClient(true)
-    setHasSpeechRecognition(
-      !!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition)
-    )
+    // Detect Safari: if so, force hasSpeechRecognition to false
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
+    if (isSafari) {
+      setHasSpeechRecognition(false)
+    } else {
+      setHasSpeechRecognition(
+        !!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition)
+      )
+    }
   }, [])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const intros = ['/hey.mp3', '/howdy.mp3', '/hello.mp3'];
+    const pick = intros[Math.floor(Math.random() * intros.length)];
+    const audio = new Audio(pick);
+    audio.play().catch(() => {});
+  }, []);
 
   const playAudioBlob = (blob: Blob) => {
     if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current)
@@ -131,9 +145,12 @@ export default function HomePage() {
       const transcript = e.results[0][0].transcript.trim()
       recog.stop()
       setListening(false)
+      setQuestion(transcript)
       askQuestion(transcript)
     }
-    recog.onend = () => setListening(false)
+    recog.onend = () => {
+      setListening(false)
+    }
     recog.start()
   }
 
@@ -154,7 +171,10 @@ export default function HomePage() {
         form.append('audio', blob)
         const r = await fetch('/api/transcribe',{method:'POST',body:form})
         const { transcript, error } = await r.json()
-        if (!error) askQuestion(transcript)
+        if (!error && transcript) {
+          setQuestion(transcript)
+          askQuestion(transcript)
+        }
       }
       mr.start()
       setTimeout(()=>mr.state!=='inactive'&&mr.stop(),10000)
@@ -206,8 +226,7 @@ export default function HomePage() {
       }}
     >
       <div className="logo-wrap" style={{ textAlign: 'center', marginBottom: 24 }}>
-        <Image src="/echostone_logo.png" alt="EchoStone Logo" width={140} height={140} className="logo-pulse" />
-        <div style={{ fontWeight: 700, fontSize: '2.1em', color: '#fff', letterSpacing: '0.02em', marginTop: '0.2em' }}>ECHOSTONE</div>
+        <Image src="/echostone_logo.png" alt="EchoStone Logo" width={210} height={210} className="logo-pulse" />
       </div>
       <h1 className="site-title" style={{ textAlign: 'center', margin: '12px 0 32px', fontWeight: 700, fontSize: '2.5em', letterSpacing: '0.01em' }}>Speak with Jonathan</h1>
 
@@ -259,6 +278,17 @@ export default function HomePage() {
       {voiceError && <div style={{color:'#ff6b6b',fontSize:14,marginTop:8}}>{voiceError}</div>}
 
       <style jsx>{`
+        .logo-pulse {
+          animation: logo-beat 1.8s cubic-bezier(0.55, 0, 0.55, 0.2) infinite;
+          transform-origin: center;
+        }
+        @keyframes logo-beat {
+          0%   { transform: scale(1);   filter: drop-shadow(0 0 10px #6a00ff77);}
+          20%  { transform: scale(1.1); filter: drop-shadow(0 0 26px #6a00ff);}
+          50%  { transform: scale(1.05);filter: drop-shadow(0 0 18px #6a00ff);}
+          80%  { transform: scale(1.1); filter: drop-shadow(0 0 26px #6a00ff);}
+          100% { transform: scale(1);   filter: drop-shadow(0 0 10px #6a00ff77);}
+        }
         .sound-bars {
           display: flex;
           align-items: flex-end;

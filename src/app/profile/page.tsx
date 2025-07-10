@@ -163,7 +163,7 @@ export default function ProfilePage() {
   return (
     <main className="profile-main">
       <div className="profile-header">
-        <Image className="profile-logo" src="/echostone_logo.png" width={160} height={160} alt="EchoStone Logo" />
+        <Image className="profile-logo logo-pulse" src="/echostone_logo.png" width={160} height={160} alt="EchoStone Logo" />
         <h1 className="profile-title">Your Profile</h1>
         <div className="profile-tabs">
           <button
