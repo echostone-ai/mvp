@@ -6,6 +6,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/components/supabaseClient"
 
+
 // Menu CSS styles
 export const AccountMenuStyle = (
   <style jsx global>{`
@@ -53,6 +54,16 @@ export default function AccountMenu() {
   const router = useRouter()
   const closeTimeout = useRef<NodeJS.Timeout | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
+
+  // Temporary mock profileData
+  const profileData = {
+    personal_snapshot: {
+      full_legal_name: "Jonathan Ratty"
+    }
+  }
+  const firstName = profileData?.personal_snapshot?.full_legal_name
+    ? profileData.personal_snapshot.full_legal_name.split(' ')[0]
+    : 'EchoStone'
 
   const handleMouseEnter = () => {
     if (closeTimeout.current) {
@@ -149,6 +160,9 @@ export default function AccountMenu() {
           >
             <div className="account-menu-list">
               <Link href="/"         className="account-menu-item" tabIndex={0} onClick={() => setOpen(false)}>Home</Link>
+              <Link href="/profile/chat"  className="account-menu-item" tabIndex={0} onClick={() => setOpen(false)}>
+                Chat with your avatar
+              </Link>
               <Link href="/profile"  className="account-menu-item" tabIndex={0} onClick={() => setOpen(false)}>Profile</Link>
               <Link href="/about"    className="account-menu-item" tabIndex={0} onClick={() => setOpen(false)}>About</Link>
               <Link href="/login"    className="account-menu-item" tabIndex={0} onClick={() => setOpen(false)}>Login</Link>

@@ -93,7 +93,12 @@ body {
   70%  { transform: scale(1.05);  filter: drop-shadow(0 0 14px #9147ff44);}
   100% { transform: scale(1);     filter: drop-shadow(0 0 0 #9147ff44);}
 }
-
+@media (max-width: 400px) {
+  .auth-buttons {
+    flex-direction: column;
+    gap: 1em;
+  }
+}
 /* MODERN FORM STYLES */
 .ask-form {
   display: flex;

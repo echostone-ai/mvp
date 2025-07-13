@@ -6,6 +6,9 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData()
     const audioFile = formData.get('audio') as File | null
     const name = formData.get('name') as string | null
+    const accent = formData.get('accent') as string | null
+    const script = formData.get('script') as string | null
+
     if (!audioFile) {
       return NextResponse.json({ error: 'Missing audio file' }, { status: 400 })
     }
@@ -16,7 +19,10 @@ export async function POST(req: NextRequest) {
     const elevenForm = new FormData()
     elevenForm.append('files', audioFile, name)
     elevenForm.append('name', name)
-    elevenForm.append('description', 'EchoStone voice clone')
+    elevenForm.append(
+      'description',
+      `Accent: ${accent || 'unknown'} | Script: ${script?.slice(0, 80) || ''}`
+    )
 
     const apiKey = process.env.ELEVENLABS_API_KEY
     if (!apiKey) {
@@ -32,7 +38,6 @@ export async function POST(req: NextRequest) {
     })
 
     if (!response.ok) {
-      // Try to extract error message
       let errorBody: any
       try {
         errorBody = await response.json()
@@ -43,12 +48,11 @@ export async function POST(req: NextRequest) {
     }
 
     const data = await response.json()
-    // Return just the voice_id for your client
+    // Return standardized response for your client
     if (data.voice_id) {
-      return NextResponse.json({ voice_id: data.voice_id })
+      return NextResponse.json({ success: true, voiceId: data.voice_id })
     }
-    // fallback: return entire data object for debugging
-    return NextResponse.json(data)
+    return NextResponse.json({ success: false, error: 'No voice_id returned', raw: data })
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 })
   }

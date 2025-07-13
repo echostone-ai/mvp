@@ -1,96 +1,60 @@
 // src/app/api/chat/route.ts
-
-export const runtime = 'nodejs'
-
 import { NextResponse } from 'next/server'
 import { OpenAI } from 'openai'
-import fs from 'fs/promises'
-import path from 'path'
+import { pickExpressiveStyle, buildSystemPrompt, maybeAddCatchphrase } from '@/lib/expressiveHelpers'
+// FIXED PATH BELOW:
+import jonathanProfile from '@/data/jonathan_profile.json'
 
-// Initialize OpenAI client
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY!,
+})
+
+export const runtime = 'edge'
 
 export async function POST(req: Request) {
   try {
-    // 1) Parse incoming payload
-    const { question, history } = await req.json()
-    if (typeof question !== 'string') {
-      return NextResponse.json(
-        { error: 'Invalid request: `question` is required.' },
-        { status: 400 }
-      )
-    }
-    // Sanitize history
-    const safeHistory = Array.isArray(history)
-      ? history.filter(
-          (turn: any) =>
-            ['system', 'user', 'assistant'].includes(turn.role) &&
-            typeof turn.content === 'string'
-        )
-      : []
+    // Accept systemPrompt as well, for more flexibility
+    const { prompt, voiceId, systemPrompt: incomingSystemPrompt } = await req.json()
 
-    // 2) Load profile JSON
-    let profile: any = {
-      name: 'Jonathan Braden',
-      personality: '',
-      languageStyle: {},
-      humorStyle: {},
-      catchphrases: []
-    }
-    try {
-      const raw = await fs.readFile(
-        path.join(process.cwd(), 'public', 'jonathan_profile.json'),
-        'utf-8'
-      )
-      profile = JSON.parse(raw)
-    } catch (e) {
-      console.warn('[api/chat] Failed to load profile, using defaults', e)
+    if (!prompt) {
+      return NextResponse.json({ error: 'Missing prompt' }, { status: 400 })
     }
 
-    // 3) Build system prompt
-    const now = new Date()
-    const systemPrompt = [
-      `You are ${profile.name}. Persona: ${profile.personality}`,
-      `Language: ${profile.languageStyle?.description || ''}`,
-      `Humor: ${profile.humorStyle?.description || ''}`,
-      `Catchphrases: ${profile.catchphrases?.join('; ') || ''}`,
-      `Speak with wit, sarcasm, occasional profanity, and warmth.`,
-      `Current date: ${now.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      })}`,
-      `Current time: ${now.toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true
-      })}`,
-      `Full profile JSON:`,
-      JSON.stringify(profile, null, 2)
-    ].join('\n')
+    // Use incoming systemPrompt if provided, otherwise generate
+    let systemPrompt = incomingSystemPrompt
+    if (!systemPrompt) {
+      const style = pickExpressiveStyle(prompt)
+      systemPrompt = buildSystemPrompt(style)
+    }
 
-    // 4) Assemble message list
-    const messages = [
-      { role: 'system', content: systemPrompt },
-      ...safeHistory,
-      { role: 'user', content: question }
-    ]
+    // For debugging—log the systemPrompt so you can see it in Vercel/console
+    console.log('systemPrompt:', systemPrompt)
 
-    // 5) Query OpenAI
-    const resp = await openai.chat.completions.create({
-      model: 'gpt-4o-2024-08-06',
-      messages: messages as any,
-      temperature: 0.7
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o-mini', // or 'gpt-4o' for best results
+      messages: [
+        {
+          role: 'system',
+          content: systemPrompt,
+        },
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
     })
-    const answer = resp.choices?.[0]?.message?.content ?? ''
-
-    // 6) Respond
-    return NextResponse.json({ answer })
-  } catch (err: any) {
-    console.error('[api/chat] Error:', err)
-    return NextResponse.json(
-      { error: err.message },
-      { status: 500 }
-    )
+    let answer = completion.choices[0].message.content
+    // Add a catchphrase only very rarely (about 2.5% of the time) for subtlety
+    if (Math.random() < 0.025 && jonathanProfile.catchphrases.length > 0) {
+      const cp = jonathanProfile.catchphrases[
+        Math.floor(Math.random() * jonathanProfile.catchphrases.length)
+      ]
+      answer = answer.endsWith('.') ? answer + ' ' + cp : answer + '. ' + cp
+    }
+    // Return the AI answer and voiceId (to pass back to client)
+    return NextResponse.json({ answer, voiceId })
+  } catch (err) {
+    console.error('Chat API error:', err)
+    return NextResponse.json({ error: 'Chat API error' }, { status: 500 })
   }
 }

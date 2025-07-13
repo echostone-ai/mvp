@@ -5,16 +5,19 @@ export const runtime = 'edge'
 
 export async function POST(req: Request) {
   try {
-    const { text } = await req.json()
+    const { text, voiceId } = await req.json()
 
-    // wrap SSML around any mention of “Krissy” to bump pitch +10%
-    const outgoingText = text.includes('Krissy')
-      ? `<speak><prosody pitch="+10%">${text}</prosody></speak>`
-      : text
+    if (!text) {
+      return NextResponse.json({ error: 'Missing text to synthesize' }, { status: 400 })
+    }
+
+    if (!voiceId) {
+      return NextResponse.json({ error: 'Missing voiceId' }, { status: 400 })
+    }
 
     const apiKey = process.env.ELEVENLABS_API_KEY!
-    const voiceId = process.env.ELEVENLABS_VOICE_ID!
 
+    // Call ElevenLabs TTS API with user voiceId
     const apiRes = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
       {
@@ -24,21 +27,24 @@ export async function POST(req: Request) {
           'xi-api-key': apiKey,
         },
         body: JSON.stringify({
-          text: outgoingText,
-          voice_settings: { stability: 0.5, similarity_boost: 0.75 },
+          text: text,
+          voice_settings: {
+            stability: 0.5,
+            similarity_boost: 0.75,
+          },
         }),
       }
     )
 
     if (!apiRes.ok) {
-      const err = await apiRes.text().catch(() => 'Unknown error')
-      console.error('ElevenLabs error:', err)
-      return NextResponse.json({ error: err }, { status: apiRes.status })
+      const errText = await apiRes.text().catch(() => 'Unknown error')
+      console.error('ElevenLabs TTS API error:', errText)
+      return NextResponse.json({ error: errText }, { status: apiRes.status })
     }
 
-    // get raw MP3 bytes
     const buffer = await apiRes.arrayBuffer()
 
+    // Return raw mp3 audio bytes as response
     return new NextResponse(buffer, {
       status: 200,
       headers: {
@@ -46,12 +52,11 @@ export async function POST(req: Request) {
         'Cache-Control': 'no-store',
       },
     })
-  } catch (e) {
-    console.error('Voice route failed:', e)
+  } catch (err) {
+    console.error('Voice route failed:', err)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     )
   }
 }
- 
