@@ -1,0 +1,142 @@
+.onboarding-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--color-bg-voice);
+  color: var(--color-text);
+  font-family: 'Poppins', sans-serif;
+}
+
+.onboarding-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid rgba(255 255 255 / 0.1);
+  background: var(--color-bg-personality);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.onboarding-title {
+  font-weight: 600;
+  font-size: 1.5rem;
+}
+
+.account-menu-wrapper {
+  position: relative;
+}
+
+.onboarding-chat-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 2rem;
+  overflow: hidden;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.messages-list {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 1rem;
+  margin-bottom: 1rem;
+}
+
+.message {
+  margin-bottom: 1rem;
+  max-width: 70%;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  line-height: 1.4;
+  font-size: 1rem;
+  white-space: pre-wrap;
+}
+
+.message.assistant {
+  background: var(--color-bg-personality);
+  color: var(--color-text);
+  align-self: flex-start;
+}
+
+.message.user {
+  background: var(--color-primary);
+  color: white;
+  align-self: flex-end;
+}
+
+.input-bar {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* Prominent mic button */
+.mic-btn {
+  font-size: 1.8rem;
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  width: 72px;
+  height: 40px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s ease;
+  flex-shrink: 0;
+}
+
+.mic-btn:hover:not(:disabled) {
+  background-color: #9a7cff; /* Slightly lighter purple */
+}
+
+.mic-btn.active {
+  background-color: var(--color-secondary);
+}
+
+.mic-btn:disabled {
+  background-color: var(--color-secondary);
+  cursor: not-allowed;
+}
+
+/* Smaller input */
+.input-bar input[type="text"] {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  border-radius: 9999px;
+  border: 1px solid var(--color-secondary);
+  background: var(--color-bg-voice);
+  color: var(--color-text);
+  outline-offset: 2px;
+  transition: outline-offset 0.15s ease;
+}
+
+.input-bar input[type="text"]:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 4px;
+}
+
+/* Smaller send button, less prominent */
+.send-btn {
+  padding: 0.4rem 1rem;
+  font-size: 0.9rem;
+  border-radius: 9999px;
+  border: none;
+  background: var(--color-secondary);
+  color: var(--color-text);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  flex-shrink: 0;
+}
+
+.send-btn:disabled {
+  background-color: #555a7f;
+  cursor: default;
+}

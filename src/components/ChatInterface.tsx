@@ -1,6 +1,17 @@
 'use client'
 
+
 import React, { useState, useRef, useEffect } from 'react'
+
+function getFirstName(profileData: any): string {
+  if (profileData?.personal_snapshot?.full_legal_name)
+    return profileData.personal_snapshot.full_legal_name.split(' ')[0];
+  if (profileData?.full_legal_name)
+    return profileData.full_legal_name.split(' ')[0];
+  if (profileData?.name)
+    return profileData.name.split(' ')[0];
+  return 'Friend';
+}
 
 export type ChatMessage = { role: 'user' | 'assistant'; content: string }
 
@@ -241,22 +252,7 @@ export default function ChatInterface({
   }
 
   return (
-    <main
-      style={{
-        minHeight: '100vh',
-        width: '100vw',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        overflow: 'hidden',
-        padding: 0,
-        margin: 0,
-        background: 'none',
-        boxShadow: 'none',
-        position: 'relative',
-      }}
-    >
+    <main className="chatMain">
       <div
         className="logo-wrap"
         style={{ textAlign: 'center', marginBottom: 24, userSelect: 'none' }}
@@ -272,39 +268,29 @@ export default function ChatInterface({
           style={{ userSelect: 'none' }}
         />
       </div>
-      <h1
-  className="site-title"
-  style={{ textAlign: 'center', margin: '12px 0 32px' }}
->
-  Speak with {profileData?.personal_snapshot?.full_legal_name
-    ? profileData.personal_snapshot.full_legal_name.split(' ')[0]
-    : 'EchoStone'}
-</h1>
+      <h1 className="site-title" style={{ textAlign: 'center', margin: '12px 0 32px' }}>
+        Speak with {getFirstName(profileData)}
+      </h1>
 
-      <form
-        className="ask-form"
-        onSubmit={handleSubmit}
-        style={{ display: 'flex', gap: 12, width: '100%', maxWidth: 600 }}
-      >
+      <form className="askForm" onSubmit={handleSubmit}>
         <input
           type="text"
           placeholder="Ask me anything…"
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
-          style={{ flex: 1 }}
+          className="askInput"
           spellCheck={false}
           autoComplete="off"
         />
-        <button type="submit" disabled={loading}>
+        <button type="submit" disabled={loading} className="askBtn">
           {loading ? '…Thinking' : 'Ask'}
         </button>
       </form>
 
       <button
-        className={listening ? 'mic-btn active' : 'mic-btn'}
+        className={`micBtn${listening ? ' active' : ''}`}
         onClick={handleMicClick}
         type="button"
-        style={{ marginTop: 24 }}
       >
         {listening ? '🎤 Listening… (tap to stop)' : '🎤 Speak'}
       </button>
@@ -326,11 +312,11 @@ export default function ChatInterface({
       )}
 
       {answer && (
-        <div className="answer" style={{ userSelect: 'text' }}>
-          <h2>EchoStone says:</h2>
+        <div className="answer">
+          <h2>{getFirstName(profileData)} says:</h2>
           <p>{answer}</p>
           {!playing && (
-            <button onClick={handleReplay} style={{ marginTop: 8 }}>
+            <button onClick={handleReplay} className="playBtn">
               🔊 Play Again
             </button>
           )}
@@ -338,9 +324,9 @@ export default function ChatInterface({
       )}
 
       {playing && (
-        <div className="sound-bars">
+        <div className="soundbars">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} style={{ animationDelay: `${i * 0.1}s` }} />
+            <div key={i} className={`soundbar delay-${i}`} />
           ))}
         </div>
       )}
@@ -350,37 +336,6 @@ export default function ChatInterface({
           {voiceError}
         </div>
       )}
-
-      <style jsx>{`
-        .sound-bars {
-          display: flex;
-          align-items: flex-end;
-          height: 24px;
-          margin-top: 12px;
-        }
-        .sound-bars div {
-          flex: 1;
-          margin: 0 2px;
-          background: #6a00ff;
-          height: 50%;
-          animation: sound 0.8s infinite ease-in-out;
-        }
-        .sound-bars div:nth-child(odd) {
-          animation-duration: 0.7s;
-        }
-        .sound-bars div:nth-child(even) {
-          animation-duration: 0.9s;
-        }
-        @keyframes sound {
-          0%,
-          100% {
-            transform: scaleY(0.5);
-          }
-          50% {
-            transform: scaleY(1);
-          }
-        }
-      `}</style>
     </main>
   )
 }

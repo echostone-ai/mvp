@@ -103,68 +103,25 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ userName, onVoiceUploaded
 
   // UI
   return (
-    <div
-      style={{
-        maxWidth: 420,
-        margin: "0 auto",
-        padding: 24,
-        border: "1px solid #ede2fa",
-        borderRadius: 14,
-        background: "rgba(255,255,255,0.03)",
-        boxShadow: "0 6px 20px #ede2fa22",
-        display: "flex",
-        flexDirection: "column",
-        gap: 12,
-        alignItems: "stretch",
-      }}
-    >
-      <h3 style={{
-        marginBottom: 4,
-        fontWeight: 700,
-        fontSize: "1.3rem",
-        color: "#8864fa",
-        letterSpacing: "0.01em",
-      }}>Voice Training</h3>
+    <div className="voice-recorder-panel">
+      <h3 className="voice-recorder-title">Voice Training</h3>
 
-      <div
-        style={{
-          color: '#fff',
-          textShadow: '0 2px 8px rgba(0,0,0,0.45), 0 1px 0 #232946',
-          filter: 'brightness(1.18)',
-          marginBottom: 8,
-          fontSize: "0.98rem"
-        }}
-      >
+      <div className="voice-recorder-tips">
         <strong>Recording tips:</strong>
-        <ul style={{ margin: "4px 0 4px 16px" }}>
+        <ul>
           <li>Quiet room, no background noise</li>
           <li>Speak naturally (don’t rush)</li>
           <li>Add your personality—laugh, pause, be real</li>
         </ul>
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", marginBottom: 6, gap: 8 }}>
-        <label htmlFor="accent-select" style={{
-          fontWeight: 600,
-          fontSize: "1rem",
-          color: "#291954",
-          marginRight: 4,
-        }}>Accent:</label>
+      <div className="voice-accent-row">
+        <label htmlFor="accent-select" className="voice-accent-label">Accent:</label>
         <select
           id="accent-select"
           value={accent}
           onChange={(e) => setAccent(e.target.value)}
-          style={{
-            fontSize: "1rem",
-            padding: "0.4rem 1rem",
-            borderRadius: "7px",
-            border: "1.5px solid #8864fa",
-            outline: "none",
-            background: "#f8f7ff",
-            color: "#291954",
-            fontWeight: 600,
-            minWidth: 155,
-          }}
+          className="voice-accent-select"
         >
           {accentOptions.map(opt => (
             <option key={opt} value={opt}>{opt}</option>
@@ -172,79 +129,33 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ userName, onVoiceUploaded
         </select>
       </div>
 
-      <div style={{ margin: "10px 0" }}>
+      <div>
         <label>
-          <strong style={{ fontSize: "1rem" }}>Please read this aloud for best results:</strong>
+          <strong className="voice-script-label">Please read this aloud for best results:</strong>
           <textarea
             value={script}
             readOnly
             rows={5}
-            style={{
-              width: "100%",
-              fontFamily: "inherit",
-              background: "#f5f5f5",
-              marginTop: 6,
-              border: "1px solid #ede2fa",
-              borderRadius: 6,
-              padding: "8px 10px",
-              fontSize: "1rem",
-              color: "#291954",
-              resize: "none"
-            }}
+            className="voice-script-textarea"
           />
         </label>
-        <div style={{ marginTop: 3, display: "flex", gap: 8 }}>
+        <div className="voice-script-toggle-row">
           <button
             type="button"
             disabled={script === defaultScript}
             onClick={() => setScript(defaultScript)}
-            style={{
-              background: script === defaultScript ? "#e2e2f6" : "#8864fa",
-              color: script === defaultScript ? "#888" : "#fff",
-              border: "none",
-              padding: "0.38rem 1.2rem",
-              borderRadius: 6,
-              fontWeight: 600,
-              fontSize: "0.99rem",
-              cursor: script === defaultScript ? "not-allowed" : "pointer",
-              transition: "background 0.15s",
-            }}
+            className={`voice-script-btn${script === defaultScript ? ' active' : ''}`}
           >Default Script</button>
           <button
             type="button"
             disabled={script === playfulScript}
             onClick={() => setScript(playfulScript)}
-            style={{
-              background: script === playfulScript ? "#e2e2f6" : "#48dfb5",
-              color: script === playfulScript ? "#888" : "#1b383a",
-              border: "none",
-              padding: "0.38rem 1.2rem",
-              borderRadius: 6,
-              fontWeight: 600,
-              fontSize: "0.99rem",
-              cursor: script === playfulScript ? "not-allowed" : "pointer",
-              transition: "background 0.15s",
-            }}
+            className={`voice-script-btn${script === playfulScript ? ' active' : ''}`}
           >Playful Script</button>
         </div>
       </div>
 
-      <label htmlFor="audio-upload" style={{
-        display: "flex",
-        alignItems: "center",
-        background: "#8864fa",
-        color: "#fff",
-        padding: "0.55rem 0",
-        borderRadius: "7px",
-        fontWeight: 700,
-        fontSize: "1rem",
-        justifyContent: "center",
-        boxShadow: "0 1.5px 8px #ede2fa",
-        cursor: "pointer",
-        margin: "4px 0 0 0",
-        width: "100%",
-        gap: 8,
-      }}>
+      <label htmlFor="audio-upload" className="voice-upload-btn">
         <span role="img" aria-label="upload">📂</span>
         Choose File
         <input
@@ -256,49 +167,24 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ userName, onVoiceUploaded
         />
       </label>
 
-      <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+      <div className="voice-file-row">
         <button
           type="button"
           onClick={startRecording}
           disabled={recording}
-          style={{
-            flex: 1,
-            background: "#48dfb5",
-            color: "#1b383a",
-            padding: "0.5rem 0",
-            borderRadius: "7px",
-            border: "none",
-            fontWeight: 700,
-            fontSize: "1rem",
-            cursor: recording ? "not-allowed" : "pointer",
-            boxShadow: "0 1px 4px #e2e6f6",
-            transition: "background 0.16s",
-          }}
+          className="voice-record-btn"
         >Record</button>
         <button
           type="button"
           onClick={stopRecording}
           disabled={!recording}
-          style={{
-            flex: 1,
-            background: "#48dfb5",
-            color: !recording ? "#b8b8b8" : "#1b383a",
-            padding: "0.5rem 0",
-            borderRadius: "7px",
-            border: "none",
-            fontWeight: 700,
-            fontSize: "1rem",
-            cursor: !recording ? "not-allowed" : "pointer",
-            opacity: recording ? 1 : 0.5,
-            boxShadow: "0 1px 4px #e2e6f6",
-            transition: "background 0.16s",
-          }}
+          className="voice-record-btn"
         >Stop Recording</button>
       </div>
 
       {audioUrl && (
-        <div style={{ margin: "8px 0" }}>
-          <audio controls src={audioUrl} style={{ width: "100%" }} />
+        <div className="voice-audio-container">
+          <audio controls src={audioUrl} className="voice-audio-player" />
         </div>
       )}
 
@@ -306,25 +192,11 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ userName, onVoiceUploaded
         type="button"
         disabled={!audioBlob || isUploading}
         onClick={() => audioBlob && uploadAudio(audioBlob)}
-        style={{
-          background: "#8864fa",
-          color: "#fff",
-          padding: "0.55rem 0",
-          borderRadius: "7px",
-          border: "none",
-          fontWeight: 700,
-          fontSize: "1.07rem",
-          width: "100%",
-          cursor: (!audioBlob || isUploading) ? "not-allowed" : "pointer",
-          marginTop: 8,
-          marginBottom: 2,
-          boxShadow: "0 2px 6px #ede2fa",
-          transition: "background 0.16s",
-        }}
+        className="voice-upload-btn"
       >
         {isUploading ? "Uploading..." : "Upload Voice"}
       </button>
-      {status && <div style={{ marginTop: 10, color: "#291954" }}>{status}</div>}
+      {status && <div className="voice-upload-status">{status}</div>}
     </div>
   )
 }

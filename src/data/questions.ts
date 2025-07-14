@@ -184,4 +184,16 @@ export const QUESTIONS: Record<string, Question[]> = {
     { key: 'unusual_fears_dislikes', q: 'Unusual phobias or strong dislikes' },
     { key: 'guilty_pleasure', q: 'Guilty-pleasure habit you’ll never give up' },
   ],
+  top_important_people: [
+    { key: 'most_influential_person', q: 'The most influential person in your life and why' },
+    { key: 'mentor_impact', q: 'A mentor who significantly impacted you' },
+    { key: 'friend_support_story', q: 'A friend who supported you during a tough time' },
+    { key: 'family_inspiration', q: 'A family member who inspires you' },
+    { key: 'role_model_traits', q: 'Traits you admire in your role models' },
+    { key: 'important_people_lessons', q: 'Important lessons learned from people close to you' },
+    { key: 'people_who_challenge_you', q: 'People who challenge you to grow' },
+    { key: 'gratitude_for_someone', q: 'Someone you are deeply grateful for' },
+    { key: 'people_who_make_you_laugh', q: 'People who make you laugh and why' },
+    { key: 'impact_of_community', q: 'How your community has shaped who you are' },
+  ],
 }

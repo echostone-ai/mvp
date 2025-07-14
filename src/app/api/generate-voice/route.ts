@@ -5,14 +5,20 @@ export const runtime = 'edge'  // or 'nodejs' if you prefer server-side
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { text, voiceId } = body
+    let { text, voiceId, userId } = body
 
     if (!text) {
       return NextResponse.json({ error: 'Text is required' }, { status: 400 })
     }
 
+    // Use default Jonathan voiceId if none provided
     if (!voiceId) {
-      return NextResponse.json({ error: 'voiceId is required' }, { status: 400 })
+      if (userId === 'bucky') {
+        // Use different voice for Bucky if needed, else fallback to default
+        voiceId = 'DEFAULT_BUCKY_VOICE_ID' // Replace with actual voice ID for Bucky or remove this line to fallback to Jonathan voice
+      } else {
+        voiceId = 'CO6pxVrMZfyL61ZIglyr' // Jonathan's cloned voice ID
+      }
     }
 
     const apiKey = process.env.ELEVENLABS_API_KEY

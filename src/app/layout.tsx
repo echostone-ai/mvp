@@ -1,15 +1,26 @@
 // src/app/layout.tsx
 import './globals.css'
-import type { ReactNode } from 'react'
-import PageShell from '@/components/PageShell'
+import { ReactNode } from 'react'
+import SupabaseProvider from '@/components/SupabaseProvider'
 
+export const metadata = {
+  title: 'EchoStone',
+  description: '…',
+}
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
+      <head>
+        {/* Google fonts */}
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap"
+        />
+      </head>
       <body>
-        <PageShell>
+        <SupabaseProvider>
           {children}
-        </PageShell>
+        </SupabaseProvider>
       </body>
     </html>
   )
