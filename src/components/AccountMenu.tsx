@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef } from "react"
+import React, { useState, useRef, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -9,9 +9,30 @@ import { supabase } from "@/components/supabaseClient"
 export default function AccountMenu() {
   const [open, setOpen] = useState(false)
   const [imgError, setImgError] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [loading, setLoading] = useState(true)
   const router = useRouter()
   const closeTimeout = useRef<NodeJS.Timeout | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    // Check initial auth state
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      setIsLoggedIn(!!session)
+      setLoading(false)
+    }
+    
+    checkAuth()
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsLoggedIn(!!session)
+      setLoading(false)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
 
   // Temporary mock profileData
   const profileData = {
@@ -90,21 +111,30 @@ export default function AccountMenu() {
             <Link href="/" className="account-menu-item" tabIndex={0} onClick={() => setOpen(false)}>
               Home
             </Link>
-            <Link href="/profile/chat" className="account-menu-item" tabIndex={0} onClick={() => setOpen(false)}>
-              Chat with your avatar
-            </Link>
-            <Link href="/profile" className="account-menu-item" tabIndex={0} onClick={() => setOpen(false)}>
-              Profile
-            </Link>
+            {isLoggedIn && (
+              <>
+                <Link href="/profile/chat" className="account-menu-item" tabIndex={0} onClick={() => setOpen(false)}>
+                  Chat with your avatar
+                </Link>
+                <Link href="/profile" className="account-menu-item" tabIndex={0} onClick={() => setOpen(false)}>
+                  Profile
+                </Link>
+              </>
+            )}
             <Link href="/about" className="account-menu-item" tabIndex={0} onClick={() => setOpen(false)}>
               About
             </Link>
-            <Link href="/login" className="account-menu-item" tabIndex={0} onClick={() => setOpen(false)}>
-              Login
-            </Link>
-            <button onClick={handleLogout} className="account-menu-item" tabIndex={0}>
-              Logout
-            </button>
+            {!loading && (
+              isLoggedIn ? (
+                <button onClick={handleLogout} className="account-menu-item" tabIndex={0}>
+                  Logout
+                </button>
+              ) : (
+                <Link href="/login" className="account-menu-item" tabIndex={0} onClick={() => setOpen(false)}>
+                  Login
+                </Link>
+              )
+            )}
           </div>
         </div>
       )}

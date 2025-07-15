@@ -14,6 +14,8 @@ export default function EditSectionPage() {
   const router = useRouter()
   const questions: Question[] = QUESTIONS[section] || []
 
+  const [user, setUser] = useState<any>(null)
+  const [loadingUser, setLoadingUser] = useState(true)
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [saved, setSaved] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(0)
@@ -21,6 +23,27 @@ export default function EditSectionPage() {
   const [error, setError] = useState<string|null>(null)
   // No skipSnaps! Just use loop: false for natural UX
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false })
+
+  // Check authentication
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+        if (sessionError) {
+          console.error('Session error:', sessionError)
+          setLoadingUser(false)
+          return
+        }
+        const currentUser = sessionData.session?.user ?? null
+        setUser(currentUser)
+        setLoadingUser(false)
+      } catch (e: any) {
+        console.error('Auth check error:', e)
+        setLoadingUser(false)
+      }
+    }
+    checkAuth()
+  }, [])
 
   // Set/restore answers
   useEffect(() => {
@@ -115,6 +138,70 @@ export default function EditSectionPage() {
 
   const scrollPrev = () => emblaApi?.scrollPrev()
   const scrollNext = () => emblaApi?.scrollNext()
+
+  // Show loading state
+  if (loadingUser) {
+    return (
+      <div className="min-h-screen w-screen relative">
+        <div className="fixed top-9 right-9 z-50">
+          <AccountMenu />
+        </div>
+        <main className="min-h-screen flex flex-col items-center justify-center text-white">
+          <div className="loading-spinner"></div>
+          <p className="mt-4 text-xl">Loading...</p>
+        </main>
+      </div>
+    )
+  }
+
+  // Show login prompt if not authenticated
+  if (!user) {
+    return (
+      <div className="min-h-screen w-screen relative">
+        <div className="fixed top-9 right-9 z-50">
+          <AccountMenu />
+        </div>
+        <main className="min-h-screen flex flex-col items-center justify-center text-white p-4 text-center">
+          <img
+            src="/echostone_logo.png"
+            alt="EchoStone Logo"
+            className="logo-pulse w-36 mb-8 select-none"
+          />
+          <div className="auth-required-card">
+            <h1 className="auth-required-title">
+              Authentication Required
+            </h1>
+            <p className="auth-required-subtitle">
+              Please sign in to edit your profile and answer questions.
+            </p>
+            <div className="auth-required-actions">
+              <a 
+                href="/login" 
+                className="auth-btn primary"
+              >
+                Sign In
+              </a>
+              <a 
+                href="/login" 
+                className="auth-btn secondary"
+              >
+                Create Account
+              </a>
+            </div>
+            <div className="auth-required-features">
+              <h3>Complete your profile to:</h3>
+              <ul>
+                <li>🎯 Build a comprehensive personality profile</li>
+                <li>🤖 Train your AI to respond like you</li>
+                <li>💾 Save your progress securely</li>
+                <li>🔄 Sync across all your devices</li>
+              </ul>
+            </div>
+          </div>
+        </main>
+      </div>
+    )
+  }
 
   if (!questions.length) {
     return (

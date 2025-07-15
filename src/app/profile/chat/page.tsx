@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/components/supabaseClient'
 import ChatInterface from '@/components/ChatInterface'
 import AccountMenu from '@/components/AccountMenu'
+import PageShell from '@/components/PageShell'
 
 const buttonStyle: React.CSSProperties = {
   display: 'inline-block',
@@ -63,22 +64,27 @@ export default function ProfileChat() {
 
   useEffect(() => {
     loadUserData()
-  }, [reloadSignal])
+  }, []) // Remove reloadSignal dependency - only load on mount and page refresh
 
-  const refreshProfileData = () => {
-    setReloadSignal(Date.now())
-  }
+  // Auto-refresh when component mounts or page is revisited
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        loadUserData()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [])
 
   return (
-    <div className="min-h-screen w-screen relative">
-      <div className="fixed top-9 right-9 z-50">
-        <AccountMenu />
-      </div>
-
+    <PageShell>
       {loading ? (
-        <div className="min-h-screen flex items-center justify-center">
-          <p className="text-center text-xl text-white">Loading...</p>
-        </div>
+        <main className="min-h-screen flex flex-col items-center justify-center text-white">
+          <div className="loading-spinner"></div>
+          <p className="text-center text-xl mt-4">Loading...</p>
+        </main>
       ) : !user ? (
         <main className="min-h-screen flex flex-col items-center justify-center text-white p-4 text-center">
           <img
@@ -86,20 +92,21 @@ export default function ProfileChat() {
             alt="EchoStone Logo"
             className="logo-pulse w-36 mb-6 select-none"
           />
-          <div className="max-w-sm w-full bg-white/10 rounded-2xl p-8 shadow-2xl border border-purple-500/30">
-            <p className="text-xl mb-6">
+          <div className="auth-required-card">
+            <h1 className="auth-required-title">Chat with Your Avatar</h1>
+            <p className="auth-required-subtitle mb-6">
               Please sign up or log in to chat with your EchoStone.
             </p>
             <div className="flex justify-center gap-4">
               <a 
                 href="/login" 
-                className="inline-block px-8 py-4 bg-primary text-white rounded-xl font-bold no-underline cursor-pointer shadow-lg hover:bg-purple-600 transition-colors"
+                className="auth-submit-btn inline-block px-8 py-4 text-white rounded-xl font-bold no-underline cursor-pointer shadow-lg transition-all"
               >
                 Log In
               </a>
               <a 
                 href="/signup" 
-                className="inline-block px-8 py-4 bg-purple-500 text-white rounded-xl font-bold no-underline cursor-pointer shadow-lg hover:bg-purple-600 transition-colors"
+                className="auth-submit-btn inline-block px-8 py-4 text-white rounded-xl font-bold no-underline cursor-pointer shadow-lg transition-all"
               >
                 Sign Up
               </a>
@@ -107,27 +114,16 @@ export default function ProfileChat() {
           </div>
         </main>
       ) : error ? (
-        <div className="min-h-screen flex items-center justify-center">
+        <main className="min-h-screen flex flex-col items-center justify-center text-white">
           <p className="text-center text-xl text-red-400">{error}</p>
-        </div>
+        </main>
       ) : !profileData ? (
-        <div className="min-h-screen flex items-center justify-center">
-          <p className="text-center text-xl text-white">No profile data found.</p>
-        </div>
+        <main className="min-h-screen flex flex-col items-center justify-center text-white">
+          <p className="text-center text-xl">No profile data found.</p>
+        </main>
       ) : (
-        <>
-          <div className="text-center my-4 pt-20">
-            <button 
-              onClick={refreshProfileData} 
-              className="inline-block px-8 py-4 bg-primary text-white rounded-xl font-bold cursor-pointer shadow-lg hover:bg-purple-600 transition-colors min-w-48"
-            >
-              Refresh Profile Data
-            </button>
-          </div>
-
-          <ChatInterface profileData={profileData} voiceId={voiceId} />
-        </>
+        <ChatInterface profileData={profileData} voiceId={voiceId} />
       )}
-    </div>
+    </PageShell>
   )
 }

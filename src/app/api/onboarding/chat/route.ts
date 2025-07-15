@@ -42,6 +42,103 @@ const supabase = createClient(SUPABASE_URL, supabaseKey);
 
 export const runtime = 'nodejs';
 
+// Intelligent mapping function to convert extracted data into profile question answers
+async function mapExtractedDataToQuestions(extractedData: any, existingProfile: any): Promise<Record<string, Record<string, string>>> {
+  if (!extractedData || Object.keys(extractedData).length === 0) {
+    return {};
+  }
+
+  const mappingPrompt = `
+You are an expert at mapping extracted personal information to specific profile questions. Given the extracted data, intelligently fill in answers for relevant profile questions.
+
+EXTRACTED DATA:
+${JSON.stringify(extractedData, null, 2)}
+
+EXISTING PROFILE DATA (don't overwrite existing answers):
+${JSON.stringify(existingProfile, null, 2)}
+
+MAP TO THESE PROFILE QUESTION CATEGORIES AND KEYS:
+
+PERSONAL_SNAPSHOT:
+- sibling_order_nicknames_story: "Sibling order, nicknames and a favorite shared story"
+- parent_names_vivid_memory: "Parent names and one vivid memory with each"
+- obscure_fact: "An obscure fact most people don't know about you"
+- three_adjectives_others_use: "Three adjectives others use to describe you"
+
+FAMILY_ORIGINS_CHILDHOOD:
+- parent_names_vivid_memory: "Parent names and one vivid memory with each"
+- sibling_order_nicknames_story: "Sibling order, nicknames and a favorite shared story"
+- childhood_fear_overcome: "A childhood fear and how you overcame it"
+- earliest_memory: "Your earliest memory—and what it taught you"
+- admired_family_member: "A family member you admired and what you learned from them"
+
+FRIENDSHIPS_SOCIAL_CIRCLE:
+- closest_childhood_friend: "Closest childhood friend and your signature adventure"
+- inside_joke: "Inside joke that still makes you laugh"
+- friendship_milestone: "A friendship milestone you'll never forget"
+
+DEFINING_LIFE_MOMENTS_CHALLENGES:
+- biggest_risk: "Biggest risk you've ever taken"
+- failure_turning_point: "A failure that became a turning point"
+- surprising_yourself: "A time you surprised even yourself"
+
+MEMORY_NOSTALGIA:
+- vivid_childhood_memory: "Most vivid memory from early childhood"
+- meaningful_keepsake: "A keepsake that holds deep meaning"
+- sensory_nostalgia: "A song or scent that triggers nostalgia"
+
+PREFERENCES_QUIRKS_JUST_BECAUSE:
+- unusual_fears_dislikes: "Unusual phobias or strong dislikes"
+- sure_smile: "What makes you smile without fail"
+
+TOP_IMPORTANT_PEOPLE:
+- most_influential_person: "The most influential person in your life and why"
+- family_inspiration: "A family member who inspires you"
+- friend_support_story: "A friend who supported you during a tough time"
+
+INSTRUCTIONS:
+1. Only fill in questions where you have specific, relevant information from the extracted data
+2. Write complete, natural sentences as if the person is answering the question
+3. Include specific names, details, and context from the extracted data
+4. Don't make up information - only use what's provided
+5. If a question already has an answer in the existing profile, skip it
+6. Focus on the most relevant mappings based on the extracted data
+
+Return a JSON object with this structure:
+{
+  "section_name": {
+    "question_key": "Complete answer based on extracted data"
+  }
+}
+
+Example:
+If extracted data contains: {"family": {"siblings": [{"name": "Geoff", "relationship": "brother", "shared_memories": ["chased me with a snake"]}]}}
+
+Return:
+{
+  "family_origins_childhood": {
+    "sibling_order_nicknames_story": "I have a brother named Geoff. One memorable story is when he chased me with a snake when I was little."
+  }
+}
+`;
+
+  try {
+    const mappingRes = await openai.chat.completions.create({
+      model: 'gpt-4-turbo',
+      messages: [{ role: 'system', content: mappingPrompt }],
+      temperature: 0.3,
+      max_tokens: 800,
+    });
+
+    const mappedAnswers = JSON.parse(mappingRes.choices[0].message.content || '{}');
+    console.log('[DEBUG] AI mapped answers:', mappedAnswers);
+    return mappedAnswers;
+  } catch (mappingErr) {
+    console.error('[ERROR] Failed to map extracted data to questions:', mappingErr);
+    return {};
+  }
+}
+
 export async function POST(req: Request) {
   console.log('[POST] /api/onboarding/chat called');
   let question, userId;
@@ -92,56 +189,115 @@ export async function POST(req: Request) {
 
     const existing = row.profile_data || {};
 
-    // Extract any new personal info from the user question
+    // Extract any new personal info from the user question with enhanced family/relationship detection
     const extractPrompt = `
-Extract as many distinct personal facts or memories as possible from the user's message, as a flat or nested JSON object. For each fact, choose the most appropriate key (invent new keys if needed, but prefer standard ones such as name, birthday, favorite_food, dislikes, family, friends, locations, favorite_drink, favorite_activities, memories, pets, life_lessons, work, etc). Use arrays for multiple values. If a fact relates to another person, use a nested object for that person.
+You are an expert at extracting personal information and organizing it into a comprehensive personality profile. Extract ALL personal facts, relationships, memories, and details from the user's message. Pay special attention to family members, friends, and relationships.
 
-Example 1:
-User: "My best friend Nancy lives in South Dakota. We shot darts and she loves PBR beer."
-Extract: {
-  "friend": {
-    "name": "Nancy",
-    "location": "South Dakota",
-    "shared_activities": ["shoot darts"],
-    "favorite_drink": "PBR beer"
-  }
-}
+CRITICAL INSTRUCTIONS:
+1. ALWAYS extract family member names and relationships (brother, sister, mother, father, cousin, etc.)
+2. ALWAYS preserve specific names, places, organizations, events, and unique details
+3. Create detailed nested objects for people mentioned
+4. Extract emotional context and personality traits
+5. Identify fears, preferences, reactions, and behavioral patterns
+6. CAPTURE ALL EXPRESSIONS, SLANG, AND COLLOQUIAL LANGUAGE - these are crucial for personality
+7. Extract casual phrases, descriptive words, and unique ways of speaking
 
-Example 2:
-User: "I have three cats, love jazz, and my dad Eric taught me to fish in Maine."
+FAMILY/RELATIONSHIP EXTRACTION EXAMPLES:
+User: "My brother Geoff chased me with a snake when I was little"
 Extract: {
-  "pets": ["cat", "cat", "cat"],
-  "hobbies": ["jazz"],
   "family": {
-    "father": "Eric"
+    "siblings": [
+      {
+        "name": "Geoff",
+        "relationship": "brother",
+        "shared_memories": ["chased me with a snake when I was little"]
+      }
+    ]
   },
-  "memories": ["Dad Eric taught me to fish in Maine"]
+  "memories": [
+    {
+      "event": "Brother Geoff chased me with a snake",
+      "age_context": "when I was little",
+      "emotional_impact": "likely scary/memorable",
+      "people_involved": ["Geoff (brother)"]
+    }
+  ],
+  "fears_or_reactions": ["snakes (possibly)"],
+  "personality_traits": ["has memorable childhood experiences with siblings"]
 }
 
-IMPORTANT:
-- When extracting facts or summarizing stories, ALWAYS preserve specific names, people, places, organizations, bands, events, and unique details.
-- Do NOT generalize away or omit famous names, brands, or key locations.
-- For example, if the user says "I snuck into a Paul McCartney concert," store "Snuck into a Paul McCartney concert" as a memory (not just "snuck into a concert").
-- When in doubt, err on the side of keeping the original, specific wording—never reduce to generic events.
-- Always include famous or culturally significant details in your facts and memories.
-- If a user shares a story or memory, use their exact wording as a direct quote when possible.
-- For each extracted memory, if possible, add a field "why_it_matters" with the user's feeling or the significance if it's present.
-
-Example 3:
-User: "I snuck into a Paul McCartney concert in Austin, Texas, in 2010. It was amazing."
+User: "My mom Sarah and I used to bake cookies every Sunday"
 Extract: {
-  "memories": ["Snuck into a Paul McCartney concert in Austin, Texas, in 2010."],
-  "feelings": ["amazing", "one of the best concert experiences in my life"],
-  "locations": ["Austin, Texas"],
-  "people": ["Paul McCartney"],
-  "notable_events": ["Paul McCartney concert"],
-  "why_it_matters": ["It was a lifelong dream"]
+  "family": {
+    "parents": [
+      {
+        "name": "Sarah",
+        "relationship": "mother",
+        "shared_activities": ["baking cookies"],
+        "traditions": ["Sunday cookie baking"]
+      }
+    ]
+  },
+  "traditions": ["Sunday cookie baking with mom"],
+  "memories": [
+    {
+      "event": "Baking cookies with mom Sarah every Sunday",
+      "frequency": "weekly tradition",
+      "emotional_tone": "positive/bonding"
+    }
+  ]
 }
 
-If no personal facts or memories are present, return {}.
-User message:
-${question}
-Extract:
+User: "I worked for a map company for seven years it was wild"
+Extract: {
+  "professional_experience": [
+    {
+      "company_type": "map company",
+      "duration": "seven years",
+      "description": "worked for a map company"
+    }
+  ],
+  "speech_patterns": {
+    "expressions": ["it was wild"],
+    "descriptive_words": ["wild"],
+    "speaking_style": ["casual", "expressive"]
+  },
+  "personality_traits": ["describes experiences with colorful language", "expressive communicator"],
+  "memories": [
+    {
+      "event": "Working at map company for seven years",
+      "emotional_tone": "exciting/intense",
+      "user_description": "wild"
+    }
+  ]
+}
+
+COMPREHENSIVE EXTRACTION CATEGORIES:
+- family: {siblings: [], parents: [], extended_family: []}
+- friends: [{name, relationship_type, shared_experiences}]
+- memories: [{event, people_involved, location, age_context, emotional_impact}]
+- personality_traits: []
+- fears_and_phobias: []
+- preferences: {likes: [], dislikes: []}
+- locations: {lived_in: [], visited: [], meaningful_places: []}
+- hobbies_and_interests: []
+- values_and_beliefs: []
+- life_lessons: []
+- formative_experiences: []
+- relationships: {romantic: [], friendships: [], professional: []}
+- speech_patterns: {catchphrases: [], expressions: [], unique_words: [], speaking_style: []}
+- humor_and_personality: {jokes: [], sarcasm: [], wit: [], humor_style: []}
+
+ALWAYS:
+- Extract names of people mentioned (family, friends, acquaintances)
+- Identify relationship types (brother, sister, friend, coworker, etc.)
+- Preserve exact quotes and specific details
+- Note emotional context and reactions
+- Identify personality traits revealed by the story
+- Extract location and time context when available
+
+User message: "${question}"
+Extract (return valid JSON only):
 `.trim();
 
     let extracted = {};
@@ -150,7 +306,7 @@ Extract:
         model: 'gpt-4-turbo',
         messages: [{ role: 'system', content: extractPrompt }],
         temperature: 0,
-        max_tokens: 120,
+        max_tokens: 500, // Increased for better extraction
       });
       extracted = JSON.parse(extractRes.choices[0].message.content || '{}');
       console.log('[DEBUG] Extracted from question:', extracted);
@@ -174,7 +330,9 @@ You must gently but persistently encourage the user to go deeper—ask follow-up
 - When the conversation slows, try asking the user this “story starter” to keep the memories flowing: "${pickStoryStarter()}"
 
 Here’s what we’ve already learned so far:
-${JSON.stringify(existing, null, 2)}
+${existing?.history?.slice(-2)?.map((h: any) => `User said: "${h.question}"`).join('\n') || 'This is the start of our conversation.'}
+
+**CRITICAL: Do not make up details, combine stories, or assume information the user hasn't explicitly shared. Only ask follow-up questions based on what they actually told you.**
 
 Do not ask for fields that already exist. Respond to the user’s most recent message and gently encourage them to share more, or move on to another area of their life if a topic seems complete.
 `.trim();
@@ -223,6 +381,17 @@ Do not ask for fields that already exist. Respond to the user’s most recent me
     }
     if (!Array.isArray(merged.history)) merged.history = [];
     merged.history.push({ question, answer });
+
+    // NEW: Map extracted data to profile questions
+    const mappedAnswers = await mapExtractedDataToQuestions(extracted, existing);
+    if (Object.keys(mappedAnswers).length > 0) {
+      // Merge the mapped answers into the profile data
+      Object.entries(mappedAnswers).forEach(([section, answers]) => {
+        if (!merged[section]) merged[section] = {};
+        merged[section] = { ...merged[section], ...answers };
+      });
+      console.log('[DEBUG] Mapped answers to profile questions:', mappedAnswers);
+    }
 
     // Clean the merged profile before saving
     const cleanedProfile = cleanProfile(merged);

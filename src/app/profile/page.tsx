@@ -6,7 +6,9 @@ import { useState, useEffect } from 'react'
 import { QUESTIONS } from '@/data/questions'
 import { supabase } from '@/components/supabaseClient'
 import VoiceRecorder from '@/components/VoiceRecorder'
+import StoriesSection from '@/components/StoriesSection'
 import AccountMenu from '@/components/AccountMenu'
+import PageShell from '@/components/PageShell'
 
 type Progress = { total: number; answered: number; isComplete: boolean }
 
@@ -28,7 +30,7 @@ async function ensureProfileExists(userId: string) {
 export default function ProfilePage() {
   const [user, setUser] = useState<any>(null)
   const [loadingUser, setLoadingUser] = useState(true)
-  const [activeTab, setActiveTab] = useState<'voice'|'personality'>('voice')
+  const [activeTab, setActiveTab] = useState<'voice'|'stories'|'personality'>('voice')
   const [progress, setProgress] = useState<Record<string,Progress>>({})
   const [voiceId, setVoiceId] = useState<string|null>(null)
   const [error, setError] = useState<string|null>(null)
@@ -82,21 +84,79 @@ export default function ProfilePage() {
     return () => { mounted = false }
   }, [])
 
-  return (
-    <div className="min-h-screen w-screen relative">
-      <div className="fixed top-9 right-9 z-50">
-        <AccountMenu />
-      </div>
+  // Show loading state
+  if (loadingUser) {
+    return (
+      <PageShell>
+        <main className="min-h-screen flex flex-col items-center justify-center text-white">
+          <div className="loading-spinner"></div>
+          <p className="mt-4 text-xl">Loading...</p>
+        </main>
+      </PageShell>
+    )
+  }
 
+  // Show login prompt if not authenticated
+  if (!user) {
+    return (
+      <PageShell>
+        <main className="min-h-screen flex flex-col items-center justify-center text-white p-4 text-center">
+          <a href="/" className="inline-block">
+            <img
+              src="/echostone_logo.png"
+              alt="EchoStone Logo"
+              className="logo-pulse w-36 mb-8 select-none cursor-pointer hover:scale-110 transition-transform duration-300"
+            />
+          </a>
+          <div className="auth-required-card">
+            <h1 className="auth-required-title">
+              Authentication Required
+            </h1>
+            <p className="auth-required-subtitle">
+              Please sign in to access your profile and build your digital voice.
+            </p>
+            <div className="auth-required-actions">
+              <a 
+                href="/login" 
+                className="auth-btn primary"
+              >
+                Sign In
+              </a>
+              <a 
+                href="/login" 
+                className="auth-btn secondary"
+              >
+                Create Account
+              </a>
+            </div>
+            <div className="auth-required-features">
+              <h3>With your profile, you can:</h3>
+              <ul>
+                <li>🎤 Train your personal voice</li>
+                <li>📝 Build your personality profile</li>
+                <li>💬 Chat with your digital twin</li>
+                <li>🔒 Keep your data secure and private</li>
+              </ul>
+            </div>
+          </div>
+        </main>
+      </PageShell>
+    )
+  }
+
+  return (
+    <PageShell>
       <main className="min-h-screen text-white flex flex-col items-center p-0 max-w-full">
         <div className="flex flex-col items-center my-8 mb-2">
-          <Image 
-            className="logo-pulse mb-6" 
-            src="/echostone_logo.png" 
-            width={160} 
-            height={160} 
-            alt="EchoStone Logo" 
-          />
+          <a href="/" className="inline-block">
+            <Image 
+              className="logo-pulse mb-6 cursor-pointer hover:scale-110 transition-transform duration-300" 
+              src="/echostone_logo.png" 
+              width={160} 
+              height={160} 
+              alt="EchoStone Logo" 
+            />
+          </a>
           <h1 className="text-4xl font-black text-white mb-4">
             Your Profile
           </h1>
@@ -110,6 +170,16 @@ export default function ProfilePage() {
               onClick={() => setActiveTab('voice')}
             >
               Voice
+            </button>
+            <button
+              className={`px-6 py-3 text-xl font-bold rounded-lg cursor-pointer border-2 border-transparent transition-all duration-300 ${
+                activeTab === 'stories' 
+                  ? 'bg-primary text-white' 
+                  : 'bg-purple-800 text-white hover:bg-purple-700'
+              }`}
+              onClick={() => setActiveTab('stories')}
+            >
+              Your Stories
             </button>
             <button
               className={`px-6 py-3 text-xl font-bold rounded-lg cursor-pointer border-2 border-transparent transition-all duration-300 ${
@@ -143,16 +213,20 @@ export default function ProfilePage() {
             />
           )}
 
+          {activeTab === 'stories' && (
+            <StoriesSection userId={user?.id} />
+          )}
+
           {activeTab === 'personality' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 mt-7 max-w-5xl w-full">
               {Object.entries(QUESTIONS || {}).map(([section, qs]) => {
                 const prog = progress[section] || { total: qs.length, answered: 0, isComplete: false }
                 return (
                   <Link key={section} href={`/profile/edit/${section}`} className="no-underline text-inherit">
-                    <div className={`p-5 rounded-2xl shadow-lg transition-all duration-200 text-left min-h-24 relative flex flex-col justify-start ${
+                    <div className={`personality-block p-5 rounded-2xl shadow-lg transition-all duration-300 text-left min-h-24 relative flex flex-col justify-start ${
                       prog.isComplete 
                         ? 'bg-purple-800/95 shadow-green-400/20 shadow-xl opacity-100' 
-                        : 'bg-purple-900/75 shadow-black/30 opacity-90 hover:opacity-100'
+                        : 'bg-purple-900/75 shadow-black/30 opacity-90'
                     }`}>
                       <h2 className="m-0 text-xl font-semibold text-white capitalize mb-2 leading-tight">
                         {section.replace(/_/g,' ')}
@@ -160,6 +234,11 @@ export default function ProfilePage() {
                       <p className="m-0 mb-1 text-base text-purple-200">
                         {prog.answered} of {prog.total} answered
                       </p>
+                      {prog.answered > 0 && prog.answered < prog.total && (
+                        <div className="text-xs text-blue-300 mt-1">
+                          ✨ Some auto-filled from stories
+                        </div>
+                      )}
                       {prog.isComplete && (
                         <span className="text-green-400 text-2xl absolute top-4 right-4">✓</span>
                       )}
@@ -171,6 +250,6 @@ export default function ProfilePage() {
           )}
         </div>
       </main>
-    </div>
+    </PageShell>
   )
 }

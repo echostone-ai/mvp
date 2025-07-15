@@ -143,7 +143,10 @@ export default function ChatInterface({
           }
           setVoiceError(null)
           const blob = await vr.blob()
-          if (blob.size > 0) playAudioBlob(blob)
+          if (blob.size > 0) {
+            // Auto-play the audio immediately
+            playAudioBlob(blob)
+          }
         } catch {
           setVoiceError('Voice fetch failed; using browser TTS instead.')
           if ('speechSynthesis' in window) {
@@ -297,15 +300,48 @@ export default function ChatInterface({
         </div>
       )}
 
-      {answer && (
-        <div className="answer">
-          <h2>{getFirstName(profileData)} says:</h2>
-          <p>{answer}</p>
-          {!playing && (
-            <button onClick={handleReplay} className="play-btn">
-              🔊 Play Again
-            </button>
-          )}
+      {messages.length > 0 && (
+        <div className="chat-history" style={{ maxWidth: '700px', width: '100%', marginTop: '40px' }}>
+          {messages.slice(-3).map((msg, idx) => (
+            <div key={idx} className="message-pair" style={{ marginBottom: '32px' }}>
+              {msg.role === 'user' && (
+                <div className="user-question" style={{
+                  background: 'rgba(147, 71, 255, 0.2)',
+                  borderRadius: '16px',
+                  padding: '16px 20px',
+                  marginBottom: '12px',
+                  borderLeft: '4px solid #9147ff'
+                }}>
+                  <h3 style={{ margin: '0 0 8px 0', color: '#9147ff', fontSize: '16px', fontWeight: '600' }}>
+                    You asked:
+                  </h3>
+                  <p style={{ margin: '0', fontSize: '16px', color: '#e2e2f6' }}>
+                    {msg.content}
+                  </p>
+                </div>
+              )}
+              {msg.role === 'assistant' && (
+                <div className="assistant-answer" style={{
+                  background: 'rgba(30, 23, 57, 0.8)',
+                  borderRadius: '16px',
+                  padding: '20px',
+                  borderLeft: '4px solid #6a41f1'
+                }}>
+                  <h3 style={{ margin: '0 0 12px 0', color: '#9b7cff', fontSize: '18px', fontWeight: '600' }}>
+                    {getFirstName(profileData)} says:
+                  </h3>
+                  <p style={{ margin: '0 0 16px 0', fontSize: '16px', color: '#e2e2f6', lineHeight: '1.6' }}>
+                    {msg.content}
+                  </p>
+                  {idx === messages.length - 1 && !playing && (
+                    <button onClick={handleReplay} className="play-btn">
+                      🔊 Play Again
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       )}
 

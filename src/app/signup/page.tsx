@@ -3,21 +3,65 @@
 import { useState } from 'react'
 import { supabase } from '@/components/supabaseClient'
 import AccountMenu from '@/components/AccountMenu'
+import { useRouter } from 'next/navigation'
 
-export default function LoginPage() {
+export default function SignupPage() {
   const [email, setEmail] = useState('')
+  const [name, setName] = useState('')
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const router = useRouter()
 
-  async function handleLogin(e: React.FormEvent) {
+  async function handleSignup(e: React.FormEvent) {
     e.preventDefault()
     setMessage('')
     setError('')
-    const { error } = await supabase.auth.signInWithOtp({ email })
-    if (error) {
-      setError(error.message)
-    } else {
-      setMessage('Check your email for the magic link!')
+    setLoading(true)
+
+    try {
+      // Sign up the user
+      const { data, error: signupError } = await supabase.auth.signUp({
+        email,
+        options: {
+          data: {
+            full_name: name,
+          }
+        }
+      })
+
+      if (signupError) {
+        setError(signupError.message)
+        setLoading(false)
+        return
+      }
+
+      if (data.user) {
+        // Create initial profile with name
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([
+            {
+              user_id: data.user.id,
+              profile_data: {
+                personal_snapshot: {
+                  full_legal_name: name
+                }
+              }
+            }
+          ])
+
+        if (profileError) {
+          console.error('Error creating profile:', profileError)
+          // Don't show error to user, profile will be created later if needed
+        }
+
+        setMessage('Check your email for the confirmation link!')
+      }
+    } catch (err: any) {
+      setError(err.message || 'An unexpected error occurred')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -36,13 +80,31 @@ export default function LoginPage() {
         
         <div className="auth-required-card">
           <h1 className="auth-required-title">
-            Welcome to EchoStone
+            Join EchoStone
           </h1>
           <p className="auth-required-subtitle">
-            Sign in to access your digital voice and personality profile.
+            Create your account to start building your digital voice and personality profile.
           </p>
           
-          <form onSubmit={handleLogin} className="w-full">
+          <form onSubmit={handleSignup} className="w-full">
+            <div className="mb-6 text-left">
+              <label 
+                htmlFor="name" 
+                className="block text-white font-semibold text-lg mb-3"
+              >
+                Full Name
+              </label>
+              <input
+                id="name"
+                type="text"
+                required
+                value={name}
+                onChange={e => setName(e.target.value)}
+                className="auth-input w-full px-5 py-4 rounded-2xl border-2 border-purple-500/30 bg-purple-950/60 text-white text-lg shadow-lg outline-none focus:border-purple-400 focus:shadow-purple-400/20 focus:shadow-xl transition-all font-sans"
+                placeholder="Enter your full name"
+              />
+            </div>
+
             <div className="mb-6 text-left">
               <label 
                 htmlFor="email" 
@@ -63,10 +125,10 @@ export default function LoginPage() {
             
             <button
               type="submit"
-              disabled={!email.trim()}
+              disabled={!email.trim() || !name.trim() || loading}
               className="auth-submit-btn w-full py-4 bg-gradient-to-r from-purple-600 to-purple-500 text-white border-none rounded-2xl font-bold text-lg cursor-pointer shadow-lg hover:from-purple-500 hover:to-purple-600 hover:transform hover:-translate-y-1 hover:shadow-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
-              Send Magic Link
+              {loading ? 'Creating Account...' : 'Create Account'}
             </button>
           </form>
           
@@ -83,9 +145,9 @@ export default function LoginPage() {
           
           <div className="mt-6 text-center">
             <p className="text-gray-300">
-              Don't have an account?{' '}
-              <a href="/signup" className="text-purple-400 hover:text-purple-300 font-semibold">
-                Sign up here
+              Already have an account?{' '}
+              <a href="/login" className="text-purple-400 hover:text-purple-300 font-semibold">
+                Sign in here
               </a>
             </p>
           </div>

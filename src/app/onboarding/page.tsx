@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import AccountMenu from '@/components/AccountMenu'
+import PageShell from '@/components/PageShell'
 
 interface ChatMessage {
   role: 'user' | 'assistant'
@@ -15,32 +16,34 @@ let lastPlayedMessageId = 0;
 
 async function playElevenLabs(text: string) {
   try {
+    // Always stop any currently playing audio first
     if (currentElevenLabsAudio) {
       currentElevenLabsAudio.pause();
+      currentElevenLabsAudio.currentTime = 0;
       currentElevenLabsAudio = null;
+    }
+    
+    // Also stop browser TTS if it's playing
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
     }
 
     const apiKey = process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY;
     const voiceId = 'wAGzRVkxKEs8La0lmdrE';
     const url = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?optimize_streaming_latency=0`;
 
+    console.log('ElevenLabs API Key present:', !!apiKey);
+    console.log('Attempting ElevenLabs TTS for:', text.substring(0, 50) + '...');
+
     if (!apiKey) {
-      console.warn('No ElevenLabs API key found, falling back to browser TTS.');
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        const utter = new window.SpeechSynthesisUtterance(text);
-        utter.rate = 1.08;
-        utter.pitch = 1.04;
-        utter.lang = 'en-US';
-        window.speechSynthesis.speak(utter);
-        return;
-      }
+      console.error('ElevenLabs API key is missing! Add NEXT_PUBLIC_ELEVENLABS_API_KEY to your .env.local file');
+      return; // Don't fall back to system voice
     }
 
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'xi-api-key': apiKey!,
+        'xi-api-key': apiKey,
         'Content-Type': 'application/json',
         Accept: 'audio/mpeg'
       },
@@ -50,38 +53,33 @@ async function playElevenLabs(text: string) {
       })
     });
 
+    console.log('ElevenLabs response status:', response.status);
+
     if (response.ok) {
       const audioBlob = await response.blob();
+      console.log('Audio blob size:', audioBlob.size);
+      
       const audioUrl = URL.createObjectURL(audioBlob);
       const answerAudio = new Audio(audioUrl);
       answerAudio.volume = 1;
       answerAudio.playbackRate = 1.14;
       currentElevenLabsAudio = answerAudio;
 
-      await answerAudio.play();
+      answerAudio.onended = () => {
+        currentElevenLabsAudio = null;
+        URL.revokeObjectURL(audioUrl);
+      };
 
-      currentElevenLabsAudio = null;
+      await answerAudio.play();
+      console.log('ElevenLabs audio playing successfully');
     } else {
-      console.error('ElevenLabs TTS request failed, falling back to browser TTS');
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        const utter = new window.SpeechSynthesisUtterance(text);
-        utter.rate = 1.08;
-        utter.pitch = 1.04;
-        utter.lang = 'en-US';
-        window.speechSynthesis.speak(utter);
-      }
+      const errorText = await response.text();
+      console.error('ElevenLabs TTS request failed:', response.status, errorText);
+      // Don't fall back to system voice - just log the error
     }
   } catch (error) {
     console.error('Error during ElevenLabs TTS:', error);
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utter = new window.SpeechSynthesisUtterance(text);
-      utter.rate = 1.08;
-      utter.pitch = 1.04;
-      utter.lang = 'en-US';
-      window.speechSynthesis.speak(utter);
-    }
+    // Don't fall back to system voice - just log the error
   }
 }
 
@@ -98,14 +96,23 @@ export default function OnboardingPage() {
   const chatEndRef = useRef<HTMLDivElement>(null)
   const recognitionRef = useRef<any>(null)
 
-  const hasSpeechRecognition = typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)
+  const [hasSpeechRecognition, setHasSpeechRecognition] = useState(false)
 
   useEffect(() => {
-    const intro = new Audio('/snippets/intro.mp3');
-    intro.volume = 1;
-    intro.play();
+    setHasSpeechRecognition(typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window))
+  }, [])
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const intro = new Audio('/intro.mp3');
+      intro.volume = 1;
+      intro.play().catch(error => {
+        console.log('Intro audio failed to play:', error);
+      });
+    }, 3000); // 3 second delay
+
     return () => {
-      intro.pause();
+      clearTimeout(timer);
     };
   }, []);
 
@@ -132,7 +139,17 @@ export default function OnboardingPage() {
   }, [])
 
   const startListening = () => {
-    if (!hasSpeechRecognition) return alert('Speech recognition not supported in this browser.')
+    if (!hasSpeechRecognition) {
+      alert('Speech recognition not supported in this browser.')
+      return
+    }
+    
+    // Stop any currently playing ElevenLabs audio
+    if (currentElevenLabsAudio) {
+      currentElevenLabsAudio.pause()
+      currentElevenLabsAudio = null
+    }
+    
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
     const recognition = new SpeechRecognition()
     recognitionRef.current = recognition
@@ -145,8 +162,12 @@ export default function OnboardingPage() {
       const transcript = event.results[0][0].transcript.trim()
       setInput(transcript)
     }
-    recognition.onerror = () => setListening(false)
+    recognition.onerror = (event: any) => {
+      console.error('Speech error:', event.error)
+      setListening(false)
+    }
     recognition.onend = () => setListening(false)
+    
     recognition.start()
   }
 
@@ -165,12 +186,10 @@ export default function OnboardingPage() {
   async function sendMessage(text?: string) {
     const messageText = text ?? input.trim()
     if (!messageText) return
+    
+    // Allow onboarding to work without login for demo purposes
     if (!userId) {
-      setMessages(prev => [
-        ...prev,
-        { role: 'assistant', content: 'Please log in to chat.' }
-      ])
-      return
+      console.log('No user ID, but allowing onboarding to continue for demo purposes')
     }
     const userMessage: ChatMessage = { role: 'user', content: messageText }
     setMessages(prev => [...prev, userMessage])
@@ -222,32 +241,48 @@ export default function OnboardingPage() {
         const thisMessageId = ++lastPlayedMessageId;
         await playElevenLabs(fullAnswer);
         if (thisMessageId !== lastPlayedMessageId) return;
-        // Optionally update profile if returned
-        // if (data.profile) setProfile(data.profile)
+        // Update profile if returned
+        if (data.profile) {
+          setProfile(data.profile)
+          console.log('Profile updated:', data.profile)
+        }
       } else {
         setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I didn’t get that. Could you please rephrase?' }])
       }
     } catch (err) {
-      setMessages(prev => [...prev, { role: 'assistant', content: 'Error connecting to server. Please try again later.' }])
+      // Fallback responses for demo purposes
+      const fallbackResponses = [
+        "That's really interesting! Tell me more about that experience.",
+        "I love hearing stories like that. What made that moment special for you?",
+        "Thanks for sharing that with me. How did that make you feel?",
+        "That sounds meaningful. Can you tell me more about what happened next?",
+        "I appreciate you opening up about that. What other memories come to mind?"
+      ]
+      const randomResponse = fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)]
+      setMessages(prev => [...prev, { role: 'assistant', content: randomResponse }])
+      try {
+        const thisMessageId = ++lastPlayedMessageId;
+        await playElevenLabs(randomResponse);
+      } catch (ttsError) {
+        console.log('TTS failed, but continuing...')
+      }
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen w-screen relative">
-      <div className="fixed top-9 right-9 z-50">
-        <AccountMenu />
-      </div>
-
+    <PageShell>
       <main className="min-h-screen flex flex-col items-center justify-center px-4">
         <div className="onboarding-container">
           <div className="onboarding-header">
-            <img
-              src="/echostone_logo.png"
-              alt="EchoStone Logo"
-              className="logo-pulse onboarding-logo"
-            />
+            <a href="/" className="inline-block">
+              <img
+                src="/echostone_logo.png"
+                alt="EchoStone Logo"
+                className="logo-pulse onboarding-logo cursor-pointer hover:scale-110 transition-transform duration-300"
+              />
+            </a>
             <h1 className="onboarding-title">Tell Your Story</h1>
             <p className="onboarding-subtitle">
               Share your memories, experiences, and what makes you unique. 
@@ -259,7 +294,7 @@ export default function OnboardingPage() {
             <div className="onboarding-input-section">
               <button
                 onClick={listening ? stopListening : startListening}
-                disabled={!hasSpeechRecognition || loading || !userId}
+                disabled={!hasSpeechRecognition || loading}
                 title={hasSpeechRecognition ? (listening ? "Click to stop recording" : "Click to start recording") : "Speech recognition not supported"}
                 aria-pressed={listening}
                 aria-label={listening ? "Stop recording" : "Start recording"}
@@ -294,7 +329,7 @@ export default function OnboardingPage() {
                   }
                 }}
                 placeholder={loading ? "Waiting for response..." : "Type your story here... (shift+enter for new line)"}
-                disabled={loading || listening || !userId}
+                disabled={loading || listening}
                 aria-label="User input for onboarding"
                 autoComplete="off"
                 rows={4}
@@ -333,6 +368,6 @@ export default function OnboardingPage() {
           </div>
         </div>
       </main>
-    </div>
+    </PageShell>
   )
 }
