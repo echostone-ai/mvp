@@ -20,8 +20,8 @@ export default function SignupPage() {
     setLoading(true)
 
     try {
-      // Sign up the user
-      const { data, error: signupError } = await supabase.auth.signUp({
+      // Sign up the user with magic link
+      const { data, error: signupError } = await supabase.auth.signInWithOtp({
         email,
         options: {
           data: {
@@ -36,28 +36,9 @@ export default function SignupPage() {
         return
       }
 
-      if (data.user) {
-        // Create initial profile with name
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert([
-            {
-              user_id: data.user.id,
-              profile_data: {
-                personal_snapshot: {
-                  full_legal_name: name
-                }
-              }
-            }
-          ])
-
-        if (profileError) {
-          console.error('Error creating profile:', profileError)
-          // Don't show error to user, profile will be created later if needed
-        }
-
-        setMessage('Check your email for the confirmation link!')
-      }
+      // For OTP signup, we don't get a user immediately
+      // The profile will be created when they confirm their email
+      setMessage('Check your email for the confirmation link!')
     } catch (err: any) {
       setError(err.message || 'An unexpected error occurred')
     } finally {
