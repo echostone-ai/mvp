@@ -204,7 +204,7 @@ export default function HomePage() {
           />
         </div>
         <h1 className="text-4xl font-bold mb-8 text-shadow-lg">
-          {jonathanProfile?.personal_snapshot?.full_legal_name?.split(' ')[0] || 'Jonathan'} says:
+          {jonathanProfile?.full_name?.split(' ')[0] || 'Jonathan'} says:
         </h1>
 
         <form className="ask-form" onSubmit={handleSubmit}>
@@ -236,7 +236,7 @@ export default function HomePage() {
 
         {answer && (
           <div className="answer">
-            <h2>{jonathanProfile?.personal_snapshot?.full_legal_name?.split(' ')[0] || 'Jonathan'} says:</h2>
+            <h2>{jonathanProfile?.full_name?.split(' ')[0] || 'Jonathan'} says:</h2>
             <p>{answer}</p>
             {!playing && (
               <button onClick={handleReplay} className="play-btn">
