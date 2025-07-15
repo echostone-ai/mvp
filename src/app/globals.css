@@ -2497,7 +2497,8 @@ s Section Styles */
     padding: 32px 24px;
     margin: 0 16px;
   }
-  
+}
+
 /* Stories Section Layout Fix */
 .stories-chat-container {
   background: linear-gradient(145deg, rgba(30, 20, 60, 0.95), rgba(45, 25, 80, 0.9)) !important;
