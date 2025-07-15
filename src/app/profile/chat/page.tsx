@@ -70,76 +70,57 @@ export default function ProfileChat() {
   }
 
   return (
-    <>
-      <div style={{
-        width: '100%',
-        display: 'flex',
-        justifyContent: 'flex-end',
-        alignItems: 'center',
-        padding: '1.2rem 2.2rem 0 2.2rem',
-        minHeight: 0,
-        background: 'transparent',
-        boxSizing: 'border-box'
-      }}>
+    <div className="min-h-screen w-screen relative">
+      <div className="fixed top-9 right-9 z-50">
         <AccountMenu />
       </div>
 
       {loading ? (
-        <p style={{ textAlign: 'center', marginTop: 40 }}>Loading...</p>
+        <div className="min-h-screen flex items-center justify-center">
+          <p className="text-center text-xl text-white">Loading...</p>
+        </div>
       ) : !user ? (
-        <main
-          style={{
-            minHeight: '100vh',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#fff',
-            padding: '1em',
-            textAlign: 'center',
-          }}
-        >
+        <main className="min-h-screen flex flex-col items-center justify-center text-white p-4 text-center">
           <img
             src="/echostone_logo.png"
             alt="EchoStone Logo"
-            className="logo-pulse"
-            style={{ width: 140, marginBottom: 24, userSelect: 'none' }}
+            className="logo-pulse w-36 mb-6 select-none"
           />
-          <div
-            style={{
-              maxWidth: 360,
-              width: '90%',
-              background: 'rgba(255,255,255,0.1)',
-              borderRadius: 16,
-              padding: '2em',
-              boxShadow: '0 0 24px rgba(106, 0, 255, 0.7)',
-            }}
-          >
-            <p style={{ fontSize: '1.2em', marginBottom: '1.5em' }}>
+          <div className="max-w-sm w-full bg-white/10 rounded-2xl p-8 shadow-2xl border border-purple-500/30">
+            <p className="text-xl mb-6">
               Please sign up or log in to chat with your EchoStone.
             </p>
-            <div style={{ display: 'flex', justifyContent: 'space-around' }}>
-              <a href="/login" style={buttonStyle}>
+            <div className="flex justify-center gap-4">
+              <a 
+                href="/login" 
+                className="inline-block px-8 py-4 bg-primary text-white rounded-xl font-bold no-underline cursor-pointer shadow-lg hover:bg-purple-600 transition-colors"
+              >
                 Log In
               </a>
-              <a href="/signup" style={{ ...buttonStyle, backgroundColor: '#9147ff' }}>
+              <a 
+                href="/signup" 
+                className="inline-block px-8 py-4 bg-purple-500 text-white rounded-xl font-bold no-underline cursor-pointer shadow-lg hover:bg-purple-600 transition-colors"
+              >
                 Sign Up
               </a>
             </div>
           </div>
         </main>
       ) : error ? (
-        <p style={{ textAlign: 'center', marginTop: 40, color: 'red' }}>
-          {error}
-        </p>
+        <div className="min-h-screen flex items-center justify-center">
+          <p className="text-center text-xl text-red-400">{error}</p>
+        </div>
       ) : !profileData ? (
-        <p style={{ textAlign: 'center', marginTop: 40 }}>
-          No profile data found.
-        </p>
+        <div className="min-h-screen flex items-center justify-center">
+          <p className="text-center text-xl text-white">No profile data found.</p>
+        </div>
       ) : (
         <>
-          <div style={{ textAlign: 'center', margin: '1em 0' }}>
-            <button onClick={refreshProfileData} style={{ ...buttonStyle, minWidth: 180 }}>
+          <div className="text-center my-4 pt-20">
+            <button 
+              onClick={refreshProfileData} 
+              className="inline-block px-8 py-4 bg-primary text-white rounded-xl font-bold cursor-pointer shadow-lg hover:bg-purple-600 transition-colors min-w-48"
+            >
               Refresh Profile Data
             </button>
           </div>
@@ -147,6 +128,6 @@ export default function ProfileChat() {
           <ChatInterface profileData={profileData} voiceId={voiceId} />
         </>
       )}
-    </>
+    </div>
   )
 }

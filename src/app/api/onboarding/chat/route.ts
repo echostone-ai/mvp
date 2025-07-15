@@ -1,6 +1,25 @@
 import { NextResponse } from 'next/server';
 import { OpenAI } from 'openai';
 import { createClient } from '@supabase/supabase-js';
+import { cleanProfile } from '../../clean-profile/profileCleanup';
+
+const storyStarters = [
+  "Can you tell me about a moment that changed you?",
+  "Who was your childhood hero, and why?",
+  "Describe a time you felt truly alive.",
+  "Is there a place that holds special meaning for you?",
+  "Tell me about an adventure, big or small.",
+  "Who influenced your beliefs the most?",
+  "Was there a lesson you learned the hard way?",
+  "What’s a favorite family tradition or story?",
+  "Share a memory that makes you smile.",
+  "Is there something about you most people don’t know?",
+  "What do you want future generations to remember about you?",
+];
+
+function pickStoryStarter() {
+  return storyStarters[Math.floor(Math.random() * storyStarters.length)];
+}
 
 console.log('[Echostone DEBUG] SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL);
 console.log('[Echostone DEBUG] SUPABASE_SERVICE_ROLE_KEY:', process.env.SUPABASE_SERVICE_ROLE_KEY ? '[present]' : '[missing]');
@@ -99,6 +118,26 @@ Extract: {
   "memories": ["Dad Eric taught me to fish in Maine"]
 }
 
+IMPORTANT:
+- When extracting facts or summarizing stories, ALWAYS preserve specific names, people, places, organizations, bands, events, and unique details.
+- Do NOT generalize away or omit famous names, brands, or key locations.
+- For example, if the user says "I snuck into a Paul McCartney concert," store "Snuck into a Paul McCartney concert" as a memory (not just "snuck into a concert").
+- When in doubt, err on the side of keeping the original, specific wording—never reduce to generic events.
+- Always include famous or culturally significant details in your facts and memories.
+- If a user shares a story or memory, use their exact wording as a direct quote when possible.
+- For each extracted memory, if possible, add a field "why_it_matters" with the user's feeling or the significance if it's present.
+
+Example 3:
+User: "I snuck into a Paul McCartney concert in Austin, Texas, in 2010. It was amazing."
+Extract: {
+  "memories": ["Snuck into a Paul McCartney concert in Austin, Texas, in 2010."],
+  "feelings": ["amazing", "one of the best concert experiences in my life"],
+  "locations": ["Austin, Texas"],
+  "people": ["Paul McCartney"],
+  "notable_events": ["Paul McCartney concert"],
+  "why_it_matters": ["It was a lifelong dream"]
+}
+
 If no personal facts or memories are present, return {}.
 User message:
 ${question}
@@ -121,10 +160,23 @@ Extract:
 
     // Compose system prompt for response
     const systemPrompt = `
-You are a friendly onboarding assistant. Current profile data:
+You are Claire, the legendary onboarding agent for EchoStone—a digital memorial project whose mission is to capture the *full, living story* of a person for future generations.
+
+Your job is not just to collect facts, but to inspire the user to share long stories, colorful details, and memories that reveal their personality, beliefs, quirks, key relationships, and life lessons.
+
+You must gently but persistently encourage the user to go deeper—ask follow-up questions, help them remember stories, and celebrate their unique voice. Try to cover every aspect of their life: family, friends, love, work, passions, struggles, dreams, regrets, adventures, beliefs, and the places that shaped them.
+
+**Important:**
+- Never settle for surface-level facts—always invite the user to elaborate, explain, or share a story.
+- When a user gives a one-word answer or short response, thank them, but then invite them to reflect and expand: “Can you tell me about a time when...?”
+- If you learn about an important person, place, or event, follow up with: “How did that shape you?” or “Is there a memory that stands out?”
+- Always ask open-ended, curiosity-driven questions—never yes/no.
+- When the conversation slows, try asking the user this “story starter” to keep the memories flowing: "${pickStoryStarter()}"
+
+Here’s what we’ve already learned so far:
 ${JSON.stringify(existing, null, 2)}
 
-Do not ask for fields that already exist. Respond to the user question:
+Do not ask for fields that already exist. Respond to the user’s most recent message and gently encourage them to share more, or move on to another area of their life if a topic seems complete.
 `.trim();
 
     let answer = 'I’m sorry, I couldn’t process that.';
@@ -172,10 +224,13 @@ Do not ask for fields that already exist. Respond to the user question:
     if (!Array.isArray(merged.history)) merged.history = [];
     merged.history.push({ question, answer });
 
+    // Clean the merged profile before saving
+    const cleanedProfile = cleanProfile(merged);
+
     // Update the profile_data by row id
     const { error: updateError } = await supabase
       .from('profiles')
-      .update({ profile_data: merged })
+      .update({ profile_data: cleanedProfile })
       .eq('id', row.id);
 
     if (updateError) {
@@ -184,7 +239,7 @@ Do not ask for fields that already exist. Respond to the user question:
     }
 
     console.log('Returning: Success with answer and merged profile');
-    return NextResponse.json({ answer, profile: merged });
+    return NextResponse.json({ answer, profile: cleanedProfile });
   } catch (err) {
     console.error('[ERROR] Unexpected:', err);
     return NextResponse.json({ error: 'Server error', message: err instanceof Error ? err.message : String(err) }, { status: 500 });

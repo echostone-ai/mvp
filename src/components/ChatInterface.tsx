@@ -252,43 +252,37 @@ export default function ChatInterface({
   }
 
   return (
-    <main className="chatMain">
-      <div
-        className="logo-wrap"
-        style={{ textAlign: 'center', marginBottom: 24, userSelect: 'none' }}
-      >
-        {/* Add a pulsing CSS class as needed */}
+    <main className="min-h-screen flex flex-col items-center justify-start w-screen bg-transparent pt-8 box-border">
+      <div className="text-center mb-6 select-none">
         <img
           src="/echostone_logo.png"
           alt="EchoStone Logo"
           width={140}
           height={140}
-          className="logo-pulse"
+          className="logo-pulse select-none"
           draggable={false}
-          style={{ userSelect: 'none' }}
         />
       </div>
-      <h1 className="site-title" style={{ textAlign: 'center', margin: '12px 0 32px' }}>
+      <h1 className="text-center my-3 mb-8 text-4xl font-bold">
         Speak with {getFirstName(profileData)}
       </h1>
 
-      <form className="askForm" onSubmit={handleSubmit}>
+      <form className="ask-form" onSubmit={handleSubmit}>
         <input
           type="text"
           placeholder="Ask me anything…"
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
-          className="askInput"
           spellCheck={false}
           autoComplete="off"
         />
-        <button type="submit" disabled={loading} className="askBtn">
+        <button type="submit" disabled={loading}>
           {loading ? '…Thinking' : 'Ask'}
         </button>
       </form>
 
       <button
-        className={`micBtn${listening ? ' active' : ''}`}
+        className={`mic-btn${listening ? ' active' : ''}`}
         onClick={handleMicClick}
         type="button"
       >
@@ -296,15 +290,7 @@ export default function ChatInterface({
       </button>
 
       {isClient && (
-        <div
-          style={{
-            fontSize: 13,
-            opacity: 0.7,
-            margin: '0.5em 0',
-            textAlign: 'center',
-            userSelect: 'none',
-          }}
-        >
+        <div className="text-xs opacity-70 my-2 text-center select-none">
           {hasSpeechRecognition
             ? 'Speech recognition supported on this device.'
             : 'On this device, your voice will be transcribed after recording.'}
@@ -316,7 +302,7 @@ export default function ChatInterface({
           <h2>{getFirstName(profileData)} says:</h2>
           <p>{answer}</p>
           {!playing && (
-            <button onClick={handleReplay} className="playBtn">
+            <button onClick={handleReplay} className="play-btn">
               🔊 Play Again
             </button>
           )}
@@ -326,13 +312,13 @@ export default function ChatInterface({
       {playing && (
         <div className="soundbars">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className={`soundbar delay-${i}`} />
+            <div key={i} className="soundbar" />
           ))}
         </div>
       )}
 
       {voiceError && (
-        <div style={{ color: '#ff6b6b', fontSize: 14, marginTop: 8 }}>
+        <div className="text-red-400 text-sm mt-2">
           {voiceError}
         </div>
       )}

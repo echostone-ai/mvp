@@ -82,56 +82,54 @@ export default function ProfilePage() {
     return () => { mounted = false }
   }, [])
 
-  // Responsive, styled!
   return (
-    <>
-      <div style={{
-        width: '100%',
-        display: 'flex',
-        justifyContent: 'flex-end',
-        alignItems: 'center',
-        padding: '1.2rem 2.2rem 0 2.2rem',
-        minHeight: 0,
-        background: 'transparent',
-        boxSizing: 'border-box'
-      }}>
+    <div className="min-h-screen w-screen relative">
+      <div className="fixed top-9 right-9 z-50">
         <AccountMenu />
       </div>
 
-      <main className="profile-main">
-        <div className="profile-header">
-          <Image className="profile-logo logo-pulse" src="/echostone_logo.png" width={160} height={160} alt="EchoStone Logo" />
-          <h1
-            className="profile-title"
-            style={{
-              fontSize: '2.5rem',
-              fontWeight: '900',
-              color: '#fff',
-              marginBottom: '1rem'
-            }}
-          >
+      <main className="min-h-screen text-white flex flex-col items-center p-0 max-w-full">
+        <div className="flex flex-col items-center my-8 mb-2">
+          <Image 
+            className="logo-pulse mb-6" 
+            src="/echostone_logo.png" 
+            width={160} 
+            height={160} 
+            alt="EchoStone Logo" 
+          />
+          <h1 className="text-4xl font-black text-white mb-4">
             Your Profile
           </h1>
-          <div className="profile-tabs">
+          <div className="flex gap-3 mb-6">
             <button
-              className={`profile-tab ${activeTab==='voice' ? 'active' : ''}`}
+              className={`px-6 py-3 text-xl font-bold rounded-lg cursor-pointer border-2 border-transparent transition-all duration-300 ${
+                activeTab === 'voice' 
+                  ? 'bg-primary text-white' 
+                  : 'bg-purple-800 text-white hover:bg-purple-700'
+              }`}
               onClick={() => setActiveTab('voice')}
-              style={{ fontSize: '1.25rem', fontWeight: '700', padding: '0.75rem 1.5rem', borderRadius: '8px', cursor: 'pointer', border: '2px solid transparent', transition: 'all 0.3s ease' }}
             >
-              <span>Voice</span>
+              Voice
             </button>
             <button
-              className={`profile-tab ${activeTab==='personality' ? 'active' : ''}`}
+              className={`px-6 py-3 text-xl font-bold rounded-lg cursor-pointer border-2 border-transparent transition-all duration-300 ${
+                activeTab === 'personality' 
+                  ? 'bg-primary text-white' 
+                  : 'bg-purple-800 text-white hover:bg-purple-700'
+              }`}
               onClick={() => setActiveTab('personality')}
-              style={{ fontSize: '1.25rem', fontWeight: '700', padding: '0.75rem 1.5rem', borderRadius: '8px', cursor: 'pointer', border: '2px solid transparent', transition: 'all 0.3s ease' }}
             >
-              <span>Personality</span>
+              Personality
             </button>
           </div>
         </div>
 
-        <div className="profile-content">
-          {error && <div className="profile-error">{error}</div>}
+        <div className="max-w-5xl w-[94vw] mx-auto mb-12">
+          {error && (
+            <div className="text-red-400 bg-purple-900/50 px-6 py-4 rounded-xl mb-5 text-lg text-center font-medium">
+              {error}
+            </div>
+          )}
 
           {activeTab === 'voice' && (
             <VoiceRecorder
@@ -142,25 +140,29 @@ export default function ProfilePage() {
                   await supabase.from('profiles').update({ voice_id: voiceId }).eq('user_id', user.id)
                 }
               }}
-              instructionsStyle={{
-                color: '#fff',
-                textShadow: '0 2px 8px rgba(0,0,0,0.45), 0 1px 0 #232946',
-                filter: 'brightness(1.18)',
-                marginBottom: 8
-              }}
             />
           )}
 
           {activeTab === 'personality' && (
-            <div className="profile-sections">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 mt-7 max-w-5xl w-full">
               {Object.entries(QUESTIONS || {}).map(([section, qs]) => {
                 const prog = progress[section] || { total: qs.length, answered: 0, isComplete: false }
                 return (
-                  <Link key={section} href={`/profile/edit/${section}`} className="profile-section-link">
-                    <div className={`profile-section-card${prog.isComplete ? ' complete' : ''}`} style={{ padding: '1.25rem 1.5rem', borderRadius: '10px', boxShadow: prog.isComplete ? '0 0 10px 2px #4caf50' : '0 2px 8px rgba(0,0,0,0.1)', backgroundColor: prog.isComplete ? '#e6f4ea' : '#fff', transition: 'background-color 0.3s ease, box-shadow 0.3s ease' }}>
-                      <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: prog.isComplete ? '#2e7d32' : '#333', marginBottom: '0.5rem' }}>{section.replace(/_/g,' ')}</h2>
-                      <p style={{ fontSize: '1.1rem', fontWeight: '600', color: prog.isComplete ? '#388e3c' : '#555' }}>{prog.answered} of {prog.total} answered</p>
-                      {prog.isComplete && <span className="profile-section-check" style={{ color: '#4caf50', fontWeight: '900', fontSize: '1.5rem', marginLeft: '0.5rem' }}>✓</span>}
+                  <Link key={section} href={`/profile/edit/${section}`} className="no-underline text-inherit">
+                    <div className={`p-5 rounded-2xl shadow-lg transition-all duration-200 text-left min-h-24 relative flex flex-col justify-start ${
+                      prog.isComplete 
+                        ? 'bg-purple-800/95 shadow-green-400/20 shadow-xl opacity-100' 
+                        : 'bg-purple-900/75 shadow-black/30 opacity-90 hover:opacity-100'
+                    }`}>
+                      <h2 className="m-0 text-xl font-semibold text-white capitalize mb-2 leading-tight">
+                        {section.replace(/_/g,' ')}
+                      </h2>
+                      <p className="m-0 mb-1 text-base text-purple-200">
+                        {prog.answered} of {prog.total} answered
+                      </p>
+                      {prog.isComplete && (
+                        <span className="text-green-400 text-2xl absolute top-4 right-4">✓</span>
+                      )}
                     </div>
                   </Link>
                 )
@@ -169,6 +171,6 @@ export default function ProfilePage() {
           )}
         </div>
       </main>
-    </>
+    </div>
   )
 }

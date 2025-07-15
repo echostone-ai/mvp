@@ -18,9 +18,18 @@ module.exports = {
       animation: {
         'body-gradient-move': 'body-gradient-move 34s ease-in-out infinite',
         'logo-pulse': 'logo-pulse 2.6s cubic-bezier(0.7,0,0.2,1) infinite',
-        'fadeInMenu': 'fadeInMenu 0.2s',
+        'fade-in': 'fadeInMenu 0.2s ease-out',
+      },
+      keyframes: {
+        fadeInMenu: {
+          '0%': { opacity: '0', transform: 'translateY(-10px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+      },
+      fontFamily: {
+        sans: ['Poppins', 'system-ui', 'sans-serif'],
       },
     },
   },
-  plugins: [require('autoprefixer')],
+  plugins: [],
 }

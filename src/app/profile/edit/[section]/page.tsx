@@ -127,178 +127,111 @@ export default function EditSectionPage() {
   }
 
   return (
-    <>
-      <div style={{
-        width: '100%',
-        display: 'flex',
-        justifyContent: 'flex-end',
-        alignItems: 'center',
-        padding: '1.2rem 2.2rem 0 2.2rem',
-        minHeight: 0,
-        background: 'transparent',
-        boxSizing: 'border-box'
-      }}>
+    <div className="min-h-screen w-screen relative">
+      <div className="fixed top-9 right-9 z-50">
         <AccountMenu />
       </div>
-      <main
-        style={{
-          minHeight: '100vh',
-          width: '100vw',
-          background: 'radial-gradient(circle, #8b5cf6 0%, #4c1d95 40%, #000 100%)',
-          color: '#f0eaff',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          padding: '40px 20px',
-          fontFamily: 'Inter, Arial, sans-serif',
-          position: 'relative'
-        }}
-      >
-        <LogoHeader />
-        <h1 style={{ margin: '1em 0 0.5em 0', fontSize: '1.8rem', color: '#fff' }}>
-          {section.replace(/_/g, ' ')}
-        </h1>
-        <div
-          ref={emblaRef}
-          className="embla"
-          style={{
-            width: '100%',
-            maxWidth: 600,
-            overflow: 'hidden',
-            margin: '2em 0 1em 0',
-            borderRadius: 16,
-            background: 'rgba(40,20,90,0.85)',
-            boxShadow: '0 2px 24px #0006'
-          }}
-        >
+      
+      <main className="profile-edit-main">
+        <div className="profile-edit-header">
+          <img
+            src="/echostone_logo.png"
+            alt="EchoStone Logo"
+            className="logo-pulse profile-edit-logo"
+          />
+          <h1 className="profile-edit-title">
+            {section.replace(/_/g, ' ')}
+          </h1>
+          <p className="profile-edit-subtitle">
+            Share your thoughts and experiences to help build your digital profile
+          </p>
+        </div>
+
+        <div className="profile-edit-carousel" ref={emblaRef}>
           <div className="embla__container">
             {questions.map((q, idx) => (
               <div className="embla__slide" key={q.key}>
-                <div style={{ marginBottom: 24 }}>
-                  <span style={{
-                    display: 'inline-block',
-                    fontSize: 13,
-                    opacity: 0.65,
-                    marginBottom: 8,
-                    letterSpacing: 1,
-                  }}>
-                    Question {idx + 1} of {questions.length}
-                  </span>
-                  <label style={{
-                    display: 'block',
-                    fontWeight: 700,
-                    marginBottom: 12,
-                    fontSize: '1.13rem'
-                  }}>
+                <div className="profile-edit-card">
+                  <div className="question-header">
+                    <span className="question-counter">
+                      Question {idx + 1} of {questions.length}
+                    </span>
+                    <div className="progress-bar">
+                      <div 
+                        className="progress-fill" 
+                        style={{ width: `${((idx + 1) / questions.length) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                  
+                  <label className="question-label">
                     {q.q}
                   </label>
+                  
                   <textarea
                     value={answers[q.key] || ''}
                     onChange={e => handleChange(q.key, e.target.value)}
-                    style={{
-                      width: '100%',
-                      minHeight: 80,
-                      borderRadius: 10,
-                      padding: '1em',
-                      fontFamily: 'inherit',
-                      fontSize: '1rem',
-                      background: '#2a1851',
-                      color: '#f8f6ff',
-                      border: '1px solid #5a3fa8',
-                      marginBottom: 4,
-                    }}
+                    className="profile-edit-textarea"
+                    placeholder="Share your thoughts here..."
+                    rows={4}
                   />
-                </div>
-                <div style={{ display: 'flex', gap: 12, marginTop: 'auto', alignItems: 'center' }}>
-                  <button
-                    type="button"
-                    onClick={scrollPrev}
-                    disabled={selectedIndex === 0}
-                    style={{
-                      background: '#493093',
-                      color: '#fff',
-                      padding: '0.65em 1.5em',
-                      borderRadius: 8,
-                      border: 'none',
-                      fontWeight: 600,
-                      fontSize: '1em',
-                      cursor: selectedIndex === 0 ? 'not-allowed' : 'pointer',
-                      opacity: selectedIndex === 0 ? 0.4 : 1,
-                      transition: 'opacity 0.2s'
-                    }}
-                  >
-                    Prev
-                  </button>
-                  <button
-                    type="button"
-                    onClick={scrollNext}
-                    disabled={selectedIndex === questions.length - 1}
-                    style={{
-                      background: '#7c3aed',
-                      color: '#fff',
-                      padding: '0.65em 1.5em',
-                      borderRadius: 8,
-                      border: 'none',
-                      fontWeight: 600,
-                      fontSize: '1em',
-                      cursor: selectedIndex === questions.length - 1 ? 'not-allowed' : 'pointer',
-                      opacity: selectedIndex === questions.length - 1 ? 0.4 : 1,
-                      transition: 'opacity 0.2s'
-                    }}
-                  >
-                    Next
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleSave}
-                    style={{
-                      background: '#20c997',
-                      color: '#fff',
-                      padding: '0.65em 1.5em',
-                      borderRadius: 8,
-                      border: 'none',
-                      fontWeight: 600,
-                      fontSize: '1em',
-                      marginLeft: 8,
-                      cursor: 'pointer',
-                      boxShadow: '0 2px 12px #0003',
-                      transition: 'background 0.2s'
-                    }}
-                  >
-                    {saved ? 'Saved!' : 'Save'}
-                  </button>
+                  
+                  <div className="profile-edit-actions">
+                    <button
+                      type="button"
+                      onClick={scrollPrev}
+                      disabled={selectedIndex === 0}
+                      className={`profile-edit-btn secondary ${selectedIndex === 0 ? 'disabled' : ''}`}
+                    >
+                      ← Previous
+                    </button>
+                    
+                    <button
+                      type="button"
+                      onClick={scrollNext}
+                      disabled={selectedIndex === questions.length - 1}
+                      className={`profile-edit-btn primary ${selectedIndex === questions.length - 1 ? 'disabled' : ''}`}
+                    >
+                      Next →
+                    </button>
+                    
+                    <button
+                      type="button"
+                      onClick={handleSave}
+                      disabled={saving}
+                      className="profile-edit-btn save"
+                    >
+                      {saving ? (
+                        <>
+                          <span className="loading-spinner small"></span>
+                          Saving...
+                        </>
+                      ) : saved ? (
+                        <>
+                          <span>✓</span>
+                          Saved!
+                        </>
+                      ) : (
+                        'Save Progress'
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         </div>
-        <div style={{ marginTop: 16, color: '#fff', opacity: 0.7, fontSize: 15 }}>
-          Use ← / → or swipe to move between questions
+        
+        <div className="profile-edit-help">
+          <span>💡 Use arrow keys or swipe to navigate between questions</span>
         </div>
+        
         {error && (
-          <div style={{ color: 'salmon', marginTop: 8, fontWeight: 600 }}>
+          <div className="profile-edit-error">
             {error}
           </div>
         )}
-        <style>{`
-          .embla { overflow: hidden; }
-          .embla__container {
-            display: flex;
-          }
-          .embla__slide {
-            flex: 0 0 100%;
-            width: 100%;
-            min-width: 0;
-            box-sizing: border-box;
-            padding: 2em 1em;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            user-select: text;
-          }
-          textarea:focus { outline: 2px solid #9d7af2; }
-        `}</style>
       </main>
-    </>
+    </div>
   )
 }

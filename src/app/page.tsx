@@ -188,24 +188,24 @@ export default function HomePage() {
 
   return (
     <ProfileProvider>
-      <div
-        className="account-menu-wrapper"
-        style={{ position: 'fixed', top: '1rem', right: '1rem', zIndex: 1000 }}
-      >
+      <div className="fixed top-4 right-4 z-50">
         <AccountMenu />
       </div>
-      <main className="page-container">
+      <main className="min-h-screen flex flex-col items-center justify-center p-8 text-center relative overflow-hidden">
         <audio ref={audioRef} />
-        <div className="logo-wrap">
+        <div className="mb-6 select-none">
           <Image
             src="/echostone_logo.png"
             alt="EchoStone Logo"
             width={140}
             height={140}
+            className="logo-pulse"
+            draggable={false}
           />
         </div>
-        <h1 className="site-title">{jonathanProfile?.personal_snapshot?.full_legal_name?.split(' ')[0] || 'Jonathan'} says:</h1>
-        <br />
+        <h1 className="text-4xl font-bold mb-8 text-shadow-lg">
+          {jonathanProfile?.personal_snapshot?.full_legal_name?.split(' ')[0] || 'Jonathan'} says:
+        </h1>
 
         <form className="ask-form" onSubmit={handleSubmit}>
           <input
@@ -213,6 +213,8 @@ export default function HomePage() {
             placeholder="Ask me anything…"
             value={question}
             onChange={e => setQuestion(e.target.value)}
+            spellCheck={false}
+            autoComplete="off"
           />
           <button type="submit" disabled={loading}>
             {loading ? '…Thinking' : 'Ask'}
@@ -226,7 +228,7 @@ export default function HomePage() {
         >
           {listening ? '🎤 Listening… (tap to stop)' : '🎤 Speak'}
         </button>
-        <div style={{ fontSize: 13, opacity: 0.7, margin: '0.5em 0' }}>
+        <div className="text-xs opacity-70 my-2 select-none">
           {hasSpeechRecognition
             ? 'Speech recognition supported on this device.'
             : 'On this device, your voice will be transcribed after recording.'}
@@ -237,7 +239,7 @@ export default function HomePage() {
             <h2>{jonathanProfile?.personal_snapshot?.full_legal_name?.split(' ')[0] || 'Jonathan'} says:</h2>
             <p>{answer}</p>
             {!playing && (
-              <button onClick={handleReplay} style={{ marginTop: 8 }}>
+              <button onClick={handleReplay} className="play-btn">
                 🔊 Play Again
               </button>
             )}
@@ -245,9 +247,9 @@ export default function HomePage() {
         )}
 
         {playing && (
-          <div className="sound-bars">
+          <div className="soundbars">
             {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} style={{ animationDelay: `${i * 0.1}s` }} />
+              <div key={i} className="soundbar" />
             ))}
           </div>
         )}

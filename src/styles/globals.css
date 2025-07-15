@@ -1,0 +1,159 @@
+/* Core global styles - streamlined */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-bg-voice: #160C23;
+  --color-bg-personality: #142933;
+  --color-text: #E2E2F6;
+  --color-primary: #6a41f1;
+  --color-secondary: #392e4c;
+  --color-danger: #ff214f;
+  --color-btn-gradient: linear-gradient(90deg, #6a00ff 65%, #9147ff 100%);
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Poppins', sans-serif;
+  color: var(--color-text);
+  background: linear-gradient(120deg, #232946 0%, #413076 50%, #af7ea8 100%);
+  background-attachment: fixed;
+  background-size: 400% 400%;
+  animation: body-gradient-move 28s ease-in-out infinite;
+  min-height: 100vh;
+  width: 100vw;
+  overflow-x: hidden;
+}
+
+@keyframes body-gradient-move {
+  0%   { background-position: 0% 50%; }
+  25%  { background-position: 50% 100%; }
+  50%  { background-position: 100% 50%; }
+  75%  { background-position: 50% 0%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes logo-pulse {
+  0%   { transform: scale(1);     filter: drop-shadow(0 0 0 #9147ff44);}
+  30%  { transform: scale(1.05);  filter: drop-shadow(0 0 22px #9147ff66);}
+  55%  { transform: scale(0.98);  filter: drop-shadow(0 0 7px #9147ff22);}
+  70%  { transform: scale(1.05);  filter: drop-shadow(0 0 14px #9147ff44);}
+  100% { transform: scale(1);     filter: drop-shadow(0 0 0 #9147ff44);}
+}
+
+@keyframes soundbar-move {
+  0%, 100% {
+    transform: scaleY(0.4);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+/* Component-specific styles that can't be easily replaced with Tailwind */
+@layer components {
+  .logo-pulse {
+    animation: logo-pulse 2.6s cubic-bezier(0.7,0,0.2,1) infinite;
+  }
+  
+  .soundbars {
+    @apply flex gap-1 items-end justify-center w-12 h-7 ml-3;
+  }
+  
+  .soundbar {
+    @apply w-1 bg-gradient-to-t from-purple-600 to-purple-400 rounded-sm opacity-85;
+    animation: soundbar-move 1.4s infinite ease-in-out;
+    transform-origin: bottom;
+  }
+  
+  .soundbar:nth-child(1) { animation-delay: 0s; height: 8px; }
+  .soundbar:nth-child(2) { animation-delay: 0.2s; height: 12px; }
+  .soundbar:nth-child(3) { animation-delay: 0.4s; height: 16px; }
+  .soundbar:nth-child(4) { animation-delay: 0.6s; height: 12px; }
+  .soundbar:nth-child(5) { animation-delay: 0.8s; height: 8px; }
+  
+  /* Account Menu Styles */
+  .account-menu-dropdown {
+    animation: fadeInMenu 0.2s ease-out;
+  }
+  
+  .account-menu-item {
+    @apply block px-5 py-3 mb-1 text-white bg-transparent no-underline border-none outline-none text-base rounded-lg font-medium text-left cursor-pointer transition-all duration-150;
+  }
+  
+  .account-menu-item:hover,
+  .account-menu-item:focus {
+    @apply bg-purple-700 text-white font-semibold outline-none;
+  }
+  
+  /* Form Styles */
+  .ask-form {
+    @apply flex gap-5 w-full max-w-2xl mx-auto mt-7 items-center;
+  }
+  
+  .ask-form input[type="text"] {
+    @apply flex-1 px-4 py-5 text-lg rounded-2xl border-2 border-purple-500/30 bg-purple-900/60 text-gray-100 font-sans outline-none shadow-lg transition-all duration-200;
+  }
+  
+  .ask-form input[type="text"]:focus {
+    @apply border-purple-400 shadow-purple-400/20 shadow-xl;
+  }
+  
+  .ask-form button[type="submit"] {
+    @apply bg-gradient-to-r from-purple-600 to-purple-500 text-white text-lg font-bold border-none rounded-2xl px-9 py-4 cursor-pointer shadow-lg transition-all duration-200 font-sans min-w-28 ml-1;
+  }
+  
+  .ask-form button[type="submit"]:hover,
+  .ask-form button[type="submit"]:focus {
+    @apply bg-gradient-to-r from-purple-500 to-purple-600 shadow-purple-500/30 shadow-2xl;
+  }
+  
+  /* Mic Button */
+  .mic-btn {
+    @apply mt-6 text-lg px-9 py-4 bg-purple-900/80 border-none rounded-2xl text-white font-semibold cursor-pointer shadow-lg transition-all duration-200 font-sans;
+  }
+  
+  .mic-btn.active,
+  .mic-btn:hover {
+    @apply bg-purple-700 shadow-purple-500/30 shadow-2xl;
+  }
+  
+  /* Answer Box */
+  .answer {
+    @apply mt-10 mb-6 max-w-3xl bg-purple-900/80 rounded-2xl p-8 shadow-lg text-gray-100 text-lg leading-relaxed border-l-4 border-purple-500 break-words text-left;
+  }
+  
+  .answer h2 {
+    @apply text-xl m-0 mb-3 text-purple-300 font-semibold tracking-wide;
+  }
+  
+  .answer p {
+    @apply m-0 text-base;
+  }
+  
+  .play-btn {
+    @apply bg-gradient-to-r from-purple-600 to-purple-500 text-white text-base border-none rounded-xl px-8 py-3 cursor-pointer shadow-lg font-semibold transition-all duration-200 flex items-center gap-2 mt-2;
+  }
+  
+  .play-btn:hover,
+  .play-btn:active {
+    @apply bg-gradient-to-r from-purple-500 to-purple-600 shadow-purple-500/30 shadow-2xl;
+  }
+}
+
+@keyframes fadeInMenu {
+  from { 
+    opacity: 0; 
+    transform: translateY(-10px);
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0);
+  }
+}

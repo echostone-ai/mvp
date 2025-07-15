@@ -4,28 +4,12 @@ import AccountMenu from './AccountMenu'
 
 export default function PageShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="page-shell" style={{ minHeight: '100vh', width: '100vw', position: 'relative' }}>
-      {/* Absolutely position the AccountMenu in top-right */}
-      <div
-        style={{
-          position: 'fixed',
-          top: '2.2rem',
-          right: '2.2rem',
-          zIndex: 1000,
-        }}
-      >
+    <div className="min-h-screen w-screen relative">
+      {/* Account menu positioned in top-right */}
+      <div className="fixed top-9 right-9 z-50">
         <AccountMenu />
       </div>
-      <main className="main-content" style={{
-        minHeight: '100vh',
-        width: '100vw',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 0,
-        margin: 0,
-      }}>
+      <main className="min-h-screen w-screen flex flex-col items-center justify-center p-0 m-0">
         {children}
       </main>
     </div>
