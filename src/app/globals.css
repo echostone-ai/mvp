@@ -2395,8 +2395,9 @@ s Section Styles */
   .story-prompts-grid {
     grid-template-columns: 1fr;
   }
-}/
-* Login Page Styles */
+}
+
+/* Login Page Styles */
 .auth-required-card {
   background: linear-gradient(145deg, rgba(30, 20, 60, 0.95), rgba(45, 25, 80, 0.9));
   border-radius: 24px;
