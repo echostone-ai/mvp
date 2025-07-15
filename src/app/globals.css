@@ -2498,15 +2498,7 @@ s Section Styles */
     margin: 0 16px;
   }
   
-  .auth-required-title {
-    font-size: 2rem;
-  }
-  
-  .auth-required-subtitle {
-    font-size: 1.1rem;
-  }
-}/* St
-ories Section Layout Fix */
+/* Stories Section Layout Fix */
 .stories-chat-container {
   background: linear-gradient(145deg, rgba(30, 20, 60, 0.95), rgba(45, 25, 80, 0.9)) !important;
   border-radius: 24px !important;
