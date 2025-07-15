@@ -42,14 +42,48 @@ export default function HomePage() {
     const url = URL.createObjectURL(blob)
     audioUrlRef.current = url
     const audio = new Audio(url)
+    
+    // Enhanced mobile volume control
+    audio.volume = 1.0 // Set to maximum volume
+    audio.preload = 'auto'
+    
+    // Mobile-specific audio optimizations
+    if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+      // Force audio context for mobile
+      audio.setAttribute('playsinline', 'true')
+      audio.setAttribute('webkit-playsinline', 'true')
+      
+      // Try to unlock audio context on mobile
+      const unlockAudio = () => {
+        audio.play().then(() => {
+          audio.pause()
+          audio.currentTime = 0
+          document.removeEventListener('touchstart', unlockAudio)
+          document.removeEventListener('click', unlockAudio)
+        }).catch(() => {})
+      }
+      
+      document.addEventListener('touchstart', unlockAudio, { once: true })
+      document.addEventListener('click', unlockAudio, { once: true })
+    }
+    
     setPlaying(true)
     audio.onended = () => {
       setPlaying(false)
       URL.revokeObjectURL(url)
       audioUrlRef.current = null
     }
+    
+    audio.onerror = () => {
+      setPlaying(false)
+      console.log('Audio playback error')
+    }
+    
     setTimeout(() => {
-      audio.play().catch(() => setPlaying(false))
+      audio.play().catch((error) => {
+        console.log('Audio play failed:', error)
+        setPlaying(false)
+      })
     }, 0)
   }
 

@@ -6,6 +6,9 @@ import SupabaseProvider from '@/components/SupabaseProvider'
 export const metadata = {
   title: 'EchoStone',
   description: 'AI-powered voice interaction platform',
+  icons: {
+    icon: '/favicon.ico',
+  },
 }
 
 export default function RootLayout({ children }: { children: ReactNode }) {

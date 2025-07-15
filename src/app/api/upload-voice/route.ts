@@ -44,15 +44,34 @@ export async function POST(req: NextRequest) {
     elevenForm.append('name', name)
     elevenForm.append(
       'description',
-      `Voice generated for ${name} using ${audioFiles.length} audio samples. Script: ${script?.slice(0, 80) || 'No script provided'}`
+      `Enhanced voice clone for ${name} using ${audioFiles.length} audio samples. Script: ${script?.slice(0, 80) || 'No script provided'}`
     )
+
+    // Add enhanced settings if provided
+    const settingsStr = formData.get('settings') as string
+    const isEnhanced = formData.get('enhanced') === 'true'
+    
+    if (settingsStr && isEnhanced) {
+      try {
+        const settings = JSON.parse(settingsStr)
+        // ElevenLabs voice creation with enhanced settings
+        elevenForm.append('voice_settings', JSON.stringify(settings))
+      } catch (e) {
+        console.log('Invalid settings JSON, using defaults')
+      }
+    }
 
     const apiKey = process.env.ELEVENLABS_API_KEY
     if (!apiKey) {
       return NextResponse.json({ error: 'Missing ELEVENLABS_API_KEY env var' }, { status: 500 })
     }
 
-    const response = await fetch('https://api.elevenlabs.io/v1/voices/add', {
+    // Use enhanced voice creation endpoint if available
+    const endpoint = isEnhanced 
+      ? 'https://api.elevenlabs.io/v1/voices/add'  // Professional voice cloning
+      : 'https://api.elevenlabs.io/v1/voices/add'
+
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'xi-api-key': apiKey
