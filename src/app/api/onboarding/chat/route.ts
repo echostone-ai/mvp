@@ -37,6 +37,10 @@ if (!SUPABASE_SERVICE_ROLE_KEY && !SUPABASE_ANON_KEY) {
 }
 const supabaseKey = SUPABASE_SERVICE_ROLE_KEY || SUPABASE_ANON_KEY;
 
+if (!supabaseKey) {
+  throw new Error('Failed to get Supabase key');
+}
+
 const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
 const supabase = createClient(SUPABASE_URL, supabaseKey);
 
