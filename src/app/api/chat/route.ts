@@ -42,7 +42,7 @@ export async function POST(req: Request) {
         },
       ],
     })
-    let answer = completion.choices[0].message.content
+    let answer = completion.choices[0].message.content || 'I apologize, but I couldn\'t generate a response.'
     // Add a catchphrase only very rarely (about 2.5% of the time) for subtlety
     if (
       Math.random() < 0.025 &&
