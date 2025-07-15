@@ -3017,7 +3017,8 @@ s Section Styles */
   top: 20px !important;
 }
 
-/ * Enhanced Voice Recorder Styles */ .voice-method-toggle {
+/* Enhanced Voice Recorder Styles */
+.voice-method-toggle {
   display: flex;
   gap: 12px;
   margin-bottom: 24px;
