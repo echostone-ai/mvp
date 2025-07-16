@@ -182,7 +182,7 @@ export class MemoryQueryOptimizer {
       analyses.push({
         type: 'user_distribution',
         data: userStats,
-        recommendations: this.generateUserDistributionRecommendations(userStats)
+        recommendations: this.generateUserDistributionRecommendations(userStats || [])
       })
 
       analyses.push({
