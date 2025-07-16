@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { supabase } from '@/components/supabaseClient'
 import AccountMenu from '@/components/AccountMenu'
+import Footer from '@/components/Footer'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -28,11 +29,13 @@ export default function LoginPage() {
       </div>
       
       <main className="min-h-screen flex flex-col items-center justify-center text-white p-4 text-center">
-        <img
-          src="/echostone_logo.png"
-          alt="EchoStone Logo"
-          className="logo-pulse w-36 mb-8 select-none"
-        />
+        <a href="/" className="inline-block">
+          <img
+            src="/echostone_logo.png"
+            alt="EchoStone Logo"
+            className="logo-pulse w-36 mb-8 select-none cursor-pointer hover:scale-110 transition-transform duration-300"
+          />
+        </a>
         
         <div className="auth-required-card">
           <h1 className="auth-required-title">
@@ -42,7 +45,7 @@ export default function LoginPage() {
             Sign in to access your digital voice and personality profile.
           </p>
           
-          <form onSubmit={handleLogin} className="w-full">
+          <form onSubmit={handleLogin} className="w-full mb-6">
             <div className="mb-6 text-left">
               <label 
                 htmlFor="email" 
@@ -56,7 +59,7 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                className="auth-input w-full px-5 py-4 rounded-2xl border-2 border-purple-500/30 bg-purple-950/60 text-white text-lg shadow-lg outline-none focus:border-purple-400 focus:shadow-purple-400/20 focus:shadow-xl transition-all font-sans"
+                className="w-full px-5 py-4 rounded-2xl border-2 border-purple-500/30 bg-purple-950/60 text-white text-lg shadow-lg outline-none focus:border-purple-400 focus:shadow-purple-400/20 focus:shadow-xl transition-all font-sans"
                 placeholder="Enter your email address"
               />
             </div>
@@ -64,33 +67,30 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={!email.trim()}
-              className="auth-submit-btn w-full py-4 bg-gradient-to-r from-purple-600 to-purple-500 text-white border-none rounded-2xl font-bold text-lg cursor-pointer shadow-lg hover:from-purple-500 hover:to-purple-600 hover:transform hover:-translate-y-1 hover:shadow-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              className="auth-submit-btn w-full py-4 rounded-2xl font-bold text-lg cursor-pointer shadow-lg transition-all"
             >
               Send Magic Link
             </button>
           </form>
           
           {message && (
-            <div className="mt-6 p-4 bg-green-500/20 border border-green-500/30 rounded-xl text-green-400 font-medium">
+            <div className="mb-6 p-4 bg-green-500/20 border border-green-500/30 rounded-xl text-green-400 font-medium">
               {message}
             </div>
           )}
           {error && (
-            <div className="mt-6 p-4 bg-red-500/20 border border-red-500/30 rounded-xl text-red-400 font-medium">
+            <div className="mb-6 p-4 bg-red-500/20 border border-red-500/30 rounded-xl text-red-400 font-medium">
               {error}
             </div>
           )}
           
-          <div className="mt-6 text-center">
-            <p className="text-gray-300">
-              Don't have an account?{' '}
-              <a href="/signup" className="text-purple-400 hover:text-purple-300 font-semibold">
-                Sign up here
-              </a>
-            </p>
+          <div className="auth-required-actions">
+            <a href="/signup" className="auth-btn secondary">
+              Create Account
+            </a>
           </div>
           
-          <div className="auth-required-features mt-8">
+          <div className="auth-required-features">
             <h3>What you'll get access to:</h3>
             <ul>
               <li>🎤 Train your personal AI voice</li>

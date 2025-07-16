@@ -7,6 +7,7 @@ import { QUESTIONS } from '@/data/questions'
 import { supabase } from '@/components/supabaseClient'
 import VoiceRecorder from '@/components/VoiceRecorder'
 import StoriesSection from '@/components/StoriesSection'
+import MemoryManagement from '@/components/MemoryManagement'
 import AccountMenu from '@/components/AccountMenu'
 import PageShell from '@/components/PageShell'
 
@@ -30,7 +31,7 @@ async function ensureProfileExists(userId: string) {
 export default function ProfilePage() {
   const [user, setUser] = useState<any>(null)
   const [loadingUser, setLoadingUser] = useState(true)
-  const [activeTab, setActiveTab] = useState<'voice'|'stories'|'personality'>('voice')
+  const [activeTab, setActiveTab] = useState<'voice'|'stories'|'personality'|'memories'>('voice')
   const [progress, setProgress] = useState<Record<string,Progress>>({})
   const [voiceId, setVoiceId] = useState<string|null>(null)
   const [error, setError] = useState<string|null>(null)
@@ -210,6 +211,16 @@ export default function ProfilePage() {
             >
               Personality
             </button>
+            <button
+              className={`px-6 py-3 text-xl font-bold rounded-lg cursor-pointer border-2 border-transparent transition-all duration-300 ${
+                activeTab === 'memories' 
+                  ? 'bg-primary text-white' 
+                  : 'bg-purple-800 text-white hover:bg-purple-700'
+              }`}
+              onClick={() => setActiveTab('memories')}
+            >
+              Memories
+            </button>
           </div>
         </div>
 
@@ -266,6 +277,10 @@ export default function ProfilePage() {
                 )
               })}
             </div>
+          )}
+
+          {activeTab === 'memories' && user?.id && (
+            <MemoryManagement userId={user.id} />
           )}
         </div>
       </main>

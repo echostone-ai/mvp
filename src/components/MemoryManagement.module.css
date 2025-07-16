@@ -1,0 +1,374 @@
+.memoryManagementContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.memoryHeader {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.memoryTitle {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 0.5rem;
+}
+
+.memorySubtitle {
+  font-size: 1.1rem;
+  color: #666;
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.5;
+}
+
+.memoryStats {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.memoryStatCard {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  text-align: center;
+  min-width: 140px;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.memoryStatNumber {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.memoryStatLabel {
+  font-size: 0.9rem;
+  opacity: 0.9;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.memoryControls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.memorySearchContainer {
+  flex: 1;
+  max-width: 400px;
+}
+
+.memorySearchInput {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.2s ease;
+}
+
+.memorySearchInput:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.memoryActions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.memoryBtn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.memoryBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.memoryBtnPrimary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.memoryBtnPrimary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.memoryBtnSecondary {
+  background: #f8f9fa;
+  color: #495057;
+  border: 2px solid #e1e5e9;
+}
+
+.memoryBtnSecondary:hover:not(:disabled) {
+  background: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.memoryBtnDanger {
+  background: #dc3545;
+  color: white;
+}
+
+.memoryBtnDanger:hover:not(:disabled) {
+  background: #c82333;
+  transform: translateY(-1px);
+}
+
+.memoryBtnSmall {
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
+}
+
+.memoryError {
+  background: #f8d7da;
+  color: #721c24;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  border: 1px solid #f5c6cb;
+}
+
+.memoryLoading {
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.loadingSpinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.memoryEmpty {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #666;
+}
+
+.memoryEmptyIcon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.memoryEmpty h3 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.memoryList {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.memoryCard {
+  background: white;
+  border: 1px solid #e1e5e9;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.memoryCard:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.memoryCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.memoryDate {
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.memoryUpdated {
+  font-style: italic;
+  color: #999;
+}
+
+.memoryCardActions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.memoryContent {
+  margin-bottom: 1rem;
+}
+
+.memoryText {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #333;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.memoryEditTextarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
+  font-size: 1rem;
+  line-height: 1.6;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.memoryEditTextarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.memoryContext {
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+}
+
+.memoryContextItem {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.memoryContextItem:last-child {
+  margin-bottom: 0;
+}
+
+.memoryContextLabel {
+  font-weight: 600;
+  color: #495057;
+  min-width: 60px;
+}
+
+.memoryContextValue {
+  color: #666;
+  flex: 1;
+}
+
+.memoryContextTone {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.memoryContextToneHappy {
+  background: #d4edda;
+  color: #155724;
+}
+
+.memoryContextToneSad {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.memoryContextToneExcited {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.memoryContextToneNostalgic {
+  background: #e2e3e5;
+  color: #383d41;
+}
+
+.memoryPagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.memoryPaginationInfo {
+  font-weight: 500;
+  color: #666;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .memoryManagementContainer {
+    padding: 1rem;
+  }
+  
+  .memoryTitle {
+    font-size: 2rem;
+  }
+  
+  .memoryStats {
+    gap: 1rem;
+  }
+  
+  .memoryStatCard {
+    min-width: 120px;
+    padding: 1rem;
+  }
+  
+  .memoryControls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .memorySearchContainer {
+    max-width: none;
+  }
+  
+  .memoryActions {
+    justify-content: center;
+  }
+  
+  .memoryCardHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .memoryCardActions {
+    align-self: flex-end;
+  }
+}

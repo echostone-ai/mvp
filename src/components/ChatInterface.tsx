@@ -2,6 +2,7 @@
 
 
 import React, { useState, useRef, useEffect } from 'react'
+import { ConversationService, ChatMessage as ConversationMessage } from '@/lib/conversationService'
 
 function getFirstName(profileData: any): string {
   if (profileData?.personal_snapshot?.full_legal_name)
@@ -18,6 +19,7 @@ export type ChatMessage = { role: 'user' | 'assistant'; content: string }
 interface ChatInterfaceProps {
   profileData: any // user profile JSON
   voiceId: string | null
+  userId?: string // user ID for memory operations
   initialMessages?: ChatMessage[]
   onAsk?: (question: string) => void
 }
@@ -25,13 +27,16 @@ interface ChatInterfaceProps {
 export default function ChatInterface({
   profileData,
   voiceId,
+  userId,
   initialMessages = [],
   onAsk,
 }: ChatInterfaceProps) {
   const [question, setQuestion] = useState('')
   const [answer, setAnswer] = useState('')
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages)
+  const [conversationId, setConversationId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [conversationLoading, setConversationLoading] = useState(true)
   const [listening, setListening] = useState(false)
   const [playing, setPlaying] = useState(false)
   const [isClient, setIsClient] = useState(false)
@@ -45,30 +50,85 @@ export default function ChatInterface({
   const mediaStreamRef = useRef<MediaStream | null>(null)
   const audioUrlRef = useRef<string | null>(null)
 
+  // Load conversation when component mounts
+  useEffect(() => {
+    if (userId) {
+      loadConversation()
+    }
+  }, [userId])
+
+  const loadConversation = async () => {
+    if (!userId) return
+    
+    setConversationLoading(true)
+    try {
+      const conversation = await ConversationService.getCurrentConversation(userId)
+      if (conversation) {
+        setConversationId(conversation.id || null)
+        setMessages(conversation.messages || [])
+      }
+    } catch (error) {
+      console.error('Failed to load conversation:', error)
+    } finally {
+      setConversationLoading(false)
+    }
+  }
+
+  const saveMessage = async (newMessage: ChatMessage) => {
+    if (!userId) return
+
+    try {
+      const result = await ConversationService.addMessage(userId, newMessage, conversationId)
+      if (result.success && result.conversationId) {
+        setConversationId(result.conversationId)
+      }
+    } catch (error) {
+      console.error('Failed to save message:', error)
+    }
+  }
+
   useEffect(() => {
     setIsClient(true)
     
-    // Detect Safari
+    // Detect Safari more accurately
     const userAgent = navigator.userAgent.toLowerCase()
-    const isSafariBrowser = userAgent.includes('safari') && !userAgent.includes('chrome')
+    const isSafariBrowser = userAgent.includes('safari') && !userAgent.includes('chrome') && !userAgent.includes('chromium')
     setIsSafari(isSafariBrowser)
     
+    console.log('Browser detection:', { 
+      userAgent, 
+      isSafariBrowser, 
+      hasMediaDevices: !!navigator.mediaDevices,
+      hasGetUserMedia: !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia),
+      hasMediaRecorder: !!window.MediaRecorder
+    })
+    
     // Check speech recognition support
-    setHasSpeechRecognition(
-      !!(
-        (window as any).SpeechRecognition ||
-        (window as any).webkitSpeechRecognition
-      )
+    const speechRecognitionSupported = !!(
+      (window as any).SpeechRecognition ||
+      (window as any).webkitSpeechRecognition
     )
+    setHasSpeechRecognition(speechRecognitionSupported)
+    
+    console.log('Speech recognition support:', speechRecognitionSupported)
 
     // Check microphone permissions
     if (navigator.permissions) {
       navigator.permissions.query({ name: 'microphone' as PermissionName })
         .then(result => {
+          console.log('Microphone permission:', result.state)
           setMicPermission(result.state)
-          result.onchange = () => setMicPermission(result.state)
+          result.onchange = () => {
+            console.log('Microphone permission changed:', result.state)
+            setMicPermission(result.state)
+          }
         })
-        .catch(() => setMicPermission('unknown'))
+        .catch((err) => {
+          console.log('Permission query failed:', err)
+          setMicPermission('unknown')
+        })
+    } else {
+      console.log('Permissions API not supported')
     }
   }, [])
 
@@ -105,9 +165,13 @@ export default function ChatInterface({
     setLoading(true)
     setAnswer('')
 
-    const newHistory: ChatMessage[] = [...messages, { role: 'user', content: text }]
+    const userMessage: ChatMessage = { role: 'user', content: text }
+    const newHistory: ChatMessage[] = [...messages, userMessage]
     setMessages(newHistory)
     setQuestion('')
+
+    // Save user message
+    await saveMessage(userMessage)
 
     if (onAsk) {
       onAsk(text)
@@ -126,6 +190,7 @@ export default function ChatInterface({
           prompt,
           profileData, // <-- make sure this line is included
           voiceId,
+          userId, // <-- pass userId for memory operations
           history: newHistory,
           question: text,
         }),
@@ -135,11 +200,15 @@ export default function ChatInterface({
       const aiAnswer = data.answer || '😕 No answer.'
       setAnswer(aiAnswer)
 
+      const assistantMessage: ChatMessage = { role: 'assistant', content: aiAnswer }
       const safeHistory: ChatMessage[] = [
         ...newHistory,
-        { role: 'assistant', content: aiAnswer },
+        assistantMessage,
       ].filter((m): m is ChatMessage => m.role === 'user' || m.role === 'assistant')
       setMessages(safeHistory)
+
+      // Save assistant message
+      await saveMessage(assistantMessage)
 
       if (data.answer) {
         try {
@@ -483,6 +552,17 @@ export default function ChatInterface({
       >
         {listening ? '🎤 Listening… (tap to stop)' : '🎤 Speak'}
       </button>
+
+      {/* Safari Debug Info */}
+      {isClient && isSafari && (
+        <div className="text-xs opacity-70 my-2 text-center select-none bg-yellow-900/20 p-2 rounded">
+          <div>Safari Debug Info:</div>
+          <div>MediaRecorder: {window.MediaRecorder ? '✅' : '❌'}</div>
+          <div>getUserMedia: {(navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') ? '✅' : '❌'}</div>
+          <div>Permission: {micPermission}</div>
+          <div>Speech Recognition: {hasSpeechRecognition ? '✅' : '❌'}</div>
+        </div>
+      )}
 
       {isClient && (
         <div className="text-xs opacity-70 my-2 text-center select-none">

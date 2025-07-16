@@ -122,7 +122,7 @@ export default function ProfileChat() {
           <p className="text-center text-xl">No profile data found.</p>
         </main>
       ) : (
-        <ChatInterface profileData={profileData} voiceId={voiceId} />
+        <ChatInterface profileData={profileData} voiceId={voiceId} userId={user.id} />
       )}
     </PageShell>
   )

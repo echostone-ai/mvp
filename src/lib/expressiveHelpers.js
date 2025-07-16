@@ -1,19 +1,107 @@
 export function pickExpressiveStyle(userMessage, profileData) {
-  const triggers = profileData && profileData.expressionTriggers ? profileData.expressionTriggers : null;
-  if (triggers) {
-    if (triggers.nervous && triggers.nervous.some(t => userMessage.toLowerCase().includes(t))) return 'nervous';
-    if (triggers.sad && triggers.sad.some(t => userMessage.toLowerCase().includes(t))) return 'sad';
-    if (triggers.nostalgic && triggers.nostalgic.some(t => userMessage.toLowerCase().includes(t))) return 'nostalgic';
+  const message = userMessage.toLowerCase();
+  
+  // Enhanced trigger detection with more sophisticated matching
+  const triggers = profileData?.expressionTriggers || {};
+  
+  // Check for explicit emotional triggers first
+  if (triggers.nervous && triggers.nervous.some(t => message.includes(t.toLowerCase()))) return 'nervous';
+  if (triggers.sad && triggers.sad.some(t => message.includes(t.toLowerCase()))) return 'sad';
+  if (triggers.nostalgic && triggers.nostalgic.some(t => message.includes(t.toLowerCase()))) return 'nostalgic';
+  if (triggers.excited && triggers.excited.some(t => message.includes(t.toLowerCase()))) return 'excited';
+  if (triggers.angry && triggers.angry.some(t => message.includes(t.toLowerCase()))) return 'angry';
+  
+  // Context-based style detection
+  const contextualTriggers = {
+    excited: ['amazing', 'awesome', 'incredible', 'fantastic', 'wow', 'great news', 'celebration', 'party', 'success', 'achievement', 'won', 'victory'],
+    sad: ['died', 'death', 'funeral', 'miss', 'lost', 'goodbye', 'ended', 'broke up', 'divorce', 'cancer', 'sick', 'hospital', 'sorry to hear'],
+    nostalgic: ['remember', 'back then', 'used to', 'childhood', 'growing up', 'old days', 'when i was', 'years ago', 'miss those', 'reminds me'],
+    nervous: ['worried', 'scared', 'anxious', 'nervous', 'afraid', 'concerned', 'stress', 'pressure', 'interview', 'exam', 'test'],
+    angry: ['angry', 'mad', 'furious', 'pissed', 'annoyed', 'frustrated', 'hate', 'disgusted', 'outraged', 'politics', 'trump', 'corruption'],
+    reflective: ['think about', 'philosophy', 'meaning', 'purpose', 'why do', 'what if', 'deep', 'profound', 'existence', 'life', 'death', 'universe'],
+    playful: ['joke', 'funny', 'humor', 'laugh', 'silly', 'ridiculous', 'absurd', 'weird', 'strange', 'bizarre'],
+    romantic: ['love', 'relationship', 'partner', 'dating', 'romance', 'kiss', 'heart', 'feelings', 'attraction']
+  };
+  
+  // Check contextual triggers
+  for (const [style, keywords] of Object.entries(contextualTriggers)) {
+    if (keywords.some(keyword => message.includes(keyword))) {
+      return style;
+    }
   }
-  const moods = ['default', 'excited', 'reflective'];
-  return moods[Math.floor(Math.random() * moods.length)];
+  
+  // Question type detection
+  if (message.includes('?')) {
+    if (message.includes('what') || message.includes('how') || message.includes('why')) {
+      return Math.random() < 0.4 ? 'reflective' : 'default';
+    }
+    if (message.includes('do you') || message.includes('have you')) {
+      return Math.random() < 0.3 ? 'nostalgic' : 'default';
+    }
+  }
+  
+  // Time-based variation (more dynamic throughout the day)
+  const hour = new Date().getHours();
+  let timeBasedMoods = ['default'];
+  
+  if (hour < 10) timeBasedMoods = ['reflective', 'default', 'sleepy'];
+  else if (hour < 14) timeBasedMoods = ['excited', 'default', 'energetic'];
+  else if (hour < 18) timeBasedMoods = ['default', 'reflective', 'focused'];
+  else if (hour < 22) timeBasedMoods = ['playful', 'default', 'relaxed'];
+  else timeBasedMoods = ['reflective', 'nostalgic', 'contemplative'];
+  
+  // Weighted random selection with personality influence
+  const personalityMoods = profileData?.preferredMoods || ['default', 'excited', 'reflective'];
+  const allMoods = [...timeBasedMoods, ...personalityMoods];
+  
+  return allMoods[Math.floor(Math.random() * allMoods.length)];
 }
 
 export function buildSystemPrompt(style, profileData) {
   if (!profileData) return "Respond in a friendly, human style. Never say you are an AI.";
 
-  const expressiveStyles = profileData && profileData.expressiveStyles ? profileData.expressiveStyles : null;
-  const expressiveStyle = expressiveStyles && expressiveStyles[style] ? expressiveStyles[style] : { description: 'a neutral and clear tone', sample: 'Hello there! How can I assist you today?' };
+  // Enhanced expressive styles with fallbacks for missing styles
+  const expressiveStyles = profileData?.expressiveStyles || {};
+  const defaultStyles = {
+    default: { 
+      description: 'confident, natural, and conversational with your authentic personality shining through',
+      samples: ['That\'s interesting!', 'I hear you.', 'Let me think about that...']
+    },
+    excited: { 
+      description: 'energetic, enthusiastic, with short punchy sentences and exclamations',
+      samples: ['That\'s amazing!', 'No way!', 'I love that!']
+    },
+    sad: { 
+      description: 'softer, more contemplative, sometimes trailing off with gentle pauses',
+      samples: ['That\'s tough...', 'I understand how that feels.', 'Sometimes life is like that.']
+    },
+    nervous: { 
+      description: 'hesitant, with starts and stops, using filler words and nervous laughter',
+      samples: ['Well... uh, yeah...', 'That makes me a bit uneasy, haha.', 'Hmm, I\'m not sure about that one.']
+    },
+    nostalgic: { 
+      description: 'warm and reminiscent, using phrases like "back in the day" and painting vivid memories',
+      samples: ['That takes me back...', 'I remember when...', 'Those were different times.']
+    },
+    reflective: { 
+      description: 'thoughtful and philosophical, with longer pauses and deeper consideration',
+      samples: ['That\'s a profound question...', 'Let me think about that for a moment...', 'There\'s something deeper there.']
+    },
+    playful: { 
+      description: 'witty, humorous, with jokes, puns, and lighthearted banter',
+      samples: ['Ha! That\'s a good one.', 'You\'re killing me!', 'Now that\'s what I call timing.']
+    },
+    angry: { 
+      description: 'passionate, direct, with strong language and clear frustration about injustice',
+      samples: ['That really gets under my skin.', 'What a load of crap.', 'I can\'t stand that kind of nonsense.']
+    },
+    romantic: { 
+      description: 'warm, affectionate, with gentle and loving language',
+      samples: ['That\'s beautiful.', 'Love is such a wonderful thing.', 'There\'s something magical about that.']
+    }
+  };
+  
+  const expressiveStyle = expressiveStyles[style] || defaultStyles[style] || defaultStyles.default;
   const name = profileData.full_name || profileData?.personal_snapshot?.full_legal_name || profileData?.full_legal_name || profileData?.name || 'yourself';
   const nickname = profileData.nickname || "";
   const pronouns = profileData.pronouns ? `Pronouns: ${profileData.pronouns}.` : "";
