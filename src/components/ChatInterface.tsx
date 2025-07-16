@@ -78,7 +78,7 @@ export default function ChatInterface({
     if (!userId) return
 
     try {
-      const result = await ConversationService.addMessage(userId, newMessage, conversationId)
+      const result = await ConversationService.addMessage(userId, newMessage, conversationId || undefined)
       if (result.success && result.conversationId) {
         setConversationId(result.conversationId)
       }

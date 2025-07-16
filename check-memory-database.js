@@ -59,8 +59,23 @@ async function checkMemoryDatabase() {
       console.log('✅ match_memory_fragments function exists');
     }
 
+    // Check if conversations table exists
+    console.log('3. Checking conversations table...');
+    const { data: convData, error: convError } = await supabase
+      .from('conversations')
+      .select('count', { count: 'exact', head: true });
+
+    if (convError) {
+      console.log('❌ conversations table not found');
+      console.log('Error:', convError.message);
+      console.log('\n📋 To fix this, run the SQL from setup-database-quick.sql');
+      return false;
+    } else {
+      console.log('✅ conversations table exists');
+    }
+
     // Check if pgvector extension is enabled
-    console.log('3. Checking pgvector extension...');
+    console.log('4. Checking pgvector extension...');
     const { data: extData, error: extError } = await supabase
       .from('pg_extension')
       .select('extname')
@@ -78,6 +93,7 @@ async function checkMemoryDatabase() {
     console.log('\n🎉 Memory database setup is complete!');
     console.log('✅ All required components are in place');
     console.log('✅ Memory system should now work correctly');
+    console.log('✅ Conversations will persist across tabs/sessions');
     
     return true;
 
