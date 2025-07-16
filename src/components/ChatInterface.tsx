@@ -253,51 +253,83 @@ export default function ChatInterface({
         } : true
       }
       
+      console.log('Requesting microphone access...', { isSafari, constraints })
       const stream = await navigator.mediaDevices.getUserMedia(constraints)
+      console.log('Microphone access granted', stream)
       mediaStreamRef.current = stream
       
-      // Safari prefers different MIME types
-      const mimeType = isSafari 
-        ? (MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : 'audio/wav')
-        : 'audio/webm'
+      // Check if MediaRecorder is supported
+      if (!window.MediaRecorder) {
+        throw new Error('MediaRecorder not supported')
+      }
+      
+      // Safari prefers different MIME types - be more aggressive about finding supported format
+      let mimeType = 'audio/webm'
+      if (isSafari) {
+        const safariTypes = ['audio/mp4', 'audio/wav', 'audio/webm', 'audio/ogg']
+        mimeType = safariTypes.find(type => MediaRecorder.isTypeSupported(type)) || 'audio/wav'
+        console.log('Safari using MIME type:', mimeType)
+      }
       
       const options = MediaRecorder.isTypeSupported(mimeType) ? { mimeType } : {}
+      console.log('Creating MediaRecorder with options:', options)
+      
       const mr = new MediaRecorder(stream, options)
       mediaRecorderRef.current = mr
       setListening(true)
       
       const chunks: Blob[] = []
+      
       mr.ondataavailable = (e: BlobEvent) => {
+        console.log('Data available:', e.data.size)
         if (e.data.size) chunks.push(e.data)
       }
       
       mr.onstop = async () => {
+        console.log('Recording stopped, chunks:', chunks.length)
         setListening(false)
+        
         // Clean up the media stream
         if (mediaStreamRef.current) {
-          mediaStreamRef.current.getTracks().forEach((track) => track.stop())
+          mediaStreamRef.current.getTracks().forEach((track) => {
+            console.log('Stopping track:', track.kind, track.readyState)
+            track.stop()
+          })
           mediaStreamRef.current = null
         }
         
-        if (chunks.length === 0) return
+        if (chunks.length === 0) {
+          console.warn('No audio chunks recorded')
+          return
+        }
         
         const blob = new Blob(chunks, { type: mimeType })
-        if (!blob.size) return
+        console.log('Created blob:', blob.size, blob.type)
+        
+        if (!blob.size) {
+          console.warn('Empty audio blob')
+          return
+        }
         
         const form = new FormData()
         form.append('audio', blob, `recording.${mimeType.split('/')[1]}`)
         
         try {
+          console.log('Sending transcription request...')
           const r = await fetch('/api/transcribe', { method: 'POST', body: form })
           const { transcript, error } = await r.json()
+          console.log('Transcription response:', { transcript, error })
+          
           if (!error && transcript?.trim()) {
             setQuestion(transcript)
             askQuestion(transcript)
           } else {
             console.warn('Transcription failed:', error)
+            alert('Could not transcribe audio. Please try speaking more clearly or check your microphone.')
           }
         } catch (err) {
           console.error('Transcription request failed:', err)
+          alert('Failed to process audio. Please try again.')
         }
       }
       
@@ -308,15 +340,26 @@ export default function ChatInterface({
           mediaStreamRef.current.getTracks().forEach((track) => track.stop())
           mediaStreamRef.current = null
         }
+        alert('Recording error occurred. Please try again.')
+      }
+      
+      mr.onstart = () => {
+        console.log('Recording started')
       }
       
       // Start recording with Safari-friendly settings
-      mr.start(isSafari ? 1000 : undefined) // Safari works better with timeslice
+      console.log('Starting MediaRecorder...')
+      if (isSafari) {
+        mr.start(1000) // Safari works better with timeslice
+      } else {
+        mr.start()
+      }
       
       // Shorter timeout for Safari
       const timeout = isSafari ? 8000 : 10000
       setTimeout(() => {
         if (mr.state === 'recording') {
+          console.log('Auto-stopping recording after timeout')
           mr.stop()
         }
       }, timeout)
@@ -325,13 +368,17 @@ export default function ChatInterface({
       setListening(false)
       console.error('Recording error:', err)
       
-      // More specific error messages
+      // More specific error messages for Safari
       if (err.name === 'NotAllowedError') {
-        alert('Microphone access denied. Please allow microphone access and try again.')
+        if (isSafari) {
+          alert('Microphone access denied. Please:\n1. Click the microphone icon in Safari\'s address bar\n2. Or go to Safari → Settings → Websites → Microphone\n3. Allow access for this site')
+        } else {
+          alert('Microphone access denied. Please allow microphone access and try again.')
+        }
       } else if (err.name === 'NotFoundError') {
         alert('No microphone found. Please check your device settings.')
-      } else if (err.name === 'NotSupportedError') {
-        alert('Audio recording not supported on this browser.')
+      } else if (err.name === 'NotSupportedError' || err.message.includes('MediaRecorder')) {
+        alert('Audio recording not supported on this browser. Please try using Chrome or Firefox.')
       } else {
         alert('Microphone error: ' + (err.message || 'Unknown error'))
       }
@@ -351,12 +398,36 @@ export default function ChatInterface({
     }
   }
 
-  const handleMicClick = () => {
-    listening
-      ? stopAllRecording()
-      : hasSpeechRecognition
-      ? startWebSpeech()
-      : startRecording()
+  const handleMicClick = async () => {
+    if (listening) {
+      stopAllRecording()
+      return
+    }
+
+    // Safari-specific permission check
+    if (isSafari && micPermission === 'denied') {
+      alert('Microphone access is denied. Please go to Safari Settings → Privacy & Security → Microphone and enable access for this website.')
+      return
+    }
+
+    // For Safari, always try MediaRecorder first as Speech Recognition is unreliable
+    if (isSafari) {
+      try {
+        await startRecording()
+      } catch (error) {
+        console.error('Safari recording failed, trying speech recognition:', error)
+        if (hasSpeechRecognition) {
+          startWebSpeech()
+        }
+      }
+    } else {
+      // For other browsers, prefer Speech Recognition
+      if (hasSpeechRecognition) {
+        startWebSpeech()
+      } else {
+        startRecording()
+      }
+    }
   }
 
   const handleReplay = async () => {
