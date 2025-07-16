@@ -72,6 +72,25 @@ export default function ProfilePage() {
             })
             setProgress(prog)
             setVoiceId(data.voice_id)
+            
+            // Extract first name from profile data for voice naming
+            const profileData = data.profile_data
+            let firstName = ''
+            if (profileData?.personal_snapshot?.full_legal_name) {
+              firstName = profileData.personal_snapshot.full_legal_name.split(' ')[0]
+            } else if (profileData?.full_legal_name) {
+              firstName = profileData.full_legal_name.split(' ')[0]
+            } else if (profileData?.name) {
+              firstName = profileData.name.split(' ')[0]
+            } else if (me?.user_metadata?.full_name) {
+              firstName = me.user_metadata.full_name.split(' ')[0]
+            } else if (me?.email) {
+              // Fallback to email username
+              firstName = me.email.split('@')[0]
+            } else {
+              firstName = 'User'
+            }
+            setUserName(firstName)
           }
         }
         setLoadingUser(false)

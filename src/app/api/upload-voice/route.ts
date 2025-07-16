@@ -46,6 +46,10 @@ export async function POST(req: NextRequest) {
       'description',
       `Enhanced voice clone for ${name} using ${audioFiles.length} audio samples. Script: ${script?.slice(0, 80) || 'No script provided'}`
     )
+    
+    // Force American English accent - using ElevenLabs standard parameters
+    elevenForm.append('language', 'en')
+    elevenForm.append('accent', 'american')
 
     // Add enhanced settings if provided
     const settingsStr = formData.get('settings') as string
