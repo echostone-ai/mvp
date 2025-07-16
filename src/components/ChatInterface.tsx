@@ -37,19 +37,39 @@ export default function ChatInterface({
   const [isClient, setIsClient] = useState(false)
   const [hasSpeechRecognition, setHasSpeechRecognition] = useState(false)
   const [voiceError, setVoiceError] = useState<string | null>(null)
+  const [isSafari, setIsSafari] = useState(false)
+  const [micPermission, setMicPermission] = useState<'granted' | 'denied' | 'prompt' | 'unknown'>('unknown')
 
   const recognitionRef = useRef<any>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const mediaStreamRef = useRef<MediaStream | null>(null)
   const audioUrlRef = useRef<string | null>(null)
 
   useEffect(() => {
     setIsClient(true)
+    
+    // Detect Safari
+    const userAgent = navigator.userAgent.toLowerCase()
+    const isSafariBrowser = userAgent.includes('safari') && !userAgent.includes('chrome')
+    setIsSafari(isSafariBrowser)
+    
+    // Check speech recognition support
     setHasSpeechRecognition(
       !!(
         (window as any).SpeechRecognition ||
         (window as any).webkitSpeechRecognition
       )
     )
+
+    // Check microphone permissions
+    if (navigator.permissions) {
+      navigator.permissions.query({ name: 'microphone' as PermissionName })
+        .then(result => {
+          setMicPermission(result.state)
+          result.onchange = () => setMicPermission(result.state)
+        })
+        .catch(() => setMicPermission('unknown'))
+    }
   }, [])
 
   // Play audio blob helper
@@ -173,52 +193,148 @@ export default function ChatInterface({
     const Rec =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
     if (!Rec) return alert('Speech recognition not supported')
+    
     const recog = new Rec()
     recognitionRef.current = recog
     recog.continuous = false
     recog.interimResults = false
     recog.lang = 'en-US'
+    
+    // Safari-specific settings
+    if (isSafari) {
+      recog.maxAlternatives = 1
+    }
+    
     recog.onstart = () => setListening(true)
+    
     recog.onresult = (e: any) => {
       const transcript = e.results[0][0].transcript.trim()
-      recog.stop()
-      setListening(false)
-      setQuestion(transcript)
-      askQuestion(transcript)
+      if (transcript) {
+        recog.stop()
+        setListening(false)
+        setQuestion(transcript)
+        askQuestion(transcript)
+      }
     }
+    
+    recog.onerror = (e: any) => {
+      console.error('Speech recognition error:', e.error)
+      setListening(false)
+      
+      if (e.error === 'not-allowed') {
+        alert('Microphone access denied. Please allow microphone access in your browser settings.')
+      } else if (e.error === 'no-speech') {
+        // Don't alert for no-speech, just stop listening
+        console.log('No speech detected')
+      } else {
+        console.warn('Speech recognition error:', e.error)
+      }
+    }
+    
     recog.onend = () => setListening(false)
-    recog.start()
+    
+    try {
+      recog.start()
+    } catch (err) {
+      console.error('Failed to start speech recognition:', err)
+      setListening(false)
+    }
   }
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      const mr = new MediaRecorder(stream)
+      // Safari-specific audio constraints for better compatibility
+      const constraints = {
+        audio: isSafari ? {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          sampleRate: 44100
+        } : true
+      }
+      
+      const stream = await navigator.mediaDevices.getUserMedia(constraints)
+      mediaStreamRef.current = stream
+      
+      // Safari prefers different MIME types
+      const mimeType = isSafari 
+        ? (MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : 'audio/wav')
+        : 'audio/webm'
+      
+      const options = MediaRecorder.isTypeSupported(mimeType) ? { mimeType } : {}
+      const mr = new MediaRecorder(stream, options)
       mediaRecorderRef.current = mr
       setListening(true)
+      
       const chunks: Blob[] = []
       mr.ondataavailable = (e: BlobEvent) => {
         if (e.data.size) chunks.push(e.data)
       }
+      
       mr.onstop = async () => {
         setListening(false)
-        stream.getTracks().forEach((t) => t.stop())
-        const blob = new Blob(chunks, { type: 'audio/webm' })
+        // Clean up the media stream
+        if (mediaStreamRef.current) {
+          mediaStreamRef.current.getTracks().forEach((track) => track.stop())
+          mediaStreamRef.current = null
+        }
+        
+        if (chunks.length === 0) return
+        
+        const blob = new Blob(chunks, { type: mimeType })
         if (!blob.size) return
+        
         const form = new FormData()
-        form.append('audio', blob)
-        const r = await fetch('/api/transcribe', { method: 'POST', body: form })
-        const { transcript, error } = await r.json()
-        if (!error) {
-          setQuestion(transcript)
-          askQuestion(transcript)
+        form.append('audio', blob, `recording.${mimeType.split('/')[1]}`)
+        
+        try {
+          const r = await fetch('/api/transcribe', { method: 'POST', body: form })
+          const { transcript, error } = await r.json()
+          if (!error && transcript?.trim()) {
+            setQuestion(transcript)
+            askQuestion(transcript)
+          } else {
+            console.warn('Transcription failed:', error)
+          }
+        } catch (err) {
+          console.error('Transcription request failed:', err)
         }
       }
-      mr.start()
-      setTimeout(() => mr.state !== 'inactive' && mr.stop(), 10000)
-    } catch {
+      
+      mr.onerror = (e) => {
+        console.error('MediaRecorder error:', e)
+        setListening(false)
+        if (mediaStreamRef.current) {
+          mediaStreamRef.current.getTracks().forEach((track) => track.stop())
+          mediaStreamRef.current = null
+        }
+      }
+      
+      // Start recording with Safari-friendly settings
+      mr.start(isSafari ? 1000 : undefined) // Safari works better with timeslice
+      
+      // Shorter timeout for Safari
+      const timeout = isSafari ? 8000 : 10000
+      setTimeout(() => {
+        if (mr.state === 'recording') {
+          mr.stop()
+        }
+      }, timeout)
+      
+    } catch (err: any) {
       setListening(false)
-      alert('Mic error')
+      console.error('Recording error:', err)
+      
+      // More specific error messages
+      if (err.name === 'NotAllowedError') {
+        alert('Microphone access denied. Please allow microphone access and try again.')
+      } else if (err.name === 'NotFoundError') {
+        alert('No microphone found. Please check your device settings.')
+      } else if (err.name === 'NotSupportedError') {
+        alert('Audio recording not supported on this browser.')
+      } else {
+        alert('Microphone error: ' + (err.message || 'Unknown error'))
+      }
     }
   }
 
@@ -227,6 +343,11 @@ export default function ChatInterface({
     recognitionRef.current?.stop()
     if (mediaRecorderRef.current?.state === 'recording') {
       mediaRecorderRef.current.stop()
+    }
+    // Clean up the media stream immediately when stopping
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach((track) => track.stop())
+      mediaStreamRef.current = null
     }
   }
 
@@ -294,9 +415,19 @@ export default function ChatInterface({
 
       {isClient && (
         <div className="text-xs opacity-70 my-2 text-center select-none">
+          {isSafari && micPermission === 'denied' && (
+            <div className="text-red-400 mb-2">
+              Microphone access denied. Please enable in Safari Settings → Privacy & Security → Microphone
+            </div>
+          )}
           {hasSpeechRecognition
-            ? 'Speech recognition supported on this device.'
-            : 'On this device, your voice will be transcribed after recording.'}
+            ? `Speech recognition supported${isSafari ? ' (Safari optimized)' : ''}.`
+            : `Voice will be transcribed after recording${isSafari ? ' (Safari compatible mode)' : ''}.`}
+          {isSafari && (
+            <div className="text-xs mt-1 opacity-60">
+              For best results on Safari: speak clearly and wait for the microphone to stop before speaking again.
+            </div>
+          )}
         </div>
       )}
 
