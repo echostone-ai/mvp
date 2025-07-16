@@ -1,10 +1,8 @@
 import React, { useRef, useState } from "react"
 
-const defaultScript = `Hello! My name is [your name]. I’m recording this to help train my digital voice. I’ve lived in [your city or country]. My favorite way to spend a day is with good friends, great music, and a little adventure. The weather can change in an instant, but you’ll always find me with a smile—or maybe a sarcastic joke. Anyway, this is my real voice, and I hope you enjoy it. The quick brown fox jumps over the lazy dog. Thanks for listening!`
+const defaultScript = `Hello! My name is [your name]. I'm recording this to help train my digital voice. I've lived in [your city or country]. My favorite way to spend a day is with good friends, great music, and a little adventure. The weather can change in an instant, but you'll always find me with a smile—or maybe a sarcastic joke. Anyway, this is my real voice, and I hope you enjoy it. The quick brown fox jumps over the lazy dog. Thanks for listening!`
 
-const playfulScript = `Hi there! I’m [your name], and this is me in all my glory—awkward pauses, weird jokes, the works. I love to laugh, tell stories, and make the most of life’s little surprises. Seriously, if this digital twin says anything too wild, blame the code, not me. Quick brown fox, lazy dog, and all that jazz. Thanks for listening!`
-
-// Removed accent options to preserve natural voice
+const playfulScript = `Hi there! I'm [your name], and this is me in all my glory—awkward pauses, weird jokes, the works. I love to laugh, tell stories, and make the most of life's little surprises. Seriously, if this digital twin says anything too wild, blame the code, not me. Quick brown fox, lazy dog, and all that jazz. Thanks for listening!`
 
 interface VoiceRecorderProps {
   userName: string
@@ -87,14 +85,13 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ userName, onVoiceUploaded
 
   // Upload logic for multiple files
   const uploadAllAudio = async () => {
-    // Check if we have either recorded audio or uploaded files
     if (!audioBlob && uploadedFiles.length === 0) {
       setStatus("Please record or upload audio first")
       return
     }
 
     setIsUploading(true)
-    setStatus("Uploading...")
+    setStatus("Training your voice...")
 
     try {
       const formData = new FormData()
@@ -104,7 +101,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ userName, onVoiceUploaded
         formData.append(`audio_${index}`, file)
       })
       
-      // Add recorded audio if available and not already in uploaded files
+      // Add recorded audio if available
       if (audioBlob && !uploadedFiles.includes(audioBlob as File)) {
         formData.append('recorded_audio', audioBlob, `${userName || "voice"}_recorded.webm`)
       }
@@ -122,21 +119,19 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ userName, onVoiceUploaded
       console.log('Upload response:', data)
 
       if (response.ok && data.voice_id) {
-        setStatus(`Success! Voice ID: ${data.voice_id}`)
+        setStatus(`🎉 Success! Your American English voice has been trained with ID: ${data.voice_id}`)
         if (onVoiceUploaded) onVoiceUploaded(data.voice_id)
         // Clear uploaded files after successful upload
         setUploadedFiles([])
         setAudioBlob(null)
         setAudioUrl(null)
       } else {
-        // Handle different error formats
         let errorMessage = 'Unknown error occurred'
         
         if (data.error) {
           if (typeof data.error === 'string') {
             errorMessage = data.error
           } else if (typeof data.error === 'object') {
-            // Handle ElevenLabs API error objects
             if (data.error.detail && data.error.detail.message) {
               errorMessage = data.error.detail.message
             } else if (data.error.message) {
@@ -147,12 +142,12 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ userName, onVoiceUploaded
           }
         }
         
-        setStatus(`Error: ${errorMessage}`)
+        setStatus(`❌ Error: ${errorMessage}`)
         console.error('Upload error:', data)
       }
     } catch (error) {
       console.error('Error uploading voice:', error)
-      setStatus(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      setStatus(`❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setIsUploading(false)
     }
@@ -170,35 +165,23 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ userName, onVoiceUploaded
     setAudioBlob(lastFile)
     setAudioUrl(URL.createObjectURL(lastFile))
     
-    setStatus(`${newFiles.length} file(s) added. Total: ${uploadedFiles.length + newFiles.length} files ready for upload.`)
+    setStatus(`✅ ${newFiles.length} file(s) added. Total: ${uploadedFiles.length + newFiles.length} files ready for training.`)
   }
 
-  // UI
   return (
     <div className="voice-recorder-panel">
-      <h3 className="voice-recorder-title">Voice Training</h3>
-
-      <div className="voice-recorder-tips">
-        <strong>Recording tips:</strong>
-        <ul>
-          <li>Quiet room, no background noise</li>
-          <li>Speak naturally (don’t rush)</li>
-          <li>Add your personality—laugh, pause, be real</li>
-        </ul>
+      <div className="voice-header">
+        <h3 className="voice-recorder-title">Voice Training</h3>
+        <div className="voice-accent-notice">
+          🇺🇸 Your voice will be trained for American English pronunciation
+        </div>
       </div>
 
-
-
-      <div>
-        <label>
-          <strong className="voice-script-label">Please read this aloud for best results:</strong>
-          <textarea
-            value={script}
-            readOnly
-            rows={5}
-            className="voice-script-textarea"
-          />
-        </label>
+      {/* Script Section */}
+      <div className="voice-script-section">
+        <h4 className="section-title">📝 Training Script</h4>
+        <p className="section-description">Choose a script to read aloud for optimal voice training</p>
+        
         <div className="voice-script-toggle-row">
           <button
             type="button"
@@ -213,11 +196,60 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ userName, onVoiceUploaded
             className={`voice-script-btn${script === playfulScript ? ' active' : ''}`}
           >Playful Script</button>
         </div>
+
+        <textarea
+          value={script}
+          readOnly
+          rows={4}
+          className="voice-script-textarea"
+        />
       </div>
 
-      <div className="upload-section">
+      {/* Recording Section */}
+      <div className="voice-method-section">
+        <h4 className="section-title">🎤 Record New Audio</h4>
+        <div className="voice-recorder-tips">
+          <div className="tips-grid">
+            <div className="tip-item">🔇 Quiet room, no background noise</div>
+            <div className="tip-item">🗣️ Speak naturally (don't rush)</div>
+            <div className="tip-item">😊 Add your personality—laugh, pause, be real</div>
+          </div>
+        </div>
+
+        <div className="voice-record-controls">
+          <button
+            type="button"
+            onClick={startRecording}
+            disabled={recording}
+            className={`voice-record-btn ${recording ? 'recording' : ''}`}
+          >
+            {recording ? '🔴 Recording...' : '🎤 Start Recording'}
+          </button>
+          <button
+            type="button"
+            onClick={stopRecording}
+            disabled={!recording}
+            className="voice-record-btn stop"
+          >
+            ⏹️ Stop Recording
+          </button>
+        </div>
+
+        {audioUrl && (
+          <div className="voice-audio-container">
+            <div className="audio-preview-label">Your Recording:</div>
+            <audio controls src={audioUrl} className="voice-audio-player" />
+          </div>
+        )}
+      </div>
+
+      {/* Upload Section */}
+      <div className="voice-method-section">
+        <h4 className="section-title">📂 Upload Existing Audio</h4>
+        <p className="section-description">Upload voice messages, recordings, or audio files you already have</p>
+        
         <label htmlFor="audio-upload" className="voice-upload-btn">
-          <span role="img" aria-label="upload">📂</span>
+          <span className="upload-icon">📁</span>
           Choose Audio Files
           <input
             id="audio-upload"
@@ -228,81 +260,84 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ userName, onVoiceUploaded
             style={{ display: "none" }}
           />
         </label>
-        <div className="upload-notes">
-          <p className="upload-note-title">💡 Supported formats:</p>
-          <ul className="upload-note-list">
-            <li>📱 <strong>WhatsApp voice messages</strong> (.opus, .ogg)</li>
-            <li>💬 <strong>iMessage audio</strong> (.m4a, .caf)</li>
-            <li>🎵 <strong>Standard audio</strong> (.mp3, .wav, .aac)</li>
-            <li>📞 <strong>Voice memos</strong> (.amr, .3gp)</li>
-          </ul>
-          <p className="upload-tip">
-            <strong>Tip:</strong> Export voice messages from WhatsApp or iMessage for best results!
-          </p>
-        </div>
-      </div>
 
-      {/* Display uploaded files */}
-      {uploadedFiles.length > 0 && (
-        <div className="uploaded-files-container">
-          <h4 className="uploaded-files-title">Uploaded Files ({uploadedFiles.length})</h4>
-          <div className="uploaded-files-list">
-            {uploadedFiles.map((file, index) => (
-              <div key={index} className="uploaded-file">
-                <div className="file-info">
-                  <span className="file-icon">🎵</span>
-                  <span className="file-name">{file.name}</span>
-                  <span className="file-size">({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
-                </div>
-                <button 
-                  onClick={() => {
-                    setUploadedFiles(uploadedFiles.filter((_, i) => i !== index))
-                    if (uploadedFiles.length === 1) {
-                      setAudioBlob(null)
-                      setAudioUrl(null)
-                    }
-                  }}
-                  className="remove-file-btn"
-                  title="Remove file"
-                >
-                  ✕
-                </button>
-              </div>
-            ))}
+        <div className="upload-formats">
+          <div className="format-grid">
+            <div className="format-item">📱 WhatsApp (.opus, .ogg)</div>
+            <div className="format-item">💬 iMessage (.m4a, .caf)</div>
+            <div className="format-item">🎵 Standard (.mp3, .wav)</div>
+            <div className="format-item">📞 Voice memos (.amr, .3gp)</div>
+          </div>
+          <div className="upload-tip">
+            💡 <strong>Pro tip:</strong> Export voice messages from WhatsApp or iMessage for best results!
           </div>
         </div>
-      )}
 
-      <div className="voice-file-row">
-        <button
-          type="button"
-          onClick={startRecording}
-          disabled={recording}
-          className="voice-record-btn"
-        >Record</button>
-        <button
-          type="button"
-          onClick={stopRecording}
-          disabled={!recording}
-          className="voice-record-btn"
-        >Stop Recording</button>
+        {/* Display uploaded files */}
+        {uploadedFiles.length > 0 && (
+          <div className="uploaded-files-container">
+            <h5 className="uploaded-files-title">Uploaded Files ({uploadedFiles.length})</h5>
+            <div className="uploaded-files-list">
+              {uploadedFiles.map((file, index) => (
+                <div key={index} className="uploaded-file">
+                  <div className="file-info">
+                    <span className="file-icon">🎵</span>
+                    <div className="file-details">
+                      <span className="file-name">{file.name}</span>
+                      <span className="file-size">{(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      setUploadedFiles(uploadedFiles.filter((_, i) => i !== index))
+                      if (uploadedFiles.length === 1) {
+                        setAudioBlob(null)
+                        setAudioUrl(null)
+                      }
+                    }}
+                    className="remove-file-btn"
+                    title="Remove file"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
-      {audioUrl && (
-        <div className="voice-audio-container">
-          <audio controls src={audioUrl} className="voice-audio-player" />
-        </div>
-      )}
-
-      <button
-        type="button"
-        disabled={(!audioBlob && uploadedFiles.length === 0) || isUploading}
-        onClick={uploadAllAudio}
-        className="voice-upload-btn"
-      >
-        {isUploading ? "Uploading..." : `Upload Voice${uploadedFiles.length > 0 || audioBlob ? ` (${(uploadedFiles.length + (audioBlob ? 1 : 0))} files)` : ""}`}
-      </button>
-      {status && <div className="voice-upload-status">{status}</div>}
+      {/* Final Upload Section */}
+      <div className="voice-final-section">
+        <button
+          type="button"
+          disabled={(!audioBlob && uploadedFiles.length === 0) || isUploading}
+          onClick={uploadAllAudio}
+          className="voice-final-upload-btn"
+        >
+          {isUploading ? (
+            <>
+              <span className="loading-spinner"></span>
+              Training Voice...
+            </>
+          ) : (
+            <>
+              🚀 Train My Voice
+              {(uploadedFiles.length > 0 || audioBlob) && (
+                <span className="file-count">
+                  ({(uploadedFiles.length + (audioBlob ? 1 : 0))} files)
+                </span>
+              )}
+            </>
+          )}
+        </button>
+        
+        {status && (
+          <div className={`voice-upload-status ${status.includes('Success') || status.includes('🎉') ? 'success' : status.includes('Error') || status.includes('❌') ? 'error' : ''}`}>
+            {status}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
