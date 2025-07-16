@@ -506,7 +506,7 @@ export class MemoryPerformanceMonitor {
   static exportPerformanceData(timeWindowMs: number = 24 * 60 * 60 * 1000): {
     metrics: PerformanceMetrics[]
     stats: PerformanceStats[]
-    cacheStats: ReturnType<typeof this.getCacheStats>
+    cacheStats: ReturnType<typeof MemoryPerformanceMonitor.getCacheStats>
     recommendations: string[]
   } {
     const cutoffTime = new Date(Date.now() - timeWindowMs)
