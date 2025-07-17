@@ -59,7 +59,7 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
       model_id: 'eleven_turbo_v2_5'
     }
   );  // 
-Emotional previews state - all emotions from EmotionalCalibration
+// Emotional previews state - all emotions from EmotionalCalibration
   const [emotionalPreviews, setEmotionalPreviews] = useState<EmotionalPreview[]>([
     { emotion: 'happy', label: 'Happy', icon: '😊', isGenerating: false },
     { emotion: 'sad', label: 'Sad', icon: '😢', isGenerating: false },
@@ -128,8 +128,8 @@ Emotional previews state - all emotions from EmotionalCalibration
       category: 'professional',
       emotionalContext: 'calm'
     }
-  ];  /
-/ Generate emotional previews (Requirement 3.1)
+  ];  // 
+// Generate emotional previews (Requirement 3.1)
   const generateEmotionalPreviews = useCallback(async () => {
     setIsGeneratingAll(true);
     
@@ -189,7 +189,7 @@ Emotional previews state - all emotions from EmotionalCalibration
       ));
     }
   }, [voiceId, userName, voiceSettings]);  // 
-Generate scenario preview
+// Generate scenario preview
   const generateScenarioPreview = useCallback(async (scenarioId: string, customTextOverride?: string) => {
     const scenario = scenarios.find(s => s.id === scenarioId);
     if (!scenario) return;
@@ -612,3 +612,10 @@ Generate scenario preview
               </p>
             </div>
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default VoicePreviewTesting;
