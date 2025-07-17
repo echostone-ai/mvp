@@ -3512,3 +3512,270 @@ s Section Styles */
     width: 100%;
   }
 }
+
+/* Voice Tuning Panel Styles */
+.voice-tuning-panel {
+  background: var(--color-bg-panel, #18182a);
+  border-radius: 24px;
+  box-shadow: 0 4px 32px rgba(60, 0, 120, 0.08);
+  padding: 2.5rem 1.5rem;
+  margin: 0 auto;
+  max-width: 900px;
+  width: 100%;
+}
+.voice-tuning-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+.voice-tuning-title {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 0.5rem;
+}
+.voice-tuning-desc {
+  color: #bdbdfc;
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+.voice-tuning-tabs {
+  display: flex;
+  gap: 0.5rem;
+  background: #23234a;
+  border-radius: 16px;
+  padding: 0.25rem;
+  margin-bottom: 2rem;
+}
+.voice-tuning-tab {
+  flex: 1;
+  background: transparent;
+  color: #bdbdfc;
+  font-weight: 600;
+  font-size: 1rem;
+  border: none;
+  border-radius: 12px;
+  padding: 0.75rem 0.5rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.voice-tuning-tab.active {
+  background: linear-gradient(90deg, #7c3aed 0%, #2563eb 100%);
+  color: #fff;
+  box-shadow: 0 2px 12px rgba(60,0,120,0.08);
+}
+.voice-tuning-section {
+  margin-bottom: 2rem;
+}
+.voice-tuning-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+.voice-tuning-section-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fff;
+}
+.voice-tuning-btn {
+  background: #23234a;
+  color: #bdbdfc;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1.2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-right: 0.5rem;
+  transition: background 0.2s, color 0.2s;
+}
+.voice-tuning-btn.primary {
+  background: linear-gradient(90deg, #7c3aed 0%, #2563eb 100%);
+  color: #fff;
+}
+.voice-tuning-btn.playing {
+  background: #e11d48;
+  color: #fff;
+}
+.voice-tuning-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.voice-tuning-spinner {
+  display: inline-block;
+  width: 1.2em;
+  height: 1.2em;
+  border: 2px solid #fff;
+  border-top: 2px solid #7c3aed;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 0.5em;
+}
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.voice-tuning-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.2rem;
+}
+@media (min-width: 600px) {
+  .voice-tuning-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (min-width: 900px) {
+  .voice-tuning-grid {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+.voice-tuning-card {
+  background: #23234a;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(60,0,120,0.06);
+  padding: 1.2rem 1rem;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+.voice-tuning-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 0.5rem;
+}
+.voice-tuning-emoji {
+  font-size: 1.7rem;
+}
+.voice-tuning-card-title {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+.voice-tuning-status.success {
+  color: #22c55e;
+  background: #22c55e22;
+  border-radius: 8px;
+  padding: 0.1em 0.7em;
+  font-size: 0.9em;
+  margin-left: auto;
+}
+.voice-tuning-card-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+.voice-tuning-error {
+  color: #f87171;
+  background: #f8717115;
+  border-radius: 8px;
+  padding: 0.5em 0.8em;
+  font-size: 0.98em;
+  margin-top: 0.5em;
+}
+.voice-tuning-error.global {
+  text-align: center;
+  font-weight: 600;
+}
+.voice-tuning-error-tip {
+  color: #fbbf24;
+  font-size: 0.95em;
+  margin-top: 0.2em;
+}
+.voice-tuning-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+.voice-tuning-select {
+  background: #23234a;
+  color: #bdbdfc;
+  border: 1px solid #7c3aed;
+  border-radius: 8px;
+  padding: 0.3em 0.8em;
+  font-size: 1em;
+}
+.voice-tuning-custom-text {
+  display: flex;
+  gap: 0.7em;
+  align-items: flex-start;
+  margin-bottom: 1.2em;
+}
+.voice-tuning-textarea {
+  flex: 1;
+  background: #18182a;
+  color: #fff;
+  border: 1px solid #7c3aed;
+  border-radius: 8px;
+  padding: 0.7em 1em;
+  font-size: 1em;
+  min-height: 2.5em;
+  resize: vertical;
+}
+.voice-tuning-category {
+  font-size: 0.9em;
+  border-radius: 8px;
+  padding: 0.1em 0.7em;
+  margin-left: auto;
+  background: #7c3aed22;
+  color: #7c3aed;
+  font-weight: 600;
+}
+.voice-tuning-card-desc {
+  color: #bdbdfc;
+  font-size: 0.98em;
+  background: #23234a;
+  border-left: 4px solid #7c3aed;
+  padding: 0.5em 1em;
+  border-radius: 8px;
+}
+.voice-tuning-guide {
+  background: #23234a;
+  color: #bdbdfc;
+  border-radius: 12px;
+  padding: 1em 1.2em;
+  margin-bottom: 1.2em;
+}
+.voice-tuning-params-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.2em;
+}
+@media (min-width: 600px) {
+  .voice-tuning-params-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.voice-tuning-param {
+  background: #23234a;
+  border-radius: 12px;
+  padding: 1em 1.2em;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+}
+.voice-tuning-param-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  font-size: 1em;
+}
+.voice-tuning-slider {
+  width: 100%;
+  accent-color: #7c3aed;
+  margin: 0.5em 0;
+}
+.voice-tuning-param-desc {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.95em;
+  color: #bdbdfc;
+}
+.voice-tuning-checkbox {
+  width: 1.3em;
+  height: 1.3em;
+  accent-color: #7c3aed;
+  margin-left: 0.7em;
+}

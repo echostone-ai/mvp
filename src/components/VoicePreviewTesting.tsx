@@ -328,17 +328,17 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
   }, [emotionalPreviews]);
 
   return (
-    <div className="space-y-6">
+    <div className="voice-tuning-panel">
       {/* Header */}
-      <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Voice Preview & Testing</h2>
-        <p className="text-gray-600">
+      <div className="voice-tuning-header">
+        <h2 className="voice-tuning-title">Voice Preview & Testing</h2>
+        <p className="voice-tuning-desc">
           Test your voice with different emotions, scenarios, and parameter adjustments
         </p>
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+      <div className="voice-tuning-tabs">
         {[
           { id: 'emotional', label: 'Emotional Contexts', icon: '🎭' },
           { id: 'scenarios', label: 'Scenarios', icon: '🎬' },
@@ -347,11 +347,7 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id as any)}
-            className={`flex-1 flex items-center justify-center space-x-2 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-              activeTab === tab.id
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
+            className={`voice-tuning-tab${activeTab === tab.id ? ' active' : ''}`}
           >
             <span>{tab.icon}</span>
             <span>{tab.label}</span>
@@ -360,99 +356,73 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
       </div>      
 {/* Emotional Contexts Tab */}
       {activeTab === 'emotional' && (
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-gray-900">Emotional Contexts</h3>
+        <div className="voice-tuning-section">
+          <div className="voice-tuning-section-header">
+            <h3 className="voice-tuning-section-title">Emotional Contexts</h3>
             <button
               onClick={generateEmotionalPreviews}
               disabled={isGeneratingAll}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
+              className="voice-tuning-btn primary"
             >
               {isGeneratingAll ? (
-                <div className="flex items-center space-x-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                  <span>Generating All...</span>
-                </div>
+                <span className="voice-tuning-spinner" />
               ) : (
                 '🎭 Generate All Previews'
               )}
             </button>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="voice-tuning-grid">
             {emotionalPreviews.map(preview => (
-              <div key={preview.emotion} className="bg-white border border-gray-200 rounded-lg p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-2xl">{preview.icon}</span>
-                    <h4 className="font-medium text-gray-900">{preview.label}</h4>
-                  </div>
+              <div key={preview.emotion} className="voice-tuning-card">
+                <div className="voice-tuning-card-header">
+                  <span className="voice-tuning-emoji">{preview.icon}</span>
+                  <span className="voice-tuning-card-title">{preview.label}</span>
                   {preview.result?.success && (
-                    <div className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                      ✓ Ready
-                    </div>
+                    <span className="voice-tuning-status success">✓ Ready</span>
                   )}
                 </div>
-
-                <div className="flex space-x-2">
+                <div className="voice-tuning-card-controls">
                   <button
                     onClick={() => generateSinglePreview(preview.emotion)}
                     disabled={preview.isGenerating}
-                    className="flex-1 bg-gray-100 text-gray-700 px-3 py-2 rounded-md hover:bg-gray-200 disabled:opacity-50 text-sm transition-colors"
+                    className="voice-tuning-btn"
                   >
-                    {preview.isGenerating ? (
-                      <div className="flex items-center justify-center space-x-1">
-                        <div className="animate-spin rounded-full h-3 w-3 border-2 border-gray-600 border-t-transparent"></div>
-                        <span>Generating...</span>
-                      </div>
-                    ) : (
-                      '🔄 Generate'
-                    )}
+                    {preview.isGenerating ? 'Generating...' : '🔄 Generate'}
                   </button>
-                  
                   {preview.audioUrl && (
                     <button
                       onClick={() => playPreview(preview.emotion, preview.audioUrl)}
-                      className={`px-3 py-2 rounded-md text-sm transition-colors ${
-                        currentlyPlaying === preview.emotion
-                          ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                          : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                      }`}
+                      className={`voice-tuning-btn${currentlyPlaying === preview.emotion ? ' playing' : ''}`}
                     >
                       {currentlyPlaying === preview.emotion ? '⏹️ Stop' : '▶️ Play'}
                     </button>
                   )}
                 </div>
-
                 {preview.result && !preview.result.success && (
-                  <div className="text-xs text-red-600 bg-red-50 p-2 rounded">
-                    Error: {preview.result.error}
-                  </div>
+                  <div className="voice-tuning-error">Error: {preview.result.error}</div>
                 )}
               </div>
             ))}
           </div>
           {globalError && (
-            <div className="voice-preview-error">
+            <div className="voice-tuning-error global">
               <p>{globalError}</p>
-              <p className="voice-preview-error-tip">Check your API key, internet connection, or try again later.</p>
+              <p className="voice-tuning-error-tip">Check your API key, internet connection, or try again later.</p>
             </div>
           )}
         </div>
       )}    
   {/* Scenarios Tab */}
       {activeTab === 'scenarios' && (
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-gray-900">Contextual Scenarios</h3>
-            
-            {/* Scenario Filter */}
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-600">Filter:</span>
+        <div className="voice-tuning-section">
+          <div className="voice-tuning-section-header">
+            <h3 className="voice-tuning-section-title">Contextual Scenarios</h3>
+            <div className="voice-tuning-filter">
+              <span>Filter:</span>
               <select
                 value={scenarioFilter}
                 onChange={(e) => setScenarioFilter(e.target.value as any)}
-                className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="voice-tuning-select"
               >
                 <option value="all">All Categories</option>
                 <option value="conversational">Conversational</option>
@@ -464,62 +434,39 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
           </div>
           
           {/* Custom Text Input */}
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-3">
-            <h4 className="font-medium text-gray-900">Custom Text Testing</h4>
-            <div className="flex space-x-2">
-              <textarea
-                value={customText}
-                onChange={(e) => setCustomText(e.target.value)}
-                placeholder="Enter your own text to test how it sounds with your voice..."
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                rows={2}
-              />
-              <button
-                onClick={generateCustomPreview}
-                disabled={!customText.trim() || currentlyPlaying === 'custom'}
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {currentlyPlaying === 'custom' ? '⏹️ Stop' : '▶️ Test'}
-              </button>
-            </div>
+          <div className="voice-tuning-custom-text">
+            <textarea
+              value={customText}
+              onChange={(e) => setCustomText(e.target.value)}
+              placeholder="Enter your own text to test how it sounds with your voice..."
+              className="voice-tuning-textarea"
+              rows={2}
+            />
+            <button
+              onClick={generateCustomPreview}
+              disabled={!customText.trim() || currentlyPlaying === 'custom'}
+              className="voice-tuning-btn primary"
+            >
+              {currentlyPlaying === 'custom' ? '⏹️ Stop' : '▶️ Test'}
+            </button>
           </div>
 
           {/* Predefined Scenarios */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="voice-tuning-grid scenarios">
             {scenarios
               .filter(scenario => scenarioFilter === 'all' || scenario.category === scenarioFilter)
               .map(scenario => (
-              <div key={scenario.id} className="bg-white border border-gray-200 rounded-lg p-4 space-y-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-xl">{scenario.icon}</span>
-                    <div>
-                      <h4 className="font-medium text-gray-900">{scenario.name}</h4>
-                      <p className="text-xs text-gray-500">{scenario.description}</p>
-                    </div>
-                  </div>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    scenario.category === 'conversational' ? 'bg-blue-100 text-blue-800' :
-                    scenario.category === 'narrative' ? 'bg-purple-100 text-purple-800' :
-                    scenario.category === 'expressive' ? 'bg-pink-100 text-pink-800' :
-                    'bg-gray-100 text-gray-800'
-                  }`}>
-                    {scenario.category}
-                  </span>
+              <div key={scenario.id} className="voice-tuning-card">
+                <div className="voice-tuning-card-header">
+                  <span className="voice-tuning-emoji">{scenario.icon}</span>
+                  <span className="voice-tuning-card-title">{scenario.name}</span>
+                  <span className={`voice-tuning-category ${scenario.category}`}>{scenario.category}</span>
                 </div>
-
-                <div className="text-sm text-gray-600 bg-gray-50 p-2 rounded border-l-4 border-gray-300">
-                  "{scenario.sampleText}"
-                </div>
-
+                <div className="voice-tuning-card-desc">"{scenario.sampleText}"</div>
                 <button
                   onClick={() => generateScenarioPreview(scenario.id)}
                   disabled={currentlyPlaying === scenario.id}
-                  className={`w-full px-3 py-2 rounded-md text-sm transition-colors ${
-                    currentlyPlaying === scenario.id
-                      ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                      : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                  }`}
+                  className="voice-tuning-btn"
                 >
                   {currentlyPlaying === scenario.id ? '⏹️ Stop Playing' : '▶️ Play Scenario'}
                 </button>
@@ -530,25 +477,23 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
       )} 
      {/* Voice Parameters Tab */}
       {activeTab === 'parameters' && (
-        <div className="space-y-6">
-          <h3 className="text-lg font-semibold text-gray-900">Voice Parameter Adjustment</h3>
-          
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h4 className="font-medium text-blue-900 mb-2">💡 Parameter Guide</h4>
-            <ul className="text-sm text-blue-800 space-y-1">
+        <div className="voice-tuning-section">
+          <h3 className="voice-tuning-section-title">Voice Parameter Adjustment</h3>
+          <div className="voice-tuning-guide">
+            <h4>💡 Parameter Guide</h4>
+            <ul>
               <li><strong>Stability:</strong> Higher values = more consistent, lower = more expressive</li>
               <li><strong>Similarity Boost:</strong> How closely to match your original voice</li>
               <li><strong>Style:</strong> Amount of emotional expression and variation</li>
               <li><strong>Speaker Boost:</strong> Enhances voice clarity and presence</li>
             </ul>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="voice-tuning-params-grid">
             {/* Stability */}
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <label className="text-sm font-medium text-gray-700">Stability</label>
-                <span className="text-sm text-gray-500">{voiceSettings.stability.toFixed(2)}</span>
+            <div className="voice-tuning-param">
+              <div className="voice-tuning-param-label">
+                <label>Stability</label>
+                <span>{voiceSettings.stability.toFixed(2)}</span>
               </div>
               <input
                 type="range"
@@ -557,19 +502,18 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
                 step="0.01"
                 value={voiceSettings.stability}
                 onChange={(e) => updateVoiceParameter('stability', parseFloat(e.target.value))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                className="voice-tuning-slider"
               />
-              <div className="flex justify-between text-xs text-gray-500">
+              <div className="voice-tuning-param-desc">
                 <span>More Variable</span>
                 <span>More Stable</span>
               </div>
             </div>
-
             {/* Similarity Boost */}
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <label className="text-sm font-medium text-gray-700">Similarity Boost</label>
-                <span className="text-sm text-gray-500">{voiceSettings.similarity_boost.toFixed(2)}</span>
+            <div className="voice-tuning-param">
+              <div className="voice-tuning-param-label">
+                <label>Similarity Boost</label>
+                <span>{voiceSettings.similarity_boost.toFixed(2)}</span>
               </div>
               <input
                 type="range"
@@ -578,19 +522,18 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
                 step="0.01"
                 value={voiceSettings.similarity_boost}
                 onChange={(e) => updateVoiceParameter('similarity_boost', parseFloat(e.target.value))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                className="voice-tuning-slider"
               />
-              <div className="flex justify-between text-xs text-gray-500">
+              <div className="voice-tuning-param-desc">
                 <span>More Creative</span>
                 <span>More Similar</span>
               </div>
             </div>
-
             {/* Style */}
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <label className="text-sm font-medium text-gray-700">Style</label>
-                <span className="text-sm text-gray-500">{voiceSettings.style.toFixed(2)}</span>
+            <div className="voice-tuning-param">
+              <div className="voice-tuning-param-label">
+                <label>Style</label>
+                <span>{voiceSettings.style.toFixed(2)}</span>
               </div>
               <input
                 type="range"
@@ -599,31 +542,27 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
                 step="0.01"
                 value={voiceSettings.style}
                 onChange={(e) => updateVoiceParameter('style', parseFloat(e.target.value))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                className="voice-tuning-slider"
               />
-              <div className="flex justify-between text-xs text-gray-500">
+              <div className="voice-tuning-param-desc">
                 <span>Less Expressive</span>
                 <span>More Expressive</span>
               </div>
             </div>
-
             {/* Speaker Boost */}
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <label className="text-sm font-medium text-gray-700">Speaker Boost</label>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={voiceSettings.use_speaker_boost}
-                    onChange={(e) => updateVoiceParameter('use_speaker_boost', e.target.checked)}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
+            <div className="voice-tuning-param">
+              <div className="voice-tuning-param-label">
+                <label>Speaker Boost</label>
+                <input
+                  type="checkbox"
+                  checked={voiceSettings.use_speaker_boost}
+                  onChange={(e) => updateVoiceParameter('use_speaker_boost', e.target.checked)}
+                  className="voice-tuning-checkbox"
+                />
               </div>
-              <p className="text-xs text-gray-500">
-                Enhances voice clarity and presence
-              </p>
+              <div className="voice-tuning-param-desc">
+                <span>Enhances voice clarity and presence</span>
+              </div>
             </div>
           </div>
         </div>
