@@ -3,7 +3,8 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { MemoryService } from '@/lib/memoryService'
 
-export const runtime = 'edge'
+// Temporarily disable edge runtime to fix auth issues
+// export const runtime = 'edge'
 
 /**
  * GET /api/memories - Retrieve user's memory fragments
