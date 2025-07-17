@@ -462,13 +462,3 @@ export const defaultStepValidation = <TData = any>(): { isValid: boolean; errors
   isValid: true,
   errors: []
 })
-
-// Export types for external use
-export type {
-  WizardStep,
-  WizardStepProps,
-  WizardState,
-  WizardConfig,
-  WizardActions,
-  WizardHookReturn
-}
