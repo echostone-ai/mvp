@@ -5,7 +5,6 @@ import { VoiceQualityOptimizer, AudioAnalysis } from '../lib/voiceQualityOptimiz
 import { EnhancedVoiceService, ProfessionalVoiceSettings, EmotionalCalibration } from '../lib/enhancedVoiceService';
 import { 
   useOnboardingWizard, 
-  OnboardingStep, 
   OnboardingStepProps,
   ValidationUtils 
 } from '../lib/onboardingWizardFramework';
@@ -547,7 +546,7 @@ const CompletionStep: React.FC<OnboardingStepProps<VoiceOnboardingData>> = ({ da
 );
 
 // Define the onboarding steps
-const createOnboardingSteps = (): OnboardingStep<VoiceOnboardingData>[] => [
+const createOnboardingSteps = (): OnboardingStepProps<VoiceOnboardingData>[] => [
   {
     id: 'welcome',
     title: 'Welcome',
