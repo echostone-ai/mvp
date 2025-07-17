@@ -61,6 +61,7 @@ export default function MemoryManagement({ userId }: MemoryManagementProps) {
       setError(null)
 
       const params = new URLSearchParams({
+        userId: userId, // Add userId parameter
         limit: itemsPerPage.toString(),
         offset: (currentPage * itemsPerPage).toString(),
         orderBy: 'created_at',
@@ -177,7 +178,13 @@ export default function MemoryManagement({ userId }: MemoryManagementProps) {
       setError(null)
 
       const response = await fetch('/api/memories', {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: userId
+        })
       })
 
       if (!response.ok) {
