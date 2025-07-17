@@ -161,23 +161,32 @@ export async function POST(req: Request) {
       // Process memory capture in background without blocking response
       const conversationContext = `Chat conversation at ${new Date().toISOString()}`
       
+      // Add detailed logging for debugging
+      console.log('🧠 Starting memory processing for user:', userId)
+      console.log('🧠 User ID type:', typeof userId)
+      console.log('🧠 User ID length:', userId.length)
+      console.log('🧠 Message:', prompt.substring(0, 100) + '...')
+      
       MemoryService.processAndStoreMemories(prompt, userId, conversationContext)
         .then(fragments => {
           if (fragments.length > 0) {
-            console.log(`Successfully stored ${fragments.length} memory fragments for user ${userId}`)
+            console.log(`✅ Successfully stored ${fragments.length} memory fragments for user ${userId}`)
             // Log fragment details for debugging (in development only)
             if (process.env.NODE_ENV === 'development') {
               console.log('Memory fragments:', fragments.map(f => f.fragmentText))
             }
+          } else {
+            console.log(`ℹ️  No memories extracted from message for user ${userId}`)
           }
         })
         .catch(error => {
           // Log detailed error information but don't fail the request
-          console.error('Background memory processing failed for user', userId, ':', error)
+          console.error('❌ Background memory processing failed for user', userId, ':', error)
           console.error('Error details:', {
             message: error.message,
             stack: error.stack,
             userId,
+            userIdType: typeof userId,
             promptLength: prompt.length,
             timestamp: new Date().toISOString()
           })
@@ -188,6 +197,8 @@ export async function POST(req: Request) {
             console.error('Full error object:', error)
           }
         })
+    } else {
+      console.log('⚠️  No userId provided for memory processing')
     }
 
     // Return the AI answer, voiceId, and memory information for transparency
