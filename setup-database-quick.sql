@@ -1,10 +1,21 @@
--- Quick Database Setup for Memory System
--- Copy and paste this entire script into your Supabase SQL Editor and run it
+-- Complete Memory System Database Setup
+-- Run this entire script in your Supabase SQL Editor
 
--- 1. Enable pgvector extension
+-- Enable the pgvector extension for vector operations
 CREATE EXTENSION IF NOT EXISTS vector;
 
--- 2. Create conversations table (for persistent chat)
+-- Create the memory_fragments table
+CREATE TABLE IF NOT EXISTS memory_fragments (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  fragment_text TEXT NOT NULL,
+  embedding vector(1536) NOT NULL,
+  conversation_context JSONB,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create the conversations table for persistent chat history
 CREATE TABLE IF NOT EXISTS conversations (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -14,20 +25,33 @@ CREATE TABLE IF NOT EXISTS conversations (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 3. Create indexes for conversations
+-- Create indexes for memory_fragments
+CREATE INDEX IF NOT EXISTS memory_fragments_embedding_idx ON memory_fragments 
+USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
+
+CREATE INDEX IF NOT EXISTS memory_fragments_user_id_idx ON memory_fragments (user_id);
+CREATE INDEX IF NOT EXISTS memory_fragments_created_at_idx ON memory_fragments (created_at);
+
+-- Create indexes for conversations
 CREATE INDEX IF NOT EXISTS conversations_user_id_idx ON conversations (user_id);
 CREATE INDEX IF NOT EXISTS conversations_last_active_idx ON conversations (last_active);
 CREATE INDEX IF NOT EXISTS conversations_user_last_active_idx ON conversations (user_id, last_active DESC);
 
--- 4. Enable RLS for conversations
+-- Enable Row Level Security (RLS)
+ALTER TABLE memory_fragments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
 
--- 5. Create RLS policy for conversations
+-- Create RLS policies for memory_fragments
+DROP POLICY IF EXISTS "Users can only access their own memory fragments" ON memory_fragments;
+CREATE POLICY "Users can only access their own memory fragments" ON memory_fragments
+  FOR ALL USING (auth.uid() = user_id);
+
+-- Create RLS policies for conversations
 DROP POLICY IF EXISTS "Users can only access their own conversations" ON conversations;
 CREATE POLICY "Users can only access their own conversations" ON conversations
   FOR ALL USING (auth.uid() = user_id);
 
--- 6. Create trigger for conversations updated_at
+-- Create function to update the updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -36,16 +60,24 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
+-- Create triggers to automatically update the updated_at column
+DROP TRIGGER IF EXISTS update_memory_fragments_updated_at ON memory_fragments;
+CREATE TRIGGER update_memory_fragments_updated_at 
+    BEFORE UPDATE ON memory_fragments 
+    FOR EACH ROW 
+    EXECUTE FUNCTION update_updated_at_column();
+
 DROP TRIGGER IF EXISTS update_conversations_updated_at ON conversations;
 CREATE TRIGGER update_conversations_updated_at 
     BEFORE UPDATE ON conversations 
     FOR EACH ROW 
     EXECUTE FUNCTION update_updated_at_column();
 
--- 7. Verify memory_fragments table exists (should already exist)
--- If this fails, you need to run the memory fragments migration first
+-- Drop existing function first to avoid return type conflicts
+DROP FUNCTION IF EXISTS match_memory_fragments(vector, double precision, integer, uuid);
+DROP FUNCTION IF EXISTS match_memory_fragments(vector, float, integer, uuid);
 
--- 8. Create/update the vector search function
+-- Function to perform vector similarity search for memory fragments
 CREATE OR REPLACE FUNCTION match_memory_fragments(
   query_embedding vector(1536),
   match_threshold float DEFAULT 0.78,
@@ -58,7 +90,9 @@ RETURNS TABLE (
   fragment_text text,
   conversation_context jsonb,
   similarity float,
-  created_at timestamptz
+  created_at timestamptz,
+  updated_at timestamptz,
+  embedding vector(1536)
 )
 LANGUAGE plpgsql
 AS $$
@@ -70,7 +104,9 @@ BEGIN
     memory_fragments.fragment_text,
     memory_fragments.conversation_context,
     1 - (memory_fragments.embedding <=> query_embedding) AS similarity,
-    memory_fragments.created_at
+    memory_fragments.created_at,
+    memory_fragments.updated_at,
+    memory_fragments.embedding
   FROM memory_fragments
   WHERE 
     (target_user_id IS NULL OR memory_fragments.user_id = target_user_id)
@@ -80,5 +116,34 @@ BEGIN
 END;
 $$;
 
--- Success message
-SELECT 'Database setup complete! Memory system should now work.' as status;
+-- Verify setup
+DO $$
+BEGIN
+  -- Check if pgvector extension is enabled
+  IF NOT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'vector') THEN
+    RAISE EXCEPTION 'pgvector extension is not enabled';
+  END IF;
+  
+  -- Check if tables exist
+  IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'memory_fragments') THEN
+    RAISE EXCEPTION 'memory_fragments table does not exist';
+  END IF;
+  
+  IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'conversations') THEN
+    RAISE EXCEPTION 'conversations table does not exist';
+  END IF;
+  
+  -- Check if function exists
+  IF NOT EXISTS (SELECT 1 FROM information_schema.routines WHERE routine_name = 'match_memory_fragments') THEN
+    RAISE EXCEPTION 'match_memory_fragments function does not exist';
+  END IF;
+  
+  RAISE NOTICE '✅ Memory system database setup completed successfully!';
+  RAISE NOTICE '✅ pgvector extension enabled';
+  RAISE NOTICE '✅ memory_fragments table created';
+  RAISE NOTICE '✅ conversations table created';
+  RAISE NOTICE '✅ match_memory_fragments function created';
+  RAISE NOTICE '✅ All indexes and policies configured';
+  RAISE NOTICE '🎉 Your memory system is ready to use!';
+END
+$$;

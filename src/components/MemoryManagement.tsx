@@ -40,7 +40,20 @@ export default function MemoryManagement({ userId }: MemoryManagementProps) {
   // Load memories on component mount and when page changes
   useEffect(() => {
     loadMemories()
-  }, [currentPage, searchQuery])
+  }, [currentPage])
+
+  // Debounced search effect
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (currentPage !== 0) {
+        setCurrentPage(0) // Reset to first page when searching
+      } else {
+        loadMemories()
+      }
+    }, 300) // 300ms debounce
+
+    return () => clearTimeout(timeoutId)
+  }, [searchQuery])
 
   const loadMemories = async () => {
     try {

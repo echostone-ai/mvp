@@ -180,19 +180,14 @@ export default function ChatInterface({
     }
 
     try {
-      const profileContext = buildProfileContext()
-      const prompt = `You are speaking with a personality based on this profile data:\n${profileContext}\n\nConversation history:\n${newHistory.map(m => `${m.role}: ${m.content}`).join('\n')}\n\nUser: ${text}\nAssistant:`
-
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          prompt,
-          profileData, // <-- make sure this line is included
+          prompt: text, // Send just the user's current message
+          profileData,
           voiceId,
-          userId, // <-- pass userId for memory operations
-          history: newHistory,
-          question: text,
+          userId, // Pass userId for memory operations
         }),
       })
 
