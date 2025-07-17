@@ -602,7 +602,7 @@ const createOnboardingSteps = (): any[] => [
 
 // Main component
 export const EnhancedVoiceOnboardingNew: React.FC = () => {
-  const { wizard, state, currentStep, stepProps, progress } = useOnboardingWizard({
+  const { state, actions, currentStep, progress } = useOnboardingWizard({
     steps: createOnboardingSteps(),
     initialData: {
       audioFiles: [],
@@ -618,14 +618,25 @@ export const EnhancedVoiceOnboardingNew: React.FC = () => {
       console.log('Onboarding completed with data:', data);
       // Handle completion logic here
     },
-    onStepChange: (stepId, stepIndex, data) => {
-      console.log(`Step changed to ${stepId} (${stepIndex})`, data);
-    },
-    persistProgress: true,
     storageKey: 'voice-onboarding-progress'
   });
 
   const StepComponent = currentStep.component;
+
+  // Construct WizardStepProps for the current step
+  const stepProps = {
+    data: state.data,
+    updateData: actions.updateData,
+    nextStep: actions.nextStep,
+    prevStep: actions.prevStep,
+    goToStep: actions.goToStep,
+    isValid: currentStep.validation(state.data).isValid,
+    errors: state.errors,
+    currentStepIndex: state.currentStep,
+    totalSteps: progress.total,
+    isProcessing: state.isProcessing,
+    setProcessing: actions.setProcessing
+  };
 
   return (
     <div className="max-w-2xl mx-auto p-6">
@@ -670,7 +681,6 @@ export const EnhancedVoiceOnboardingNew: React.FC = () => {
           <p>Current Step: {currentStep.id}</p>
           <p>Valid: {stepProps.isValid ? 'Yes' : 'No'}</p>
           <p>Errors: {stepProps.errors.join(', ')}</p>
-          <p>Completed Steps: {progress.completedSteps.join(', ')}</p>
         </div>
       )}
     </div>
