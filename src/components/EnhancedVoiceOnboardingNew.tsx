@@ -136,8 +136,8 @@ const AudioUploadStep: React.FC<any> = ({
   }, []);
 
   const removeFile = useCallback((index: number) => {
-    const newFiles = data.audioFiles.filter((_, i) => i !== index);
-    const newAnalyses = data.qualityAnalysis.filter((_, i) => i !== index);
+    const newFiles = data.audioFiles.filter((_: any, i: number) => i !== index);
+    const newAnalyses = data.qualityAnalysis.filter((_: any, i: number) => i !== index);
     updateData({ audioFiles: newFiles, qualityAnalysis: newAnalyses });
   }, [data.audioFiles, data.qualityAnalysis, updateData]);
 
