@@ -174,11 +174,18 @@ export async function POST(req: Request) {
         .catch(error => {
           // Log detailed error information but don't fail the request
           console.error('Background memory processing failed for user', userId, ':', error)
+          console.error('Error details:', {
+            message: error.message,
+            stack: error.stack,
+            userId,
+            promptLength: prompt.length,
+            timestamp: new Date().toISOString()
+          })
           
           // In development, log more details for debugging
           if (process.env.NODE_ENV === 'development') {
             console.error('Failed message:', prompt)
-            console.error('Error stack:', error.stack)
+            console.error('Full error object:', error)
           }
         })
     }

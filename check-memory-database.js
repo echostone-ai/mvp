@@ -74,20 +74,30 @@ async function checkMemoryDatabase() {
       console.log('✅ conversations table exists');
     }
 
-    // Check if pgvector extension is enabled
+    // Check if pgvector extension is enabled by testing vector operations
     console.log('4. Checking pgvector extension...');
-    const { data: extData, error: extError } = await supabase
-      .from('pg_extension')
-      .select('extname')
-      .eq('extname', 'vector');
+    try {
+      const testEmbedding = new Array(1536).fill(0.1);
+      const { error: vectorError } = await supabase.rpc('match_memory_fragments', {
+        query_embedding: testEmbedding,
+        target_user_id: '00000000-0000-0000-0000-000000000000',
+        match_threshold: 0.5,
+        match_count: 1
+      });
 
-    if (extError || !extData || extData.length === 0) {
-      console.log('❌ pgvector extension not enabled');
-      console.log('\n📋 To fix this, run the following SQL in your Supabase SQL Editor:');
-      console.log('   CREATE EXTENSION IF NOT EXISTS vector;');
+      if (vectorError && vectorError.message.includes('vector')) {
+        console.log('❌ pgvector extension not enabled');
+        console.log('Error:', vectorError.message);
+        console.log('\n📋 To fix this, run the following SQL in your Supabase SQL Editor:');
+        console.log('   CREATE EXTENSION IF NOT EXISTS vector;');
+        return false;
+      } else {
+        console.log('✅ pgvector extension is enabled');
+      }
+    } catch (vectorTestError) {
+      console.log('❌ pgvector extension test failed');
+      console.log('Error:', vectorTestError.message);
       return false;
-    } else {
-      console.log('✅ pgvector extension is enabled');
     }
 
     console.log('\n🎉 Memory database setup is complete!');
