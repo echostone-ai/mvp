@@ -571,7 +571,7 @@ const createOnboardingSteps = (): any[] => [
     title: 'Voice Settings',
     description: 'Configure voice parameters',
     component: VoiceSettingsStep,
-    validation: (data) => data.voiceName.length > 0,
+    validation: (data: any) => data.voiceName.length > 0,
     tips: [
       'Start with default settings and adjust as needed',
       'Higher stability = more consistent voice',
