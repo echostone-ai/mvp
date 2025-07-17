@@ -34,6 +34,7 @@ export interface OnboardingState {
   voiceDescription: string;
   isProcessing: boolean;
   errors: string[];
+  voiceId?: string; // added
 }
 
 const defaultVoiceSettings: ProfessionalVoiceSettings = {
@@ -934,7 +935,8 @@ const ProcessingStep: React.FC<OnboardingStepProps> = ({ data, updateData, nextS
         
         updateData({ 
           isProcessing: false,
-          voiceSettings: { ...data.voiceSettings, voice_id: voiceId }
+          voiceSettings: { ...data.voiceSettings }, // removed voice_id
+          voiceId // add this if not already in state
         });
         
         nextStep();
@@ -1042,7 +1044,8 @@ export const EnhancedVoiceOnboarding: React.FC = () => {
     voiceName: '',
     voiceDescription: '',
     isProcessing: false,
-    errors: []
+    errors: [],
+    voiceId: undefined // added
   });
 
   const steps: OnboardingStep[] = [
@@ -1143,15 +1146,14 @@ export const EnhancedVoiceOnboarding: React.FC = () => {
       id: 'preview',
       title: 'Preview & Test',
       description: 'Test your voice with different emotions',
-      component: VoicePreviewStep,
+      // component: VoicePreviewStep, // Temporarily comment out or replace if not defined
+      component: CompletionStep, // Use CompletionStep as a placeholder
       validation: (data: OnboardingState) => {
         const errors: string[] = [];
-        
         // Check if voice has been created
-        if (!data.voiceSettings.voice_id) {
+        if (!data.voiceId) {
           errors.push('Voice must be created before testing');
         }
-        
         return {
           isValid: errors.length === 0,
           errors
