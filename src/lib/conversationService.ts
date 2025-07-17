@@ -220,4 +220,49 @@ export class ConversationService {
       return []
     }
   }
+
+  /**
+   * Clear a specific conversation
+   */
+  static async clearConversation(userId: string, conversationId: string): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('conversations')
+        .delete()
+        .eq('id', conversationId)
+        .eq('user_id', userId)
+
+      if (error) {
+        console.error('Error clearing conversation:', error)
+        return false
+      }
+
+      return true
+    } catch (error) {
+      console.error('Error in clearConversation:', error)
+      return false
+    }
+  }
+
+  /**
+   * Clear all conversations for a user
+   */
+  static async clearAllConversations(userId: string): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('conversations')
+        .delete()
+        .eq('user_id', userId)
+
+      if (error) {
+        console.error('Error clearing all conversations:', error)
+        return false
+      }
+
+      return true
+    } catch (error) {
+      console.error('Error in clearAllConversations:', error)
+      return false
+    }
+  }
 }
