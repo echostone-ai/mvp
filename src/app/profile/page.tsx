@@ -219,7 +219,7 @@ export default function ProfilePage() {
               }`}
               onClick={() => setActiveTab('memories')}
             >
-              Memories
+              New Memories
             </button>
           </div>
         </div>

@@ -227,9 +227,9 @@ export default function MemoryManagement({ userId }: MemoryManagementProps) {
     <div className={styles.memoryManagementContainer}>
       {/* Header */}
       <div className={styles.memoryHeader}>
-        <h2 className={styles.memoryTitle}>Your Conversation Memories</h2>
+        <h2 className={styles.memoryTitle}>New Memories</h2>
         <p className={styles.memorySubtitle}>
-          Manage the personal details and experiences your avatar remembers from your conversations
+          Personal details and experiences your avatar has learned from your conversations
         </p>
       </div>
 
