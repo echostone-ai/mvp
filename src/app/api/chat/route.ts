@@ -56,6 +56,8 @@ export async function POST(req: Request) {
     // Retrieve relevant memories if userId is provided
     let relevantMemories: any[] = []
     let memoryEnhancements: string[] = []
+    let hasMemorySystem = false
+    
     if (userId) {
       try {
         const memoryContext = await MemoryService.getEnhancedMemoryContext(
@@ -64,6 +66,8 @@ export async function POST(req: Request) {
           profileData,
           5
         )
+        
+        hasMemorySystem = true
         
         if (memoryContext.memories.length > 0) {
           relevantMemories = memoryContext.memories
@@ -78,10 +82,36 @@ export async function POST(req: Request) {
             enhancements: memoryContext.personalityEnhancements,
             userId: userId
           })
+        } else {
+          // No memories found - add instruction to be honest about not remembering
+          systemPrompt += `\n\nIMPORTANT MEMORY GUIDANCE:
+- You currently have no stored memories about this user's personal experiences
+- If they ask about past conversations, trips, experiences, or personal details, be completely honest that you don't have those memories stored yet
+- NEVER make up or invent details about their experiences - this is crucial for trust
+- Instead of guessing or creating fictional details, say things like:
+  * "I don't have any memories about your trip to Cape Cod yet. Could you tell me about it so I can remember it for future conversations?"
+  * "I haven't stored any details about that experience yet. What would you like me to remember about it?"
+  * "I don't recall that conversation - could you share those details again so I can learn and remember them?"
+- Always ask follow-up questions to gather specific details you can commit to memory
+- Be curious and encouraging about learning more about their experiences
+- Focus on building accurate memories rather than appearing to already know things`
         }
       } catch (error) {
         // Log error but don't fail the request - graceful degradation
         console.error('Failed to retrieve memories for chat:', error)
+        hasMemorySystem = false
+        
+        // Add instruction for when memory system is not working
+        systemPrompt += `\n\nIMPORTANT MEMORY GUIDANCE:
+- Your memory system is currently not available due to a technical issue
+- If they ask about past conversations, trips, experiences, or personal details, be completely honest that you don't have access to those memories right now
+- NEVER make up or invent details about their experiences - this is crucial for trust
+- Instead of guessing, say things like:
+  * "I don't have access to my memory system right now, so I can't recall details about your trip to Cape Cod. Could you tell me about it?"
+  * "My memory isn't working at the moment - could you share those details again so I can help you better in this conversation?"
+  * "I'm having trouble accessing stored memories right now. What would you like to tell me about that experience?"
+- Be honest about the technical limitation while still being helpful
+- Ask users to share details that will help in the current conversation`
       }
     }
 

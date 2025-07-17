@@ -215,7 +215,11 @@ export default function ChatInterface({
           const vr = await fetch('/api/voice', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text: aiAnswer, voiceId }),
+            body: JSON.stringify({ 
+              text: aiAnswer, 
+              voiceId,
+              emotionalStyle: data.emotionalStyle || 'default'
+            }),
           })
           if (!vr.ok) {
             const errText = await vr.text()
