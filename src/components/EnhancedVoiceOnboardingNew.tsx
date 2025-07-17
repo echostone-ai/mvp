@@ -190,7 +190,7 @@ const AudioUploadStep: React.FC<any> = ({
       {data.audioFiles.length > 0 && (
         <div className="space-y-3">
           <h3 className="font-semibold text-gray-900">Uploaded Files ({data.audioFiles.length})</h3>
-          {data.audioFiles.map((file, index) => {
+          {data.audioFiles.map((file: File, index: number) => {
             const analysis = data.qualityAnalysis[index];
             return (
               <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
