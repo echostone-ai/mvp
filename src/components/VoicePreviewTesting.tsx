@@ -331,9 +331,9 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
     <div className="voice-tuning-panel">
       {/* Header */}
       <div className="voice-tuning-header">
-        <h2 className="voice-tuning-title">Voice Preview & Testing</h2>
+        <h2 className="voice-tuning-title">Voice Tuning</h2>
         <p className="voice-tuning-desc">
-          Test your voice with different emotions, scenarios, and parameter adjustments
+          Fine-tune your digital voice with advanced controls, emotional previews, and parameter adjustments.
         </p>
       </div>
 
@@ -353,8 +353,9 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
             <span>{tab.label}</span>
           </button>
         ))}
-      </div>      
-{/* Emotional Contexts Tab */}
+      </div>
+
+      {/* Emotional Contexts Tab */}
       {activeTab === 'emotional' && (
         <div className="voice-tuning-section">
           <div className="voice-tuning-section-header">
@@ -411,8 +412,8 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
             </div>
           )}
         </div>
-      )}    
-  {/* Scenarios Tab */}
+      )}
+      {/* Scenarios Tab */}
       {activeTab === 'scenarios' && (
         <div className="voice-tuning-section">
           <div className="voice-tuning-section-header">
@@ -432,8 +433,6 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
               </select>
             </div>
           </div>
-          
-          {/* Custom Text Input */}
           <div className="voice-tuning-custom-text">
             <textarea
               value={customText}
@@ -450,32 +449,30 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
               {currentlyPlaying === 'custom' ? '⏹️ Stop' : '▶️ Test'}
             </button>
           </div>
-
-          {/* Predefined Scenarios */}
           <div className="voice-tuning-grid scenarios">
             {scenarios
               .filter(scenario => scenarioFilter === 'all' || scenario.category === scenarioFilter)
               .map(scenario => (
-              <div key={scenario.id} className="voice-tuning-card">
-                <div className="voice-tuning-card-header">
-                  <span className="voice-tuning-emoji">{scenario.icon}</span>
-                  <span className="voice-tuning-card-title">{scenario.name}</span>
-                  <span className={`voice-tuning-category ${scenario.category}`}>{scenario.category}</span>
+                <div key={scenario.id} className="voice-tuning-card">
+                  <div className="voice-tuning-card-header">
+                    <span className="voice-tuning-emoji">{scenario.icon}</span>
+                    <span className="voice-tuning-card-title">{scenario.name}</span>
+                    <span className={`voice-tuning-category ${scenario.category}`}>{scenario.category}</span>
+                  </div>
+                  <div className="voice-tuning-card-desc">"{scenario.sampleText}"</div>
+                  <button
+                    onClick={() => generateScenarioPreview(scenario.id)}
+                    disabled={currentlyPlaying === scenario.id}
+                    className="voice-tuning-btn"
+                  >
+                    {currentlyPlaying === scenario.id ? '⏹️ Stop Playing' : '▶️ Play Scenario'}
+                  </button>
                 </div>
-                <div className="voice-tuning-card-desc">"{scenario.sampleText}"</div>
-                <button
-                  onClick={() => generateScenarioPreview(scenario.id)}
-                  disabled={currentlyPlaying === scenario.id}
-                  className="voice-tuning-btn"
-                >
-                  {currentlyPlaying === scenario.id ? '⏹️ Stop Playing' : '▶️ Play Scenario'}
-                </button>
-              </div>
-            ))}
+              ))}
           </div>
         </div>
-      )} 
-     {/* Voice Parameters Tab */}
+      )}
+      {/* Voice Parameters Tab */}
       {activeTab === 'parameters' && (
         <div className="voice-tuning-section">
           <h3 className="voice-tuning-section-title">Voice Parameter Adjustment</h3>
