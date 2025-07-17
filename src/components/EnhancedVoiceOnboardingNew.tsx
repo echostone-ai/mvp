@@ -557,7 +557,7 @@ const createOnboardingSteps = (): any[] => [
     title: 'Upload Audio',
     description: 'Upload your voice samples',
     component: AudioUploadStep,
-    validation: (data) => data.audioFiles.length >= 3,
+    validation: (data: any) => data.audioFiles.length >= 3,
     tips: [
       'Use clear, high-quality recordings',
       'Speak naturally and vary your tone',
