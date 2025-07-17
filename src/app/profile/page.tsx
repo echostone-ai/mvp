@@ -10,6 +10,7 @@ import StoriesSection from '@/components/StoriesSection'
 import MemoryManagement from '@/components/MemoryManagement'
 import AccountMenu from '@/components/AccountMenu'
 import PageShell from '@/components/PageShell'
+import VoicePreview from '@/components/VoicePreview'
 
 type Progress = { total: number; answered: number; isComplete: boolean }
 
@@ -232,15 +233,33 @@ export default function ProfilePage() {
           )}
 
           {activeTab === 'voice' && (
-            <VoiceRecorder
-              userName={userName}
-              onVoiceUploaded={async (voiceId) => {
-                setVoiceId(voiceId)
-                if (user?.id) {
-                  await supabase.from('profiles').update({ voice_id: voiceId }).eq('user_id', user.id)
-                }
-              }}
-            />
+            <>
+              <VoiceRecorder
+                userName={userName}
+                onVoiceUploaded={async (voiceId) => {
+                  setVoiceId(voiceId)
+                  if (user?.id) {
+                    await supabase.from('profiles').update({ voice_id: voiceId }).eq('user_id', user.id)
+                  }
+                }}
+              />
+              {/* Show advanced voice preview if a voiceId is available */}
+              {voiceId && (
+                <div className="mt-10">
+                  <h2 className="text-2xl font-bold mb-4 text-white text-center">Test Your Digital Voice</h2>
+                  <p className="text-lg text-purple-200 mb-6 text-center max-w-2xl mx-auto">
+                    Preview your voice clone in a range of emotions and styles. Adjust parameters to make it truly yours.
+                  </p>
+                  <div className="max-w-3xl mx-auto">
+                    <VoicePreview
+                      voiceId={voiceId}
+                      userName={userName}
+                      showAdvancedTesting={true}
+                    />
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
           {activeTab === 'stories' && (
