@@ -3,11 +3,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { VoiceQualityOptimizer, AudioAnalysis } from '../lib/voiceQualityOptimizer';
 import { EnhancedVoiceService, ProfessionalVoiceSettings, EmotionalCalibration } from '../lib/enhancedVoiceService';
-import { 
-  useOnboardingWizard, 
-  OnboardingStepProps,
-  ValidationUtils 
-} from '../lib/onboardingWizardFramework';
+import { useOnboardingWizard } from '../lib/onboardingWizardFramework';
 
 // Define the onboarding data structure
 export interface VoiceOnboardingData {
@@ -45,7 +41,7 @@ const defaultEmotionalCalibration: EmotionalCalibration = {
 };
 
 // Step Components
-const WelcomeStep: React.FC<OnboardingStepProps<VoiceOnboardingData>> = ({ nextStep }) => (
+const WelcomeStep: React.FC<any> = ({ nextStep }) => (
   <div className="text-center space-y-6">
     <div className="w-16 h-16 mx-auto bg-blue-100 rounded-full flex items-center justify-center">
       <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -74,7 +70,7 @@ const WelcomeStep: React.FC<OnboardingStepProps<VoiceOnboardingData>> = ({ nextS
   </div>
 );
 
-const AudioUploadStep: React.FC<OnboardingStepProps<VoiceOnboardingData>> = ({ 
+const AudioUploadStep: React.FC<any> = ({ 
   data, 
   updateData, 
   nextStep, 
@@ -253,7 +249,7 @@ const AudioUploadStep: React.FC<OnboardingStepProps<VoiceOnboardingData>> = ({
   );
 };
 
-const VoiceSettingsStep: React.FC<OnboardingStepProps<VoiceOnboardingData>> = ({ 
+const VoiceSettingsStep: React.FC<any> = ({ 
   data, 
   updateData, 
   nextStep, 
@@ -427,7 +423,7 @@ const VoiceSettingsStep: React.FC<OnboardingStepProps<VoiceOnboardingData>> = ({
   );
 };
 
-const ProcessingStep: React.FC<OnboardingStepProps<VoiceOnboardingData>> = ({ data, updateData }) => {
+const ProcessingStep: React.FC<any> = ({ data, updateData }) => {
   const [progress, setProgress] = useState(0);
   const [currentTask, setCurrentTask] = useState('Preparing audio files...');
 
@@ -504,7 +500,7 @@ const ProcessingStep: React.FC<OnboardingStepProps<VoiceOnboardingData>> = ({ da
   );
 };
 
-const CompletionStep: React.FC<OnboardingStepProps<VoiceOnboardingData>> = ({ data }) => (
+const CompletionStep: React.FC<any> = ({ data }) => (
   <div className="text-center space-y-6">
     <div className="w-16 h-16 mx-auto bg-green-100 rounded-full flex items-center justify-center">
       <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -546,7 +542,7 @@ const CompletionStep: React.FC<OnboardingStepProps<VoiceOnboardingData>> = ({ da
 );
 
 // Define the onboarding steps
-const createOnboardingSteps = (): OnboardingStepProps<VoiceOnboardingData>[] => [
+const createOnboardingSteps = (): any[] => [
   {
     id: 'welcome',
     title: 'Welcome',
@@ -561,7 +557,7 @@ const createOnboardingSteps = (): OnboardingStepProps<VoiceOnboardingData>[] => 
     title: 'Upload Audio',
     description: 'Upload your voice samples',
     component: AudioUploadStep,
-    validation: (data) => ValidationUtils.minArrayLength(data.audioFiles, 3, 'Audio files'),
+    validation: (data) => data.audioFiles.length >= 3,
     tips: [
       'Use clear, high-quality recordings',
       'Speak naturally and vary your tone',
@@ -575,7 +571,7 @@ const createOnboardingSteps = (): OnboardingStepProps<VoiceOnboardingData>[] => 
     title: 'Voice Settings',
     description: 'Configure voice parameters',
     component: VoiceSettingsStep,
-    validation: (data) => ValidationUtils.required(data, ['voiceName']),
+    validation: (data) => data.voiceName.length > 0,
     tips: [
       'Start with default settings and adjust as needed',
       'Higher stability = more consistent voice',
