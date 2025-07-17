@@ -514,6 +514,57 @@ export default function ChatInterface({
     }
   }
 
+  const handleClearConversation = async () => {
+    if (!confirm('Are you sure you want to clear this conversation and all associated memories? This action cannot be undone.')) {
+      return
+    }
+
+    try {
+      setLoading(true)
+
+      // Clear conversation history
+      if (conversationId && userId) {
+        try {
+          await ConversationService.clearConversation(userId, conversationId)
+        } catch (error) {
+          console.error('Failed to clear conversation:', error)
+        }
+      }
+
+      // Clear associated memories
+      if (userId) {
+        try {
+          const response = await fetch('/api/memories', {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ userId })
+          })
+
+          if (!response.ok) {
+            console.error('Failed to clear memories:', response.statusText)
+          }
+        } catch (error) {
+          console.error('Failed to clear memories:', error)
+        }
+      }
+
+      // Clear local state
+      setMessages([])
+      setConversationId(null)
+      setAnswer('')
+      
+      console.log('✅ Conversation and memories cleared successfully')
+
+    } catch (error) {
+      console.error('Error clearing conversation:', error)
+      alert('Failed to clear conversation. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <main className="min-h-screen flex flex-col items-center justify-start w-screen bg-transparent pt-8 box-border">
       <div className="text-center mb-6 select-none">
@@ -583,46 +634,78 @@ export default function ChatInterface({
 
       {messages.length > 0 && (
         <div className="chat-history" style={{ maxWidth: '700px', width: '100%', marginTop: '40px' }}>
-          {messages.slice(-3).map((msg, idx) => (
-            <div key={idx} className="message-pair" style={{ marginBottom: '32px' }}>
-              {msg.role === 'user' && (
-                <div className="user-question" style={{
-                  background: 'rgba(147, 71, 255, 0.2)',
-                  borderRadius: '16px',
-                  padding: '16px 20px',
-                  marginBottom: '12px',
-                  borderLeft: '4px solid #9147ff'
-                }}>
-                  <h3 style={{ margin: '0 0 8px 0', color: '#9147ff', fontSize: '16px', fontWeight: '600' }}>
-                    You asked:
-                  </h3>
-                  <p style={{ margin: '0', fontSize: '16px', color: '#e2e2f6' }}>
-                    {msg.content}
-                  </p>
-                </div>
-              )}
-              {msg.role === 'assistant' && (
-                <div className="assistant-answer" style={{
-                  background: 'rgba(30, 23, 57, 0.8)',
-                  borderRadius: '16px',
-                  padding: '20px',
-                  borderLeft: '4px solid #6a41f1'
-                }}>
-                  <h3 style={{ margin: '0 0 12px 0', color: '#9b7cff', fontSize: '18px', fontWeight: '600' }}>
-                    {getFirstName(profileData)} says:
-                  </h3>
-                  <p style={{ margin: '0 0 16px 0', fontSize: '16px', color: '#e2e2f6', lineHeight: '1.6' }}>
-                    {msg.content}
-                  </p>
-                  {idx === messages.length - 1 && !playing && (
-                    <button onClick={handleReplay} className="play-btn">
-                      🔊 Play Again
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          ))}
+          {/* Clear conversation button */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <h3 style={{ color: '#9b7cff', margin: 0 }}>Recent Conversation</h3>
+            <button
+              onClick={handleClearConversation}
+              style={{
+                background: 'rgba(255, 71, 71, 0.2)',
+                border: '1px solid rgba(255, 71, 71, 0.5)',
+                borderRadius: '8px',
+                padding: '8px 16px',
+                color: '#ff9999',
+                fontSize: '14px',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 71, 71, 0.3)'
+                e.currentTarget.style.borderColor = 'rgba(255, 71, 71, 0.8)'
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 71, 71, 0.2)'
+                e.currentTarget.style.borderColor = 'rgba(255, 71, 71, 0.5)'
+              }}
+            >
+              🗑️ Clear Chat & Memories
+            </button>
+          </div>
+          
+          {/* Display messages in reverse order (newest first) */}
+          {messages.slice(-6).reverse().map((msg, idx) => {
+            const originalIdx = messages.length - 1 - idx // Calculate original index for play button
+            return (
+              <div key={`${messages.length - idx}`} className="message-pair" style={{ marginBottom: '32px' }}>
+                {msg.role === 'user' && (
+                  <div className="user-question" style={{
+                    background: 'rgba(147, 71, 255, 0.2)',
+                    borderRadius: '16px',
+                    padding: '16px 20px',
+                    marginBottom: '12px',
+                    borderLeft: '4px solid #9147ff'
+                  }}>
+                    <h3 style={{ margin: '0 0 8px 0', color: '#9147ff', fontSize: '16px', fontWeight: '600' }}>
+                      You asked:
+                    </h3>
+                    <p style={{ margin: '0', fontSize: '16px', color: '#e2e2f6' }}>
+                      {msg.content}
+                    </p>
+                  </div>
+                )}
+                {msg.role === 'assistant' && (
+                  <div className="assistant-answer" style={{
+                    background: 'rgba(30, 23, 57, 0.8)',
+                    borderRadius: '16px',
+                    padding: '20px',
+                    borderLeft: '4px solid #6a41f1'
+                  }}>
+                    <h3 style={{ margin: '0 0 12px 0', color: '#9b7cff', fontSize: '18px', fontWeight: '600' }}>
+                      {getFirstName(profileData)} says:
+                    </h3>
+                    <p style={{ margin: '0 0 16px 0', fontSize: '16px', color: '#e2e2f6', lineHeight: '1.6' }}>
+                      {msg.content}
+                    </p>
+                    {idx === 0 && !playing && ( // Show play button only for the most recent message
+                      <button onClick={handleReplay} className="play-btn">
+                        🔊 Play Again
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </div>
       )}
 

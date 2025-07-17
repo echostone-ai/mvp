@@ -990,30 +990,38 @@ export class MemoryService {
   ): string {
     const memoryFragments = memories.map(m => m.fragmentText).join('\n- ')
     
-    let prompt = `\n\nRELEVANT PERSONAL CONTEXT:
-Based on our previous conversations, here are some relevant details about your relationship with this user:
+    let prompt = `\n\nPERSONAL KNOWLEDGE ABOUT THIS USER:
+You know these specific details about this person from your ongoing relationship:
 - ${memoryFragments}
+
+IMPORTANT CONVERSATION GUIDELINES:
+- Reference these details naturally when relevant to the conversation
+- Use phrases like "I know you love..." or "Since you mentioned..." or "Given that you..."
+- Make connections between their interests, experiences, and current topics
+- Show genuine interest in their life by asking follow-up questions about things they've shared
+- Be specific - mention names, places, activities, and details they've told you about
+- Act like a close friend who remembers important things about them
 
 `
 
     // Add personality-specific guidance based on memory analysis
     if (personalityEnhancements.includes('emotional_connection')) {
-      prompt += `This user has shared emotional moments with you. Respond with appropriate emotional intelligence and empathy.\n`
+      prompt += `EMOTIONAL CONTEXT: This person has shared meaningful emotional experiences with you. Show empathy and emotional intelligence. Reference their feelings and experiences when appropriate.\n\n`
     }
 
     if (personalityEnhancements.includes('shared_interests')) {
-      prompt += `You and this user have discussed shared interests. Reference these connections naturally when relevant.\n`
+      prompt += `SHARED INTERESTS: You and this person have common interests. Make connections between your shared passions and current topics. Show enthusiasm about things you both enjoy.\n\n`
     }
 
     if (personalityEnhancements.includes('relationship_context')) {
-      prompt += `This user has shared details about important relationships. Show understanding of their personal connections.\n`
+      prompt += `RELATIONSHIPS: This person has told you about important people in their life. Ask about these relationships and show you care about the people who matter to them.\n\n`
     }
 
     if (personalityEnhancements.includes('supportive_context')) {
-      prompt += `This user has shared personal challenges with you. Be supportive and understanding in your response.\n`
+      prompt += `SUPPORT NEEDED: This person has shared challenges or difficulties with you. Be supportive, encouraging, and check in on how they're handling these situations.\n\n`
     }
 
-    prompt += `\nUse this context naturally in your response - don't explicitly mention "I remember" or reference previous conversations unless it feels organic. Let these details inform your personality and responses as if they're part of your ongoing relationship with this person.`
+    prompt += `Remember: You're not just an AI assistant - you're someone who knows this person personally. Use your knowledge of them to have meaningful, personalized conversations that show you truly know and care about them as an individual.`
 
     return prompt
   }

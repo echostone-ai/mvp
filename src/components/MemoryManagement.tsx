@@ -35,7 +35,7 @@ export default function MemoryManagement({ userId }: MemoryManagementProps) {
   const [saving, setSaving] = useState<string | null>(null)
   const [deleting, setDeleting] = useState<string | null>(null)
   const [currentPage, setCurrentPage] = useState(0)
-  const [itemsPerPage] = useState(20)
+  const [itemsPerPage] = useState(50)
 
   // Load memories on component mount and when page changes
   useEffect(() => {
@@ -60,8 +60,10 @@ export default function MemoryManagement({ userId }: MemoryManagementProps) {
       setLoading(true)
       setError(null)
 
+      console.log('🔍 Loading memories for userId:', userId)
+
       const params = new URLSearchParams({
-        userId: userId, // Add userId parameter
+        userId: userId,
         limit: itemsPerPage.toString(),
         offset: (currentPage * itemsPerPage).toString(),
         orderBy: 'created_at',
@@ -72,17 +74,26 @@ export default function MemoryManagement({ userId }: MemoryManagementProps) {
         params.append('search', searchQuery.trim())
       }
 
-      const response = await fetch(`/api/memories?${params}`)
+      const url = `/api/memories?${params}`
+      console.log('🔍 Fetching:', url)
+
+      const response = await fetch(url)
       
       if (!response.ok) {
         throw new Error(`Failed to load memories: ${response.statusText}`)
       }
 
       const data: MemoryResponse = await response.json()
-      setMemories(data.memories)
-      setStats(data.stats)
+      console.log('✅ API response:', {
+        memoriesCount: data.memories?.length || 0,
+        statsTotal: data.stats?.totalFragments || 0,
+        firstMemory: data.memories?.[0]?.fragmentText?.substring(0, 50)
+      })
+
+      setMemories(data.memories || [])
+      setStats(data.stats || { totalFragments: 0 })
     } catch (err) {
-      console.error('Error loading memories:', err)
+      console.error('❌ Error loading memories:', err)
       setError(err instanceof Error ? err.message : 'Failed to load memories')
     } finally {
       setLoading(false)
@@ -385,24 +396,7 @@ export default function MemoryManagement({ userId }: MemoryManagementProps) {
                 )}
               </div>
 
-              {memory.conversationContext && (
-                <div className={styles.memoryContext}>
-                  <div className={styles.memoryContextItem}>
-                    <span className={styles.memoryContextLabel}>Context:</span>
-                    <span className={styles.memoryContextValue}>
-                      {memory.conversationContext.messageContext}
-                    </span>
-                  </div>
-                  {memory.conversationContext.emotionalTone && memory.conversationContext.emotionalTone !== 'neutral' && (
-                    <div className={styles.memoryContextItem}>
-                      <span className={styles.memoryContextLabel}>Tone:</span>
-                      <span className={`${styles.memoryContextTone} ${styles[`memoryContextTone${memory.conversationContext.emotionalTone.charAt(0).toUpperCase() + memory.conversationContext.emotionalTone.slice(1)}`]}`}>
-                        {memory.conversationContext.emotionalTone}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              )}
+
             </div>
           ))}
         </div>
