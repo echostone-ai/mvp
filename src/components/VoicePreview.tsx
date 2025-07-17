@@ -54,8 +54,15 @@ const VoicePreview: React.FC<VoicePreviewProps> = ({
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to generate voice')
+        let errorMsg = 'Failed to generate voice.'
+        try {
+          const errorData = await response.json()
+          errorMsg = errorData.error || errorData.message || JSON.stringify(errorData)
+        } catch (e) {
+          errorMsg = 'Failed to generate voice (unknown error).'
+        }
+        setError(errorMsg)
+        return
       }
 
       // Get the audio blob from the response
@@ -63,8 +70,9 @@ const VoicePreview: React.FC<VoicePreviewProps> = ({
       const url = URL.createObjectURL(audioBlob)
       setAudioUrl(url)
     } catch (err) {
-      console.error('Error generating voice preview:', err)
-      setError(err instanceof Error ? err.message : 'Failed to generate voice preview')
+      let errorMsg = 'Failed to generate voice preview.'
+      if (err instanceof Error) errorMsg = err.message
+      setError(errorMsg)
     } finally {
       setIsGenerating(false)
     }
@@ -104,55 +112,37 @@ const VoicePreview: React.FC<VoicePreviewProps> = ({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="text-center">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Voice Preview</h3>
-        <p className="text-gray-600 text-sm">
-          Generate a sample to hear how your voice clone sounds
-        </p>
+    <div className="voice-preview-section">
+      <div className="voice-preview-header">
+        <h3 className="voice-preview-title">Voice Preview</h3>
+        <p className="voice-preview-desc">Generate a sample to hear how your voice clone sounds.</p>
       </div>
-
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-          <p className="text-red-700 text-sm">{error}</p>
+        <div className="voice-preview-error">
+          <p>{error}</p>
+          <p className="voice-preview-error-tip">Try re-recording, uploading a clearer sample, or check your internet connection.</p>
         </div>
       )}
-
-      <div className="flex flex-col space-y-3">
+      <div className="voice-preview-controls">
         <button
           onClick={generateVoicePreview}
           disabled={isGenerating || !voiceId}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="voice-preview-btn"
         >
-          {isGenerating ? (
-            <div className="flex items-center justify-center space-x-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-              <span>Generating...</span>
-            </div>
-          ) : (
-            '🎤 Generate Voice Preview'
-          )}
+          {isGenerating ? 'Generating...' : '🎤 Generate Voice Preview'}
         </button>
-
         {audioUrl && (
           <button
             onClick={playAudio}
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              isPlaying
-                ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                : 'bg-green-100 text-green-700 hover:bg-green-200'
-            }`}
+            className={`voice-preview-btn${isPlaying ? ' playing' : ''}`}
           >
             {isPlaying ? '⏹️ Stop Preview' : '▶️ Play Preview'}
           </button>
         )}
       </div>
-
       {!voiceId && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-          <p className="text-yellow-700 text-sm">
-            Please upload and train your voice first to generate previews.
-          </p>
+        <div className="voice-preview-warning">
+          <p>Please upload and train your voice first to generate previews.</p>
         </div>
       )}
     </div>

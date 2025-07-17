@@ -336,251 +336,430 @@ body {
 
 /* Voice Recorder Styles - Modern UI/UX */
 .voice-recorder-panel {
-  background: linear-gradient(145deg, rgba(30, 20, 60, 0.95), rgba(45, 25, 80, 0.9));
-  border-radius: 24px;
-  padding: 40px 32px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(147, 71, 255, 0.2);
-  max-width: 600px;
-  margin: 0 auto;
-  width: 100%;
+  background: var(--color-bg-voice);
+  border-radius: 2.2em;
+  box-shadow: 0 8px 40px 0 #6a00ff33;
+  border: 1.5px solid #9147ff33;
+  max-width: 540px;
+  margin: 32px auto 0 auto;
+  padding: 2.5em 2.2em 2.2em 2.2em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .voice-recorder-title {
-  font-size: 28px;
+  font-size: 2.1rem;
   font-weight: 700;
-  color: white;
+  color: #fff;
+  margin-bottom: 0.3em;
   text-align: center;
-  margin-bottom: 24px;
-  background: linear-gradient(135deg, #9147ff, #6a00ff);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
-.voice-recorder-tips {
-  background: rgba(147, 71, 255, 0.1);
-  border: 1px solid rgba(147, 71, 255, 0.3);
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 24px;
-  color: #e2e2f6;
+.voice-recorder-desc {
+  color: #bbaaff;
+  font-size: 1.1rem;
+  margin-bottom: 1.5em;
+  text-align: center;
 }
 
-.voice-recorder-tips strong {
-  color: #9147ff;
-  font-weight: 600;
-  display: block;
-  margin-bottom: 12px;
-}
-
-.voice-recorder-tips ul {
-  margin: 0;
-  padding-left: 20px;
-}
-
-.voice-recorder-tips li {
-  margin-bottom: 8px;
-  color: #c2b8e0;
-}
-
-.voice-accent-row {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.voice-accent-label {
-  color: white;
-  font-weight: 600;
-  font-size: 16px;
-  min-width: 80px;
-}
-
-.voice-accent-select {
-  flex: 1;
-  padding: 12px 16px;
-  border-radius: 12px;
-  border: 2px solid rgba(147, 71, 255, 0.3);
-  background: rgba(20, 15, 40, 0.8);
-  color: white;
-  font-size: 16px;
-  font-family: 'Poppins', sans-serif;
-  outline: none;
-  transition: all 0.3s ease;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239147ff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
-  background-position: right 12px center;
-  background-repeat: no-repeat;
-  background-size: 16px;
-  padding-right: 40px;
-}
-
-.voice-accent-select:focus {
-  border-color: #9147ff;
-  box-shadow: 0 0 0 3px rgba(145, 71, 255, 0.2);
+.voice-script-section {
+  width: 100%;
+  margin-bottom: 1.7em;
 }
 
 .voice-script-label {
-  color: white;
+  font-size: 1.1rem;
   font-weight: 600;
-  font-size: 16px;
-  display: block;
-  margin-bottom: 12px;
-}
-
-.voice-script-textarea {
-  width: 100%;
-  padding: 16px;
-  border-radius: 16px;
-  border: 2px solid rgba(147, 71, 255, 0.3);
-  background: rgba(20, 15, 40, 0.6);
   color: #e2e2f6;
-  font-size: 15px;
-  font-family: 'Poppins', sans-serif;
-  line-height: 1.6;
-  resize: vertical;
-  min-height: 120px;
-  outline: none;
-  transition: all 0.3s ease;
-  margin-bottom: 16px;
-}
-
-.voice-script-textarea:focus {
-  border-color: #9147ff;
-  box-shadow: 0 0 0 3px rgba(145, 71, 255, 0.2);
+  margin-bottom: 0.5em;
 }
 
 .voice-script-toggle-row {
   display: flex;
-  gap: 12px;
-  margin-bottom: 24px;
-  justify-content: center;
+  gap: 1em;
+  margin-bottom: 0.7em;
 }
 
 .voice-script-btn {
-  padding: 10px 20px;
-  border-radius: 12px;
-  border: 2px solid rgba(147, 71, 255, 0.4);
-  background: rgba(20, 15, 40, 0.6);
-  color: #c2b8e0;
-  font-size: 14px;
+  background: #2d2543;
+  color: #e2e2f6;
+  border: 2px solid #a884ff;
+  border-radius: 1.1em;
+  padding: 0.7em 1.5em;
+  font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s ease;
-  outline: none;
+  transition: background 0.18s, color 0.18s, border 0.18s;
 }
 
-.voice-script-btn:hover {
-  border-color: #9147ff;
-  background: rgba(147, 71, 255, 0.2);
-  color: white;
-}
-
-.voice-script-btn.active {
-  background: linear-gradient(135deg, #9147ff, #6a00ff);
-  border-color: #9147ff;
-  color: white;
-  font-weight: 600;
+.voice-script-btn.active,
+.voice-script-btn:active {
+  background: var(--color-btn-gradient);
+  color: #fff;
+  border-color: #6a00ff;
 }
 
 .voice-script-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
-.voice-upload-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px 32px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, #9147ff, #6a00ff);
-  color: white;
-  font-size: 16px;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 8px 25px rgba(145, 71, 255, 0.3);
-  margin-bottom: 20px;
+.voice-script-textarea {
   width: 100%;
+  padding: 1.1em;
+  border-radius: 1.2em;
+  border: 2px solid #a884ff;
+  background: #180736;
+  color: #fff;
+  font-size: 1.08rem;
+  font-family: 'Poppins', monospace;
+  margin-bottom: 0.5em;
+  outline: none;
+  resize: vertical;
+  min-height: 80px;
+  transition: box-shadow 0.18s, border 0.18s;
+}
+
+.voice-script-textarea:focus {
+  border: 2px solid #9147ff;
+  box-shadow: 0 2px 12px #a884ff55;
+}
+
+.voice-method-section {
+  width: 100%;
+  margin-bottom: 1.7em;
+}
+
+.voice-method-toggle {
+  display: flex;
+  gap: 2em;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.voice-record-section,
+.voice-upload-section {
+  flex: 1 1 220px;
+  background: #2d2543;
+  border-radius: 1.5em;
+  padding: 1.3em 1.1em 1.1em 1.1em;
+  margin-bottom: 0.5em;
+  box-shadow: 0 2px 12px #6a00ff22;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.voice-record-label,
+.voice-upload-label {
+  font-size: 1.08rem;
+  font-weight: 600;
+  color: #e2e2f6;
+  margin-bottom: 0.6em;
+}
+
+.voice-record-controls {
+  display: flex;
+  gap: 0.8em;
+  margin-bottom: 0.7em;
+}
+
+.voice-record-btn {
+  background: #6a00ff;
+  color: #fff;
+  border: none;
+  border-radius: 1.1em;
+  padding: 0.7em 1.5em;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+}
+
+.voice-record-btn.recording {
+  background: #ff214f;
+  color: #fff;
+}
+
+.voice-record-btn.stop {
+  background: #392e4c;
+  color: #fff;
+}
+
+.voice-record-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.voice-recorder-tips {
+  color: #bbaaff;
+  font-size: 0.97rem;
+  margin-bottom: 0.5em;
+}
+
+.voice-recorder-tips ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+.voice-recorder-tips li {
+  margin-bottom: 0.2em;
+}
+
+.voice-audio-container {
+  width: 100%;
+  margin-top: 0.7em;
+  display: flex;
   justify-content: center;
 }
 
-.voice-upload-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 35px rgba(145, 71, 255, 0.4);
+.voice-audio-player {
+  width: 100%;
+  border-radius: 0.7em;
+  background: #180736;
 }
 
-.voice-upload-btn:active {
-  transform: translateY(0);
+.voice-upload-section {
+  margin-top: 1.2em;
+}
+
+.voice-upload-btn {
+  background: #9147ff;
+  color: #fff;
+  border: none;
+  border-radius: 1.1em;
+  padding: 0.7em 1.5em;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 0.7em;
+  transition: background 0.18s, color 0.18s;
+}
+
+.voice-upload-btn.enhanced {
+  background: var(--color-btn-gradient);
+  font-size: 1.13rem;
+  font-weight: 700;
+  padding: 1em 2.2em;
+  margin-top: 1.2em;
+  box-shadow: 0 4px 20px #6a00ff33;
 }
 
 .voice-upload-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  transform: none;
 }
 
-.voice-file-row {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 24px;
-  justify-content: center;
+.upload-notes {
+  color: #bbaaff;
+  font-size: 0.97rem;
+  margin-bottom: 0.5em;
 }
 
-.voice-record-btn {
-  padding: 14px 28px;
-  border-radius: 14px;
-  border: 2px solid rgba(147, 71, 255, 0.4);
-  background: rgba(20, 15, 40, 0.8);
-  color: white;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  outline: none;
-  min-width: 140px;
+.upload-note-list {
+  list-style: none;
+  padding-left: 0;
+  margin: 0 0 0.3em 0;
 }
 
-.voice-record-btn:hover:not(:disabled) {
-  border-color: #9147ff;
-  background: rgba(147, 71, 255, 0.2);
-  transform: translateY(-1px);
+.upload-note-list li {
+  margin-bottom: 0.2em;
 }
 
-.voice-record-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.upload-tip {
+  color: #e2e2f6;
+  font-size: 0.93rem;
+  margin-top: 0.2em;
 }
 
-.voice-audio-container {
-  margin: 24px 0;
-  text-align: center;
-}
-
-.voice-audio-player {
+.uploaded-files-container {
   width: 100%;
-  max-width: 400px;
-  border-radius: 12px;
-  background: rgba(20, 15, 40, 0.8);
+  margin-top: 0.7em;
+  background: #180736;
+  border-radius: 1em;
+  padding: 0.7em 1em;
+  box-shadow: 0 1px 6px #6a00ff11;
 }
 
-.voice-upload-status {
-  text-align: center;
-  margin-top: 16px;
-  padding: 12px;
-  border-radius: 12px;
+.uploaded-files-title {
+  font-size: 1.01rem;
+  font-weight: 600;
+  color: #e2e2f6;
+  margin-bottom: 0.3em;
+}
+
+.uploaded-files-list {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+}
+
+.uploaded-file {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #2d2543;
+  border-radius: 0.7em;
+  padding: 0.5em 1em;
+  color: #fff;
+  font-size: 0.98rem;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 0.7em;
+}
+
+.file-icon {
+  font-size: 1.2em;
+}
+
+.file-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.file-name {
   font-weight: 500;
 }
 
+.file-size {
+  color: #bbaaff;
+  font-size: 0.93em;
+}
+
+.remove-file-btn {
+  background: none;
+  border: none;
+  color: #ff214f;
+  font-size: 1.3em;
+  cursor: pointer;
+  margin-left: 0.7em;
+  transition: color 0.18s;
+}
+
+.remove-file-btn:hover {
+  color: #ff5a7a;
+}
+
+.voice-final-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 1.2em;
+}
+
 .voice-upload-status {
-  background: rgba(34, 197, 94, 0.2);
-  color: #4ade80;
-  border: 1px solid rgba(34, 197, 94, 0.3);
+  margin-top: 1em;
+  font-size: 1.08rem;
+  text-align: center;
+  color: #bbaaff;
+}
+
+.voice-upload-status.success {
+  color: #3be37b;
+}
+
+.voice-upload-status.error {
+  color: #ff214f;
+}
+
+/* --- Voice Preview Section --- */
+.voice-preview-section {
+  background: #2d2543;
+  border-radius: 1.7em;
+  box-shadow: 0 4px 20px #6a00ff22;
+  border: 1.5px solid #9147ff33;
+  max-width: 420px;
+  margin: 32px auto 0 auto;
+  padding: 2em 1.7em 1.7em 1.7em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.voice-preview-header {
+  text-align: center;
+  margin-bottom: 1em;
+}
+
+.voice-preview-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 0.2em;
+}
+
+.voice-preview-desc {
+  color: #bbaaff;
+  font-size: 1rem;
+}
+
+.voice-preview-error {
+  background: #ffebee;
+  border: 1.5px solid #ff214f44;
+  border-radius: 1em;
+  padding: 0.8em 1em;
+  margin-bottom: 1em;
+  width: 100%;
+  text-align: center;
+  color: #ff214f;
+  font-size: 1.01rem;
+}
+
+.voice-preview-error-tip {
+  color: #ff214f;
+  font-size: 0.93rem;
+  margin-top: 0.2em;
+}
+
+.voice-preview-controls {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7em;
+  align-items: center;
+  margin-bottom: 0.7em;
+}
+
+.voice-preview-btn {
+  background: var(--color-btn-gradient);
+  color: #fff;
+  border: none;
+  border-radius: 1.1em;
+  padding: 0.8em 1.7em;
+  font-size: 1.08rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.18s, color 0.18s;
+}
+
+.voice-preview-btn.playing {
+  background: #ff214f;
+  color: #fff;
+}
+
+.voice-preview-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.voice-preview-warning {
+  background: #fffbe6;
+  border: 1.5px solid #ffe066;
+  border-radius: 1em;
+  padding: 0.8em 1em;
+  margin-top: 1em;
+  width: 100%;
+  text-align: center;
+  color: #bbaaff;
+  font-size: 1.01rem;
 }
 
 /* Profile Page Tab Styling */

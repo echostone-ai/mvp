@@ -143,95 +143,120 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ userName, onVoiceUploaded
   }
 
   return (
-    <div className="voice-recorder-apple flex flex-col items-center w-full max-w-2xl mx-auto p-6 bg-gradient-to-br from-purple-900/70 to-blue-900/60 rounded-3xl shadow-2xl border border-purple-500/20">
-      <h2 className="text-3xl font-bold text-white mb-2 text-center">Train Your Digital Voice</h2>
-      <p className="text-lg text-purple-200 mb-6 text-center max-w-xl">Record or upload your voice, then preview and save. Your voice is private and secure.</p>
+    <div className="voice-recorder-panel">
+      <h2 className="voice-recorder-title">Train Your Digital Voice</h2>
+      <p className="voice-recorder-desc">Record or upload your voice, then preview and save. Your voice is private and secure.</p>
 
       {/* Step 1: Script Selection */}
-      <div className="w-full mb-6">
-        <h4 className="text-xl font-semibold text-white mb-2">1. Choose a Script</h4>
-        <div className="flex gap-3 mb-2">
+      <div className="voice-script-section">
+        <h4 className="voice-script-label">1. Choose a Script</h4>
+        <div className="voice-script-toggle-row">
           <button
             type="button"
             disabled={script === defaultScript}
             onClick={() => setScript(defaultScript)}
-            className={`voice-script-btn px-4 py-2 rounded-lg font-medium transition-all ${script === defaultScript ? 'bg-blue-600 text-white' : 'bg-purple-800 text-purple-100 hover:bg-purple-700'}`}
+            className={`voice-script-btn${script === defaultScript ? ' active' : ''}`}
           >Default</button>
           <button
             type="button"
             disabled={script === playfulScript}
             onClick={() => setScript(playfulScript)}
-            className={`voice-script-btn px-4 py-2 rounded-lg font-medium transition-all ${script === playfulScript ? 'bg-blue-600 text-white' : 'bg-purple-800 text-purple-100 hover:bg-purple-700'}`}
+            className={`voice-script-btn${script === playfulScript ? ' active' : ''}`}
           >Playful</button>
         </div>
         <textarea
           value={script}
           readOnly
           rows={4}
-          className="w-full p-3 rounded-xl border-2 border-purple-400 bg-purple-950/60 text-white text-lg font-mono mb-1 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="voice-script-textarea"
         />
       </div>
 
       {/* Step 2: Record or Upload */}
-      <div className="w-full mb-6 flex flex-col md:flex-row gap-6">
-        {/* Record */}
-        <div className="flex-1 bg-purple-900/60 rounded-2xl p-5 flex flex-col items-center shadow-md">
-          <h5 className="text-lg font-semibold text-white mb-2">🎤 Record</h5>
-          <div className="flex gap-3 mb-3">
-            <button
-              type="button"
-              onClick={startRecording}
-              disabled={recording}
-              className={`px-5 py-2 rounded-lg font-bold transition-all ${recording ? 'bg-red-600 text-white' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
-            >{recording ? '● Recording...' : 'Start Recording'}</button>
-            <button
-              type="button"
-              onClick={stopRecording}
-              disabled={!recording}
-              className="px-5 py-2 rounded-lg font-bold bg-gray-700 text-white hover:bg-gray-800 transition-all"
-            >⏹️ Stop</button>
+      <div className="voice-method-section">
+        <div className="voice-method-toggle">
+          <div className="voice-record-section">
+            <h5 className="voice-record-label">🎤 Record</h5>
+            <div className="voice-record-controls">
+              <button
+                type="button"
+                onClick={startRecording}
+                disabled={recording}
+                className={`voice-record-btn${recording ? ' recording' : ''}`}
+              >{recording ? '● Recording...' : 'Start Recording'}</button>
+              <button
+                type="button"
+                onClick={stopRecording}
+                disabled={!recording}
+                className="voice-record-btn stop"
+              >⏹️ Stop</button>
+            </div>
+            <div className="voice-recorder-tips">
+              <ul>
+                <li>🔇 Quiet room, no background noise</li>
+                <li>��️ Speak naturally (don't rush)</li>
+                <li>😊 Add your personality—laugh, pause, be real</li>
+              </ul>
+            </div>
+            {audioUrl && (
+              <div className="voice-audio-container">
+                <audio controls src={audioUrl} className="voice-audio-player" />
+              </div>
+            )}
           </div>
-          <div className="text-xs text-purple-200 mb-2">Tip: Use a quiet room and speak naturally.</div>
-          {audioUrl && (
-            <audio controls src={audioUrl} className="w-full mt-2 rounded-lg shadow" />
-          )}
-        </div>
-        {/* Upload */}
-        <div className="flex-1 bg-purple-900/60 rounded-2xl p-5 flex flex-col items-center shadow-md">
-          <h5 className="text-lg font-semibold text-white mb-2">📁 Upload</h5>
-          <input
-            type="file"
-            accept="audio/*,.opus,.ogg,.m4a,.aac,.amr,.3gp,.caf"
-            multiple
-            onChange={handleFileChange}
-            className="mb-2"
-          />
-          <div className="text-xs text-purple-200 mb-2">Upload voice memos, recordings, or audio files.</div>
-          {uploadedFiles.length > 0 && (
-            <ul className="w-full mt-2 space-y-1">
-              {uploadedFiles.map((file, idx) => (
-                <li key={idx} className="flex items-center justify-between bg-purple-950/40 px-3 py-2 rounded-lg text-white text-sm">
-                  {file.name} <span className="ml-2 text-purple-300">({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
-                  <button onClick={() => removeFile(idx)} className="ml-3 text-red-400 hover:text-red-600 text-lg" title="Remove">×</button>
-                </li>
-              ))}
-            </ul>
-          )}
+          <div className="voice-upload-section">
+            <h5 className="voice-upload-label">📁 Upload</h5>
+            <input
+              type="file"
+              accept="audio/*,.opus,.ogg,.m4a,.aac,.amr,.3gp,.caf"
+              multiple
+              onChange={handleFileChange}
+              className="voice-upload-btn"
+            />
+            <div className="upload-notes">
+              <ul className="upload-note-list">
+                <li>📱 WhatsApp (.opus, .ogg)</li>
+                <li>💬 iMessage (.m4a, .caf)</li>
+                <li>🎵 Standard (.mp3, .wav)</li>
+                <li>📞 Voice memos (.amr, .3gp)</li>
+              </ul>
+              <div className="upload-tip">💡 Export voice messages from WhatsApp or iMessage for best results!</div>
+            </div>
+            {uploadedFiles.length > 0 && (
+              <div className="uploaded-files-container">
+                <h5 className="uploaded-files-title">Uploaded Files ({uploadedFiles.length})</h5>
+                <div className="uploaded-files-list">
+                  {uploadedFiles.map((file, idx) => (
+                    <div key={idx} className="uploaded-file">
+                      <div className="file-info">
+                        <span className="file-icon">🎵</span>
+                        <div className="file-details">
+                          <span className="file-name">{file.name}</span>
+                          <span className="file-size">{(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                        </div>
+                      </div>
+                      <button onClick={() => removeFile(idx)} className="remove-file-btn" title="Remove file">✕</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Step 3: Save/Train */}
-      <div className="w-full flex flex-col items-center mb-2">
+      <div className="voice-final-section">
         <button
           type="button"
           onClick={uploadAllAudio}
           disabled={isUploading || (!audioBlob && uploadedFiles.length === 0)}
-          className="px-8 py-3 rounded-2xl font-bold text-lg bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-xl hover:from-blue-700 hover:to-purple-700 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+          className="voice-upload-btn enhanced"
         >
           {isUploading ? 'Training Voice...' : 'Save & Train Voice'}
         </button>
         {status && (
-          <div className={`mt-3 text-center text-base font-medium ${status.startsWith('🎉') ? 'text-green-400' : status.startsWith('❌') ? 'text-red-400' : 'text-purple-200'}`}>{status}</div>
+          <div className={`voice-upload-status${status.startsWith('🎉') ? ' success' : status.startsWith('❌') ? ' error' : ''}`}>{status}</div>
         )}
       </div>
     </div>

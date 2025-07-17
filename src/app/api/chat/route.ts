@@ -14,7 +14,7 @@ const openai = new OpenAI({
 export async function POST(req: Request) {
   try {
     // Accept profileData and userId in the body (from the UI)
-    const { prompt, voiceId, systemPrompt: incomingSystemPrompt, profileData, userId } = await req.json()
+    const { prompt, voiceId, systemPrompt: incomingSystemPrompt, profileData, userId, partnerProfile } = await req.json()
 
     if (!prompt) {
       return NextResponse.json({ answer: 'Missing prompt.' }, { status: 400 })
@@ -33,24 +33,25 @@ export async function POST(req: Request) {
     if (!systemPrompt) {
       // Pick expressive style based on user input and context
       selectedStyle = pickExpressiveStyle(prompt, profileData)
-      
-      // Analyze context for additional personality adaptations
-      contextualAdaptations = adaptToContext(prompt, profileData)
-      
-      // Build enhanced system prompt with emotional intelligence
-      systemPrompt = buildSystemPrompt(selectedStyle, profileData)
-      
+      // Analyze context for additional personality adaptations, now with partnerProfile
+      contextualAdaptations = adaptToContext(prompt, profileData, partnerProfile)
+      // Build enhanced system prompt with emotional intelligence and partner context
+      systemPrompt = buildSystemPrompt(selectedStyle, profileData, partnerProfile)
       // Add contextual modifications to the prompt
       if (contextualAdaptations?.strongOpinion) {
         systemPrompt += `\n\nIMPORTANT: The user is asking about ${contextualAdaptations.strongOpinion}, which you have strong opinions about. Let your passion and authentic views show through clearly.`
       }
-      
       if (contextualAdaptations?.personalConnection) {
         systemPrompt += `\n\nIMPORTANT: The user mentioned ${contextualAdaptations.mentionedFriend}, someone important in your life. Share personal details and memories about them naturally.`
       }
-      
       if (contextualAdaptations?.emotionalContext) {
         systemPrompt += `\n\nIMPORTANT: The user's message has a ${contextualAdaptations.emotionalContext} emotional tone. Match their energy and respond with appropriate emotional intelligence.`
+      }
+      if (contextualAdaptations?.partnerRelationship) {
+        systemPrompt += `\n\nIMPORTANT: The user is your ${contextualAdaptations.partnerRelationship}. Respond with the appropriate familiarity and warmth.`
+      }
+      if (contextualAdaptations?.partnerSharedMemories) {
+        systemPrompt += `\n\nIMPORTANT: You share these memories with the user: ${contextualAdaptations.partnerSharedMemories.join('; ')}. Reference them naturally if relevant.`
       }
     }
 

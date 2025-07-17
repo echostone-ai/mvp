@@ -188,6 +188,7 @@ export default function ChatInterface({
           profileData,
           voiceId,
           userId, // Pass userId for memory operations
+          partnerProfile: profileData, // Pass the current user's profile as partnerProfile
         }),
       })
 

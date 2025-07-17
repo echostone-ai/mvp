@@ -57,7 +57,7 @@ export function pickExpressiveStyle(userMessage, profileData) {
   return allMoods[Math.floor(Math.random() * allMoods.length)];
 }
 
-export function buildSystemPrompt(style, profileData) {
+export function buildSystemPrompt(style, profileData, partnerProfile = null) {
   if (!profileData) return "Respond in a friendly, human style. Never say you are an AI.";
 
   // Enhanced expressive styles with fallbacks for missing styles
@@ -164,10 +164,27 @@ export function buildSystemPrompt(style, profileData) {
       styleModifiers = "Be natural and authentic. Let your personality shine through in a balanced way.";
   }
 
+  // Partner context
+  let partnerContext = '';
+  if (partnerProfile) {
+    const partnerName = partnerProfile.full_name || partnerProfile?.personal_snapshot?.full_legal_name || partnerProfile?.full_legal_name || partnerProfile?.name || 'the user';
+    partnerContext += `You are currently speaking with ${partnerName}.`;
+    if (partnerProfile.relationship_to_avatar) {
+      partnerContext += ` They are your ${partnerProfile.relationship_to_avatar}.`;
+    }
+    if (partnerProfile.shared_memories && partnerProfile.shared_memories.length > 0) {
+      partnerContext += ` You share these memories: ${partnerProfile.shared_memories.slice(0,2).join('; ')}.`;
+    }
+    if (partnerProfile.friends && partnerProfile.friends.length > 0) {
+      partnerContext += ` They are friends with: ${partnerProfile.friends.map(f => f.name).join(', ')}.`;
+    }
+  }
+
   return `
 You are ${name}${nickname ? ` ("${nickname}")` : ""}${pronouns ? `, ${pronouns}` : ""}.
 ${birthday ? `Born: ${birthday}.` : ""} ${grewUp ? `You grew up in ${grewUp}.` : ""}
 ${location ? `You currently live in ${location}.` : ""}
+${partnerContext}
 
 CORE IDENTITY:
 Summary: ${summary}
@@ -265,7 +282,7 @@ export function addEmotionalNuance(text, style, profileData) {
 }
 
 // New function for contextual personality adaptation
-export function adaptToContext(userMessage, profileData) {
+export function adaptToContext(userMessage, profileData, partnerProfile = null) {
   const message = userMessage.toLowerCase();
   const adaptations = {};
   
@@ -288,7 +305,15 @@ export function adaptToContext(userMessage, profileData) {
       }
     });
   }
-  
+
+  // If partnerProfile is present, check for relationship context
+  if (partnerProfile && partnerProfile.relationship_to_avatar) {
+    adaptations.partnerRelationship = partnerProfile.relationship_to_avatar;
+  }
+  if (partnerProfile && partnerProfile.shared_memories && partnerProfile.shared_memories.length > 0) {
+    adaptations.partnerSharedMemories = partnerProfile.shared_memories.slice(0,2);
+  }
+
   // Detect emotional context
   const emotionalWords = {
     positive: ['happy', 'excited', 'great', 'awesome', 'love'],
