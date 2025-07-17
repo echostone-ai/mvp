@@ -130,25 +130,32 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
       emotionalContext: 'calm'
     }
   ];  // 
-// Generate emotional previews (Requirement 3.1)
+// Add error state for the whole preview section
+  const [globalError, setGlobalError] = useState<string | null>(null);
+
+  // Generate emotional previews (Requirement 3.1)
   const generateEmotionalPreviews = useCallback(async () => {
     setIsGeneratingAll(true);
-    
+    setGlobalError(null);
     const sampleText = `Hello! This is ${userName} voice expressing different emotions. Each emotion brings out unique characteristics in my speech patterns.`;
-    
     try {
       const results = await enhancedVoiceService.generateEmotionalPreviews(voiceId, sampleText);
-      
+      // Check for any global errors (e.g., all fail with the same error)
+      const allFailed = Object.values(results).every(r => !r.success);
+      if (allFailed) {
+        const firstError = Object.values(results)[0]?.error || 'Voice generation failed. Please check your API key or try again later.';
+        setGlobalError(firstError);
+      }
       setEmotionalPreviews(prev => prev.map(preview => ({
         ...preview,
         result: results[preview.emotion],
-        audioUrl: results[preview.emotion].success 
+        audioUrl: results[preview.emotion] && results[preview.emotion].success
           ? URL.createObjectURL(new Blob([results[preview.emotion].audio_data!], { type: 'audio/mpeg' }))
           : undefined,
         isGenerating: false
       })));
     } catch (error) {
-      console.error('Error generating emotional previews:', error);
+      setGlobalError('Voice generation failed. Please check your API key or try again later.');
       setEmotionalPreviews(prev => prev.map(preview => ({
         ...preview,
         isGenerating: false
@@ -160,32 +167,32 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
 
   // Generate single emotional preview
   const generateSinglePreview = useCallback(async (emotion: keyof EmotionalCalibration) => {
-    setEmotionalPreviews(prev => prev.map(p => 
+    setEmotionalPreviews(prev => prev.map(p =>
       p.emotion === emotion ? { ...p, isGenerating: true } : p
     ));
-
+    setGlobalError(null);
     try {
       const sampleText = `This is ${userName} voice expressing ${emotion}. Notice how the tone and delivery change to match this emotional context.`;
-      
       const result = await enhancedVoiceService.generateSpeech({
         text: sampleText,
         voice_id: voiceId,
         emotional_context: emotion,
         settings: voiceSettings
       });
-
-      const audioUrl = result.success 
+      if (!result.success) {
+        setGlobalError(result.error || 'Voice generation failed. Please check your API key or try again later.');
+      }
+      const audioUrl = result.success
         ? URL.createObjectURL(new Blob([result.audio_data!], { type: 'audio/mpeg' }))
         : undefined;
-
-      setEmotionalPreviews(prev => prev.map(p => 
-        p.emotion === emotion 
+      setEmotionalPreviews(prev => prev.map(p =>
+        p.emotion === emotion
           ? { ...p, result, audioUrl, isGenerating: false }
           : p
       ));
     } catch (error) {
-      console.error(`Error generating ${emotion} preview:`, error);
-      setEmotionalPreviews(prev => prev.map(p => 
+      setGlobalError('Voice generation failed. Please check your API key or try again later.');
+      setEmotionalPreviews(prev => prev.map(p =>
         p.emotion === emotion ? { ...p, isGenerating: false } : p
       ));
     }
@@ -425,6 +432,12 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
               </div>
             ))}
           </div>
+          {globalError && (
+            <div className="voice-preview-error">
+              <p>{globalError}</p>
+              <p className="voice-preview-error-tip">Check your API key, internet connection, or try again later.</p>
+            </div>
+          )}
         </div>
       )}    
   {/* Scenarios Tab */}

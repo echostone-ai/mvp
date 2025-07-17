@@ -12,6 +12,7 @@ import MemoryManagement from '@/components/MemoryManagement'
 import AccountMenu from '@/components/AccountMenu'
 import PageShell from '@/components/PageShell'
 import VoicePreview from '@/components/VoicePreview'
+import VoicePreviewTesting from '@/components/VoicePreviewTesting'
 
 type Progress = { total: number; answered: number; isComplete: boolean }
 
@@ -33,7 +34,7 @@ async function ensureProfileExists(userId: string) {
 export default function ProfilePage() {
   const [user, setUser] = useState<any>(null)
   const [loadingUser, setLoadingUser] = useState(true)
-  const [activeTab, setActiveTab] = useState<'voice'|'stories'|'personality'|'memories'>('voice')
+  const [activeTab, setActiveTab] = useState<'voice'|'stories'|'personality'|'memories'|'voicetuning'>('voice')
   const [progress, setProgress] = useState<Record<string,Progress>>({})
   const [voiceId, setVoiceId] = useState<string|null>(null)
   const [error, setError] = useState<string|null>(null)
@@ -195,6 +196,16 @@ export default function ProfilePage() {
             </button>
             <button
               className={`px-6 py-3 text-xl font-bold rounded-lg cursor-pointer border-2 border-transparent transition-all duration-300 ${
+                activeTab === 'voicetuning' 
+                  ? 'bg-primary text-white' 
+                  : 'bg-purple-800 text-white hover:bg-purple-700'
+              }`}
+              onClick={() => setActiveTab('voicetuning')}
+            >
+              Voice Tuning
+            </button>
+            <button
+              className={`px-6 py-3 text-xl font-bold rounded-lg cursor-pointer border-2 border-transparent transition-all duration-300 ${
                 activeTab === 'stories' 
                   ? 'bg-primary text-white' 
                   : 'bg-purple-800 text-white hover:bg-purple-700'
@@ -244,23 +255,27 @@ export default function ProfilePage() {
                   }
                 }}
               />
-              {/* Show advanced voice preview if a voiceId is available */}
+              {/* Show basic voice preview if a voiceId is available */}
               {voiceId && (
                 <div className="mt-10">
                   <h2 className="text-2xl font-bold mb-4 text-white text-center">Test Your Digital Voice</h2>
-                  <p className="text-lg text-purple-200 mb-6 text-center max-w-2xl mx-auto">
-                    Preview your voice clone in a range of emotions and styles. Adjust parameters to make it truly yours.
-                  </p>
-                  <div className="max-w-3xl mx-auto">
-                    <VoicePreview
-                      voiceId={voiceId}
-                      userName={userName}
-                      showAdvancedTesting={true}
-                    />
-                  </div>
+                  <VoicePreview
+                    voiceId={voiceId}
+                    userName={userName}
+                  />
                 </div>
               )}
             </>
+          )}
+          {activeTab === 'voicetuning' && voiceId && (
+            <div className="mt-10">
+              <h2 className="text-2xl font-bold mb-4 text-white text-center">Voice Tuning</h2>
+              <p className="text-lg text-gray-300 mb-6 text-center">Fine-tune your digital voice with advanced controls, emotional previews, and parameter adjustments.</p>
+              <VoicePreviewTesting
+                voiceId={voiceId}
+                userName={userName}
+              />
+            </div>
           )}
 
           {activeTab === 'stories' && (
