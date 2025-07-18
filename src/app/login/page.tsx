@@ -14,7 +14,17 @@ export default function LoginPage() {
     e.preventDefault()
     setMessage('')
     setError('')
-    const { error } = await supabase.auth.signInWithOtp({ email })
+    
+    // Get current origin for redirect URL
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://app.echostone.ai'
+    
+    const { error } = await supabase.auth.signInWithOtp({ 
+      email,
+      options: {
+        emailRedirectTo: origin
+      }
+    })
+    
     if (error) {
       setError(error.message)
     } else {

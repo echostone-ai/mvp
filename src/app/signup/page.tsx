@@ -20,10 +20,14 @@ export default function SignupPage() {
     setLoading(true)
 
     try {
+      // Get current origin for redirect URL
+      const origin = typeof window !== 'undefined' ? window.location.origin : 'https://app.echostone.ai'
+      
       // Sign up the user with magic link
       const { data, error: signupError } = await supabase.auth.signInWithOtp({
         email,
         options: {
+          emailRedirectTo: origin,
           data: {
             full_name: name,
           }
