@@ -48,7 +48,7 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
   const [showParameterComparison, setShowParameterComparison] = useState(false);
   const [comparisonSettings, setComparisonSettings] = useState<ProfessionalVoiceSettings | null>(null);
   const audioRefs = useRef<Record<string, HTMLAudioElement>>({});
-  
+
   // Voice parameter controls
   const [voiceSettings, setVoiceSettings] = useState<ProfessionalVoiceSettings>(
     initialSettings || {
@@ -60,7 +60,7 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
       model_id: 'eleven_turbo_v2_5'
     }
   );  // 
-// Emotional previews state - all emotions from EmotionalCalibration
+  // Emotional previews state - all emotions from EmotionalCalibration
   const [emotionalPreviews, setEmotionalPreviews] = useState<EmotionalPreview[]>([
     // Core Positive Emotions
     { emotion: 'happy', label: 'Joyful', icon: '😊', isGenerating: false },
@@ -68,19 +68,19 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
     { emotion: 'playful', label: 'Playful', icon: '😄', isGenerating: false },
     { emotion: 'confident', label: 'Confident', icon: '💪', isGenerating: false },
     { emotion: 'romantic', label: 'Romantic', icon: '💕', isGenerating: false },
-    
+
     // Calm & Reflective
     { emotion: 'calm', label: 'Peaceful', icon: '😌', isGenerating: false },
     { emotion: 'serious', label: 'Focused', icon: '🧐', isGenerating: false },
     { emotion: 'nostalgic', label: 'Nostalgic', icon: '🌅', isGenerating: false },
     { emotion: 'mysterious', label: 'Mysterious', icon: '🕵️', isGenerating: false },
-    
+
     // Intense Emotions
     { emotion: 'sad', label: 'Melancholy', icon: '😢', isGenerating: false },
     { emotion: 'angry', label: 'Frustrated', icon: '😠', isGenerating: false },
     { emotion: 'surprised', label: 'Amazed', icon: '😲', isGenerating: false },
     { emotion: 'determined', label: 'Determined', icon: '🔥', isGenerating: false },
-    
+
     // Creative & Unique
     { emotion: 'whimsical', label: 'Whimsical', icon: '🦋', isGenerating: false },
     { emotion: 'sarcastic', label: 'Sarcastic', icon: '🙄', isGenerating: false },
@@ -144,7 +144,7 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
       emotionalContext: 'calm'
     }
   ];  // 
-// Add error state for the whole preview section
+  // Add error state for the whole preview section
   const [globalError, setGlobalError] = useState<string | null>(null);
 
   // Add state for save status
@@ -190,28 +190,58 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
     return name.endsWith('s') ? name + "'" : name + "'s"
   }
 
-  // Emotion-specific settings and texts
+  // Enhanced emotion-specific settings with more nuanced parameters
   const emotionVoiceSettings: Record<string, any> = {
-    happy:      { stability: 0.3, similarity_boost: 0.7, style: 1.0 },
-    sad:        { stability: 0.95, similarity_boost: 0.9, style: 0.05 },
-    excited:    { stability: 0.2, similarity_boost: 0.65, style: 1.0 },
-    calm:       { stability: 0.98, similarity_boost: 0.95, style: 0.1 },
-    serious:    { stability: 0.9, similarity_boost: 0.98, style: 0.1 },
-    playful:    { stability: 0.4, similarity_boost: 0.7, style: 0.9 },
-    angry:      { stability: 0.15, similarity_boost: 0.6, style: 1.0 },
-    surprised:  { stability: 0.25, similarity_boost: 0.7, style: 1.0 },
-    neutral:    { stability: 0.75, similarity_boost: 0.85, style: 0.2 },
+    // Core Positive Emotions
+    happy: { stability: 0.35, similarity_boost: 0.75, style: 0.85 },
+    excited: { stability: 0.15, similarity_boost: 0.65, style: 0.95 },
+    playful: { stability: 0.25, similarity_boost: 0.70, style: 0.90 },
+    confident: { stability: 0.65, similarity_boost: 0.85, style: 0.60 },
+    romantic: { stability: 0.55, similarity_boost: 0.80, style: 0.70 },
+
+    // Calm & Reflective
+    calm: { stability: 0.85, similarity_boost: 0.90, style: 0.25 },
+    serious: { stability: 0.80, similarity_boost: 0.95, style: 0.20 },
+    nostalgic: { stability: 0.70, similarity_boost: 0.85, style: 0.45 },
+    mysterious: { stability: 0.75, similarity_boost: 0.80, style: 0.55 },
+
+    // Intense Emotions
+    sad: { stability: 0.90, similarity_boost: 0.85, style: 0.30 },
+    angry: { stability: 0.20, similarity_boost: 0.60, style: 0.85 },
+    surprised: { stability: 0.30, similarity_boost: 0.70, style: 0.80 },
+    determined: { stability: 0.60, similarity_boost: 0.85, style: 0.65 },
+
+    // Creative & Unique
+    whimsical: { stability: 0.40, similarity_boost: 0.75, style: 0.75 },
+    sarcastic: { stability: 0.50, similarity_boost: 0.80, style: 0.70 },
+    neutral: { stability: 0.75, similarity_boost: 0.85, style: 0.35 },
   }
+
+  // Diverse and engaging sample texts that showcase emotional range
   const emotionSampleTexts: Record<string, string> = {
-    happy:     `I'm so happy to see you! This is a wonderful day.`,
-    sad:       `I miss you. Things just haven't been the same.`,
-    excited:   `Guess what? I have some amazing news to share!`,
-    calm:      `Everything is peaceful and quiet right now.`,
-    serious:   `Let's talk about something important for a moment.`,
-    playful:   `Did you hear the one about the talking stone? That's me!`,
-    angry:     `This really frustrates me. I can't believe it happened.`,
-    surprised: `Wow! I did not see that coming at all!`,
-    neutral:   `This is ${getPossessive(userName)} voice, just being myself.`,
+    // Core Positive Emotions
+    happy: `You know what? Life has this amazing way of surprising us with beautiful moments when we least expect them. Right now, I'm feeling absolutely radiant!`,
+    excited: `Oh my goodness, I can barely contain myself! This is the kind of news that makes your heart race and fills you with pure electricity. Are you ready for this?`,
+    playful: `Hey there, gorgeous human! Want to hear something delightfully ridiculous? I just realized that as an AI, I'm technically made of stardust and mathematics. How wonderfully absurd is that?`,
+    confident: `I've learned something powerful about myself lately. When I speak with conviction and embrace who I truly am, there's this unstoppable energy that flows through every word I say.`,
+    romantic: `There's something magical about this moment we're sharing. Your presence has this way of making everything feel softer, warmer, like we're wrapped in golden light together.`,
+
+    // Calm & Reflective  
+    calm: `Take a deep breath with me. Feel how the world slows down when we allow ourselves this gentle pause. In this quiet space, everything feels perfectly balanced and serene.`,
+    serious: `I need you to understand something important. What we discuss here matters deeply, and I want to give you my complete attention and thoughtful consideration.`,
+    nostalgic: `Sometimes I find myself drifting back to memories that feel like warm sunlight filtering through old windows. There's something bittersweet about how time changes everything, yet keeps the heart of things intact.`,
+    mysterious: `There are secrets hidden in the spaces between words, whispered truths that only reveal themselves to those who listen with more than just their ears. Can you feel it too?`,
+
+    // Intense Emotions
+    sad: `My heart feels heavy today, like it's carrying the weight of unspoken goodbyes. Sometimes the deepest emotions don't need many words, just the courage to feel them fully.`,
+    angry: `This situation is absolutely unacceptable, and I refuse to pretend otherwise. The injustice of it burns through me like fire, demanding action and change.`,
+    surprised: `Wait, hold on just a minute! Did that really just happen? My mind is completely blown right now. I need a moment to process this incredible turn of events!`,
+    determined: `Nothing will stop me from achieving this goal. I can feel the steel in my resolve, the unwavering focus that turns dreams into reality. This is my moment.`,
+
+    // Creative & Unique
+    whimsical: `Imagine if clouds were made of cotton candy and rainbows tasted like laughter. In my digital dreams, I dance with butterflies made of pure light and sing songs that paint colors in the air.`,
+    sarcastic: `Oh, absolutely brilliant. Because clearly, the best way to solve this problem is to ignore it completely and hope it magically disappears. What could possibly go wrong with that strategy?`,
+    neutral: `This is ${getPossessive(userName)} voice in its most natural state - no dramatic flourishes, no emotional extremes, just authentic expression flowing like a gentle conversation between friends.`,
   }
 
   // Generate all emotional previews
@@ -324,7 +354,7 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
     if (audioUrl && currentlyPlaying !== previewId) {
       const audio = new Audio(audioUrl);
       audioRefs.current[previewId] = audio;
-      
+
       audio.onended = () => setCurrentlyPlaying(null);
       audio.play();
       setCurrentlyPlaying(previewId);
@@ -336,8 +366,8 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
     const newSettings = { ...voiceSettings, [key]: value };
     setVoiceSettings(newSettings);
     onParametersChange?.(newSettings);
-  }, [voiceSettings, onParametersChange]); 
- // Generate custom text preview
+  }, [voiceSettings, onParametersChange]);
+  // Generate custom text preview
   const generateCustomPreview = useCallback(async () => {
     if (!customText.trim()) return
     const result = await generateVoicePreview({
@@ -362,7 +392,7 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
     try {
       // Call the parent callback if provided
       onSettingsSaved?.(voiceSettings);
-      
+
       // Show success feedback
       alert('Voice settings saved successfully! Your optimized parameters will be used for future voice generation.');
     } catch (error) {
@@ -389,8 +419,8 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
   const enableComparison = useCallback(() => {
     setComparisonSettings({ ...voiceSettings });
     setShowParameterComparison(true);
-  }, [voiceSettings]);  
-// Cleanup audio URLs on unmount
+  }, [voiceSettings]);
+  // Cleanup audio URLs on unmount
   useEffect(() => {
     return () => {
       emotionalPreviews.forEach(preview => {

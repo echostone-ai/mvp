@@ -11,14 +11,28 @@ export interface VoiceParameters {
 }
 
 export interface EmotionalCalibration {
+  // Core Positive Emotions
   happy: VoiceParameters
-  sad: VoiceParameters
   excited: VoiceParameters
+  playful: VoiceParameters
+  confident: VoiceParameters
+  romantic: VoiceParameters
+  
+  // Calm & Reflective
   calm: VoiceParameters
   serious: VoiceParameters
-  playful: VoiceParameters
+  nostalgic: VoiceParameters
+  mysterious: VoiceParameters
+  
+  // Intense Emotions
+  sad: VoiceParameters
   angry: VoiceParameters
   surprised: VoiceParameters
+  determined: VoiceParameters
+  
+  // Creative & Unique
+  whimsical: VoiceParameters
+  sarcastic: VoiceParameters
   neutral: VoiceParameters
 }
 
@@ -50,79 +64,141 @@ export interface CalibrationWorkflow {
 export class EmotionalCalibrationService {
   // Base emotional parameter templates
   private readonly EMOTIONAL_TEMPLATES: EmotionalCalibration = {
+    // Core Positive Emotions
     happy: {
-      stability: 0.6,
-      similarity_boost: 0.8,
-      style: 0.4,
-      use_speaker_boost: true
-    },
-    sad: {
-      stability: 0.8,
-      similarity_boost: 0.9,
-      style: 0.1,
+      stability: 0.35,
+      similarity_boost: 0.75,
+      style: 0.85,
       use_speaker_boost: true
     },
     excited: {
-      stability: 0.5,
-      similarity_boost: 0.7,
-      style: 0.6,
-      use_speaker_boost: true
-    },
-    calm: {
-      stability: 0.9,
-      similarity_boost: 0.85,
-      style: 0.1,
-      use_speaker_boost: true
-    },
-    serious: {
-      stability: 0.85,
-      similarity_boost: 0.9,
-      style: 0.05,
+      stability: 0.15,
+      similarity_boost: 0.65,
+      style: 0.95,
       use_speaker_boost: true
     },
     playful: {
-      stability: 0.6,
-      similarity_boost: 0.75,
-      style: 0.5,
+      stability: 0.25,
+      similarity_boost: 0.70,
+      style: 0.90,
+      use_speaker_boost: true
+    },
+    confident: {
+      stability: 0.65,
+      similarity_boost: 0.85,
+      style: 0.60,
+      use_speaker_boost: true
+    },
+    romantic: {
+      stability: 0.55,
+      similarity_boost: 0.80,
+      style: 0.70,
+      use_speaker_boost: true
+    },
+    
+    // Calm & Reflective
+    calm: {
+      stability: 0.85,
+      similarity_boost: 0.90,
+      style: 0.25,
+      use_speaker_boost: true
+    },
+    serious: {
+      stability: 0.80,
+      similarity_boost: 0.95,
+      style: 0.20,
+      use_speaker_boost: true
+    },
+    nostalgic: {
+      stability: 0.70,
+      similarity_boost: 0.85,
+      style: 0.45,
+      use_speaker_boost: true
+    },
+    mysterious: {
+      stability: 0.75,
+      similarity_boost: 0.80,
+      style: 0.55,
+      use_speaker_boost: true
+    },
+    
+    // Intense Emotions
+    sad: {
+      stability: 0.90,
+      similarity_boost: 0.85,
+      style: 0.30,
       use_speaker_boost: true
     },
     angry: {
-      stability: 0.7,
-      similarity_boost: 0.8,
-      style: 0.3,
+      stability: 0.20,
+      similarity_boost: 0.60,
+      style: 0.85,
       use_speaker_boost: true
     },
     surprised: {
-      stability: 0.5,
+      stability: 0.30,
+      similarity_boost: 0.70,
+      style: 0.80,
+      use_speaker_boost: true
+    },
+    determined: {
+      stability: 0.60,
+      similarity_boost: 0.85,
+      style: 0.65,
+      use_speaker_boost: true
+    },
+    
+    // Creative & Unique
+    whimsical: {
+      stability: 0.40,
       similarity_boost: 0.75,
-      style: 0.4,
+      style: 0.75,
+      use_speaker_boost: true
+    },
+    sarcastic: {
+      stability: 0.50,
+      similarity_boost: 0.80,
+      style: 0.70,
       use_speaker_boost: true
     },
     neutral: {
       stability: 0.75,
       similarity_boost: 0.85,
-      style: 0.2,
+      style: 0.35,
       use_speaker_boost: true
     }
   }
 
   // Sample texts for emotional calibration
   private readonly CALIBRATION_TEXTS: Record<keyof EmotionalCalibration, string[]> = {
+    // Core Positive Emotions
     happy: [
       "I'm so excited to share this wonderful news with you!",
       "This is absolutely fantastic! I couldn't be happier about how things turned out.",
       "What a beautiful day! Everything seems to be going perfectly."
-    ],
-    sad: [
-      "I'm feeling quite down about this situation. It's been really difficult.",
-      "This news is heartbreaking. I need some time to process everything.",
-      "I'm sorry to hear about what happened. My thoughts are with you."
     ],
     excited: [
       "Oh my goodness, this is incredible! I can barely contain my excitement!",
       "This is the best thing that's happened all year! I'm absolutely thrilled!",
       "I can't wait to get started! This is going to be amazing!"
     ],
+    playful: [
+      "Hey there! Want to try something fun and silly together?",
+      "Life's too short not to laugh and enjoy the little moments!",
+      "Come on, let's be a little mischievous and see what happens!"
+    ],
+    confident: [
+      "I know exactly what needs to be done, and I'm ready to make it happen.",
+      "This challenge doesn't intimidate me. I've got the skills and determination to succeed.",
+      "I believe in myself and my abilities. Let's tackle this head-on."
+    ],
+    romantic: [
+      "There's something magical about this moment we're sharing together.",
+      "Your presence makes everything feel warmer and more beautiful.",
+      "I cherish these quiet, intimate conversations we have."
+    ],
+    
+    // Calm & Reflective
     calm: [
       "Let's take a moment to breathe and think this through carefully.",
       "Everything will work out fine. We just need to stay focused and patient.",
@@ -133,10 +209,22 @@ export class EmotionalCalibrationService {
       "This is a significant issue that requires our immediate and focused attention.",
       "I want to be completely clear about the importance of this situation."
     ],
-    playful: [
-      "Hey there! Want to try something fun and silly together?",
-      "Life's too short not to laugh and enjoy the little moments!",
-      "Come on, let's be a little mischievous and see what happens!"
+    nostalgic: [
+      "This reminds me of simpler times when everything felt more innocent.",
+      "There's something bittersweet about looking back on those cherished memories.",
+      "I find myself drifting back to moments that shaped who I am today."
+    ],
+    mysterious: [
+      "There are secrets hidden in the spaces between our words.",
+      "Some truths can only be whispered in the shadows of understanding.",
+      "I sense there's more to this story than meets the eye."
+    ],
+    
+    // Intense Emotions
+    sad: [
+      "I'm feeling quite down about this situation. It's been really difficult.",
+      "This news is heartbreaking. I need some time to process everything.",
+      "I'm sorry to hear about what happened. My thoughts are with you."
     ],
     angry: [
       "This is completely unacceptable! I'm very frustrated with this situation.",
@@ -147,6 +235,23 @@ export class EmotionalCalibrationService {
       "Wow! I definitely wasn't expecting that to happen!",
       "Oh my! That caught me completely off guard!",
       "Really? That's quite surprising! I never would have guessed."
+    ],
+    determined: [
+      "Nothing will stop me from achieving this goal. I'm absolutely committed.",
+      "I've made up my mind, and I will see this through to the end.",
+      "This is my moment to prove what I'm truly capable of."
+    ],
+    
+    // Creative & Unique
+    whimsical: [
+      "Imagine if clouds were made of cotton candy and dreams tasted like starlight.",
+      "In my wildest fantasies, butterflies paint rainbows with their wings.",
+      "What if we could dance with the wind and sing songs to the moon?"
+    ],
+    sarcastic: [
+      "Oh, absolutely brilliant. Because that's exactly what we needed right now.",
+      "Well, that went about as well as expected. What a delightful surprise.",
+      "Sure, let's just ignore all logic and see how that works out for us."
     ],
     neutral: [
       "Let me explain the situation clearly and objectively.",
@@ -415,14 +520,28 @@ export class EmotionalCalibrationService {
    */
   private enhanceCharacteristic(current: number, emotion: keyof EmotionalCalibration): number {
     const enhancementMap = {
+      // Core Positive Emotions
       happy: 0.02,
       excited: 0.03,
       playful: 0.02,
-      sad: -0.02,
+      confident: 0.015,
+      romantic: 0.01,
+      
+      // Calm & Reflective
       calm: -0.01,
       serious: -0.02,
+      nostalgic: 0.005,
+      mysterious: 0.01,
+      
+      // Intense Emotions
+      sad: -0.02,
       angry: 0.01,
       surprised: 0.02,
+      determined: 0.015,
+      
+      // Creative & Unique
+      whimsical: 0.025,
+      sarcastic: 0.01,
       neutral: 0
     }
 

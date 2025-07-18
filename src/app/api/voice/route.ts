@@ -42,36 +42,108 @@ function generateVoiceSettings(text: string, emotionalStyle?: string) {
   const isExclamation = text.includes('!')
   const isLong = text.length > 100
   
-  // Adjust based on emotional style
+  // Enhanced emotional style mapping with more nuanced parameters
   switch (emotionalStyle) {
+    // Core Positive Emotions
+    case 'happy':
+      stability = 0.30 + Math.random() * 0.15 // 0.30-0.45 (energetic but controlled)
+      style = 0.70 + Math.random() * 0.20 // 0.70-0.90 (highly expressive)
+      similarityBoost = 0.70 + Math.random() * 0.10 // 0.70-0.80
+      break
     case 'excited':
-      stability = 0.3 + Math.random() * 0.2 // 0.3-0.5 (less stable = more energetic)
-      style = 0.4 + Math.random() * 0.3 // 0.4-0.7 (higher style = more expressive)
-      break
-    case 'sad':
-      stability = 0.7 + Math.random() * 0.2 // 0.7-0.9 (more stable = calmer)
-      style = 0.1 + Math.random() * 0.2 // 0.1-0.3 (lower style = more subdued)
-      break
-    case 'angry':
-      stability = 0.2 + Math.random() * 0.3 // 0.2-0.5 (less stable = more intense)
-      style = 0.5 + Math.random() * 0.3 // 0.5-0.8 (higher style = more passionate)
-      break
-    case 'nervous':
-      stability = 0.3 + Math.random() * 0.3 // 0.3-0.6 (variable stability)
-      style = 0.2 + Math.random() * 0.3 // 0.2-0.5 (moderate style)
+      stability = 0.15 + Math.random() * 0.20 // 0.15-0.35 (very dynamic)
+      style = 0.80 + Math.random() * 0.15 // 0.80-0.95 (maximum expression)
+      similarityBoost = 0.60 + Math.random() * 0.15 // 0.60-0.75
       break
     case 'playful':
-      stability = 0.4 + Math.random() * 0.3 // 0.4-0.7 (moderate variation)
-      style = 0.3 + Math.random() * 0.4 // 0.3-0.7 (varied expression)
+      stability = 0.25 + Math.random() * 0.25 // 0.25-0.50 (varied and fun)
+      style = 0.75 + Math.random() * 0.20 // 0.75-0.95 (very expressive)
+      similarityBoost = 0.65 + Math.random() * 0.15 // 0.65-0.80
+      break
+    case 'confident':
+      stability = 0.55 + Math.random() * 0.20 // 0.55-0.75 (steady and strong)
+      style = 0.50 + Math.random() * 0.20 // 0.50-0.70 (moderately expressive)
+      similarityBoost = 0.80 + Math.random() * 0.10 // 0.80-0.90
+      break
+    case 'romantic':
+      stability = 0.45 + Math.random() * 0.20 // 0.45-0.65 (warm and flowing)
+      style = 0.60 + Math.random() * 0.20 // 0.60-0.80 (expressive but controlled)
+      similarityBoost = 0.75 + Math.random() * 0.10 // 0.75-0.85
+      break
+    
+    // Calm & Reflective
+    case 'calm':
+      stability = 0.75 + Math.random() * 0.15 // 0.75-0.90 (very stable)
+      style = 0.15 + Math.random() * 0.20 // 0.15-0.35 (subtle expression)
+      similarityBoost = 0.85 + Math.random() * 0.10 // 0.85-0.95
+      break
+    case 'serious':
+      stability = 0.70 + Math.random() * 0.20 // 0.70-0.90 (controlled and focused)
+      style = 0.10 + Math.random() * 0.20 // 0.10-0.30 (minimal expression)
+      similarityBoost = 0.90 + Math.random() * 0.05 // 0.90-0.95
+      break
+    case 'nostalgic':
+      stability = 0.60 + Math.random() * 0.20 // 0.60-0.80 (gentle and reflective)
+      style = 0.35 + Math.random() * 0.20 // 0.35-0.55 (moderate expression)
+      similarityBoost = 0.80 + Math.random() * 0.10 // 0.80-0.90
+      break
+    case 'mysterious':
+      stability = 0.65 + Math.random() * 0.20 // 0.65-0.85 (controlled intrigue)
+      style = 0.45 + Math.random() * 0.20 // 0.45-0.65 (subtle expression)
+      similarityBoost = 0.75 + Math.random() * 0.15 // 0.75-0.90
+      break
+    
+    // Intense Emotions
+    case 'sad':
+      stability = 0.80 + Math.random() * 0.15 // 0.80-0.95 (very controlled)
+      style = 0.20 + Math.random() * 0.20 // 0.20-0.40 (subdued expression)
+      similarityBoost = 0.80 + Math.random() * 0.10 // 0.80-0.90
+      break
+    case 'angry':
+      stability = 0.15 + Math.random() * 0.25 // 0.15-0.40 (highly variable)
+      style = 0.70 + Math.random() * 0.25 // 0.70-0.95 (intense expression)
+      similarityBoost = 0.55 + Math.random() * 0.15 // 0.55-0.70
+      break
+    case 'surprised':
+      stability = 0.20 + Math.random() * 0.25 // 0.20-0.45 (dynamic reaction)
+      style = 0.65 + Math.random() * 0.25 // 0.65-0.90 (high expression)
+      similarityBoost = 0.65 + Math.random() * 0.15 // 0.65-0.80
+      break
+    case 'determined':
+      stability = 0.50 + Math.random() * 0.20 // 0.50-0.70 (focused energy)
+      style = 0.55 + Math.random() * 0.20 // 0.55-0.75 (strong expression)
+      similarityBoost = 0.80 + Math.random() * 0.10 // 0.80-0.90
+      break
+    
+    // Creative & Unique
+    case 'whimsical':
+      stability = 0.30 + Math.random() * 0.25 // 0.30-0.55 (playfully variable)
+      style = 0.60 + Math.random() * 0.25 // 0.60-0.85 (creative expression)
+      similarityBoost = 0.70 + Math.random() * 0.15 // 0.70-0.85
+      break
+    case 'sarcastic':
+      stability = 0.40 + Math.random() * 0.25 // 0.40-0.65 (controlled wit)
+      style = 0.55 + Math.random() * 0.25 // 0.55-0.80 (expressive delivery)
+      similarityBoost = 0.75 + Math.random() * 0.10 // 0.75-0.85
+      break
+    
+    // Legacy support
+    case 'nervous':
+      stability = 0.25 + Math.random() * 0.30 // 0.25-0.55 (variable)
+      style = 0.40 + Math.random() * 0.30 // 0.40-0.70 (moderate expression)
+      similarityBoost = 0.70 + Math.random() * 0.15 // 0.70-0.85
       break
     case 'reflective':
-      stability = 0.6 + Math.random() * 0.2 // 0.6-0.8 (more stable = thoughtful)
-      style = 0.2 + Math.random() * 0.2 // 0.2-0.4 (moderate style)
+      stability = 0.65 + Math.random() * 0.20 // 0.65-0.85 (thoughtful)
+      style = 0.25 + Math.random() * 0.25 // 0.25-0.50 (moderate expression)
+      similarityBoost = 0.80 + Math.random() * 0.10 // 0.80-0.90
       break
+    
     default:
-      // Add natural variation even for default
-      stability = 0.4 + Math.random() * 0.3 // 0.4-0.7
-      style = 0.2 + Math.random() * 0.3 // 0.2-0.5
+      // Enhanced natural variation for neutral/default
+      stability = 0.45 + Math.random() * 0.30 // 0.45-0.75
+      style = 0.25 + Math.random() * 0.35 // 0.25-0.60
+      similarityBoost = 0.75 + Math.random() * 0.15 // 0.75-0.90
   }
   
   // Content-based adjustments

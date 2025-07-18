@@ -157,3 +157,428 @@ html, body {
     transform: translateY(0);
   }
 }
+/* Enha
+nced Voice Tuning Styles */
+.voice-tuning-panel {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  color: white;
+}
+
+.voice-tuning-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.voice-tuning-title {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(135deg, #9147ff, #ff6b6b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.voice-tuning-desc {
+  font-size: 1.1rem;
+  color: #b8b8d4;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.voice-tuning-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 3rem;
+  flex-wrap: wrap;
+}
+
+.voice-tuning-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  background: rgba(147, 71, 255, 0.2);
+  border: 2px solid rgba(147, 71, 255, 0.3);
+  border-radius: 12px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.voice-tuning-tab:hover {
+  background: rgba(147, 71, 255, 0.3);
+  border-color: rgba(147, 71, 255, 0.5);
+  transform: translateY(-2px);
+}
+
+.voice-tuning-tab.active {
+  background: linear-gradient(135deg, #9147ff, #7c3aed);
+  border-color: #9147ff;
+  box-shadow: 0 8px 25px rgba(145, 71, 255, 0.4);
+}
+
+.voice-tuning-section {
+  margin-bottom: 3rem;
+}
+
+.voice-tuning-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.voice-tuning-section-title {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #9b7cff;
+}
+
+.voice-tuning-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: rgba(147, 71, 255, 0.2);
+  border: 1px solid rgba(147, 71, 255, 0.4);
+  border-radius: 8px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.voice-tuning-btn:hover {
+  background: rgba(147, 71, 255, 0.3);
+  border-color: rgba(147, 71, 255, 0.6);
+  transform: translateY(-1px);
+}
+
+.voice-tuning-btn.primary {
+  background: linear-gradient(135deg, #9147ff, #7c3aed);
+  border-color: #9147ff;
+  box-shadow: 0 4px 15px rgba(145, 71, 255, 0.3);
+}
+
+.voice-tuning-btn.primary:hover {
+  box-shadow: 0 6px 20px rgba(145, 71, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+.voice-tuning-btn.playing {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+  border-color: #ff6b6b;
+}
+
+.voice-tuning-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.voice-tuning-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.voice-tuning-grid.scenarios {
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+}
+
+.voice-tuning-card {
+  background: rgba(30, 23, 57, 0.8);
+  border: 1px solid rgba(147, 71, 255, 0.3);
+  border-radius: 16px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.voice-tuning-card:hover {
+  border-color: rgba(147, 71, 255, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.voice-tuning-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.voice-tuning-emoji {
+  font-size: 1.5rem;
+}
+
+.voice-tuning-card-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: white;
+  flex: 1;
+}
+
+.voice-tuning-status.success {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.voice-tuning-card-controls {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.voice-tuning-card-desc {
+  color: #b8b8d4;
+  font-style: italic;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.voice-tuning-category {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.voice-tuning-category.conversational {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+}
+
+.voice-tuning-category.narrative {
+  background: rgba(168, 85, 247, 0.2);
+  color: #c084fc;
+}
+
+.voice-tuning-category.expressive {
+  background: rgba(236, 72, 153, 0.2);
+  color: #f472b6;
+}
+
+.voice-tuning-category.professional {
+  background: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+}
+
+.voice-tuning-error {
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 8px;
+  padding: 1rem;
+  color: #fca5a5;
+  margin-top: 1rem;
+}
+
+.voice-tuning-error.global {
+  margin: 2rem 0;
+  text-align: center;
+}
+
+.voice-tuning-error-tip {
+  font-size: 0.9rem;
+  opacity: 0.8;
+  margin-top: 0.5rem;
+}
+
+.voice-tuning-spinner {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.voice-tuning-custom-text {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  align-items: flex-end;
+}
+
+.voice-tuning-textarea {
+  flex: 1;
+  padding: 1rem;
+  background: rgba(30, 23, 57, 0.8);
+  border: 1px solid rgba(147, 71, 255, 0.3);
+  border-radius: 8px;
+  color: white;
+  font-size: 1rem;
+  resize: vertical;
+  min-height: 80px;
+}
+
+.voice-tuning-textarea:focus {
+  outline: none;
+  border-color: rgba(147, 71, 255, 0.6);
+  box-shadow: 0 0 0 2px rgba(147, 71, 255, 0.2);
+}
+
+.voice-tuning-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #b8b8d4;
+}
+
+.voice-tuning-select {
+  padding: 0.5rem 1rem;
+  background: rgba(30, 23, 57, 0.8);
+  border: 1px solid rgba(147, 71, 255, 0.3);
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+}
+
+.voice-tuning-guide {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.voice-tuning-guide h4 {
+  color: #60a5fa;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+.voice-tuning-guide ul {
+  list-style: none;
+  padding: 0;
+}
+
+.voice-tuning-guide li {
+  color: #b8b8d4;
+  margin-bottom: 0.5rem;
+  padding-left: 1rem;
+  position: relative;
+}
+
+.voice-tuning-guide li::before {
+  content: "•";
+  color: #60a5fa;
+  position: absolute;
+  left: 0;
+}
+
+.voice-tuning-params-grid {
+  display: grid;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.voice-tuning-param {
+  background: rgba(30, 23, 57, 0.6);
+  border: 1px solid rgba(147, 71, 255, 0.2);
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.voice-tuning-param-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.voice-tuning-param-label label {
+  font-weight: 600;
+  color: white;
+  font-size: 1.1rem;
+}
+
+.voice-tuning-param-label span {
+  color: #9b7cff;
+  font-weight: 600;
+  font-family: monospace;
+}
+
+.voice-tuning-slider {
+  width: 100%;
+  height: 6px;
+  background: rgba(147, 71, 255, 0.2);
+  border-radius: 3px;
+  outline: none;
+  margin-bottom: 1rem;
+  cursor: pointer;
+}
+
+.voice-tuning-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(135deg, #9147ff, #7c3aed);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(145, 71, 255, 0.4);
+}
+
+.voice-tuning-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(135deg, #9147ff, #7c3aed);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 8px rgba(145, 71, 255, 0.4);
+}
+
+.voice-tuning-param-desc {
+  display: flex;
+  justify-content: space-between;
+  color: #b8b8d4;
+  font-size: 0.9rem;
+}
+
+.voice-tuning-checkbox {
+  width: 20px;
+  height: 20px;
+  accent-color: #9147ff;
+  cursor: pointer;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .voice-tuning-panel {
+    padding: 1rem;
+  }
+  
+  .voice-tuning-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .voice-tuning-custom-text {
+    flex-direction: column;
+  }
+  
+  .voice-tuning-section-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

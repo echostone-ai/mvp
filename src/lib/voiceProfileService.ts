@@ -233,15 +233,29 @@ export class VoiceProfileService {
     trainingSamples: number = 0
   ): Promise<VoiceProfile> {
     const defaultEmotionalCalibration: EmotionalCalibration = {
-      happy: { stability: 0.6, similarity_boost: 0.8, style: 0.4, use_speaker_boost: true },
-      sad: { stability: 0.8, similarity_boost: 0.9, style: 0.1, use_speaker_boost: true },
-      excited: { stability: 0.5, similarity_boost: 0.7, style: 0.6, use_speaker_boost: true },
-      calm: { stability: 0.9, similarity_boost: 0.85, style: 0.1, use_speaker_boost: true },
-      serious: { stability: 0.85, similarity_boost: 0.9, style: 0.05, use_speaker_boost: true },
-      playful: { stability: 0.6, similarity_boost: 0.75, style: 0.5, use_speaker_boost: true },
-      angry: { stability: 0.7, similarity_boost: 0.8, style: 0.3, use_speaker_boost: true },
-      surprised: { stability: 0.5, similarity_boost: 0.75, style: 0.4, use_speaker_boost: true },
-      neutral: { stability: 0.75, similarity_boost: 0.85, style: 0.2, use_speaker_boost: true }
+      // Core Positive Emotions
+      happy: { stability: 0.35, similarity_boost: 0.75, style: 0.85, use_speaker_boost: true },
+      excited: { stability: 0.15, similarity_boost: 0.65, style: 0.95, use_speaker_boost: true },
+      playful: { stability: 0.25, similarity_boost: 0.70, style: 0.90, use_speaker_boost: true },
+      confident: { stability: 0.65, similarity_boost: 0.85, style: 0.60, use_speaker_boost: true },
+      romantic: { stability: 0.55, similarity_boost: 0.80, style: 0.70, use_speaker_boost: true },
+      
+      // Calm & Reflective
+      calm: { stability: 0.85, similarity_boost: 0.90, style: 0.25, use_speaker_boost: true },
+      serious: { stability: 0.80, similarity_boost: 0.95, style: 0.20, use_speaker_boost: true },
+      nostalgic: { stability: 0.70, similarity_boost: 0.85, style: 0.45, use_speaker_boost: true },
+      mysterious: { stability: 0.75, similarity_boost: 0.80, style: 0.55, use_speaker_boost: true },
+      
+      // Intense Emotions
+      sad: { stability: 0.90, similarity_boost: 0.85, style: 0.30, use_speaker_boost: true },
+      angry: { stability: 0.20, similarity_boost: 0.60, style: 0.85, use_speaker_boost: true },
+      surprised: { stability: 0.30, similarity_boost: 0.70, style: 0.80, use_speaker_boost: true },
+      determined: { stability: 0.60, similarity_boost: 0.85, style: 0.65, use_speaker_boost: true },
+      
+      // Creative & Unique
+      whimsical: { stability: 0.40, similarity_boost: 0.75, style: 0.75, use_speaker_boost: true },
+      sarcastic: { stability: 0.50, similarity_boost: 0.80, style: 0.70, use_speaker_boost: true },
+      neutral: { stability: 0.75, similarity_boost: 0.85, style: 0.35, use_speaker_boost: true }
     }
 
     const voiceProfile: VoiceProfile = {
