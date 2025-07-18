@@ -180,64 +180,53 @@ export default function ProfilePage() {
               alt="EchoStone Logo" 
             />
           </a>
-          <h1 className="text-4xl font-black text-white mb-4">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white mb-4 px-4 text-center">
             Your Profile
           </h1>
-          <div className="flex gap-3 mb-6">
-            <button
-              className={`px-6 py-3 text-xl font-bold rounded-lg cursor-pointer border-2 border-transparent transition-all duration-300 ${
-                activeTab === 'voice' 
-                  ? 'bg-primary text-white' 
-                  : 'bg-purple-800 text-white hover:bg-purple-700'
-              }`}
-              onClick={() => setActiveTab('voice')}
-            >
-              Voice
-            </button>
-            <button
-              className={`px-6 py-3 text-xl font-bold rounded-lg cursor-pointer border-2 border-transparent transition-all duration-300 ${
-                activeTab === 'voicetuning' 
-                  ? 'bg-primary text-white' 
-                  : 'bg-purple-800 text-white hover:bg-purple-700'
-              }`}
-              onClick={() => setActiveTab('voicetuning')}
-            >
-              Voice Tuning
-            </button>
-            <button
-              className={`px-6 py-3 text-xl font-bold rounded-lg cursor-pointer border-2 border-transparent transition-all duration-300 ${
-                activeTab === 'stories' 
-                  ? 'bg-primary text-white' 
-                  : 'bg-purple-800 text-white hover:bg-purple-700'
-              }`}
-              onClick={() => setActiveTab('stories')}
-            >
-              Your Stories
-            </button>
-            <button
-              className={`px-6 py-3 text-xl font-bold rounded-lg cursor-pointer border-2 border-transparent transition-all duration-300 ${
-                activeTab === 'personality' 
-                  ? 'bg-primary text-white' 
-                  : 'bg-purple-800 text-white hover:bg-purple-700'
-              }`}
-              onClick={() => setActiveTab('personality')}
-            >
-              Personality
-            </button>
-            <button
-              className={`px-6 py-3 text-xl font-bold rounded-lg cursor-pointer border-2 border-transparent transition-all duration-300 ${
-                activeTab === 'memories' 
-                  ? 'bg-primary text-white' 
-                  : 'bg-purple-800 text-white hover:bg-purple-700'
-              }`}
-              onClick={() => setActiveTab('memories')}
-            >
-              New Memories
-            </button>
+          
+          {/* Mobile-optimized tab navigation */}
+          <div className="w-full mb-6">
+            <div className="flex overflow-x-auto scrollbar-hide px-4 sm:px-0 sm:justify-center">
+              <div className="flex gap-2 sm:gap-3 min-w-max sm:min-w-0">
+                {[
+                  { id: 'voice', label: 'Voice', icon: '🎤' },
+                  { id: 'voicetuning', label: 'Tuning', icon: '🎛️' },
+                  { id: 'stories', label: 'Stories', icon: '📚' },
+                  { id: 'personality', label: 'Profile', icon: '👤' },
+                  { id: 'memories', label: 'Memories', icon: '🧠' }
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    className={`
+                      flex flex-col items-center justify-center
+                      min-w-[80px] sm:min-w-[120px] 
+                      h-16 sm:h-18
+                      px-3 sm:px-6 py-2 sm:py-3
+                      text-xs sm:text-sm lg:text-base font-bold 
+                      rounded-xl sm:rounded-lg 
+                      cursor-pointer border-2 border-transparent 
+                      transition-all duration-300 
+                      touch-manipulation
+                      ${activeTab === tab.id 
+                        ? 'bg-primary text-white shadow-lg transform scale-105 sm:scale-100' 
+                        : 'bg-purple-800 text-white hover:bg-purple-700 active:bg-purple-600'
+                      }
+                    `}
+                    onClick={() => setActiveTab(tab.id as any)}
+                    role="tab"
+                    aria-selected={activeTab === tab.id}
+                    aria-controls={`${tab.id}-panel`}
+                  >
+                    <span className="text-lg sm:text-xl mb-1">{tab.icon}</span>
+                    <span className="leading-tight text-center">{tab.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="max-w-5xl w-[94vw] mx-auto mb-12">
+        <div className="max-w-5xl w-full px-4 sm:px-6 lg:px-8 mx-auto mb-12 tab-content">
           {error && (
             <div className="text-red-400 bg-purple-900/50 px-6 py-4 rounded-xl mb-5 text-lg text-center font-medium">
               {error}
@@ -245,7 +234,12 @@ export default function ProfilePage() {
           )}
 
           {activeTab === 'voice' && (
-            <>
+            <div 
+              role="tabpanel"
+              id="voice-panel"
+              aria-labelledby="voice-tab"
+              className="w-full"
+            >
               <VoiceRecorder
                 userName={userName}
                 onVoiceUploaded={async (voiceId) => {
@@ -257,46 +251,81 @@ export default function ProfilePage() {
               />
               {/* Show basic voice preview if a voiceId is available */}
               {voiceId && (
-                <div className="mt-10">
-                  <h2 className="text-2xl font-bold mb-4 text-white text-center">Test Your Digital Voice</h2>
+                <div className="mt-6 sm:mt-10">
+                  <h2 className="text-xl sm:text-2xl font-bold mb-4 text-white text-center">Test Your Digital Voice</h2>
                   <VoicePreview
                     voiceId={voiceId}
                     userName={userName}
                   />
                 </div>
               )}
-            </>
+            </div>
           )}
+          
           {activeTab === 'voicetuning' && voiceId && (
-            <div className="mt-10">
-              <h2 className="text-2xl font-bold mb-4 text-white text-center">Voice Tuning</h2>
-              <p className="text-lg text-gray-300 mb-6 text-center">Fine-tune your digital voice with advanced controls, emotional previews, and parameter adjustments.</p>
+            <div 
+              role="tabpanel"
+              id="voicetuning-panel"
+              aria-labelledby="voicetuning-tab"
+              className="mt-6 sm:mt-10 w-full"
+            >
+              <h2 className="text-xl sm:text-2xl font-bold mb-4 text-white text-center">Voice Tuning</h2>
+              <p className="text-base sm:text-lg text-gray-300 mb-6 text-center px-2">Fine-tune your digital voice with advanced controls, emotional previews, and parameter adjustments.</p>
               <VoicePreviewTesting
                 voiceId={voiceId}
                 userName={userName}
+                userId={user?.id}
               />
             </div>
           )}
 
           {activeTab === 'stories' && (
-            <StoriesSection userId={user?.id} />
+            <div 
+              role="tabpanel"
+              id="stories-panel"
+              aria-labelledby="stories-tab"
+              className="w-full"
+            >
+              <StoriesSection userId={user?.id} />
+            </div>
           )}
 
           {activeTab === 'personality' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 mt-7 max-w-5xl w-full">
+            <div 
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 mt-4 sm:mt-7 w-full"
+              role="tabpanel"
+              id="personality-panel"
+              aria-labelledby="personality-tab"
+            >
               {Object.entries(QUESTIONS || {}).map(([section, qs]) => {
                 const prog = progress[section] || { total: qs.length, answered: 0, isComplete: false }
                 return (
-                  <Link key={section} href={`/profile/edit/${section}`} className="no-underline text-inherit">
-                    <div className={`personality-block p-5 rounded-2xl shadow-lg transition-all duration-300 text-left min-h-24 relative flex flex-col justify-start ${
-                      prog.isComplete 
+                  <Link 
+                    key={section} 
+                    href={`/profile/edit/${section}`} 
+                    className="no-underline text-inherit block touch-manipulation"
+                  >
+                    <div className={`
+                      personality-block 
+                      p-4 sm:p-5 
+                      rounded-xl sm:rounded-2xl 
+                      shadow-lg 
+                      transition-all duration-300 
+                      text-left 
+                      min-h-[100px] sm:min-h-24 
+                      relative 
+                      flex flex-col justify-start
+                      hover:transform hover:scale-105
+                      active:scale-95
+                      ${prog.isComplete 
                         ? 'bg-purple-800/95 shadow-green-400/20 shadow-xl opacity-100' 
-                        : 'bg-purple-900/75 shadow-black/30 opacity-90'
-                    }`}>
-                      <h2 className="m-0 text-xl font-semibold text-white capitalize mb-2 leading-tight">
+                        : 'bg-purple-900/75 shadow-black/30 opacity-90 hover:opacity-100'
+                      }
+                    `}>
+                      <h2 className="m-0 text-lg sm:text-xl font-semibold text-white capitalize mb-2 leading-tight">
                         {section.replace(/_/g,' ')}
                       </h2>
-                      <p className="m-0 mb-1 text-base text-purple-200">
+                      <p className="m-0 mb-1 text-sm sm:text-base text-purple-200">
                         {prog.answered} of {prog.total} answered
                       </p>
                       {prog.answered > 0 && prog.answered < prog.total && (
@@ -305,8 +334,16 @@ export default function ProfilePage() {
                         </div>
                       )}
                       {prog.isComplete && (
-                        <span className="text-green-400 text-2xl absolute top-4 right-4">✓</span>
+                        <span className="text-green-400 text-xl sm:text-2xl absolute top-3 sm:top-4 right-3 sm:right-4">✓</span>
                       )}
+                      
+                      {/* Mobile-friendly progress indicator */}
+                      <div className="mt-2 w-full bg-purple-800/50 rounded-full h-2">
+                        <div 
+                          className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${(prog.answered / prog.total) * 100}%` }}
+                        />
+                      </div>
                     </div>
                   </Link>
                 )
@@ -315,7 +352,14 @@ export default function ProfilePage() {
           )}
 
           {activeTab === 'memories' && user?.id && (
-            <MemoryManagement userId={user.id} />
+            <div 
+              role="tabpanel"
+              id="memories-panel"
+              aria-labelledby="memories-tab"
+              className="w-full"
+            >
+              <MemoryManagement userId={user.id} />
+            </div>
           )}
         </div>
       </main>

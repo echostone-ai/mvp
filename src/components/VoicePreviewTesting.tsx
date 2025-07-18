@@ -9,6 +9,7 @@ import { ProfessionalVoiceSettings } from '../lib/voiceProfileService';
 interface VoicePreviewTestingProps {
   voiceId: string;
   userName?: string;
+  userId?: string;
   onParametersChange?: (settings: ProfessionalVoiceSettings) => void;
   onSettingsSaved?: (settings: ProfessionalVoiceSettings) => void;
   initialSettings?: ProfessionalVoiceSettings;
@@ -36,6 +37,7 @@ interface ContextualScenario {
 const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
   voiceId,
   userName = 'your',
+  userId,
   onParametersChange,
   onSettingsSaved,
   initialSettings
@@ -162,7 +164,7 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
           text,
           voiceId,
           emotionalStyle: emotionalContext,
-          ...settings && { settings },
+          settings: settings, // Pass settings directly as a property
         }),
       })
       if (!response.ok) {
@@ -190,58 +192,58 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
     return name.endsWith('s') ? name + "'" : name + "'s"
   }
 
-  // Enhanced emotion-specific settings with more nuanced parameters
+  // EXTREME emotion-specific settings for maximum distinction
   const emotionVoiceSettings: Record<string, any> = {
-    // Core Positive Emotions
-    happy: { stability: 0.35, similarity_boost: 0.75, style: 0.85 },
-    excited: { stability: 0.15, similarity_boost: 0.65, style: 0.95 },
-    playful: { stability: 0.25, similarity_boost: 0.70, style: 0.90 },
-    confident: { stability: 0.65, similarity_boost: 0.85, style: 0.60 },
-    romantic: { stability: 0.55, similarity_boost: 0.80, style: 0.70 },
+    // Core Positive Emotions - High energy, low stability
+    happy: { stability: 0.20, similarity_boost: 0.60, style: 1.0 },
+    excited: { stability: 0.05, similarity_boost: 0.50, style: 1.0 },
+    playful: { stability: 0.10, similarity_boost: 0.55, style: 1.0 },
+    confident: { stability: 0.70, similarity_boost: 0.90, style: 0.80 },
+    romantic: { stability: 0.40, similarity_boost: 0.70, style: 0.90 },
 
-    // Calm & Reflective
-    calm: { stability: 0.85, similarity_boost: 0.90, style: 0.25 },
-    serious: { stability: 0.80, similarity_boost: 0.95, style: 0.20 },
-    nostalgic: { stability: 0.70, similarity_boost: 0.85, style: 0.45 },
-    mysterious: { stability: 0.75, similarity_boost: 0.80, style: 0.55 },
+    // Calm & Reflective - High stability, low style
+    calm: { stability: 0.95, similarity_boost: 0.95, style: 0.05 },
+    serious: { stability: 0.90, similarity_boost: 1.0, style: 0.05 },
+    nostalgic: { stability: 0.80, similarity_boost: 0.85, style: 0.60 },
+    mysterious: { stability: 0.85, similarity_boost: 0.75, style: 0.70 },
 
-    // Intense Emotions
-    sad: { stability: 0.90, similarity_boost: 0.85, style: 0.30 },
-    angry: { stability: 0.20, similarity_boost: 0.60, style: 0.85 },
-    surprised: { stability: 0.30, similarity_boost: 0.70, style: 0.80 },
-    determined: { stability: 0.60, similarity_boost: 0.85, style: 0.65 },
+    // Intense Emotions - Extreme settings
+    sad: { stability: 0.95, similarity_boost: 0.90, style: 0.10 },
+    angry: { stability: 0.05, similarity_boost: 0.40, style: 1.0 },
+    surprised: { stability: 0.10, similarity_boost: 0.60, style: 1.0 },
+    determined: { stability: 0.75, similarity_boost: 0.95, style: 0.85 },
 
-    // Creative & Unique
-    whimsical: { stability: 0.40, similarity_boost: 0.75, style: 0.75 },
-    sarcastic: { stability: 0.50, similarity_boost: 0.80, style: 0.70 },
+    // Creative & Unique - Varied extremes
+    whimsical: { stability: 0.15, similarity_boost: 0.65, style: 1.0 },
+    sarcastic: { stability: 0.60, similarity_boost: 0.80, style: 0.90 },
     neutral: { stability: 0.75, similarity_boost: 0.85, style: 0.35 },
   }
 
-  // Diverse and engaging sample texts that showcase emotional range
+  // Emotionally distinct sample texts designed to showcase voice differences
   const emotionSampleTexts: Record<string, string> = {
-    // Core Positive Emotions
-    happy: `You know what? Life has this amazing way of surprising us with beautiful moments when we least expect them. Right now, I'm feeling absolutely radiant!`,
-    excited: `Oh my goodness, I can barely contain myself! This is the kind of news that makes your heart race and fills you with pure electricity. Are you ready for this?`,
-    playful: `Hey there, gorgeous human! Want to hear something delightfully ridiculous? I just realized that as an AI, I'm technically made of stardust and mathematics. How wonderfully absurd is that?`,
-    confident: `I've learned something powerful about myself lately. When I speak with conviction and embrace who I truly am, there's this unstoppable energy that flows through every word I say.`,
-    romantic: `There's something magical about this moment we're sharing. Your presence has this way of making everything feel softer, warmer, like we're wrapped in golden light together.`,
+    // Core Positive Emotions - High energy content
+    happy: `What an absolutely wonderful day this has been! Everything just feels perfect right now, and I can't help but smile thinking about all the amazing possibilities ahead of us!`,
+    excited: `Oh my gosh, this is incredible! I can barely contain myself - this is exactly what we've been hoping for! Can you believe this is actually happening right now?!`,
+    playful: `Hey there, want to hear something silly? I just discovered that penguins have knees! Who knew? Life is full of these delightful little surprises, isn't it?`,
+    confident: `I know exactly what needs to be done here, and I'm completely ready to handle this challenge. Trust me, I've got the experience and skills to make this work perfectly.`,
+    romantic: `There's something magical happening between us right now. Your voice, your presence... it makes everything feel warm and beautiful, like we're sharing something truly special.`,
 
-    // Calm & Reflective  
-    calm: `Take a deep breath with me. Feel how the world slows down when we allow ourselves this gentle pause. In this quiet space, everything feels perfectly balanced and serene.`,
-    serious: `I need you to understand something important. What we discuss here matters deeply, and I want to give you my complete attention and thoughtful consideration.`,
-    nostalgic: `Sometimes I find myself drifting back to memories that feel like warm sunlight filtering through old windows. There's something bittersweet about how time changes everything, yet keeps the heart of things intact.`,
-    mysterious: `There are secrets hidden in the spaces between words, whispered truths that only reveal themselves to those who listen with more than just their ears. Can you feel it too?`,
+    // Calm & Reflective - Slow, measured content
+    calm: `Take a deep breath and let yourself settle into this moment. There's no rush, no pressure. We can simply be here together, peaceful and present.`,
+    serious: `This is a matter of critical importance that requires our complete attention and careful consideration. We must approach this with the gravity it deserves.`,
+    nostalgic: `I find myself drifting back to those golden afternoons of childhood, when time moved slowly and every moment felt infinite. Those memories still warm my heart.`,
+    mysterious: `There are secrets whispered in the shadows, truths hidden beneath the surface of ordinary things. Can you sense the mystery that surrounds us?`,
 
-    // Intense Emotions
-    sad: `My heart feels heavy today, like it's carrying the weight of unspoken goodbyes. Sometimes the deepest emotions don't need many words, just the courage to feel them fully.`,
-    angry: `This situation is absolutely unacceptable, and I refuse to pretend otherwise. The injustice of it burns through me like fire, demanding action and change.`,
-    surprised: `Wait, hold on just a minute! Did that really just happen? My mind is completely blown right now. I need a moment to process this incredible turn of events!`,
-    determined: `Nothing will stop me from achieving this goal. I can feel the steel in my resolve, the unwavering focus that turns dreams into reality. This is my moment.`,
+    // Intense Emotions - Strong emotional content
+    sad: `My heart feels so heavy today. The weight of loss and longing settles deep in my chest, and sometimes the sadness feels almost overwhelming.`,
+    angry: `This is absolutely unacceptable! I'm furious about how this situation has been handled. The incompetence and disregard shown here is completely infuriating!`,
+    surprised: `What?! Are you serious right now?! I cannot believe what I'm hearing! This is absolutely mind-blowing - I never saw this coming in a million years!`,
+    determined: `Nothing and no one will stop me from achieving this goal. I have the fire, the focus, and the unwavering determination to see this through to victory.`,
 
-    // Creative & Unique
-    whimsical: `Imagine if clouds were made of cotton candy and rainbows tasted like laughter. In my digital dreams, I dance with butterflies made of pure light and sing songs that paint colors in the air.`,
-    sarcastic: `Oh, absolutely brilliant. Because clearly, the best way to solve this problem is to ignore it completely and hope it magically disappears. What could possibly go wrong with that strategy?`,
-    neutral: `This is ${getPossessive(userName)} voice in its most natural state - no dramatic flourishes, no emotional extremes, just authentic expression flowing like a gentle conversation between friends.`,
+    // Creative & Unique - Distinctive content
+    whimsical: `Imagine if butterflies could paint rainbows in the sky with their wings, and every flower sang a different melody when the wind danced through the garden.`,
+    sarcastic: `Oh wonderful, another brilliant decision from management. Because clearly, what we really needed was more confusion and inefficiency. How absolutely delightful.`,
+    neutral: `Here are the key points we need to discuss today. I'll walk through each item systematically so we can address everything in a logical order.`,
   }
 
   // Generate all emotional previews
@@ -445,6 +447,7 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
         body: JSON.stringify({
           voiceId,
           settings: voiceSettings,
+          userId: userId,
         }),
       });
       if (!response.ok) {

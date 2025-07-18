@@ -185,7 +185,7 @@ function generateVoiceSettings(text: string, emotionalStyle?: string) {
 
 export async function POST(req: Request) {
   try {
-    const { text, voiceId, userId, emotionalStyle } = await req.json()
+    const { text, voiceId, userId, emotionalStyle, settings } = await req.json()
 
     if (!text) {
       return NextResponse.json({ error: 'Missing text to synthesize' }, { status: 400 })
@@ -205,8 +205,20 @@ export async function POST(req: Request) {
       }
     }
 
-    // Generate dynamic voice settings based on emotional style and content
-    const voiceSettings = generateVoiceSettings(cleanedText, emotionalStyle)
+    // Use passed settings if available, otherwise generate dynamic settings
+    let voiceSettings
+    if (settings && Object.keys(settings).length > 0) {
+      // Use the specific settings passed from the frontend (for voice tuning)
+      voiceSettings = {
+        stability: settings.stability || 0.5,
+        similarity_boost: settings.similarity_boost || 0.75,
+        style: settings.style || 0.2,
+        use_speaker_boost: settings.use_speaker_boost !== undefined ? settings.use_speaker_boost : true
+      }
+    } else {
+      // Generate dynamic voice settings based on emotional style and content
+      voiceSettings = generateVoiceSettings(cleanedText, emotionalStyle)
+    }
 
     const apiKey = process.env.ELEVENLABS_API_KEY!
 

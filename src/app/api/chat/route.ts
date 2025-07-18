@@ -42,7 +42,21 @@ export async function POST(req: Request) {
         systemPrompt += `\n\nIMPORTANT: The user is asking about ${contextualAdaptations.strongOpinion}, which you have strong opinions about. Let your passion and authentic views show through clearly.`
       }
       if (contextualAdaptations?.personalConnection) {
-        systemPrompt += `\n\nIMPORTANT: The user mentioned ${contextualAdaptations.mentionedFriend}, someone important in your life. Share personal details and memories about them naturally.`
+        const relationshipType = contextualAdaptations.relationshipType || 'friend';
+        const friendDetails = contextualAdaptations.friendDetails;
+        let personalInfo = `The user mentioned ${contextualAdaptations.mentionedFriend}, your ${relationshipType}.`;
+        
+        if (friendDetails) {
+          if (friendDetails.traits) personalInfo += ` They are ${friendDetails.traits.join(', ')}.`;
+          if (friendDetails.profession) personalInfo += ` They work as a ${friendDetails.profession}.`;
+          if (friendDetails.location) personalInfo += ` They live in ${friendDetails.location}.`;
+          if (friendDetails.partner) personalInfo += ` Their partner is ${friendDetails.partner.name || friendDetails.partner}.`;
+          if (friendDetails.memoriesWithJonathan) personalInfo += ` You have these memories together: ${friendDetails.memoriesWithJonathan.join('; ')}.`;
+          if (friendDetails.ageDifference) personalInfo += ` They are ${friendDetails.ageDifference}.`;
+          if (friendDetails.children) personalInfo += ` They have children: ${friendDetails.children.join(', ')}.`;
+        }
+        
+        systemPrompt += `\n\nIMPORTANT: ${personalInfo} Share personal details, memories, and your relationship with them naturally. Be warm and specific about your connection.`
       }
       if (contextualAdaptations?.emotionalContext) {
         systemPrompt += `\n\nIMPORTANT: The user's message has a ${contextualAdaptations.emotionalContext} emotional tone. Match their energy and respond with appropriate emotional intelligence.`

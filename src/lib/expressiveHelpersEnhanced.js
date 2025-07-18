@@ -297,13 +297,55 @@ export function adaptToContext(userMessage, profileData, partnerProfile = null) 
   }
   
   // Detect if user mentions people from their life
+  
+  // Check friends
   if (profileData.friends) {
     profileData.friends.forEach(friend => {
-      if (message.includes(friend.name.toLowerCase())) {
+      const friendName = friend.name.toLowerCase();
+      if (message.includes(friendName)) {
         adaptations.mentionedFriend = friend.name;
         adaptations.personalConnection = true;
+        adaptations.friendDetails = friend;
       }
     });
+  }
+  
+  // Check family members
+  if (profileData.brother) {
+    const brotherName = profileData.brother.name.toLowerCase();
+    const brotherNickname = profileData.brother.nickname?.toLowerCase();
+    if (message.includes(brotherName) || (brotherNickname && message.includes(brotherNickname))) {
+      adaptations.mentionedFriend = profileData.brother.name;
+      adaptations.personalConnection = true;
+      adaptations.relationshipType = 'brother';
+      adaptations.friendDetails = profileData.brother;
+    }
+  }
+  
+  // Check partner
+  if (profileData.partner) {
+    const partnerName = profileData.partner.name.toLowerCase();
+    if (message.includes(partnerName)) {
+      adaptations.mentionedFriend = profileData.partner.name;
+      adaptations.personalConnection = true;
+      adaptations.relationshipType = 'partner';
+      adaptations.friendDetails = profileData.partner;
+    }
+  }
+  
+  // Check parents
+  if (profileData.family?.mother && message.includes(profileData.family.mother.name.toLowerCase())) {
+    adaptations.mentionedFriend = profileData.family.mother.name;
+    adaptations.personalConnection = true;
+    adaptations.relationshipType = 'mother';
+    adaptations.friendDetails = profileData.family.mother;
+  }
+  
+  if (profileData.family?.father && message.includes(profileData.family.father.name.toLowerCase())) {
+    adaptations.mentionedFriend = profileData.family.father.name;
+    adaptations.personalConnection = true;
+    adaptations.relationshipType = 'father';
+    adaptations.friendDetails = profileData.family.father;
   }
 
   // If partnerProfile is present, check for relationship context

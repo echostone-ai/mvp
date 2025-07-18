@@ -581,4 +581,193 @@ nced Voice Tuning Styles */
     flex-direction: column;
     align-items: stretch;
   }
+}/* 
+Mobile-Optimized Profile Page Styles */
+
+/* Hide scrollbar for horizontal tab scrolling */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Safari and Chrome */
+}
+
+/* Touch-friendly interactions */
+.touch-manipulation {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Mobile tab enhancements */
+@media (max-width: 640px) {
+  /* Ensure tabs are properly sized on mobile */
+  .profile-tab-mobile {
+    min-width: 80px;
+    height: 64px;
+    font-size: 0.75rem;
+  }
+  
+  /* Better spacing for mobile content */
+  .profile-content-mobile {
+    padding: 1rem;
+    margin: 0 auto;
+  }
+  
+  /* Optimize personality grid for mobile */
+  .personality-grid-mobile {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  /* Mobile-friendly voice tuning */
+  .voice-tuning-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  /* Better mobile typography */
+  .mobile-title {
+    font-size: 1.5rem;
+    line-height: 1.3;
+  }
+  
+  .mobile-subtitle {
+    font-size: 1rem;
+    line-height: 1.4;
+  }
+}
+
+/* Tablet optimizations */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .personality-grid-tablet {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+  }
+  
+  .voice-tuning-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+/* Enhanced focus states for accessibility */
+.profile-tab:focus {
+  outline: 2px solid #9147ff;
+  outline-offset: 2px;
+}
+
+/* Smooth transitions for tab switching */
+.tab-content {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mobile-specific improvements for voice components */
+@media (max-width: 640px) {
+  .voice-recorder-mobile {
+    padding: 1rem;
+  }
+  
+  .voice-preview-mobile {
+    padding: 1rem;
+    margin: 1rem 0;
+  }
+  
+  /* Better button sizing for mobile */
+  .mobile-button {
+    min-height: 44px;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+  }
+  
+  /* Optimize memory management for mobile */
+  .memory-management-mobile {
+    padding: 1rem;
+  }
+  
+  .memory-management-mobile .memory-card {
+    margin-bottom: 1rem;
+  }
+}
+
+/* Improved loading states for mobile */
+.loading-spinner-mobile {
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid rgba(147, 71, 255, 0.3);
+  border-top: 3px solid #9147ff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Better error states for mobile */
+.error-card-mobile {
+  padding: 1rem;
+  margin: 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+/* Responsive improvements for auth states */
+@media (max-width: 640px) {
+  .auth-required-card {
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+  
+  .auth-required-title {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .auth-required-subtitle {
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .auth-required-actions {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .auth-btn {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+  }
+}
+
+/* Swipe gesture indicators (optional enhancement) */
+.swipe-indicator {
+  position: relative;
+}
+
+.swipe-indicator::after {
+  content: '';
+  position: absolute;
+  right: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 20px;
+  background: linear-gradient(to bottom, transparent, rgba(147, 71, 255, 0.5), transparent);
+  border-radius: 2px;
+}
+
+@media (min-width: 640px) {
+  .swipe-indicator::after {
+    display: none;
+  }
 }
