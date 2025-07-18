@@ -20,6 +20,7 @@ interface ChatInterfaceProps {
   profileData: any // user profile JSON
   voiceId: string | null
   userId?: string // user ID for memory operations
+  avatarId?: string // avatar ID for memory isolation
   initialMessages?: ChatMessage[]
   onAsk?: (question: string) => void
 }
@@ -28,6 +29,7 @@ export default function ChatInterface({
   profileData,
   voiceId,
   userId,
+  avatarId,
   initialMessages = [],
   onAsk,
 }: ChatInterfaceProps) {
@@ -188,6 +190,7 @@ export default function ChatInterface({
           profileData,
           voiceId,
           userId, // Pass userId for memory operations
+          avatarId, // Pass avatarId for memory isolation
           partnerProfile: profileData, // Pass the current user's profile as partnerProfile
         }),
       })

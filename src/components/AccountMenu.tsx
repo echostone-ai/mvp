@@ -119,6 +119,9 @@ export default function AccountMenu() {
                 <Link href="/profile" className="account-menu-item" tabIndex={0} onClick={() => setOpen(false)}>
                   Profile
                 </Link>
+                <Link href="/avatars" className="account-menu-item" tabIndex={0} onClick={() => setOpen(false)}>
+                  Avatars
+                </Link>
               </>
             )}
             <Link href="/about" className="account-menu-item" tabIndex={0} onClick={() => setOpen(false)}>

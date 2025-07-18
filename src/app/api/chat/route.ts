@@ -13,8 +13,8 @@ const openai = new OpenAI({
 
 export async function POST(req: Request) {
   try {
-    // Accept profileData and userId in the body (from the UI)
-    const { prompt, voiceId, systemPrompt: incomingSystemPrompt, profileData, userId, partnerProfile } = await req.json()
+    // Accept profileData, userId and avatarId in the body (from the UI)
+    const { prompt, voiceId, systemPrompt: incomingSystemPrompt, profileData, userId, avatarId, partnerProfile } = await req.json()
 
     if (!prompt) {
       return NextResponse.json({ answer: 'Missing prompt.' }, { status: 400 })
@@ -87,7 +87,8 @@ export async function POST(req: Request) {
           prompt, 
           userId, 
           profileData,
-          10 // Increased from 5 to get more memories
+          10, // Increased from 5 to get more memories
+          avatarId // Pass avatarId for memory isolation
         )
         
         hasMemorySystem = true
@@ -204,7 +205,8 @@ export async function POST(req: Request) {
       MemoryService.processAndStoreMemories(prompt, userId, {
         timestamp: new Date().toISOString(),
         messageContext: 'User message in chat',
-        emotionalTone: selectedStyle
+        emotionalTone: selectedStyle,
+        avatarId // Include avatarId in context
       }, 0.6) // Lower threshold to extract more memories
         .then(fragments => {
           if (fragments.length > 0) {
@@ -223,7 +225,8 @@ export async function POST(req: Request) {
       MemoryService.processAndStoreMemories(answer, userId, {
         timestamp: new Date().toISOString(),
         messageContext: 'AI response in chat',
-        emotionalTone: selectedStyle
+        emotionalTone: selectedStyle,
+        avatarId // Include avatarId in context
       }, 0.6)
         .then(fragments => {
           if (fragments.length > 0) {
@@ -244,7 +247,8 @@ export async function POST(req: Request) {
         {
           timestamp: new Date().toISOString(),
           messageContext: 'Conversation exchange',
-          emotionalTone: 'reflective'
+          emotionalTone: 'reflective',
+          avatarId // Include avatarId in context
         },
         0.7
       )
