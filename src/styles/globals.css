@@ -905,4 +905,92 @@ file Page Tab Navigation - Works without Tailwind */
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 1.5rem;
   }
+}/* Profil
+e Page Tab Navigation - Beautiful Desktop & Mobile */
+.profile-tabs-container {
+  width: 100%;
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: center;
+  padding: 0 1rem;
+}
+
+.profile-tabs {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  max-width: 1200px;
+}
+
+.profile-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: #7c3aed;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  user-select: none;
+  min-height: 48px;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+}
+
+.profile-tab:hover {
+  background: #8b5cf6;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(124, 58, 237, 0.4);
+}
+
+.profile-tab.active {
+  background: linear-gradient(135deg, #9147ff, #7c3aed);
+  box-shadow: 0 8px 24px rgba(145, 71, 255, 0.5);
+  transform: translateY(-1px);
+}
+
+.tab-icon {
+  font-size: 20px;
+}
+
+.tab-label {
+  white-space: nowrap;
+}
+
+/* Mobile optimizations for tabs */
+@media (max-width: 768px) {
+  .profile-tabs-container {
+    overflow-x: auto;
+    justify-content: flex-start;
+    padding: 0 1rem;
+  }
+  
+  .profile-tabs {
+    flex-wrap: nowrap;
+    min-width: max-content;
+    gap: 8px;
+  }
+  
+  .profile-tab {
+    flex-direction: column;
+    padding: 8px 12px;
+    min-width: 80px;
+    font-size: 12px;
+    gap: 4px;
+  }
+  
+  .tab-icon {
+    font-size: 24px;
+  }
+  
+  .tab-label {
+    font-size: 12px;
+    line-height: 1;
+  }
 }

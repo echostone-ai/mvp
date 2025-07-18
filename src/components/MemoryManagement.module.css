@@ -390,4 +390,56 @@
   .memoryCardActions {
     align-self: flex-end;
   }
+}/* Memory 
+Title Row with Refresh Button */
+.memoryTitleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.refreshButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(147, 71, 255, 0.8);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  min-height: 36px;
+}
+
+.refreshButton:hover:not(:disabled) {
+  background: rgba(147, 71, 255, 1);
+  transform: translateY(-1px);
+}
+
+.refreshButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.refreshButton:disabled:hover {
+  transform: none;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .memoryTitleRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  
+  .refreshButton {
+    align-self: flex-end;
+    width: fit-content;
+  }
 }

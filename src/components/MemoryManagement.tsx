@@ -42,6 +42,18 @@ export default function MemoryManagement({ userId }: MemoryManagementProps) {
     loadMemories()
   }, [currentPage])
 
+  // Auto-refresh memories every 30 seconds when component is visible
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!document.hidden && currentPage === 0) {
+        // Only auto-refresh the first page to show latest memories
+        loadMemories()
+      }
+    }, 30000) // 30 seconds
+
+    return () => clearInterval(interval)
+  }, [currentPage])
+
   // Debounced search effect
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -258,10 +270,25 @@ export default function MemoryManagement({ userId }: MemoryManagementProps) {
     <div className={styles.memoryManagementContainer}>
       {/* Header */}
       <div className={styles.memoryHeader}>
-        <h2 className={styles.memoryTitle}>New Memories</h2>
-        <p className={styles.memorySubtitle}>
-          Personal details and experiences your avatar has learned from your conversations
-        </p>
+        <div className={styles.memoryTitleRow}>
+          <div>
+            <h2 className={styles.memoryTitle}>New Memories</h2>
+            <p className={styles.memorySubtitle}>
+              Personal details and experiences your avatar has learned from your conversations
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              setCurrentPage(0);
+              loadMemories();
+            }}
+            className={styles.refreshButton}
+            disabled={loading}
+            title="Refresh memories"
+          >
+            {loading ? '⟳' : '🔄'} Refresh
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
