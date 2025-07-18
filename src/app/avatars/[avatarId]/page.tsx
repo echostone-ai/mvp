@@ -138,6 +138,27 @@ export default function AvatarChatPage() {
           </div>
         </div>
         
+        {/* Voice Training Section (if no voice is set) */}
+        {!avatarProfile.voice_id && (
+          <div className="max-w-5xl w-full mx-auto px-4 mb-8">
+            <div className="bg-purple-900/40 border border-purple-500/30 rounded-lg p-6">
+              <h2 className="text-xl font-bold mb-3 text-white">Train {avatarProfile.name}'s Voice</h2>
+              <p className="text-gray-300 mb-4">
+                This avatar doesn't have a voice yet. Record a voice sample to give it a unique voice.
+              </p>
+              
+              <div className="flex justify-center">
+                <Link 
+                  href={`/avatars/voices`}
+                  className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
+                >
+                  Train Voice
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <ChatInterface 
           profileData={avatarProfile.profile_data || {}}
           voiceId={avatarProfile.voice_id}

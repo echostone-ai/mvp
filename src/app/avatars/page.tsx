@@ -113,7 +113,18 @@ export default function AvatarsPage() {
   return (
     <PageShell>
       <main className="min-h-screen text-white flex flex-col items-center p-6 max-w-5xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Your Avatars</h1>
+        <div className="flex justify-between items-center w-full mb-8">
+          <h1 className="text-3xl font-bold">Your Avatars</h1>
+          <Link 
+            href="/avatars/voices" 
+            className="bg-indigo-700 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
+            </svg>
+            Manage Voices
+          </Link>
+        </div>
 
         {error && (
           <div className="bg-red-900/50 text-red-200 p-4 rounded-lg mb-6 w-full">

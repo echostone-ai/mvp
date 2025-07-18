@@ -82,14 +82,29 @@ export async function POST(req: Request) {
     
     if (userId) {
       try {
-        // First, try to get more memories (10 instead of 5) to ensure we have enough context
-        // Note: avatarId support will be added in a future update
-        const memoryContext = await MemoryService.getEnhancedMemoryContext(
-          prompt, 
-          userId, 
-          profileData,
-          10 // Increased from 5 to get more memories
-        )
+        // Use avatar-specific memories if avatarId is provided
+        let memoryContext;
+        
+        if (avatarId) {
+          // Import the quick fix for avatar memory isolation
+          const { getAvatarSpecificMemories } = await import('@/lib/memoryServiceQuickFix');
+          
+          // Get avatar-specific memories
+          memoryContext = await getAvatarSpecificMemories(
+            prompt,
+            userId,
+            avatarId,
+            10 // Get up to 10 memories
+          );
+        } else {
+          // Use the standard memory service for non-avatar chats
+          memoryContext = await MemoryService.getEnhancedMemoryContext(
+            prompt, 
+            userId, 
+            profileData,
+            10 // Increased from 5 to get more memories
+          );
+        }
         
         hasMemorySystem = true
         
@@ -201,13 +216,36 @@ export async function POST(req: Request) {
       console.log('🧠 Has memory system:', hasMemorySystem)
       console.log('🧠 Relevant memories found:', relevantMemories.length)
       
-      // Process user message with lower threshold to extract more memories
-      MemoryService.processAndStoreMemories(prompt, userId, {
-        timestamp: new Date().toISOString(),
-        messageContext: 'User message in chat',
-        emotionalTone: selectedStyle,
-        avatarId // Include avatarId in context
-      }, 0.6) // Lower threshold to extract more memories
+      // Process user message with avatar isolation if avatarId is provided
+      if (avatarId) {
+        // Import the quick fix for avatar memory isolation
+        const { storeMemoryFragmentWithAvatarIsolation } = await import('@/lib/memoryServiceQuickFix');
+        
+        // Extract and store memories with avatar isolation
+        fetch('/api/extract-memories', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: prompt,
+            userId,
+            avatarId,
+            context: {
+              timestamp: new Date().toISOString(),
+              messageContext: 'User message in chat',
+              emotionalTone: selectedStyle
+            }
+          })
+        }).catch(error => {
+          console.error('❌ Avatar memory extraction failed:', error);
+        });
+      } else {
+        // Use standard memory service for non-avatar chats
+        MemoryService.processAndStoreMemories(prompt, userId, {
+          timestamp: new Date().toISOString(),
+          messageContext: 'User message in chat',
+          emotionalTone: selectedStyle
+        }, 0.6); // Lower threshold to extract more memories
+      }
         .then(fragments => {
           if (fragments.length > 0) {
             console.log(`✅ Stored ${fragments.length} memory fragments from user message`)
@@ -221,13 +259,33 @@ export async function POST(req: Request) {
           console.error('❌ User memory processing failed:', error)
         })
       
-      // Also process AI response to extract more context
-      MemoryService.processAndStoreMemories(answer, userId, {
-        timestamp: new Date().toISOString(),
-        messageContext: 'AI response in chat',
-        emotionalTone: selectedStyle,
-        avatarId // Include avatarId in context
-      }, 0.6)
+      // Process AI response with avatar isolation if avatarId is provided
+      if (avatarId) {
+        // Extract and store memories with avatar isolation
+        fetch('/api/extract-memories', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: answer,
+            userId,
+            avatarId,
+            context: {
+              timestamp: new Date().toISOString(),
+              messageContext: 'AI response in chat',
+              emotionalTone: selectedStyle
+            }
+          })
+        }).catch(error => {
+          console.error('❌ Avatar memory extraction failed:', error);
+        });
+      } else {
+        // Use standard memory service for non-avatar chats
+        MemoryService.processAndStoreMemories(answer, userId, {
+          timestamp: new Date().toISOString(),
+          messageContext: 'AI response in chat',
+          emotionalTone: selectedStyle
+        }, 0.6);
+      }
         .then(fragments => {
           if (fragments.length > 0) {
             console.log(`✅ Stored ${fragments.length} memory fragments from AI response`)
@@ -240,18 +298,38 @@ export async function POST(req: Request) {
           console.error('❌ AI memory processing failed:', error)
         })
         
-      // Process a combined summary of the current exchange
-      MemoryService.processAndStoreMemories(
-        `USER QUERY: ${prompt}\nAI RESPONSE: ${answer}`, 
-        userId, 
-        {
-          timestamp: new Date().toISOString(),
-          messageContext: 'Conversation exchange',
-          emotionalTone: 'reflective',
-          avatarId // Include avatarId in context
-        },
-        0.7
-      )
+      // Process combined summary with avatar isolation if avatarId is provided
+      if (avatarId) {
+        // Extract and store memories with avatar isolation
+        fetch('/api/extract-memories', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: `USER QUERY: ${prompt}\nAI RESPONSE: ${answer}`,
+            userId,
+            avatarId,
+            context: {
+              timestamp: new Date().toISOString(),
+              messageContext: 'Conversation exchange',
+              emotionalTone: 'reflective'
+            }
+          })
+        }).catch(error => {
+          console.error('❌ Avatar memory extraction failed:', error);
+        });
+      } else {
+        // Use standard memory service for non-avatar chats
+        MemoryService.processAndStoreMemories(
+          `USER QUERY: ${prompt}\nAI RESPONSE: ${answer}`, 
+          userId, 
+          {
+            timestamp: new Date().toISOString(),
+            messageContext: 'Conversation exchange',
+            emotionalTone: 'reflective'
+          },
+          0.7
+        )
+      }
         .then(fragments => {
           if (fragments.length > 0) {
             console.log(`✅ Stored ${fragments.length} memory fragments from conversation exchange`)
