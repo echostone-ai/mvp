@@ -1,172 +1,54 @@
-import React from 'react';
-import { QUESTIONS } from './questions';
-
-export default function Dashboard() {
-  return (
-    <div>
-      <h1>Profile Dashboard</h1>
-      <ul>
-        {QUESTIONS.map((q, idx) => (
-          <li key={idx}>{q}</li>
-        ))}
-      </ul>
-    </div>
-  );
+/* --- Profile Tabs Bar --- */
+.profile-tabs-bar {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  align-items: center;
+  margin: 0 0 36px 0;
+  background: rgba(30, 20, 60, 0.74);
+  border-radius: 14px;
+  padding: 8px 16px;
+  box-shadow: 0 2px 18px 0 #9147ff16;
+  border: 1.5px solid rgba(147, 71, 255, 0.12);
 }
 
-import React, { useState, useRef, useEffect } from 'react';
-import { QUESTIONS } from '../../../app/profile/questions';
-
-export default function Wizard() {
-  const [step, setStep] = useState(0);
-  const [answers, setAnswers] = useState({});
-  const [slide, setSlide] = useState(null); // 'next' or 'prev' or null
-  const inputRef = useRef(null);
-
-  useEffect(() => {
-    if (inputRef.current) inputRef.current.focus();
-  }, [step]);
-
-  function handleChange(value) {
-    setAnswers(prev => ({
-      ...prev,
-      [QUESTIONS[step]]: value
-    }));
-  }
-
-  function handleNav(dir) {
-    if ((dir === 1 && step < QUESTIONS.length - 1) || (dir === -1 && step > 0)) {
-      setSlide(dir === 1 ? 'next' : 'prev');
-      setTimeout(() => {
-        setStep(s => s + dir);
-        setSlide(null);
-      }, 400); // match transition duration
-    }
-  }
-
-  // Only show the current and target panel for animation
-  const renderPanels = () => {
-    let panels = [];
-    if (slide === 'next') {
-      panels.push(
-        <Panel key={step} q={QUESTIONS[step]} a={answers[QUESTIONS[step]]} inputRef={inputRef}
-               style={panelStyle('center', slide)} onChange={handleChange} />,
-        <Panel key={step+1} q={QUESTIONS[step+1]} a={answers[QUESTIONS[step+1]]}
-               style={panelStyle('right', slide)} />
-      );
-    } else if (slide === 'prev') {
-      panels.push(
-        <Panel key={step} q={QUESTIONS[step]} a={answers[QUESTIONS[step]]} inputRef={inputRef}
-               style={panelStyle('center', slide)} onChange={handleChange} />,
-        <Panel key={step-1} q={QUESTIONS[step-1]} a={answers[QUESTIONS[step-1]]}
-               style={panelStyle('left', slide)} />
-      );
-    } else {
-      panels.push(
-        <Panel key={step} q={QUESTIONS[step]} a={answers[QUESTIONS[step]]} inputRef={inputRef}
-               style={panelStyle('center', null)} onChange={handleChange} />
-      );
-    }
-    return panels;
-  };
-
-  // Panel slide logic
-  function panelStyle(pos, anim) {
-    const base = {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      width: 540,
-      maxWidth: 580,
-      minHeight: 370,
-      height: 420,
-      padding: '3em 2.7em 2.5em 2.7em',
-      borderRadius: '1.6em',
-      background: 'rgba(44,27,74,0.85)',
-      boxShadow: '0 0 18px 2px #a884ffcc',
-      transition: 'transform 0.38s cubic-bezier(.44,.98,.47,1.18), opacity 0.32s',
-      color: '#fff',
-      overflow: 'hidden',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'space-between',
-      zIndex: 2
-    };
-    // Fresh, only one panel
-    if (!anim && pos === 'center') return { ...base, transform: 'translateX(0)' };
-    // Animate out/in
-    if (anim === 'next') {
-      if (pos === 'center') return { ...base, zIndex: 3, transform: 'translateX(-100%)' };
-      if (pos === 'right') return { ...base, zIndex: 4, transform: 'translateX(0)' };
-    }
-    if (anim === 'prev') {
-      if (pos === 'center') return { ...base, zIndex: 3, transform: 'translateX(100%)' };
-      if (pos === 'left') return { ...base, zIndex: 4, transform: 'translateX(0)' };
-    }
-    // Initial state
-    if (pos === 'right') return { ...base, zIndex: 1, transform: 'translateX(100%)' };
-    if (pos === 'left') return { ...base, zIndex: 1, transform: 'translateX(-100%)' };
-    return base;
-  }
-
-  return (
-    <div style={{ maxWidth: 600, height: 530, paddingTop: '2.7em', margin: '0 auto', position: 'relative' }}>
-      <div style={{ marginBottom: '2.6em', marginTop: '-28px' }}>
-        <img src="/logo.png" alt="Logo" style={{ width: 120 }} />
-      </div>
-      <div style={{ position: 'relative', height: 420 }}>
-        {renderPanels()}
-      </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', width: 540, maxWidth: 580, margin: '1em auto 0 auto' }}>
-        <button onClick={() => handleNav(-1)} disabled={step === 0}>Back</button>
-        <button onClick={() => handleNav(1)} disabled={step === QUESTIONS.length - 1}>Next</button>
-      </div>
-    </div>
-  );
+.profile-tab-btn {
+  display: inline-block;
+  padding: 11px 28px;
+  font-size: 1.08rem;
+  font-weight: 600;
+  color: #e2e2f6;
+  background: none;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, font-weight 0.2s, box-shadow 0.2s;
+  margin: 0 2px;
+  text-decoration: none;
+  outline: none;
 }
 
-function Panel({ q, a, inputRef, style, onChange }) {
-  return (
-    <div style={style}>
-      <div>
-        <h2 style={{
-          margin: 0,
-          fontSize: '1.35rem',
-          fontWeight: 700,
-          color: '#fff',
-          textAlign: 'center',
-          letterSpacing: '0.01em',
-          textShadow: '0 2px 12px #6a00ff33',
-          lineHeight: 1.22,
-          minHeight: 35,
-        }}>{q}</h2>
-        {onChange ? (
-          <textarea
-            ref={inputRef}
-            value={a || ''}
-            onChange={e => onChange(e.target.value)}
-            rows={5}
-            style={{
-              width: '100%',
-              fontSize: '1.16rem',
-              padding: '1.2em',
-              borderRadius: '1.2em',
-              border: '2.3px solid #a884ff',
-              background: '#180736',
-              color: '#fff',
-              boxShadow: '0 0 0 2px #a884ff66',
-              marginBottom: '0.7em',
-              outline: 'none',
-              resize: 'vertical',
-              minHeight: 92,
-              transition: 'box-shadow 0.22s, border 0.22s'
-            }}
-            autoFocus
-          />
-        ) : (
-          <div style={{ height: 92 }} />
-        )}
-      </div>
-    </div>
-  );
+.profile-tab-btn.active,
+.profile-tab-btn:focus {
+  background: linear-gradient(90deg, #7c3aed 0%, #9147ff 100%);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 2px 10px 0 #7c3aed33;
+}
+
+.profile-tab-btn:hover:not(.active) {
+  background: rgba(147, 71, 255, 0.14);
+  color: #d1c7e8;
+}
+
+@media (max-width: 650px) {
+  .profile-tabs-bar {
+    flex-wrap: wrap;
+    gap: 2px;
+    padding: 6px 2px;
+  }
+  .profile-tab-btn {
+    padding: 11px 14px;
+    font-size: 1rem;
+  }
 }

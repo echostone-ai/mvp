@@ -1,4 +1,3 @@
-// TEMP: test change for deployment
 'use client'
 
 import Link from 'next/link'
@@ -185,29 +184,29 @@ export default function ProfilePage() {
           </h1>
           
           {/* Tab navigation that works without Tailwind */}
-          <div className="profile-tabs-container">
-            <div className="profile-tabs">
-              {[
-                { id: 'voice', label: 'Voice', icon: '🎤' },
-                { id: 'voicetuning', label: 'Voice Tuning', icon: '🎛️' },
-                { id: 'stories', label: 'Your Stories', icon: '📚' },
-                { id: 'personality', label: 'Personality', icon: '👤' },
-                { id: 'memories', label: 'New Memories', icon: '🧠' }
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  className={`profile-tab ${activeTab === tab.id ? 'active' : ''}`}
-                  onClick={() => setActiveTab(tab.id as any)}
-                  role="tab"
-                  aria-selected={activeTab === tab.id}
-                  aria-controls={`${tab.id}-panel`}
-                >
-                  <span className="tab-icon">{tab.icon}</span>
-                  <span className="tab-label">{tab.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+          <nav className="profile-tabs-bar" role="tablist" aria-label="Profile Tabs">
+            {[
+              { id: 'voice', label: 'Voice', icon: '🎤' },
+              { id: 'voicetuning', label: 'Voice Tuning', icon: '🎛️' },
+              { id: 'stories', label: 'Your Stories', icon: '📚' },
+              { id: 'personality', label: 'Personality', icon: '👤' },
+              { id: 'memories', label: 'New Memories', icon: '🧠' }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                className={`profile-tab-btn${activeTab === tab.id ? ' active' : ''}`}
+                onClick={() => setActiveTab(tab.id as any)}
+                role="tab"
+                aria-selected={activeTab === tab.id}
+                aria-controls={`${tab.id}-panel`}
+                id={`${tab.id}-tab`}
+                type="button"
+              >
+                <span className="tab-icon">{tab.icon}</span>
+                <span className="tab-label">{tab.label}</span>
+              </button>
+            ))}
+          </nav>
         </div>
 
         <div className="max-w-5xl w-full px-4 sm:px-6 lg:px-8 mx-auto mb-12 tab-content">
