@@ -133,6 +133,10 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
 // Add error state for the whole preview section
   const [globalError, setGlobalError] = useState<string | null>(null);
 
+  // Add state for save status
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
+  const [saveMessage, setSaveMessage] = useState<string>('');
+
   // Replace all calls to enhancedVoiceService.generateSpeech and generateEmotionalPreviews with fetch('/api/voice')
   // Helper to generate and play audio preview via /api/voice
   const generateVoicePreview = async ({ text, voiceId, settings = {}, emotionalContext }: { text: string, voiceId: string, settings?: any, emotionalContext?: string }) => {
@@ -166,18 +170,49 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
     }
   }
 
+  // Helper to get possessive form
+  function getPossessive(name: string) {
+    if (!name) return ''
+    return name.endsWith('s') ? name + "'" : name + "'s"
+  }
+
+  // Emotion-specific settings and texts
+  const emotionVoiceSettings: Record<string, any> = {
+    happy:      { stability: 0.3, similarity_boost: 0.7, style: 1.0 },
+    sad:        { stability: 0.95, similarity_boost: 0.9, style: 0.05 },
+    excited:    { stability: 0.2, similarity_boost: 0.65, style: 1.0 },
+    calm:       { stability: 0.98, similarity_boost: 0.95, style: 0.1 },
+    serious:    { stability: 0.9, similarity_boost: 0.98, style: 0.1 },
+    playful:    { stability: 0.4, similarity_boost: 0.7, style: 0.9 },
+    angry:      { stability: 0.15, similarity_boost: 0.6, style: 1.0 },
+    surprised:  { stability: 0.25, similarity_boost: 0.7, style: 1.0 },
+    neutral:    { stability: 0.75, similarity_boost: 0.85, style: 0.2 },
+  }
+  const emotionSampleTexts: Record<string, string> = {
+    happy:     `I'm so happy to see you! This is a wonderful day.`,
+    sad:       `I miss you. Things just haven't been the same.`,
+    excited:   `Guess what? I have some amazing news to share!`,
+    calm:      `Everything is peaceful and quiet right now.`,
+    serious:   `Let's talk about something important for a moment.`,
+    playful:   `Did you hear the one about the talking stone? That's me!`,
+    angry:     `This really frustrates me. I can't believe it happened.`,
+    surprised: `Wow! I did not see that coming at all!`,
+    neutral:   `This is ${getPossessive(userName)} voice, just being myself.`,
+  }
+
   // Generate all emotional previews
   const generateEmotionalPreviews = useCallback(async () => {
     setIsGeneratingAll(true)
     setGlobalError(null)
-    const sampleText = `Hello! This is ${userName} voice expressing different emotions. Each emotion brings out unique characteristics in my speech patterns.`
     try {
       const results: Record<string, { success: boolean, audioBlob?: Blob, error?: string }> = {}
       for (const preview of emotionalPreviews) {
+        const settings = emotionVoiceSettings[preview.emotion] || voiceSettings
+        const text = emotionSampleTexts[preview.emotion] || `This is ${getPossessive(userName)} voice expressing ${preview.emotion}.`
         const result = await generateVoicePreview({
-          text: sampleText,
+          text,
           voiceId,
-          settings: voiceSettings,
+          settings,
           emotionalContext: preview.emotion,
         })
         results[preview.emotion] = result
@@ -215,11 +250,12 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
       p.emotion === emotion ? { ...p, isGenerating: true } : p
     ))
     setGlobalError(null)
-    const sampleText = `This is ${userName} voice expressing ${emotion}. Notice how the tone and delivery change to match this emotional context.`
+    const settings = emotionVoiceSettings[emotion] || voiceSettings
+    const text = emotionSampleTexts[emotion] || `This is ${getPossessive(userName)} voice expressing ${emotion}.`
     const result = await generateVoicePreview({
-      text: sampleText,
+      text,
       voiceId,
-      settings: voiceSettings,
+      settings,
       emotionalContext: emotion,
     })
     if (!result.success) {
@@ -239,12 +275,14 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
   const generateScenarioPreview = useCallback(async (scenarioId: string, customTextOverride?: string) => {
     const scenario = scenarios.find(s => s.id === scenarioId)
     if (!scenario) return
+    const emotion = scenario.emotionalContext || 'neutral'
+    const settings = emotionVoiceSettings[emotion] || voiceSettings
     const text = customTextOverride || scenario.sampleText
     const result = await generateVoicePreview({
       text,
       voiceId,
-      settings: voiceSettings,
-      emotionalContext: scenario.emotionalContext,
+      settings,
+      emotionalContext: emotion,
     })
     if (result.success && result.audioBlob) {
       const audioUrl = URL.createObjectURL(result.audioBlob)
@@ -351,6 +389,39 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
       });
     };
   }, [emotionalPreviews]);
+
+  // Save settings to backend
+  const handleSaveSettings = useCallback(async () => {
+    setSaveStatus('saving');
+    setSaveMessage('');
+    try {
+      const response = await fetch('/api/save-voice-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          voiceId,
+          settings: voiceSettings,
+        }),
+      });
+      if (!response.ok) {
+        let errorMsg = 'Failed to save settings.';
+        try {
+          const errorData = await response.json();
+          errorMsg = errorData.error || errorData.message || JSON.stringify(errorData);
+        } catch (e) {
+          errorMsg = 'Failed to save settings (unknown error).';
+        }
+        setSaveStatus('error');
+        setSaveMessage(errorMsg);
+        return;
+      }
+      setSaveStatus('success');
+      setSaveMessage('Voice settings saved successfully!');
+    } catch (err) {
+      setSaveStatus('error');
+      setSaveMessage('Failed to save settings. Please try again.');
+    }
+  }, [voiceId, voiceSettings]);
 
   return (
     <div className="voice-tuning-panel">
@@ -586,6 +657,25 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
                 <span>Enhances voice clarity and presence</span>
               </div>
             </div>
+          </div>
+          <div style={{ display: 'flex', gap: '1em', marginTop: '2em', alignItems: 'center' }}>
+            <button
+              className="voice-tuning-btn primary"
+              onClick={handleSaveSettings}
+              disabled={saveStatus === 'saving'}
+              type="button"
+            >
+              {saveStatus === 'saving' ? 'Saving...' : '💾 Save Settings'}
+            </button>
+            <button
+              className="voice-tuning-btn"
+              onClick={resetToDefaults}
+              type="button"
+            >
+              Reset to Defaults
+            </button>
+            {saveStatus === 'success' && <span style={{ color: '#22c55e', fontWeight: 600 }}>{saveMessage}</span>}
+            {saveStatus === 'error' && <span style={{ color: '#f87171', fontWeight: 600 }}>{saveMessage}</span>}
           </div>
         </div>
       )}
