@@ -469,14 +469,6 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
 
   return (
     <div className="voice-tuning-panel">
-      {/* Header */}
-      <div className="voice-tuning-header">
-        <h2 className="voice-tuning-title">Voice Tuning</h2>
-        <p className="voice-tuning-desc">
-          Fine-tune your digital voice with advanced controls, emotional previews, and parameter adjustments.
-        </p>
-      </div>
-
       {/* Tab Navigation */}
       <div className="voice-tuning-tabs">
         {[
