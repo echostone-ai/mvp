@@ -5,7 +5,13 @@ import { supabase } from '@/components/supabaseClient'
 import ChatInterface from '@/components/ChatInterface'
 import PageShell from '@/components/PageShell'
 
-export default function AvatarChatPage({ params }: { params: { avatarId: string } }) {
+interface AvatarChatPageProps {
+  params: {
+    avatarId: string;
+  };
+}
+
+export default function AvatarChatPage({ params }: AvatarChatPageProps) {
   const [user, setUser] = useState<any>(null)
   const [avatarProfile, setAvatarProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)

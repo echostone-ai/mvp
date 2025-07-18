@@ -41,7 +41,7 @@ RETURNS TABLE (
   embedding vector(1536)
 )
 LANGUAGE plpgsql
-AS $$
+AS $function$
 BEGIN
   RETURN QUERY
   SELECT
@@ -62,4 +62,4 @@ BEGIN
   ORDER BY memory_fragments.embedding <=> query_embedding
   LIMIT match_count;
 END;
-$$;
+$function$;
