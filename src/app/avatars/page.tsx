@@ -112,7 +112,27 @@ export default function AvatarsPage() {
 
   return (
     <PageShell>
-      <main className="min-h-screen text-white flex flex-col items-center p-6 max-w-5xl mx-auto">
+      <style jsx global>{`
+        .avatar-card-container {
+          perspective: 1000px;
+        }
+        
+        .avatar-card {
+          backface-visibility: hidden;
+          will-change: transform;
+        }
+        
+        .avatar-card:hover {
+          box-shadow: 0 15px 30px rgba(79, 70, 229, 0.2);
+        }
+        
+        @media (max-width: 640px) {
+          .avatar-card-container {
+            perspective: none;
+          }
+        }
+      `}</style>
+      <main className="min-h-screen text-white flex flex-col items-center p-6 max-w-6xl mx-auto">
         <div className="flex justify-between items-center w-full mb-8">
           <h1 className="text-3xl font-bold">Your Avatars</h1>
           <Link 
@@ -172,44 +192,68 @@ export default function AvatarsPage() {
             <p className="text-gray-300 text-lg">No avatars created yet. Create your first avatar above.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
             {avatars.map((avatar) => (
-              <Link
-                key={avatar.id}
-                href={`/avatars/${avatar.id}`}
-                className="bg-purple-800/30 hover:bg-purple-700/40 border-2 border-purple-500/30 hover:border-purple-400/50 rounded-xl p-6 transition-all duration-300 shadow-lg hover:shadow-xl flex flex-col"
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-2xl font-bold text-white">{avatar.name}</h3>
-                  <div className="bg-purple-600/50 text-white text-xs font-bold uppercase px-3 py-1 rounded-full">
-                    Avatar
+              <div key={avatar.id} className="avatar-card-container">
+                <Link
+                  href={`/avatars/${avatar.id}`}
+                  className="avatar-card bg-gradient-to-br from-purple-900/80 to-indigo-900/80 hover:from-purple-800/80 hover:to-indigo-800/80 border-2 border-purple-500/40 hover:border-purple-400/60 rounded-xl overflow-hidden transition-all duration-300 shadow-lg hover:shadow-xl flex flex-col h-full transform hover:-translate-y-1"
+                >
+                  {/* Avatar Header with Gradient Accent */}
+                  <div className="h-2 bg-gradient-to-r from-purple-500 to-indigo-500"></div>
+                  
+                  {/* Avatar Icon and Name */}
+                  <div className="p-6 pb-4">
+                    <div className="flex items-start">
+                      <div className="bg-gradient-to-br from-purple-600 to-indigo-600 p-3 rounded-lg shadow-md mr-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-white mb-1">{avatar.name}</h3>
+                        <div className="flex items-center">
+                          {avatar.voice_id ? (
+                            <span className="bg-green-700/60 text-green-200 px-2 py-0.5 rounded-full text-xs font-medium flex items-center">
+                              <span className="w-2 h-2 bg-green-400 rounded-full mr-1"></span>
+                              Voice Ready
+                            </span>
+                          ) : (
+                            <span className="bg-yellow-700/60 text-yellow-200 px-2 py-0.5 rounded-full text-xs font-medium flex items-center">
+                              <span className="w-2 h-2 bg-yellow-400 rounded-full mr-1"></span>
+                              No Voice
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                
-                {avatar.description && (
-                  <p className="text-gray-200 mb-4 flex-grow">{avatar.description}</p>
-                )}
-                
-                <div className="flex items-center justify-between mt-4 pt-4 border-t border-purple-500/30">
-                  <span className="text-sm text-gray-300">
-                    Created: {new Date(avatar.created_at).toLocaleDateString()}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    {avatar.voice_id ? (
-                      <span className="bg-green-700/50 text-green-200 px-3 py-1 rounded-full text-xs font-medium">
-                        Voice Ready
-                      </span>
+                  
+                  {/* Avatar Description */}
+                  <div className="px-6 pb-4 flex-grow">
+                    {avatar.description ? (
+                      <p className="text-gray-200">{avatar.description}</p>
                     ) : (
-                      <span className="bg-yellow-700/50 text-yellow-200 px-3 py-1 rounded-full text-xs font-medium">
-                        No Voice
-                      </span>
+                      <p className="text-gray-400 italic">No description provided</p>
                     )}
-                    <span className="bg-blue-700/50 text-blue-200 px-3 py-1 rounded-full text-xs font-medium">
-                      Chat Now
-                    </span>
                   </div>
-                </div>
-              </Link>
+                  
+                  {/* Avatar Footer */}
+                  <div className="px-6 py-4 bg-purple-950/50 border-t border-purple-500/30 mt-auto">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-400">
+                        Created: {new Date(avatar.created_at).toLocaleDateString()}
+                      </span>
+                      <span className="bg-blue-700/60 text-blue-200 px-3 py-1 rounded-full text-xs font-medium flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                        Chat Now
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              </div>
             ))}
           </div>
         )}

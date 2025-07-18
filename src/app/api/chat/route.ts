@@ -244,20 +244,20 @@ export async function POST(req: Request) {
           timestamp: new Date().toISOString(),
           messageContext: 'User message in chat',
           emotionalTone: selectedStyle
-        }, 0.6); // Lower threshold to extract more memories
-      }
-        .then(fragments => {
-          if (fragments.length > 0) {
-            console.log(`✅ Stored ${fragments.length} memory fragments from user message`)
-            // Log fragment details for debugging (in development only)
-            if (process.env.NODE_ENV === 'development') {
-              console.log('User memory fragments:', fragments.map(f => f.fragmentText))
+        }, 0.6)
+          .then(fragments => {
+            if (fragments.length > 0) {
+              console.log(`✅ Stored ${fragments.length} memory fragments from user message`)
+              // Log fragment details for debugging (in development only)
+              if (process.env.NODE_ENV === 'development') {
+                console.log('User memory fragments:', fragments.map(f => f.fragmentText))
+              }
             }
-          }
-        })
-        .catch(error => {
-          console.error('❌ User memory processing failed:', error)
-        })
+          })
+          .catch(error => {
+            console.error('❌ User memory processing failed:', error)
+          });
+      }
       
       // Process AI response with avatar isolation if avatarId is provided
       if (avatarId) {
@@ -284,19 +284,19 @@ export async function POST(req: Request) {
           timestamp: new Date().toISOString(),
           messageContext: 'AI response in chat',
           emotionalTone: selectedStyle
-        }, 0.6);
-      }
-        .then(fragments => {
-          if (fragments.length > 0) {
-            console.log(`✅ Stored ${fragments.length} memory fragments from AI response`)
-            if (process.env.NODE_ENV === 'development') {
-              console.log('AI memory fragments:', fragments.map(f => f.fragmentText))
+        }, 0.6)
+          .then(fragments => {
+            if (fragments.length > 0) {
+              console.log(`✅ Stored ${fragments.length} memory fragments from AI response`)
+              if (process.env.NODE_ENV === 'development') {
+                console.log('AI memory fragments:', fragments.map(f => f.fragmentText))
+              }
             }
-          }
-        })
-        .catch(error => {
-          console.error('❌ AI memory processing failed:', error)
-        })
+          })
+          .catch(error => {
+            console.error('❌ AI memory processing failed:', error)
+          });
+      }
         
       // Process combined summary with avatar isolation if avatarId is provided
       if (avatarId) {
