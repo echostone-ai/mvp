@@ -298,13 +298,20 @@ export function adaptToContext(userMessage, profileData, partnerProfile = null) 
   
   // Detect if user mentions people from their life
   
-  // Check friends
+  // Check friends - improved name matching with debugging
   if (profileData.friends) {
     profileData.friends.forEach(friend => {
-      const friendName = friend.name.toLowerCase();
-      if (message.includes(friendName)) {
+      const friendFullName = friend.name.toLowerCase();
+      const friendFirstName = friendFullName.split(' ')[0]; // Get first name
+      const friendLastName = friendFullName.split(' ')[1]; // Get last name
+      
+      // Check for full name, first name, or last name matches
+      if (message.includes(friendFullName) || 
+          message.includes(friendFirstName) || 
+          (friendLastName && message.includes(friendLastName))) {
         adaptations.mentionedFriend = friend.name;
         adaptations.personalConnection = true;
+        adaptations.relationshipType = 'friend';
         adaptations.friendDetails = friend;
       }
     });

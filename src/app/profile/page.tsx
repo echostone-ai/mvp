@@ -184,45 +184,9 @@ export default function ProfilePage() {
             Your Profile
           </h1>
           
-          {/* Responsive tab navigation - mobile scrollable, desktop centered */}
-          <div className="w-full mb-6">
-            {/* Mobile: Horizontal scrollable tabs */}
-            <div className="flex overflow-x-auto scrollbar-hide px-4 sm:hidden">
-              <div className="flex gap-2 min-w-max">
-                {[
-                  { id: 'voice', label: 'Voice', icon: '🎤' },
-                  { id: 'voicetuning', label: 'Tuning', icon: '🎛️' },
-                  { id: 'stories', label: 'Stories', icon: '📚' },
-                  { id: 'personality', label: 'Profile', icon: '👤' },
-                  { id: 'memories', label: 'Memories', icon: '🧠' }
-                ].map((tab) => (
-                  <button
-                    key={tab.id}
-                    className={`
-                      flex flex-col items-center justify-center
-                      min-w-[80px] h-16 px-3 py-2
-                      text-xs font-bold 
-                      rounded-xl cursor-pointer border-2 border-transparent 
-                      transition-all duration-300 touch-manipulation
-                      ${activeTab === tab.id 
-                        ? 'bg-primary text-white shadow-lg transform scale-105' 
-                        : 'bg-purple-800 text-white active:bg-purple-600'
-                      }
-                    `}
-                    onClick={() => setActiveTab(tab.id as any)}
-                    role="tab"
-                    aria-selected={activeTab === tab.id}
-                    aria-controls={`${tab.id}-panel`}
-                  >
-                    <span className="text-lg mb-1">{tab.icon}</span>
-                    <span className="leading-tight text-center">{tab.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Desktop: Traditional horizontal tabs */}
-            <div className="hidden sm:flex justify-center gap-3">
+          {/* Tab navigation that works without Tailwind */}
+          <div className="profile-tabs-container">
+            <div className="profile-tabs">
               {[
                 { id: 'voice', label: 'Voice', icon: '🎤' },
                 { id: 'voicetuning', label: 'Voice Tuning', icon: '🎛️' },
@@ -232,23 +196,14 @@ export default function ProfilePage() {
               ].map((tab) => (
                 <button
                   key={tab.id}
-                  className={`
-                    flex items-center gap-2
-                    px-6 py-3 text-xl font-bold 
-                    rounded-lg cursor-pointer border-2 border-transparent 
-                    transition-all duration-300
-                    ${activeTab === tab.id 
-                      ? 'bg-primary text-white' 
-                      : 'bg-purple-800 text-white hover:bg-purple-700'
-                    }
-                  `}
+                  className={`profile-tab ${activeTab === tab.id ? 'active' : ''}`}
                   onClick={() => setActiveTab(tab.id as any)}
                   role="tab"
                   aria-selected={activeTab === tab.id}
                   aria-controls={`${tab.id}-panel`}
                 >
-                  <span>{tab.icon}</span>
-                  <span>{tab.label}</span>
+                  <span className="tab-icon">{tab.icon}</span>
+                  <span className="tab-label">{tab.label}</span>
                 </button>
               ))}
             </div>
@@ -321,10 +276,11 @@ export default function ProfilePage() {
 
           {activeTab === 'personality' && (
             <div 
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 mt-4 sm:mt-7 w-full"
+              className="personality-grid-mobile personality-grid-tablet personality-grid-desktop"
               role="tabpanel"
               id="personality-panel"
               aria-labelledby="personality-tab"
+              style={{ marginTop: '2rem', width: '100%' }}
             >
               {Object.entries(QUESTIONS || {}).map(([section, qs]) => {
                 const prog = progress[section] || { total: qs.length, answered: 0, isComplete: false }

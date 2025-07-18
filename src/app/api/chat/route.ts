@@ -50,7 +50,13 @@ export async function POST(req: Request) {
           if (friendDetails.traits) personalInfo += ` They are ${friendDetails.traits.join(', ')}.`;
           if (friendDetails.profession) personalInfo += ` They work as a ${friendDetails.profession}.`;
           if (friendDetails.location) personalInfo += ` They live in ${friendDetails.location}.`;
-          if (friendDetails.partner) personalInfo += ` Their partner is ${friendDetails.partner.name || friendDetails.partner}.`;
+          if (friendDetails.origin) personalInfo += ` They are from ${friendDetails.origin}.`;
+          if (friendDetails.age) personalInfo += ` They are ${friendDetails.age} years old.`;
+          if (friendDetails.partner) {
+            const partnerName = friendDetails.partner.name || friendDetails.partner;
+            const partnerOrigin = friendDetails.partner.origin ? ` from ${friendDetails.partner.origin}` : '';
+            personalInfo += ` Their partner is ${partnerName}${partnerOrigin}.`;
+          }
           if (friendDetails.memoriesWithJonathan) personalInfo += ` You have these memories together: ${friendDetails.memoriesWithJonathan.join('; ')}.`;
           if (friendDetails.ageDifference) personalInfo += ` They are ${friendDetails.ageDifference}.`;
           if (friendDetails.children) personalInfo += ` They have children: ${friendDetails.children.join(', ')}.`;
