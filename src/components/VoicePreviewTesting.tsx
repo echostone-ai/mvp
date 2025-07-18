@@ -62,15 +62,29 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
   );  // 
 // Emotional previews state - all emotions from EmotionalCalibration
   const [emotionalPreviews, setEmotionalPreviews] = useState<EmotionalPreview[]>([
-    { emotion: 'happy', label: 'Happy', icon: '😊', isGenerating: false },
-    { emotion: 'sad', label: 'Sad', icon: '😢', isGenerating: false },
-    { emotion: 'excited', label: 'Excited', icon: '🤩', isGenerating: false },
-    { emotion: 'calm', label: 'Calm', icon: '😌', isGenerating: false },
-    { emotion: 'serious', label: 'Serious', icon: '🧐', isGenerating: false },
+    // Core Positive Emotions
+    { emotion: 'happy', label: 'Joyful', icon: '😊', isGenerating: false },
+    { emotion: 'excited', label: 'Thrilled', icon: '🤩', isGenerating: false },
     { emotion: 'playful', label: 'Playful', icon: '😄', isGenerating: false },
-    { emotion: 'angry', label: 'Angry', icon: '😠', isGenerating: false },
-    { emotion: 'surprised', label: 'Surprised', icon: '😲', isGenerating: false },
-    { emotion: 'neutral', label: 'Neutral', icon: '😐', isGenerating: false }
+    { emotion: 'confident', label: 'Confident', icon: '💪', isGenerating: false },
+    { emotion: 'romantic', label: 'Romantic', icon: '💕', isGenerating: false },
+    
+    // Calm & Reflective
+    { emotion: 'calm', label: 'Peaceful', icon: '😌', isGenerating: false },
+    { emotion: 'serious', label: 'Focused', icon: '🧐', isGenerating: false },
+    { emotion: 'nostalgic', label: 'Nostalgic', icon: '🌅', isGenerating: false },
+    { emotion: 'mysterious', label: 'Mysterious', icon: '🕵️', isGenerating: false },
+    
+    // Intense Emotions
+    { emotion: 'sad', label: 'Melancholy', icon: '😢', isGenerating: false },
+    { emotion: 'angry', label: 'Frustrated', icon: '😠', isGenerating: false },
+    { emotion: 'surprised', label: 'Amazed', icon: '😲', isGenerating: false },
+    { emotion: 'determined', label: 'Determined', icon: '🔥', isGenerating: false },
+    
+    // Creative & Unique
+    { emotion: 'whimsical', label: 'Whimsical', icon: '🦋', isGenerating: false },
+    { emotion: 'sarcastic', label: 'Sarcastic', icon: '🙄', isGenerating: false },
+    { emotion: 'neutral', label: 'Natural', icon: '😐', isGenerating: false }
   ]);
 
   // Contextual scenarios with emotional contexts (Requirement 3.4)
