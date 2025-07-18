@@ -1,6 +1,10 @@
 // This file contains updates to the MemoryService class to support avatar-specific memories
 // These changes should be integrated into the existing memoryService.ts file
 
+// This is a reference file only - not meant to be imported directly
+// It contains code snippets that should be copied into the main memoryService.ts file
+
+/*
 // Update MemoryFragment interface
 export interface MemoryFragment {
   id?: string;
@@ -143,3 +147,9 @@ static async processAndStoreMemories(
     { userId, messageLength: message.length }
   );
 }
+*/
+
+// Export a dummy object to make TypeScript happy
+export const memoryServiceUpdates = {
+  description: "This file contains code snippets for updating the memory service to support avatar-specific memories. These changes should be integrated into the main memoryService.ts file."
+};
