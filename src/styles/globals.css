@@ -993,4 +993,68 @@ e Page Tab Navigation - Beautiful Desktop & Mobile */
     font-size: 12px;
     line-height: 1;
   }
+}/* Profil
+e Page Tab Navigation - Fixed to match actual JSX classes */
+.profile-tabs-bar {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding: 0 1rem;
+  max-width: 1200px;
+}
+
+.profile-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: rgba(147, 71, 255, 0.8);
+  color: white;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  user-select: none;
+  min-height: 48px;
+  box-shadow: 0 4px 12px rgba(147, 71, 255, 0.3);
+}
+
+.profile-tab-btn:hover {
+  background: rgba(147, 71, 255, 0.9);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(147, 71, 255, 0.4);
+}
+
+.profile-tab-btn.active {
+  background: linear-gradient(135deg, #9147ff, #7c3aed);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 24px rgba(145, 71, 255, 0.5);
+  transform: translateY(-1px);
+}
+
+/* Mobile optimizations for profile tabs */
+@media (max-width: 768px) {
+  .profile-tabs-bar {
+    overflow-x: auto;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    gap: 8px;
+    padding: 0 1rem 0.5rem 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .profile-tab-btn {
+    flex-direction: column;
+    padding: 8px 12px;
+    min-width: 80px;
+    font-size: 12px;
+    gap: 4px;
+    flex-shrink: 0;
+  }
 }
