@@ -33,10 +33,10 @@ async function ensureProfileExists(userId: string) {
 export default function ProfilePage() {
   const [user, setUser] = useState<any>(null)
   const [loadingUser, setLoadingUser] = useState(true)
-  const [activeTab, setActiveTab] = useState<'voice'|'stories'|'personality'|'memories'|'voicetuning'>('voice')
-  const [progress, setProgress] = useState<Record<string,Progress>>({})
-  const [voiceId, setVoiceId] = useState<string|null>(null)
-  const [error, setError] = useState<string|null>(null)
+  const [activeTab, setActiveTab] = useState<'voice' | 'stories' | 'personality' | 'memories' | 'voicetuning'>('voice')
+  const [progress, setProgress] = useState<Record<string, Progress>>({})
+  const [voiceId, setVoiceId] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const [userName, setUserName] = useState('')
 
   useEffect(() => {
@@ -67,7 +67,7 @@ export default function ProfilePage() {
             setError("Profile fetch error: " + error.message)
           }
           if (data && mounted) {
-            const prog: Record<string,Progress> = {}
+            const prog: Record<string, Progress> = {}
             Object.entries(QUESTIONS || {}).forEach(([section, qs]) => {
               const answers = data.profile_data?.[section] || {}
               const cnt = qs.filter(q => answers[q.key]?.trim()).length
@@ -75,7 +75,7 @@ export default function ProfilePage() {
             })
             setProgress(prog)
             setVoiceId(data.voice_id)
-            
+
             // Extract first name from profile data for voice naming
             const profileData = data.profile_data
             let firstName = ''
@@ -138,14 +138,14 @@ export default function ProfilePage() {
               Please sign in to access your profile and build your digital voice.
             </p>
             <div className="auth-required-actions">
-              <a 
-                href="/login" 
+              <a
+                href="/login"
                 className="auth-btn primary"
               >
                 Sign In
               </a>
-              <a 
-                href="/login" 
+              <a
+                href="/login"
                 className="auth-btn secondary"
               >
                 Create Account
@@ -171,20 +171,28 @@ export default function ProfilePage() {
       <main className="min-h-screen text-white flex flex-col items-center p-0 max-w-full">
         <div className="flex flex-col items-center my-8 mb-2">
           <a href="/" className="inline-block">
-            <Image 
-              className="logo-pulse mb-6 cursor-pointer hover:scale-110 transition-transform duration-300" 
-              src="/echostone_logo.png" 
-              width={160} 
-              height={160} 
-              alt="EchoStone Logo" 
+            <Image
+              className="logo-pulse mb-6 cursor-pointer hover:scale-110 transition-transform duration-300"
+              src="/echostone_logo.png"
+              width={160}
+              height={160}
+              alt="EchoStone Logo"
             />
           </a>
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white mb-4 px-4 text-center">
             Your Profile
           </h1>
-          
-          {/* Tab navigation that works without Tailwind */}
-          <nav className="profile-tabs-bar" role="tablist" aria-label="Profile Tabs">
+
+          {/* Tab navigation with inline styles that actually work */}
+          <div style={{
+            display: 'flex',
+            gap: '12px',
+            flexWrap: 'wrap',
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginBottom: '2rem',
+            padding: '0 1rem'
+          }}>
             {[
               { id: 'voice', label: 'Voice', icon: '🎤' },
               { id: 'voicetuning', label: 'Voice Tuning', icon: '🎛️' },
@@ -194,19 +202,46 @@ export default function ProfilePage() {
             ].map((tab) => (
               <button
                 key={tab.id}
-                className={`profile-tab-btn${activeTab === tab.id ? ' active' : ''}`}
                 onClick={() => setActiveTab(tab.id as any)}
-                role="tab"
-                aria-selected={activeTab === tab.id}
-                aria-controls={`${tab.id}-panel`}
-                id={`${tab.id}-tab`}
-                type="button"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '12px 24px',
+                  background: activeTab === tab.id
+                    ? 'linear-gradient(135deg, #9147ff, #7c3aed)'
+                    : 'rgba(147, 71, 255, 0.8)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '12px',
+                  fontSize: '18px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  minHeight: '48px',
+                  boxShadow: activeTab === tab.id
+                    ? '0 8px 24px rgba(145, 71, 255, 0.5)'
+                    : '0 4px 12px rgba(147, 71, 255, 0.3)',
+                  transform: activeTab === tab.id ? 'translateY(-1px)' : 'none'
+                }}
+                onMouseEnter={(e) => {
+                  if (activeTab !== tab.id) {
+                    e.currentTarget.style.background = 'rgba(147, 71, 255, 0.9)';
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (activeTab !== tab.id) {
+                    e.currentTarget.style.background = 'rgba(147, 71, 255, 0.8)';
+                    e.currentTarget.style.transform = 'none';
+                  }
+                }}
               >
-                <span className="tab-icon">{tab.icon}</span>
-                <span className="tab-label">{tab.label}</span>
+                <span style={{ fontSize: '20px' }}>{tab.icon}</span>
+                <span>{tab.label}</span>
               </button>
             ))}
-          </nav>
+          </div>
         </div>
 
         <div className="max-w-5xl w-full px-4 sm:px-6 lg:px-8 mx-auto mb-12 tab-content">
@@ -217,7 +252,7 @@ export default function ProfilePage() {
           )}
 
           {activeTab === 'voice' && (
-            <div 
+            <div
               role="tabpanel"
               id="voice-panel"
               aria-labelledby="voice-tab"
@@ -244,9 +279,9 @@ export default function ProfilePage() {
               )}
             </div>
           )}
-          
+
           {activeTab === 'voicetuning' && voiceId && (
-            <div 
+            <div
               role="tabpanel"
               id="voicetuning-panel"
               aria-labelledby="voicetuning-tab"
@@ -263,7 +298,7 @@ export default function ProfilePage() {
           )}
 
           {activeTab === 'stories' && (
-            <div 
+            <div
               role="tabpanel"
               id="stories-panel"
               aria-labelledby="stories-tab"
@@ -274,7 +309,7 @@ export default function ProfilePage() {
           )}
 
           {activeTab === 'personality' && (
-            <div 
+            <div
               className="personality-grid-mobile personality-grid-tablet personality-grid-desktop"
               role="tabpanel"
               id="personality-panel"
@@ -284,9 +319,9 @@ export default function ProfilePage() {
               {Object.entries(QUESTIONS || {}).map(([section, qs]) => {
                 const prog = progress[section] || { total: qs.length, answered: 0, isComplete: false }
                 return (
-                  <Link 
-                    key={section} 
-                    href={`/profile/edit/${section}`} 
+                  <Link
+                    key={section}
+                    href={`/profile/edit/${section}`}
                     className="no-underline text-inherit block touch-manipulation"
                   >
                     <div className={`
@@ -301,13 +336,13 @@ export default function ProfilePage() {
                       flex flex-col justify-start
                       hover:transform hover:scale-105
                       active:scale-95
-                      ${prog.isComplete 
-                        ? 'bg-purple-800/95 shadow-green-400/20 shadow-xl opacity-100' 
+                      ${prog.isComplete
+                        ? 'bg-purple-800/95 shadow-green-400/20 shadow-xl opacity-100'
                         : 'bg-purple-900/75 shadow-black/30 opacity-90 hover:opacity-100'
                       }
                     `}>
                       <h2 className="m-0 text-lg sm:text-xl font-semibold text-white capitalize mb-2 leading-tight">
-                        {section.replace(/_/g,' ')}
+                        {section.replace(/_/g, ' ')}
                       </h2>
                       <p className="m-0 mb-1 text-sm sm:text-base text-purple-200">
                         {prog.answered} of {prog.total} answered
@@ -320,10 +355,10 @@ export default function ProfilePage() {
                       {prog.isComplete && (
                         <span className="text-green-400 text-xl sm:text-2xl absolute top-3 sm:top-4 right-3 sm:right-4">✓</span>
                       )}
-                      
+
                       {/* Mobile-friendly progress indicator */}
                       <div className="mt-2 w-full bg-purple-800/50 rounded-full h-2">
-                        <div 
+                        <div
                           className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-300"
                           style={{ width: `${(prog.answered / prog.total) * 100}%` }}
                         />
@@ -336,7 +371,7 @@ export default function ProfilePage() {
           )}
 
           {activeTab === 'memories' && user?.id && (
-            <div 
+            <div
               role="tabpanel"
               id="memories-panel"
               aria-labelledby="memories-tab"
