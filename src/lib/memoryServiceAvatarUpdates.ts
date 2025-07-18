@@ -1,6 +1,10 @@
 // Avatar-specific updates for the memory service
 // These changes should be integrated into the main memoryService.ts file
 
+// This is a reference file only - not meant to be imported directly
+// It contains code snippets that should be copied into the main memoryService.ts file
+
+/*
 // 1. Update the MemoryFragment interface to include avatarId
 export interface MemoryFragment {
   id?: string;
@@ -19,7 +23,9 @@ export interface MemoryFragment {
   similarity?: number; // For search results
 }
 
-// 2. Update the storeMemoryFragment method in MemoryStorageService class
+// In MemoryStorageService class:
+// 2. Update the storeMemoryFragment method
+
 static async storeMemoryFragment(fragment: MemoryFragment): Promise<string> {
   return MemoryErrorHandler.withRetry(
     async () => {
@@ -69,7 +75,8 @@ static async storeMemoryFragment(fragment: MemoryFragment): Promise<string> {
   );
 }
 
-// 3. Update the batchStoreMemoryFragments method in MemoryStorageService class
+// 3. Update the batchStoreMemoryFragments method
+
 static async batchStoreMemoryFragments(fragments: MemoryFragment[]): Promise<string[]> {
   if (fragments.length === 0) {
     return [];
@@ -134,7 +141,9 @@ static async batchStoreMemoryFragments(fragments: MemoryFragment[]): Promise<str
   );
 }
 
-// 4. Update the retrieveRelevantMemories method in MemoryRetrievalService class
+// In MemoryRetrievalService class:
+// 4. Update the retrieveRelevantMemories method
+
 static async retrieveRelevantMemories(
   query: string,
   userId: string,
@@ -232,7 +241,8 @@ static async retrieveRelevantMemories(
   );
 }
 
-// 5. Update the searchMemoriesByText method in MemoryRetrievalService class
+// 5. Update the searchMemoriesByText method
+
 static async searchMemoriesByText(
   searchText: string,
   userId: string,
@@ -292,7 +302,9 @@ static async searchMemoriesByText(
   );
 }
 
-// 6. Update the getEnhancedMemoryContext method in MemoryService class
+// In MemoryService class:
+// 6. Update the getEnhancedMemoryContext method
+
 static async getEnhancedMemoryContext(
   query: string,
   userId: string,
@@ -349,7 +361,8 @@ static async getEnhancedMemoryContext(
   );
 }
 
-// 7. Update the processAndStoreMemories method in MemoryService class
+// 7. Update the processAndStoreMemories method
+
 static async processAndStoreMemories(
   message: string,
   userId: string,
@@ -391,3 +404,9 @@ static async processAndStoreMemories(
     { userId, messageLength: message.length }
   );
 }
+*/
+
+// Export a dummy object to make TypeScript happy
+export const memoryServiceAvatarUpdates = {
+  description: "This file contains code snippets for updating the memory service to support avatar-specific memories. These changes should be integrated into the main memoryService.ts file."
+};
