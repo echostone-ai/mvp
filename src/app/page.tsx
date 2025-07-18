@@ -94,7 +94,12 @@ export default function HomePage() {
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: text, profileData: jonathanProfile })
+      body: JSON.stringify({ 
+        prompt: text, 
+        profileData: jonathanProfile,
+        userId: 'jonathan_demo', // Demo user ID for homepage
+        partnerProfile: null // No specific partner context for homepage demo
+      })
     })
     const data = await res.json()
     setAnswer(data.answer || '😕 No answer.')

@@ -184,10 +184,11 @@ export default function ProfilePage() {
             Your Profile
           </h1>
           
-          {/* Mobile-optimized tab navigation */}
+          {/* Responsive tab navigation - mobile scrollable, desktop centered */}
           <div className="w-full mb-6">
-            <div className="flex overflow-x-auto scrollbar-hide px-4 sm:px-0 sm:justify-center">
-              <div className="flex gap-2 sm:gap-3 min-w-max sm:min-w-0">
+            {/* Mobile: Horizontal scrollable tabs */}
+            <div className="flex overflow-x-auto scrollbar-hide px-4 sm:hidden">
+              <div className="flex gap-2 min-w-max">
                 {[
                   { id: 'voice', label: 'Voice', icon: '🎤' },
                   { id: 'voicetuning', label: 'Tuning', icon: '🎛️' },
@@ -199,17 +200,13 @@ export default function ProfilePage() {
                     key={tab.id}
                     className={`
                       flex flex-col items-center justify-center
-                      min-w-[80px] sm:min-w-[120px] 
-                      h-16 sm:h-18
-                      px-3 sm:px-6 py-2 sm:py-3
-                      text-xs sm:text-sm lg:text-base font-bold 
-                      rounded-xl sm:rounded-lg 
-                      cursor-pointer border-2 border-transparent 
-                      transition-all duration-300 
-                      touch-manipulation
+                      min-w-[80px] h-16 px-3 py-2
+                      text-xs font-bold 
+                      rounded-xl cursor-pointer border-2 border-transparent 
+                      transition-all duration-300 touch-manipulation
                       ${activeTab === tab.id 
-                        ? 'bg-primary text-white shadow-lg transform scale-105 sm:scale-100' 
-                        : 'bg-purple-800 text-white hover:bg-purple-700 active:bg-purple-600'
+                        ? 'bg-primary text-white shadow-lg transform scale-105' 
+                        : 'bg-purple-800 text-white active:bg-purple-600'
                       }
                     `}
                     onClick={() => setActiveTab(tab.id as any)}
@@ -217,11 +214,43 @@ export default function ProfilePage() {
                     aria-selected={activeTab === tab.id}
                     aria-controls={`${tab.id}-panel`}
                   >
-                    <span className="text-lg sm:text-xl mb-1">{tab.icon}</span>
+                    <span className="text-lg mb-1">{tab.icon}</span>
                     <span className="leading-tight text-center">{tab.label}</span>
                   </button>
                 ))}
               </div>
+            </div>
+
+            {/* Desktop: Traditional horizontal tabs */}
+            <div className="hidden sm:flex justify-center gap-3">
+              {[
+                { id: 'voice', label: 'Voice', icon: '🎤' },
+                { id: 'voicetuning', label: 'Voice Tuning', icon: '🎛️' },
+                { id: 'stories', label: 'Your Stories', icon: '📚' },
+                { id: 'personality', label: 'Personality', icon: '👤' },
+                { id: 'memories', label: 'New Memories', icon: '🧠' }
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  className={`
+                    flex items-center gap-2
+                    px-6 py-3 text-xl font-bold 
+                    rounded-lg cursor-pointer border-2 border-transparent 
+                    transition-all duration-300
+                    ${activeTab === tab.id 
+                      ? 'bg-primary text-white' 
+                      : 'bg-purple-800 text-white hover:bg-purple-700'
+                    }
+                  `}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  role="tab"
+                  aria-selected={activeTab === tab.id}
+                  aria-controls={`${tab.id}-panel`}
+                >
+                  <span>{tab.icon}</span>
+                  <span>{tab.label}</span>
+                </button>
+              ))}
             </div>
           </div>
         </div>

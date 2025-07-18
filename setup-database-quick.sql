@@ -1,8 +1,26 @@
--- Complete Memory System Database Setup
+-- Complete EchoStone Database Setup
 -- Run this entire script in your Supabase SQL Editor
 
 -- Enable the pgvector extension for vector operations
 CREATE EXTENSION IF NOT EXISTS vector;
+
+-- Create the profiles table for user data
+CREATE TABLE IF NOT EXISTS profiles (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  profile_data JSONB DEFAULT '{}'::jsonb,
+  voice_id TEXT,
+  voice_settings JSONB DEFAULT '{}'::jsonb,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create unique index on user_id to ensure one profile per user
+CREATE UNIQUE INDEX IF NOT EXISTS profiles_user_id_unique ON profiles (user_id);
+
+-- Create indexes for profiles table
+CREATE INDEX IF NOT EXISTS profiles_voice_id_idx ON profiles (voice_id);
+CREATE INDEX IF NOT EXISTS profiles_created_at_idx ON profiles (created_at);
 
 -- Create the memory_fragments table
 CREATE TABLE IF NOT EXISTS memory_fragments (
@@ -38,12 +56,18 @@ CREATE INDEX IF NOT EXISTS conversations_last_active_idx ON conversations (last_
 CREATE INDEX IF NOT EXISTS conversations_user_last_active_idx ON conversations (user_id, last_active DESC);
 
 -- Enable Row Level Security (RLS)
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE memory_fragments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
 
 -- Create RLS policies for memory_fragments
 DROP POLICY IF EXISTS "Users can only access their own memory fragments" ON memory_fragments;
 CREATE POLICY "Users can only access their own memory fragments" ON memory_fragments
+  FOR ALL USING (auth.uid() = user_id);
+
+-- Create RLS policies for profiles
+DROP POLICY IF EXISTS "Users can only access their own profile" ON profiles;
+CREATE POLICY "Users can only access their own profile" ON profiles
   FOR ALL USING (auth.uid() = user_id);
 
 -- Create RLS policies for conversations
@@ -72,6 +96,35 @@ CREATE TRIGGER update_conversations_updated_at
     BEFORE UPDATE ON conversations 
     FOR EACH ROW 
     EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_profiles_updated_at ON profiles;
+CREATE TRIGGER update_profiles_updated_at 
+    BEFORE UPDATE ON profiles 
+    FOR EACH ROW 
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- Create a function to automatically create a profile when a user signs up
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $
+BEGIN
+  INSERT INTO public.profiles (user_id, created_at, updated_at)
+  VALUES (NEW.id, NOW(), NOW());
+  RETURN NEW;
+END;
+$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Create a trigger to automatically create profiles for new users
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Update existing users who might not have profiles
+INSERT INTO profiles (user_id, created_at, updated_at)
+SELECT id, created_at, updated_at 
+FROM auth.users 
+WHERE id NOT IN (SELECT user_id FROM profiles)
+ON CONFLICT (user_id) DO NOTHING;
 
 -- Drop existing function first to avoid return type conflicts
 DROP FUNCTION IF EXISTS match_memory_fragments(vector, double precision, integer, uuid);
@@ -125,6 +178,10 @@ BEGIN
   END IF;
   
   -- Check if tables exist
+  IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'profiles') THEN
+    RAISE EXCEPTION 'profiles table does not exist';
+  END IF;
+  
   IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'memory_fragments') THEN
     RAISE EXCEPTION 'memory_fragments table does not exist';
   END IF;
@@ -138,12 +195,14 @@ BEGIN
     RAISE EXCEPTION 'match_memory_fragments function does not exist';
   END IF;
   
-  RAISE NOTICE '✅ Memory system database setup completed successfully!';
+  RAISE NOTICE '✅ EchoStone database setup completed successfully!';
   RAISE NOTICE '✅ pgvector extension enabled';
+  RAISE NOTICE '✅ profiles table created';
   RAISE NOTICE '✅ memory_fragments table created';
   RAISE NOTICE '✅ conversations table created';
   RAISE NOTICE '✅ match_memory_fragments function created';
   RAISE NOTICE '✅ All indexes and policies configured';
-  RAISE NOTICE '🎉 Your memory system is ready to use!';
+  RAISE NOTICE '✅ Auto-profile creation trigger enabled';
+  RAISE NOTICE '🎉 Your EchoStone system is ready to use!';
 END
 $$;
