@@ -328,17 +328,14 @@ export async function POST(req: Request) {
             emotionalTone: 'reflective'
           },
           0.7
-        )
-      }
-        .then(fragments => {
+        ).then(fragments => {
           if (fragments.length > 0) {
             console.log(`✅ Stored ${fragments.length} memory fragments from conversation exchange`)
             if (process.env.NODE_ENV === 'development') {
               console.log('Exchange memory fragments:', fragments.map(f => f.fragmentText))
             }
           }
-        })
-        .catch(error => {
+        }).catch(error => {
           console.error('❌ Conversation exchange memory processing failed:', error)
         })
     } else {
