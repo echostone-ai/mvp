@@ -237,31 +237,28 @@ export async function POST(req: Request) {
           console.error('❌ AI memory processing failed:', error)
         })
         
-      // If we have message history, process the entire conversation for better context
-      if (messages && messages.length > 0) {
-        const conversationSummary = messages.map(m => `${m.role === 'user' ? 'User' : 'AI'}: ${m.content}`).join('\n');
-        MemoryService.processAndStoreMemories(
-          `CONVERSATION SUMMARY:\n${conversationSummary}\n\nUSER QUERY: ${prompt}\nAI RESPONSE: ${answer}`, 
-          userId, 
-          {
-            timestamp: new Date().toISOString(),
-            messageContext: 'Conversation summary',
-            emotionalTone: 'reflective'
-          },
-          0.7
-        )
-          .then(fragments => {
-            if (fragments.length > 0) {
-              console.log(`✅ Stored ${fragments.length} memory fragments from conversation summary`)
-              if (process.env.NODE_ENV === 'development') {
-                console.log('Summary memory fragments:', fragments.map(f => f.fragmentText))
-              }
+      // Process a combined summary of the current exchange
+      MemoryService.processAndStoreMemories(
+        `USER QUERY: ${prompt}\nAI RESPONSE: ${answer}`, 
+        userId, 
+        {
+          timestamp: new Date().toISOString(),
+          messageContext: 'Conversation exchange',
+          emotionalTone: 'reflective'
+        },
+        0.7
+      )
+        .then(fragments => {
+          if (fragments.length > 0) {
+            console.log(`✅ Stored ${fragments.length} memory fragments from conversation exchange`)
+            if (process.env.NODE_ENV === 'development') {
+              console.log('Exchange memory fragments:', fragments.map(f => f.fragmentText))
             }
-          })
-          .catch(error => {
-            console.error('❌ Conversation summary memory processing failed:', error)
-          })
-      }
+          }
+        })
+        .catch(error => {
+          console.error('❌ Conversation exchange memory processing failed:', error)
+        })
     } else {
       console.log('⚠️  No userId provided for memory processing')
     }
