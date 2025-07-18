@@ -310,11 +310,17 @@ export default function ProfilePage() {
 
           {activeTab === 'personality' && (
             <div
-              className="personality-grid-mobile personality-grid-tablet personality-grid-desktop"
               role="tabpanel"
               id="personality-panel"
               aria-labelledby="personality-tab"
-              style={{ marginTop: '2rem', width: '100%' }}
+              style={{
+                marginTop: '2rem',
+                width: '100%',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                gap: '16px',
+                padding: '0 16px'
+              }}
             >
               {Object.entries(QUESTIONS || {}).map(([section, qs]) => {
                 const prog = progress[section] || { total: qs.length, answered: 0, isComplete: false }
@@ -322,45 +328,104 @@ export default function ProfilePage() {
                   <Link
                     key={section}
                     href={`/profile/edit/${section}`}
-                    className="no-underline text-inherit block touch-manipulation"
+                    style={{
+                      textDecoration: 'none',
+                      color: 'inherit',
+                      display: 'block',
+                      touchAction: 'manipulation'
+                    }}
                   >
-                    <div className={`
-                      personality-block 
-                      p-4 sm:p-5 
-                      rounded-xl sm:rounded-2xl 
-                      shadow-lg 
-                      transition-all duration-300 
-                      text-left 
-                      min-h-[100px] sm:min-h-24 
-                      relative 
-                      flex flex-col justify-start
-                      hover:transform hover:scale-105
-                      active:scale-95
-                      ${prog.isComplete
-                        ? 'bg-purple-800/95 shadow-green-400/20 shadow-xl opacity-100'
-                        : 'bg-purple-900/75 shadow-black/30 opacity-90 hover:opacity-100'
-                      }
-                    `}>
-                      <h2 className="m-0 text-lg sm:text-xl font-semibold text-white capitalize mb-2 leading-tight">
+                    <div style={{
+                      padding: '16px',
+                      borderRadius: '16px',
+                      boxShadow: prog.isComplete
+                        ? '0 10px 25px rgba(0, 0, 0, 0.2), 0 0 15px rgba(74, 222, 128, 0.2)'
+                        : '0 8px 20px rgba(0, 0, 0, 0.2)',
+                      transition: 'all 0.3s ease',
+                      textAlign: 'left',
+                      minHeight: '120px',
+                      position: 'relative',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'flex-start',
+                      background: prog.isComplete
+                        ? 'rgba(107, 33, 168, 0.95)'
+                        : 'rgba(88, 28, 135, 0.75)',
+                      opacity: prog.isComplete ? 1 : 0.9,
+                      cursor: 'pointer'
+                    }}
+                      onMouseOver={(e) => {
+                        e.currentTarget.style.transform = 'scale(1.03)';
+                        e.currentTarget.style.opacity = '1';
+                      }}
+                      onMouseOut={(e) => {
+                        e.currentTarget.style.transform = 'scale(1)';
+                        if (!prog.isComplete) {
+                          e.currentTarget.style.opacity = '0.9';
+                        }
+                      }}
+                      onMouseDown={(e) => {
+                        e.currentTarget.style.transform = 'scale(0.98)';
+                      }}
+                      onMouseUp={(e) => {
+                        e.currentTarget.style.transform = 'scale(1.03)';
+                      }}
+                    >
+                      <h2 style={{
+                        margin: 0,
+                        fontSize: '20px',
+                        fontWeight: 600,
+                        color: 'white',
+                        textTransform: 'capitalize',
+                        marginBottom: '8px',
+                        lineHeight: 1.2
+                      }}>
                         {section.replace(/_/g, ' ')}
                       </h2>
-                      <p className="m-0 mb-1 text-sm sm:text-base text-purple-200">
+                      <p style={{
+                        margin: 0,
+                        marginBottom: '4px',
+                        fontSize: '16px',
+                        color: 'rgb(233, 213, 255)'
+                      }}>
                         {prog.answered} of {prog.total} answered
                       </p>
                       {prog.answered > 0 && prog.answered < prog.total && (
-                        <div className="text-xs text-blue-300 mt-1">
+                        <div style={{
+                          fontSize: '12px',
+                          color: 'rgb(191, 219, 254)',
+                          marginTop: '4px'
+                        }}>
                           ✨ Some auto-filled from stories
                         </div>
                       )}
                       {prog.isComplete && (
-                        <span className="text-green-400 text-xl sm:text-2xl absolute top-3 sm:top-4 right-3 sm:right-4">✓</span>
+                        <span style={{
+                          color: 'rgb(74, 222, 128)',
+                          fontSize: '24px',
+                          position: 'absolute',
+                          top: '16px',
+                          right: '16px'
+                        }}>✓</span>
                       )}
 
                       {/* Mobile-friendly progress indicator */}
-                      <div className="mt-2 w-full bg-purple-800/50 rounded-full h-2">
+                      <div style={{
+                        marginTop: '12px',
+                        width: '100%',
+                        backgroundColor: 'rgba(107, 33, 168, 0.5)',
+                        borderRadius: '9999px',
+                        height: '8px',
+                        overflow: 'hidden'
+                      }}>
                         <div
-                          className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${(prog.answered / prog.total) * 100}%` }}
+                          style={{
+                            width: `${(prog.answered / prog.total) * 100}%`,
+                            height: '100%',
+                            borderRadius: '9999px',
+                            background: 'linear-gradient(to right, rgb(168, 85, 247), rgb(236, 72, 153))',
+                            transition: 'width 0.3s ease'
+                          }}
                         />
                       </div>
                     </div>
