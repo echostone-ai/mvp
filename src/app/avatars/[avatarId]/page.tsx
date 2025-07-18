@@ -1,17 +1,15 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useParams } from 'next/navigation'
 import { supabase } from '@/components/supabaseClient'
 import ChatInterface from '@/components/ChatInterface'
 import PageShell from '@/components/PageShell'
 
-interface AvatarChatPageProps {
-  params: {
-    avatarId: string;
-  };
-}
-
-export default function AvatarChatPage({ params }: AvatarChatPageProps) {
+export default function AvatarChatPage() {
+  const params = useParams() as { avatarId: string }
+  const avatarId = params.avatarId
+  
   const [user, setUser] = useState<any>(null)
   const [avatarProfile, setAvatarProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -29,7 +27,7 @@ export default function AvatarChatPage({ params }: AvatarChatPageProps) {
         const { data, error } = await supabase
           .from('avatar_profiles')
           .select('*')
-          .eq('id', params.avatarId)
+          .eq('id', avatarId)
           .single()
 
         if (error) throw error
@@ -42,7 +40,7 @@ export default function AvatarChatPage({ params }: AvatarChatPageProps) {
     }
 
     loadData()
-  }, [params.avatarId])
+  }, [avatarId])
 
   if (loading) return <div>Loading avatar...</div>
   if (error) return <div>Error: {error}</div>
@@ -57,7 +55,7 @@ export default function AvatarChatPage({ params }: AvatarChatPageProps) {
           profileData={avatarProfile.profile_data}
           voiceId={avatarProfile.voice_id}
           userId={user?.id} // Current user's ID for memory operations
-          avatarId={params.avatarId} // Avatar ID to identify which avatar they're talking to
+          avatarId={avatarId} // Avatar ID to identify which avatar they're talking to
         />
       </main>
     </PageShell>
