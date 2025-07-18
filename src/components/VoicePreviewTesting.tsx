@@ -18,7 +18,7 @@ interface EmotionalPreview {
   emotion: keyof EmotionalCalibration;
   label: string;
   icon: string;
-  result?: VoiceGenerationResult;
+  result?: { success: boolean, audioBlob?: Blob, error?: string };
   isGenerating: boolean;
   audioUrl?: string;
 }
@@ -133,100 +133,130 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
 // Add error state for the whole preview section
   const [globalError, setGlobalError] = useState<string | null>(null);
 
-  // Generate emotional previews (Requirement 3.1)
-  const generateEmotionalPreviews = useCallback(async () => {
-    setIsGeneratingAll(true);
-    setGlobalError(null);
-    const sampleText = `Hello! This is ${userName} voice expressing different emotions. Each emotion brings out unique characteristics in my speech patterns.`;
+  // Replace all calls to enhancedVoiceService.generateSpeech and generateEmotionalPreviews with fetch('/api/voice')
+  // Helper to generate and play audio preview via /api/voice
+  const generateVoicePreview = async ({ text, voiceId, settings = {}, emotionalContext }: { text: string, voiceId: string, settings?: any, emotionalContext?: string }) => {
     try {
-      const results = await enhancedVoiceService.generateEmotionalPreviews(voiceId, sampleText);
-      // Check for any global errors (e.g., all fail with the same error)
-      const allFailed = Object.values(results).every(r => !r.success);
-      if (allFailed) {
-        const firstError = Object.values(results)[0]?.error || 'Voice generation failed. Please check your API key or try again later.';
-        setGlobalError(firstError);
+      const response = await fetch('/api/voice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text,
+          voiceId,
+          emotionalStyle: emotionalContext,
+          ...settings && { settings },
+        }),
+      })
+      if (!response.ok) {
+        let errorMsg = 'Failed to generate voice.'
+        try {
+          const errorData = await response.json()
+          errorMsg = errorData.error || errorData.message || JSON.stringify(errorData)
+        } catch (e) {
+          errorMsg = 'Failed to generate voice (unknown error).'
+        }
+        return { success: false, error: errorMsg }
       }
-      setEmotionalPreviews(prev => prev.map(preview => ({
-        ...preview,
-        result: results[preview.emotion],
-        audioUrl: results[preview.emotion] && results[preview.emotion].success
-          ? URL.createObjectURL(new Blob([results[preview.emotion].audio_data!], { type: 'audio/mpeg' }))
-          : undefined,
-        isGenerating: false
-      })));
-    } catch (error) {
-      setGlobalError('Voice generation failed. Please check your API key or try again later.');
-      setEmotionalPreviews(prev => prev.map(preview => ({
-        ...preview,
-        isGenerating: false
-      })));
-    } finally {
-      setIsGeneratingAll(false);
+      const audioBlob = await response.blob()
+      return { success: true, audioBlob }
+    } catch (err) {
+      let errorMsg = 'Failed to generate voice preview.'
+      if (err instanceof Error) errorMsg = err.message
+      return { success: false, error: errorMsg }
     }
-  }, [voiceId, userName]);
+  }
+
+  // Generate all emotional previews
+  const generateEmotionalPreviews = useCallback(async () => {
+    setIsGeneratingAll(true)
+    setGlobalError(null)
+    const sampleText = `Hello! This is ${userName} voice expressing different emotions. Each emotion brings out unique characteristics in my speech patterns.`
+    try {
+      const results: Record<string, { success: boolean, audioBlob?: Blob, error?: string }> = {}
+      for (const preview of emotionalPreviews) {
+        const result = await generateVoicePreview({
+          text: sampleText,
+          voiceId,
+          settings: voiceSettings,
+          emotionalContext: preview.emotion,
+        })
+        results[preview.emotion] = result
+      }
+      const allFailed = Object.values(results).every(r => !r.success)
+      if (allFailed) {
+        const firstError = Object.values(results)[0]?.error || 'Voice generation failed. Please check your API key or try again later.'
+        setGlobalError(firstError)
+      }
+      setEmotionalPreviews(prev => prev.map(preview => {
+        const result = results[preview.emotion]
+        return {
+          ...preview,
+          result,
+          audioUrl: result && result.success && result.audioBlob
+            ? URL.createObjectURL(result.audioBlob)
+            : undefined,
+          isGenerating: false
+        }
+      }))
+    } catch (error) {
+      setGlobalError('Voice generation failed. Please check your API key or try again later.')
+      setEmotionalPreviews(prev => prev.map(preview => ({
+        ...preview,
+        isGenerating: false
+      })))
+    } finally {
+      setIsGeneratingAll(false)
+    }
+  }, [voiceId, userName, voiceSettings, emotionalPreviews])
 
   // Generate single emotional preview
   const generateSinglePreview = useCallback(async (emotion: keyof EmotionalCalibration) => {
     setEmotionalPreviews(prev => prev.map(p =>
       p.emotion === emotion ? { ...p, isGenerating: true } : p
-    ));
-    setGlobalError(null);
-    try {
-      const sampleText = `This is ${userName} voice expressing ${emotion}. Notice how the tone and delivery change to match this emotional context.`;
-      const result = await enhancedVoiceService.generateSpeech({
-        text: sampleText,
-        voice_id: voiceId,
-        emotional_context: emotion,
-        settings: voiceSettings
-      });
-      if (!result.success) {
-        setGlobalError(result.error || 'Voice generation failed. Please check your API key or try again later.');
-      }
-      const audioUrl = result.success
-        ? URL.createObjectURL(new Blob([result.audio_data!], { type: 'audio/mpeg' }))
-        : undefined;
-      setEmotionalPreviews(prev => prev.map(p =>
-        p.emotion === emotion
-          ? { ...p, result, audioUrl, isGenerating: false }
-          : p
-      ));
-    } catch (error) {
-      setGlobalError('Voice generation failed. Please check your API key or try again later.');
-      setEmotionalPreviews(prev => prev.map(p =>
-        p.emotion === emotion ? { ...p, isGenerating: false } : p
-      ));
+    ))
+    setGlobalError(null)
+    const sampleText = `This is ${userName} voice expressing ${emotion}. Notice how the tone and delivery change to match this emotional context.`
+    const result = await generateVoicePreview({
+      text: sampleText,
+      voiceId,
+      settings: voiceSettings,
+      emotionalContext: emotion,
+    })
+    if (!result.success) {
+      setGlobalError(result.error || 'Voice generation failed. Please check your API key or try again later.')
     }
-  }, [voiceId, userName, voiceSettings]);  // 
-// Generate scenario preview
+    const audioUrl = result.success && result.audioBlob
+      ? URL.createObjectURL(result.audioBlob)
+      : undefined
+    setEmotionalPreviews(prev => prev.map(p =>
+      p.emotion === emotion
+        ? { ...p, result, audioUrl, isGenerating: false }
+        : p
+    ))
+  }, [voiceId, userName, voiceSettings])
+
+  // Generate scenario preview
   const generateScenarioPreview = useCallback(async (scenarioId: string, customTextOverride?: string) => {
-    const scenario = scenarios.find(s => s.id === scenarioId);
-    if (!scenario) return;
-
-    const text = customTextOverride || scenario.sampleText;
-    
-    try {
-      const result = await enhancedVoiceService.generateSpeech({
-        text,
-        voice_id: voiceId,
-        settings: voiceSettings,
-        emotional_context: scenario.emotionalContext
-      });
-
-      if (result.success && result.audio_data) {
-        const audioUrl = URL.createObjectURL(new Blob([result.audio_data], { type: 'audio/mpeg' }));
-        
-        // Create and play audio
-        const audio = new Audio(audioUrl);
-        audioRefs.current[scenarioId] = audio;
-        
-        audio.onended = () => setCurrentlyPlaying(null);
-        audio.play();
-        setCurrentlyPlaying(scenarioId);
-      }
-    } catch (error) {
-      console.error('Error generating scenario preview:', error);
+    const scenario = scenarios.find(s => s.id === scenarioId)
+    if (!scenario) return
+    const text = customTextOverride || scenario.sampleText
+    const result = await generateVoicePreview({
+      text,
+      voiceId,
+      settings: voiceSettings,
+      emotionalContext: scenario.emotionalContext,
+    })
+    if (result.success && result.audioBlob) {
+      const audioUrl = URL.createObjectURL(result.audioBlob)
+      const audio = new Audio(audioUrl)
+      audioRefs.current[scenarioId] = audio
+      audio.onended = () => setCurrentlyPlaying(null)
+      audio.play()
+      setCurrentlyPlaying(scenarioId)
+    } else if (!result.success) {
+      setGlobalError(result.error || 'Voice generation failed. Please check your API key or try again later.')
     }
-  }, [voiceId, voiceSettings, scenarios]);
+  }, [voiceId, voiceSettings, scenarios])
 
   // Play audio preview
   const playPreview = useCallback((previewId: string, audioUrl?: string) => {
@@ -257,28 +287,23 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
   }, [voiceSettings, onParametersChange]); 
  // Generate custom text preview
   const generateCustomPreview = useCallback(async () => {
-    if (!customText.trim()) return;
-    
-    try {
-      const result = await enhancedVoiceService.generateSpeech({
-        text: customText,
-        voice_id: voiceId,
-        settings: voiceSettings
-      });
-
-      if (result.success && result.audio_data) {
-        const audioUrl = URL.createObjectURL(new Blob([result.audio_data], { type: 'audio/mpeg' }));
-        const audio = new Audio(audioUrl);
-        audioRefs.current['custom'] = audio;
-        
-        audio.onended = () => setCurrentlyPlaying(null);
-        audio.play();
-        setCurrentlyPlaying('custom');
-      }
-    } catch (error) {
-      console.error('Error generating custom preview:', error);
+    if (!customText.trim()) return
+    const result = await generateVoicePreview({
+      text: customText,
+      voiceId,
+      settings: voiceSettings,
+    })
+    if (result.success && result.audioBlob) {
+      const audioUrl = URL.createObjectURL(result.audioBlob)
+      const audio = new Audio(audioUrl)
+      audioRefs.current['custom'] = audio
+      audio.onended = () => setCurrentlyPlaying(null)
+      audio.play()
+      setCurrentlyPlaying('custom')
+    } else if (!result.success) {
+      setGlobalError(result.error || 'Voice generation failed. Please check your API key or try again later.')
     }
-  }, [customText, voiceId, voiceSettings]);
+  }, [customText, voiceId, voiceSettings])
 
   // Save optimized voice settings (Requirement 3.3)
   const saveVoiceSettings = useCallback(async () => {
