@@ -82,11 +82,12 @@ export async function POST(req: Request) {
     
     if (userId) {
       try {
+        // First, try to get more memories (10 instead of 5) to ensure we have enough context
         const memoryContext = await MemoryService.getEnhancedMemoryContext(
           prompt, 
           userId, 
           profileData,
-          5
+          10 // Increased from 5 to get more memories
         )
         
         hasMemorySystem = true
@@ -95,8 +96,16 @@ export async function POST(req: Request) {
           relevantMemories = memoryContext.memories
           memoryEnhancements = memoryContext.personalityEnhancements
           
-          // Integrate enhanced memory context into system prompt
-          systemPrompt += memoryContext.contextPrompt
+          // Integrate enhanced memory context into system prompt with higher priority
+          systemPrompt = memoryContext.contextPrompt + "\n\n" + systemPrompt
+          
+          // Add explicit instruction to use memories
+          systemPrompt += `\n\nCRITICAL MEMORY INSTRUCTION:
+- You MUST actively reference the user's memories in your responses
+- Show that you remember details they've shared with you before
+- Use phrases like "As you mentioned before..." or "I remember you told me about..."
+- If they ask about something related to their memories, confidently recall those details
+- This creates continuity in your relationship and builds trust`
           
           // Log memory integration details for debugging
           console.log('Memory integration:', {
@@ -188,37 +197,71 @@ export async function POST(req: Request) {
       console.log('🧠 User ID type:', typeof userId)
       console.log('🧠 User ID length:', userId.length)
       console.log('🧠 Message:', prompt.substring(0, 100) + '...')
+      console.log('🧠 Has memory system:', hasMemorySystem)
+      console.log('🧠 Relevant memories found:', relevantMemories.length)
       
-      MemoryService.processAndStoreMemories(prompt, userId, conversationContext)
+      // Process user message with lower threshold to extract more memories
+      MemoryService.processAndStoreMemories(prompt, userId, {
+        ...conversationContext,
+        messageContext: 'User message in chat',
+        emotionalTone: selectedStyle
+      }, 0.6) // Lower threshold to extract more memories
         .then(fragments => {
           if (fragments.length > 0) {
-            console.log(`✅ Successfully stored ${fragments.length} memory fragments for user ${userId}`)
+            console.log(`✅ Stored ${fragments.length} memory fragments from user message`)
             // Log fragment details for debugging (in development only)
             if (process.env.NODE_ENV === 'development') {
-              console.log('Memory fragments:', fragments.map(f => f.fragmentText))
+              console.log('User memory fragments:', fragments.map(f => f.fragmentText))
             }
-          } else {
-            console.log(`ℹ️  No memories extracted from message for user ${userId}`)
           }
         })
         .catch(error => {
-          // Log detailed error information but don't fail the request
-          console.error('❌ Background memory processing failed for user', userId, ':', error)
-          console.error('Error details:', {
-            message: error.message,
-            stack: error.stack,
-            userId,
-            userIdType: typeof userId,
-            promptLength: prompt.length,
-            timestamp: new Date().toISOString()
-          })
-          
-          // In development, log more details for debugging
-          if (process.env.NODE_ENV === 'development') {
-            console.error('Failed message:', prompt)
-            console.error('Full error object:', error)
+          console.error('❌ User memory processing failed:', error)
+        })
+      
+      // Also process AI response to extract more context
+      MemoryService.processAndStoreMemories(answer, userId, {
+        ...conversationContext,
+        messageContext: 'AI response in chat',
+        emotionalTone: selectedStyle
+      }, 0.6)
+        .then(fragments => {
+          if (fragments.length > 0) {
+            console.log(`✅ Stored ${fragments.length} memory fragments from AI response`)
+            if (process.env.NODE_ENV === 'development') {
+              console.log('AI memory fragments:', fragments.map(f => f.fragmentText))
+            }
           }
         })
+        .catch(error => {
+          console.error('❌ AI memory processing failed:', error)
+        })
+        
+      // If we have message history, process the entire conversation for better context
+      if (messages && messages.length > 0) {
+        const conversationSummary = messages.map(m => `${m.role === 'user' ? 'User' : 'AI'}: ${m.content}`).join('\n');
+        MemoryService.processAndStoreMemories(
+          `CONVERSATION SUMMARY:\n${conversationSummary}\n\nUSER QUERY: ${prompt}\nAI RESPONSE: ${answer}`, 
+          userId, 
+          {
+            ...conversationContext,
+            messageContext: 'Conversation summary',
+            emotionalTone: 'reflective'
+          },
+          0.7
+        )
+          .then(fragments => {
+            if (fragments.length > 0) {
+              console.log(`✅ Stored ${fragments.length} memory fragments from conversation summary`)
+              if (process.env.NODE_ENV === 'development') {
+                console.log('Summary memory fragments:', fragments.map(f => f.fragmentText))
+              }
+            }
+          })
+          .catch(error => {
+            console.error('❌ Conversation summary memory processing failed:', error)
+          })
+      }
     } else {
       console.log('⚠️  No userId provided for memory processing')
     }

@@ -37,13 +37,20 @@ Your task is to identify and extract:
 - Personal preferences (hobbies, interests, dislikes)
 - Important personal details (goals, fears, values)
 - Emotional connections and memories
+- Daily activities and routines that reveal personality
+- Opinions and beliefs that show their worldview
+- Places they've been or want to visit
+- Professional information and career details
+- Health information they might want you to remember
 
 IMPORTANT RULES:
-1. Only extract information that is personally meaningful and would be valuable to remember in future conversations
+1. Be THOROUGH - extract ALL meaningful personal information, even small details
 2. Extract complete, standalone fragments that make sense without additional context
-3. Ignore casual mentions or temporary states
-4. Focus on information that reveals character, relationships, or lasting preferences
-5. If no meaningful personal information is found, return an empty array
+3. Be SPECIFIC - include names, places, and concrete details whenever possible
+4. Focus on information that reveals character, relationships, or preferences
+5. Include information they might expect you to remember later
+6. Format each memory as a complete sentence starting with "The user..."
+7. If no meaningful personal information is found, return an empty array
 
 Return your response as a JSON array of strings, where each string is a meaningful memory fragment.
 
@@ -66,12 +73,29 @@ Now extract memory fragments from this message:
   static async extractMemoryFragments(
     message: string, 
     userId: string, 
-    conversationContext?: string
+    conversationContext?: any,
+    extractionThreshold?: number
   ): Promise<MemoryFragment[]> {
     return MemoryPerformanceMonitor.withPerformanceTracking(
       'memory_extraction',
       () => MemoryErrorHandler.withGracefulDegradation(
         async () => {
+        // Adjust temperature based on threshold - lower threshold means we want more memories
+        const temperature = extractionThreshold ? Math.max(0.1, extractionThreshold - 0.4) : 0.3;
+        
+        // Build context string if provided as object
+        let contextString = '';
+        if (conversationContext) {
+          if (typeof conversationContext === 'string') {
+            contextString = conversationContext;
+          } else {
+            // Convert object to string
+            contextString = Object.entries(conversationContext)
+              .map(([key, value]) => `${key}: ${value}`)
+              .join('\n');
+          }
+        }
+        
         const completion = await openai.chat.completions.create({
           model: 'gpt-4o-mini',
           messages: [
@@ -81,11 +105,11 @@ Now extract memory fragments from this message:
             },
             {
               role: 'user',
-              content: message,
+              content: message + (contextString ? `\n\nCONVERSATION CONTEXT:\n${contextString}` : ''),
             },
           ],
-          temperature: 0.3, // Lower temperature for more consistent extraction
-          max_tokens: 500,
+          temperature: temperature, // Dynamic temperature based on threshold
+          max_tokens: 800, // Increased to allow for more memories
         })
 
         const response = completion.choices[0].message.content
@@ -815,15 +839,17 @@ export class MemoryService {
   static async processAndStoreMemories(
     message: string,
     userId: string,
-    conversationContext?: string
+    conversationContext?: any,
+    extractionThreshold?: number
   ): Promise<MemoryFragment[]> {
     return MemoryErrorHandler.withGracefulDegradation(
       async () => {
-        // Extract memory fragments
+        // Extract memory fragments with optional threshold
         const fragments = await MemoryExtractionService.extractMemoryFragments(
           message,
           userId,
-          conversationContext
+          conversationContext,
+          extractionThreshold
         )
 
         if (fragments.length === 0) {
@@ -990,14 +1016,16 @@ export class MemoryService {
   ): string {
     const memoryFragments = memories.map(m => m.fragmentText).join('\n- ')
     
-    let prompt = `\n\nPERSONAL KNOWLEDGE ABOUT THIS USER:
-You know these specific details about this person from your ongoing relationship:
+    let prompt = `\n\nIMPORTANT - PERSONAL KNOWLEDGE ABOUT THIS USER:
+You have stored these specific memories about this person from your previous conversations:
 - ${memoryFragments}
 
-IMPORTANT CONVERSATION GUIDELINES:
-- Reference these details naturally when relevant to the conversation
-- Use phrases like "I know you love..." or "Since you mentioned..." or "Given that you..."
-- Make connections between their interests, experiences, and current topics
+MEMORY INTEGRATION GUIDELINES:
+- ACTIVELY USE these memories in your responses when relevant
+- EXPLICITLY reference these details with phrases like "I remember you mentioned..." or "Last time we talked about..."
+- Make natural connections between their past shared experiences and the current conversation
+- If they ask about something you should know from these memories, confidently reference the relevant memory
+- Show continuity in your relationship by building on these past shared details
 - Show genuine interest in their life by asking follow-up questions about things they've shared
 - Be specific - mention names, places, activities, and details they've told you about
 - Act like a close friend who remembers important things about them
