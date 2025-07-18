@@ -202,7 +202,7 @@ export async function POST(req: Request) {
       
       // Process user message with lower threshold to extract more memories
       MemoryService.processAndStoreMemories(prompt, userId, {
-        ...conversationContext,
+        timestamp: new Date().toISOString(),
         messageContext: 'User message in chat',
         emotionalTone: selectedStyle
       }, 0.6) // Lower threshold to extract more memories
@@ -221,7 +221,7 @@ export async function POST(req: Request) {
       
       // Also process AI response to extract more context
       MemoryService.processAndStoreMemories(answer, userId, {
-        ...conversationContext,
+        timestamp: new Date().toISOString(),
         messageContext: 'AI response in chat',
         emotionalTone: selectedStyle
       }, 0.6)
@@ -244,7 +244,7 @@ export async function POST(req: Request) {
           `CONVERSATION SUMMARY:\n${conversationSummary}\n\nUSER QUERY: ${prompt}\nAI RESPONSE: ${answer}`, 
           userId, 
           {
-            ...conversationContext,
+            timestamp: new Date().toISOString(),
             messageContext: 'Conversation summary',
             emotionalTone: 'reflective'
           },
