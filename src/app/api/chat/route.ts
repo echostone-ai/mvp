@@ -83,12 +83,12 @@ export async function POST(req: Request) {
     if (userId) {
       try {
         // First, try to get more memories (10 instead of 5) to ensure we have enough context
+        // Note: avatarId support will be added in a future update
         const memoryContext = await MemoryService.getEnhancedMemoryContext(
           prompt, 
           userId, 
           profileData,
-          10, // Increased from 5 to get more memories
-          avatarId // Pass avatarId for memory isolation
+          10 // Increased from 5 to get more memories
         )
         
         hasMemorySystem = true
