@@ -12,6 +12,7 @@ interface Avatar {
   voice_id: string | null
   profile_data: any
   created_at: string
+  photo_url?: string
 }
 
 export default function AvatarsPage() {
