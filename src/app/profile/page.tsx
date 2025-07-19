@@ -52,6 +52,8 @@ export default function ProfilePage() {
   const [voiceId, setVoiceId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [userName, setUserName] = useState('')
+  // Add state for savedVoiceSettings
+  const [savedVoiceSettings, setSavedVoiceSettings] = useState(null as any)
 
   useEffect(() => {
     let mounted = true
@@ -72,13 +74,19 @@ export default function ProfilePage() {
           } catch (e: any) {
             setError('Could not ensure profile exists: ' + e.message)
           }
+          // Fetch profile including voice_settings
           const { data, error } = await supabase
             .from('profiles')
-            .select('profile_data, voice_id')
+            .select('profile_data, voice_id, voice_settings')
             .eq('user_id', me.id)
             .maybeSingle()
           if (error) {
-            setError("Profile fetch error: " + error.message)
+            setError("Failed to load profile: " + error.message)
+            setLoadingUser(false)
+            return
+          }
+          if (data?.voice_settings) {
+            setSavedVoiceSettings(data.voice_settings)
           }
           if (data && mounted) {
             const prog: Record<string, Progress> = {}
@@ -359,6 +367,7 @@ export default function ProfilePage() {
                 voiceId={voiceId || selectedAvatar.voice_id || ''}
                 userName={selectedAvatar.name}
                 userId={user?.id}
+                initialSettings={savedVoiceSettings}
               />
             </div>
           )}

@@ -138,15 +138,41 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
     try {
       const formData = new FormData()
       
+      const timestamp = Date.now();
+      const randomSuffix = Math.floor(Math.random() * 10000);
+      const cloneName = `${avatarName}_${timestamp}_${randomSuffix}`;
+
+      // 1) Unique voice “name”
+      formData.append('name', cloneName);
+
       if (audioBlob) {
-        formData.append('audio', audioBlob, 'recording.webm')
+        const ext = audioBlob.type.split('/')[1] || 'webm';
+        const blobFile = new File(
+          [audioBlob],
+          `voice_${timestamp}_${randomSuffix}.${ext}`,
+          { type: audioBlob.type }
+        );
+        formData.append('audio', blobFile, blobFile.name);
+      }
+
+      uploadedFiles.forEach((file, i) => {
+        const ext = file.name.split('.').pop() || 'webm';
+        const fileCopy = new File(
+          [file],
+          `upload_${timestamp}_${i}_${randomSuffix}.${ext}`,
+          { type: file.type }
+        );
+        formData.append('audio', fileCopy, fileCopy.name);
+      });
+
+      // Debug: log outgoing FormData filenames and cloneName
+      console.log('[VOICE UPLOAD DEBUG] cloneName:', cloneName);
+      for (let pair of formData.entries()) {
+        if (pair[1] instanceof File) {
+          console.log('[VOICE UPLOAD DEBUG] file:', pair[1].name);
+        }
       }
       
-      uploadedFiles.forEach((file, index) => {
-        formData.append('audio', file, `upload_${index}.${file.name.split('.').pop()}`)
-      })
-      
-      formData.append('name', avatarName)
       formData.append('script', getCurrentScript())
       formData.append('accent', selectedAccent)
       if (avatarId) {
