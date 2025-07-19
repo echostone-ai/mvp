@@ -316,6 +316,12 @@ export default function EditSectionPage() {
               </div>
             </div>
             <div className="avatar-header-status">
+              <a
+                href={`/profile/chat?avatarId=${selectedAvatar.id}`}
+                className="avatar-header-chat-btn"
+              >
+                💬 Chat with {selectedAvatar.name}
+              </a>
               <button
                 onClick={() => router.push('/profile')}
                 className="avatar-header-change-btn"

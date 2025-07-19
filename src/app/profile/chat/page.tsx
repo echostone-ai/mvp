@@ -39,6 +39,16 @@ export default function ProfileChat() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [reloadSignal, setReloadSignal] = useState<number>(Date.now())
+  
+  // Get avatarId from URL parameters
+  const [avatarIdFromUrl, setAvatarIdFromUrl] = useState<string | null>(null)
+  
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search)
+      setAvatarIdFromUrl(urlParams.get('avatarId'))
+    }
+  }, [])
 
   async function loadUserData() {
     try {
@@ -52,20 +62,44 @@ export default function ProfileChat() {
       }
       setUser(currentUser)
 
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('profile_data, voice_id')
-        .eq('user_id', currentUser.id)
-        .single()
+      // If avatarId is provided in URL, load that specific avatar
+      if (avatarIdFromUrl) {
+        try {
+          const { data: avatarData, error: avatarError } = await supabase
+            .from('avatar_profiles')
+            .select('*')
+            .eq('id', avatarIdFromUrl)
+            .eq('user_id', currentUser.id)
+            .single()
+          
+          if (avatarError) {
+            setError('Failed to load avatar: ' + avatarError.message)
+          } else {
+            setSelectedAvatar(avatarData)
+            setProfileData(avatarData.profile_data)
+            setVoiceId(avatarData.voice_id)
+          }
+        } catch (err: any) {
+          setError('Failed to load avatar: ' + err.message)
+        }
+      } else {
+        // Load user profile data as fallback
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('profile_data, voice_id')
+          .eq('user_id', currentUser.id)
+          .single()
 
-      if (error) {
-        setError('Failed to load profile data: ' + error.message)
-        setLoading(false)
-        return
+        if (error) {
+          setError('Failed to load profile data: ' + error.message)
+          setLoading(false)
+          return
+        }
+
+        setProfileData(data.profile_data)
+        setVoiceId(data.voice_id)
       }
-
-      setProfileData(data.profile_data)
-      setVoiceId(data.voice_id)
+      
       setLoading(false)
       setError(null)
     } catch (err: any) {
@@ -76,7 +110,7 @@ export default function ProfileChat() {
 
   useEffect(() => {
     loadUserData()
-  }, []) // Remove reloadSignal dependency - only load on mount and page refresh
+  }, [avatarIdFromUrl]) // Reload when avatarId changes
 
   // Auto-refresh when component mounts or page is revisited
   useEffect(() => {

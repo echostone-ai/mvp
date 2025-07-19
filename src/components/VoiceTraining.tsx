@@ -4,6 +4,7 @@ import React, { useState, useRef } from 'react'
 
 interface VoiceTrainingProps {
   avatarName: string
+  avatarId?: string
   onVoiceUploaded?: (voiceId: string) => void
 }
 
@@ -25,7 +26,7 @@ const SAMPLE_SCRIPTS = {
   }
 }
 
-export default function VoiceTraining({ avatarName, onVoiceUploaded }: VoiceTrainingProps) {
+export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }: VoiceTrainingProps) {
   const [step, setStep] = useState<'method' | 'script' | 'record' | 'upload' | 'preview'>('method')
   const [method, setMethod] = useState<'record' | 'upload' | null>(null)
   const [selectedScript, setSelectedScript] = useState<keyof typeof SAMPLE_SCRIPTS>('conversational')
@@ -122,6 +123,9 @@ export default function VoiceTraining({ avatarName, onVoiceUploaded }: VoiceTrai
       
       formData.append('name', avatarName)
       formData.append('script', getCurrentScript())
+      if (avatarId) {
+        formData.append('avatarId', avatarId)
+      }
       
       const response = await fetch('/api/train-voice', {
         method: 'POST',

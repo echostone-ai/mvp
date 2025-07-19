@@ -231,6 +231,12 @@ export default function ProfilePage() {
             </div>
           </div>
           <div className="avatar-header-status">
+            <Link
+              href={`/profile/chat?avatarId=${selectedAvatar.id}`}
+              className="avatar-header-chat-btn"
+            >
+              💬 Chat with {selectedAvatar.name}
+            </Link>
             <button
               onClick={() => setSelectedAvatar(null)}
               className="avatar-header-change-btn"
@@ -303,18 +309,11 @@ export default function ProfilePage() {
             <div className="profile-tab-panel">
               <VoiceTraining
                 avatarName={selectedAvatar.name}
+                avatarId={selectedAvatar.id}
                 onVoiceUploaded={async (voiceId) => {
                   setVoiceId(voiceId)
-                  if (user?.id) {
-                    await supabase
-                      .from('avatar_profiles')
-                      .update({ voice_id: voiceId })
-                      .eq('id', selectedAvatar.id)
-                      .eq('user_id', user.id)
-                    
-                    // Update local state
-                    setSelectedAvatar(prev => prev ? { ...prev, voice_id: voiceId } : null)
-                  }
+                  // Update local state
+                  setSelectedAvatar(prev => prev ? { ...prev, voice_id: voiceId } : null)
                 }}
               />
               {(voiceId || selectedAvatar.voice_id) && (

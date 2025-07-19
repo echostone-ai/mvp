@@ -6,6 +6,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData()
     const name = formData.get('name') as string
     const script = formData.get('script') as string
+    const avatarId = formData.get('avatarId') as string
     const audioFiles = formData.getAll('audio') as File[]
 
     if (!name || audioFiles.length === 0) {
@@ -47,8 +48,21 @@ export async function POST(request: NextRequest) {
     // Generate a mock voice_id (in real implementation, this would come from the voice service)
     const voice_id = `voice_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
-    // Here you would typically save the voice_id to your avatar profile
-    // For now, we'll just return success
+    // Save the voice_id to the avatar profile if avatarId is provided
+    if (avatarId) {
+      const { error: updateError } = await supabase
+        .from('avatar_profiles')
+        .update({ voice_id })
+        .eq('id', avatarId)
+      
+      if (updateError) {
+        console.error('Failed to update avatar voice_id:', updateError)
+        return NextResponse.json(
+          { success: false, error: 'Failed to save voice to avatar profile' },
+          { status: 500 }
+        )
+      }
+    }
     
     return NextResponse.json({
       success: true,
