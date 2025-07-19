@@ -37,6 +37,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData()
     const name = formData.get('name') as string
     const script = formData.get('script') as string
+    const accent = formData.get('accent') as string || 'american'
     const avatarId = formData.get('avatarId') as string
     const audioFiles = formData.getAll('audio') as File[]
 

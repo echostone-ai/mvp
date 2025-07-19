@@ -9,6 +9,29 @@ interface VoiceTrainingProps {
   onVoiceUploaded?: (voiceId: string) => void
 }
 
+const ACCENT_OPTIONS = {
+  american: {
+    title: "American English",
+    description: "Standard American accent",
+    flag: "🇺🇸"
+  },
+  british: {
+    title: "British English", 
+    description: "Standard British accent",
+    flag: "🇬🇧"
+  },
+  australian: {
+    title: "Australian English",
+    description: "Standard Australian accent", 
+    flag: "🇦🇺"
+  },
+  canadian: {
+    title: "Canadian English",
+    description: "Standard Canadian accent",
+    flag: "🇨🇦"
+  }
+}
+
 const SAMPLE_SCRIPTS = {
   professional: {
     title: "Professional",
@@ -33,6 +56,7 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
   const [selectedScript, setSelectedScript] = useState<keyof typeof SAMPLE_SCRIPTS>('conversational')
   const [customScript, setCustomScript] = useState('')
   const [useCustomScript, setUseCustomScript] = useState(false)
+  const [selectedAccent, setSelectedAccent] = useState<string>('american')
   const [recording, setRecording] = useState(false)
   const [audioUrl, setAudioUrl] = useState<string | null>(null)
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null)
@@ -124,6 +148,7 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
       
       formData.append('name', avatarName)
       formData.append('script', getCurrentScript())
+      formData.append('accent', selectedAccent)
       if (avatarId) {
         formData.append('avatarId', avatarId)
       }
@@ -258,6 +283,29 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
             <p className="script-description">
               Select a pre-written script or write your own. This helps train the AI to understand your speaking style.
             </p>
+
+            {/* Accent Selection */}
+            <div className="accent-selection">
+              <h4>Select Your Accent</h4>
+              <p className="accent-description">
+                Choose the accent that matches your natural speaking voice for the best results.
+              </p>
+              <div className="accent-options">
+                {Object.entries(ACCENT_OPTIONS).map(([key, accent]) => (
+                  <button
+                    key={key}
+                    className={`accent-option ${selectedAccent === key ? 'selected' : ''}`}
+                    onClick={() => setSelectedAccent(key)}
+                  >
+                    <span className="accent-flag">{accent.flag}</span>
+                    <div className="accent-info">
+                      <h5>{accent.title}</h5>
+                      <p>{accent.description}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
             
             <div className="script-options">
               {Object.entries(SAMPLE_SCRIPTS).map(([key, script]) => (
