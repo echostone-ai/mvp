@@ -303,8 +303,6 @@ export default function ProfilePage() {
             <div className="profile-tab-panel">
               <VoiceTraining
                 avatarName={selectedAvatar.name}
-                avatarId={selectedAvatar.id}
-                currentVoiceId={selectedAvatar.voice_id}
                 onVoiceUploaded={async (voiceId) => {
                   setVoiceId(voiceId)
                   if (user?.id) {

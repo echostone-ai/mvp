@@ -1,11 +1,9 @@
 'use client'
 
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef } from 'react'
 
 interface VoiceTrainingProps {
   avatarName: string
-  avatarId: string
-  currentVoiceId?: string | null
   onVoiceUploaded?: (voiceId: string) => void
 }
 
@@ -27,7 +25,7 @@ const SAMPLE_SCRIPTS = {
   }
 }
 
-export default function VoiceTraining({ avatarName, avatarId, currentVoiceId, onVoiceUploaded }: VoiceTrainingProps) {
+export default function VoiceTraining({ avatarName, onVoiceUploaded }: VoiceTrainingProps) {
   const [step, setStep] = useState<'method' | 'script' | 'record' | 'upload' | 'preview'>('method')
   const [method, setMethod] = useState<'record' | 'upload' | null>(null)
   const [selectedScript, setSelectedScript] = useState<keyof typeof SAMPLE_SCRIPTS>('conversational')
@@ -177,7 +175,7 @@ export default function VoiceTraining({ avatarName, avatarId, currentVoiceId, on
 
       {/* Progress Indicator */}
       <div className="voice-training-progress">
-        <div className={`progress-step ${step === 'method' ? 'active' : step !== 'method' ? 'completed' : ''}`}>
+        <div className={`progress-step ${step === 'method' ? 'active' : ['script', 'record', 'upload', 'preview'].includes(step) ? 'completed' : ''}`}>
           <div className="progress-step-number">1</div>
           <span>Choose Method</span>
         </div>
@@ -296,7 +294,7 @@ export default function VoiceTraining({ avatarName, avatarId, currentVoiceId, on
               </button>
               <button 
                 className="btn-primary" 
-                onClick={() => setStep(method || 'record')}
+                onClick={() => setStep(method === 'upload' ? 'upload' : 'record')}
                 disabled={useCustomScript && customScript.trim().length < 50}
               >
                 Continue
@@ -468,7 +466,7 @@ export default function VoiceTraining({ avatarName, avatarId, currentVoiceId, on
             <div className="preview-actions">
               <button 
                 className="btn-secondary" 
-                onClick={() => setStep(method || 'record')}
+                onClick={() => setStep(method === 'upload' ? 'upload' : 'record')}
                 disabled={isProcessing}
               >
                 Back
