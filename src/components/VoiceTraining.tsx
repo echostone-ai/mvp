@@ -179,7 +179,7 @@ export default function VoiceTraining({ avatarName, onVoiceUploaded }: VoiceTrai
           <div className="progress-step-number">1</div>
           <span>Choose Method</span>
         </div>
-        <div className={`progress-step ${step === 'script' ? 'active' : ['record', 'upload', 'preview'].includes(step) ? 'completed' : ''}`}>
+        <div className={`progress-step ${step === 'script' ? 'active' : ['record', 'upload', 'preview'].includes(step) ? 'completed' : ''} ${method === 'upload' ? 'hidden' : ''}`}>
           <div className="progress-step-number">2</div>
           <span>Select Script</span>
         </div>
@@ -222,7 +222,7 @@ export default function VoiceTraining({ avatarName, onVoiceUploaded }: VoiceTrai
                 className={`method-option ${method === 'upload' ? 'selected' : ''}`}
                 onClick={() => {
                   setMethod('upload')
-                  setStep('script')
+                  setStep('upload')
                 }}
               >
                 <div className="method-icon">📁</div>
@@ -410,7 +410,7 @@ export default function VoiceTraining({ avatarName, onVoiceUploaded }: VoiceTrai
             </div>
 
             <div className="step-navigation">
-              <button className="btn-secondary" onClick={() => setStep('script')}>
+              <button className="btn-secondary" onClick={() => setStep('method')}>
                 Back
               </button>
               {uploadedFiles.length > 0 && (
