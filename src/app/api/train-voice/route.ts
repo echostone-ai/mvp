@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import crypto from 'crypto'
 
-// Helper to hash a File/Blob
-async function hashBlob(blob: Blob): Promise<string> {
-  const arrayBuffer = await blob.arrayBuffer();
-  const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
-  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+// Helper to hash a File/Blob in Node.js using crypto.createHash
+async function hashBlob(file: File): Promise<string> {
+  // Read file contents as buffer
+  const buffer = Buffer.from(await file.arrayBuffer());
+  // Create SHA-256 hash
+  return crypto.createHash('sha256').update(buffer).digest('hex');
 }
 
 export async function POST(request: NextRequest) {
@@ -115,14 +117,48 @@ export async function POST(request: NextRequest) {
         elevenLabsFormData.append('files', file, file.name)
       })
 
-      console.log('Creating voice clone with ElevenLabs...')
-      // ... (rest of your ElevenLabs API logic remains unchanged)
-      // For brevity, not shown
+      // Example: call to ElevenLabs API (replace with actual API endpoint and logic)
+      const elevenLabsResponse = await fetch('https://api.elevenlabs.io/v1/voices/add', {
+        method: 'POST',
+        headers: {
+          'xi-api-key': elevenLabsApiKey,
+        },
+        body: elevenLabsFormData,
+      })
 
-      // After success/failure, return as before
-      // Example:
-      // return NextResponse.json({ success: true, voice_id })
+      const elevenLabsData = await elevenLabsResponse.json();
 
+      if (!elevenLabsResponse.ok) {
+        // If ElevenLabs gives a "duplicated_files" error, surface the message
+        if (
+          elevenLabsData?.detail?.status === 'duplicated_files' ||
+          elevenLabsData?.detail?.message?.includes('duplicat')
+        ) {
+          return NextResponse.json(
+            { success: false, error: elevenLabsData.detail.message || 'Duplicate audio files detected.' },
+            { status: 400 }
+          );
+        }
+        // Otherwise, give a generic error
+        return NextResponse.json(
+          { success: false, error: elevenLabsData.error || 'Failed to create voice clone.' },
+          { status: 500 }
+        )
+      }
+
+      // Assuming the response includes a voice_id
+      voice_id = elevenLabsData.voice_id
+
+      // Optionally: update your own DB here to associate the new voice_id to the avatar/user
+      if (avatarId && voice_id) {
+        await supabase
+          .from('avatar_profiles')
+          .update({ voice_id })
+          .eq('id', avatarId)
+          .eq('user_id', user.id)
+      }
+
+      return NextResponse.json({ success: true, voice_id })
     } catch (err: any) {
       return NextResponse.json(
         { success: false, error: err.message || 'Failed to create voice clone.' },
@@ -131,13 +167,14 @@ export async function POST(request: NextRequest) {
     }
 
     // If you reach here, fallback error
+    // Not expected to reach here due to returns above
+    // return NextResponse.json(
+    //   { success: false, error: 'Unknown error occurred.' },
+    //   { status: 500 }
+    // )
+  } catch (error: any) {
     return NextResponse.json(
-      { success: false, error: 'Unknown error occurred.' },
-      { status: 500 }
-    )
-  } catch (error) {
-    return NextResponse.json(
-      { success: false, error: 'Unexpected error.' },
+      { success: false, error: error.message || 'Unexpected error.' },
       { status: 500 }
     )
   }
