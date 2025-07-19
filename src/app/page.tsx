@@ -230,7 +230,7 @@ export default function HomePage() {
       <div className="fixed top-4 right-4 z-50">
         <AccountMenu />
       </div>
-      <main className="main-container"
+      <main className="main-container">
         <audio ref={audioRef} />
         <div className="mb-lg select-none">
           <Image
