@@ -196,6 +196,15 @@ export async function POST(req: Request) {
 
     // Default voiceId logic
     let resolvedVoiceId = voiceId
+    
+    // Handle mock voice IDs from our training system
+    if (resolvedVoiceId && resolvedVoiceId.startsWith('voice_')) {
+      // This is a mock voice_id from our training system
+      // For now, map it to a working voice ID for testing
+      console.log('Using mock voice_id:', resolvedVoiceId, 'mapping to default voice for testing')
+      resolvedVoiceId = 'CO6pxVrMZfyL61ZIglyr' // Jonathan's cloned voice ID
+    }
+    
     if (!resolvedVoiceId) {
       if (userId === 'bucky') {
         // Replace with Bucky's voice ID if available
@@ -204,6 +213,8 @@ export async function POST(req: Request) {
         resolvedVoiceId = 'CO6pxVrMZfyL61ZIglyr' // Jonathan's cloned voice ID
       }
     }
+    
+    console.log('Resolved voice ID:', resolvedVoiceId, 'for user:', userId)
 
     // Use passed settings if available, otherwise generate dynamic settings
     let voiceSettings

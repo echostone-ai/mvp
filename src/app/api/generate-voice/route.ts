@@ -11,6 +11,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Text is required' }, { status: 400 })
     }
 
+    // Handle mock voice IDs from our training system
+    if (voiceId && voiceId.startsWith('voice_')) {
+      // This is a mock voice_id from our training system
+      // For now, map it to a working voice ID for testing
+      console.log('Using mock voice_id:', voiceId, 'mapping to default voice for testing')
+      voiceId = 'CO6pxVrMZfyL61ZIglyr' // Jonathan's cloned voice ID
+    }
+    
     // Use default Jonathan voiceId if none provided
     if (!voiceId) {
       if (userId === 'bucky') {
@@ -20,6 +28,8 @@ export async function POST(request: Request) {
         voiceId = 'CO6pxVrMZfyL61ZIglyr' // Jonathan's cloned voice ID
       }
     }
+    
+    console.log('Resolved voice ID:', voiceId, 'for user:', userId)
 
     const apiKey = process.env.ELEVENLABS_API_KEY
     if (!apiKey) {

@@ -42,6 +42,12 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
   onSettingsSaved,
   initialSettings
 }) => {
+  // Debug logging
+  useEffect(() => {
+    console.log('VoicePreviewTesting received voiceId:', voiceId)
+    console.log('VoicePreviewTesting received userName:', userName)
+    console.log('VoicePreviewTesting received userId:', userId)
+  }, [voiceId, userName, userId])
   const [activeTab, setActiveTab] = useState<'emotional' | 'scenarios' | 'parameters'>('emotional');
   const [isGeneratingAll, setIsGeneratingAll] = useState(false);
   const [customText, setCustomText] = useState('');
@@ -488,6 +494,19 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
             <span>{tab.label}</span>
           </button>
         ))}
+      </div>
+
+      {/* Debug Info */}
+      <div style={{ 
+        background: 'rgba(0,0,0,0.1)', 
+        padding: '8px 12px', 
+        borderRadius: '6px', 
+        fontSize: '12px', 
+        color: '#666',
+        marginBottom: '16px',
+        fontFamily: 'monospace'
+      }}>
+        Debug: Using voice_id = {voiceId || 'null'} | userName = {userName} | userId = {userId || 'null'}
       </div>
 
       {/* Emotional Contexts Tab */}

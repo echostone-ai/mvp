@@ -67,17 +67,66 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // For now, we'll simulate the voice training process
-    // In a real implementation, you would:
-    // 1. Upload audio files to storage (Supabase Storage, AWS S3, etc.)
-    // 2. Send files to a voice cloning service (ElevenLabs, etc.)
-    // 3. Store the resulting voice_id in the database
+    // Create voice clone using ElevenLabs API
+    const elevenLabsApiKey = process.env.ELEVENLABS_API_KEY
+    if (!elevenLabsApiKey) {
+      return NextResponse.json(
+        { success: false, error: 'ElevenLabs API key not configured' },
+        { status: 500 }
+      )
+    }
 
-    // Simulate processing time
-    await new Promise(resolve => setTimeout(resolve, 2000))
+    let voice_id: string
 
-    // Generate a mock voice_id (in real implementation, this would come from the voice service)
-    const voice_id = `voice_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    try {
+      // Create FormData for ElevenLabs API
+      const elevenLabsFormData = new FormData()
+      elevenLabsFormData.append('name', name)
+      elevenLabsFormData.append('description', `Voice clone for ${name}`)
+      
+      // Add audio files to the form data
+      audioFiles.forEach((file, index) => {
+        elevenLabsFormData.append('files', file, file.name)
+      })
+
+      console.log('Creating voice clone with ElevenLabs...')
+      
+      // Call ElevenLabs Voice Cloning API
+      const elevenLabsResponse = await fetch('https://api.elevenlabs.io/v1/voices/add', {
+        method: 'POST',
+        headers: {
+          'xi-api-key': elevenLabsApiKey,
+        },
+        body: elevenLabsFormData
+      })
+
+      if (!elevenLabsResponse.ok) {
+        const errorText = await elevenLabsResponse.text()
+        console.error('ElevenLabs API error:', errorText)
+        return NextResponse.json(
+          { success: false, error: `Voice cloning failed: ${errorText}` },
+          { status: 500 }
+        )
+      }
+
+      const elevenLabsData = await elevenLabsResponse.json()
+      voice_id = elevenLabsData.voice_id
+
+      if (!voice_id) {
+        return NextResponse.json(
+          { success: false, error: 'No voice_id returned from ElevenLabs' },
+          { status: 500 }
+        )
+      }
+
+      console.log('Voice clone created successfully:', voice_id)
+    } catch (error) {
+      console.error('Error creating voice clone:', error)
+      return NextResponse.json(
+        { success: false, error: 'Failed to create voice clone' },
+        { status: 500 }
+      )
+    }
 
     // Save the voice_id to the avatar profile if avatarId is provided
     if (avatarId) {
@@ -113,8 +162,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       voice_id,
-      message: `Successfully trained voice for ${name}`,
-      files_processed: audioFiles.length
+      message: `Successfully created voice clone for ${name}`,
+      files_processed: audioFiles.length,
+      elevenlabs_voice_id: voice_id
     })
 
   } catch (error) {
