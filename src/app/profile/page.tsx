@@ -295,6 +295,7 @@ export default function ProfilePage() {
                       .from('avatar_profiles')
                       .update({ voice_id: voiceId })
                       .eq('id', selectedAvatar.id)
+                      .eq('user_id', user.id)
                   }
                 }}
               />

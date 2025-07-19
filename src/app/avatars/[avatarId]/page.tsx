@@ -29,6 +29,7 @@ export default function AvatarChatPage() {
           .from('avatar_profiles')
           .select('*')
           .eq('id', avatarId)
+          .eq('user_id', user.id)
           .single()
 
         if (error) throw error

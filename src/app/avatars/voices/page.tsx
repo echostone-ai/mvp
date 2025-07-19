@@ -36,6 +36,7 @@ export default function AvatarVoicesPage() {
           const { data, error } = await supabase
             .from('avatar_profiles')
             .select('*')
+            .eq('user_id', currentUser.id)
             .order('created_at', { ascending: false })
 
           if (error) throw error
@@ -62,6 +63,7 @@ export default function AvatarVoicesPage() {
         .from('avatar_profiles')
         .update({ voice_id: null })
         .eq('id', avatarId)
+        .eq('user_id', user?.id)
 
       if (error) throw error
 

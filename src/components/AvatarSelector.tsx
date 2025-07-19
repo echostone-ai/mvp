@@ -55,6 +55,7 @@ export default function AvatarSelector({
           const { data, error } = await supabase
             .from('avatar_profiles')
             .select('*')
+            .eq('user_id', currentUser.id)
             .order('created_at', { ascending: false })
           if (error) throw error
           setAvatars(data || [])
@@ -131,6 +132,7 @@ export default function AvatarSelector({
           photo_url: photoUrl
         })
         .eq('id', editingAvatar.id)
+        .eq('user_id', user?.id)
         .select()
         .single()
 
@@ -166,6 +168,7 @@ export default function AvatarSelector({
         .from('avatar_profiles')
         .delete()
         .eq('id', editingAvatar.id)
+        .eq('user_id', user?.id)
 
       if (error) throw error
 

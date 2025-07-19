@@ -23,6 +23,7 @@ export default function TestMemoryIsolationPage() {
         const { data: avatarData } = await supabase
           .from('avatar_profiles')
           .select('*')
+          .eq('user_id', currentUser.id)
           .order('created_at', { ascending: false })
         
         setAvatars(avatarData || [])

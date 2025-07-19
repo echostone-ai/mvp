@@ -41,6 +41,7 @@ export default function AvatarsPage() {
           const { data, error } = await supabase
             .from('avatar_profiles')
             .select('*')
+            .eq('user_id', currentUser.id)
             .order('created_at', { ascending: false })
 
           if (error) throw error
