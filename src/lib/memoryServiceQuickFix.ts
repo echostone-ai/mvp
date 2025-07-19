@@ -222,7 +222,7 @@ export async function getAvatarSpecificMemories(
     
     // Format memories for inclusion in chat prompt
     const memoryText = memories
-      .map(memory => `- ${memory.fragmentText}`)
+      .map((memory: any) => `- ${memory.fragmentText}`)
       .join('\n');
     
     const contextPrompt = `
