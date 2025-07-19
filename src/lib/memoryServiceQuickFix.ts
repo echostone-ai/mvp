@@ -208,7 +208,7 @@ export async function getAvatarSpecificMemories(
     console.log('📝 Retrieved memories:', { 
       count: memories.length, 
       avatarId,
-      memoryTexts: memories.map(m => m.fragmentText.substring(0, 50) + '...') 
+      memoryTexts: memories.map((m: any) => m.fragmentText.substring(0, 50) + '...') 
     });
     
     if (memories.length === 0) {
