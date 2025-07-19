@@ -6,6 +6,7 @@
 import { VoiceQualityOptimizer, AudioAnalysis } from './voiceQualityOptimizer'
 import { VoiceProfileService, ProfessionalVoiceSettings, VoiceProfile } from './voiceProfileService'
 import { EmotionalCalibration, VoiceParameters } from './emotionalCalibrationService'
+import { createHash } from 'crypto'
 
 export interface VoiceTrainingConfig {
   files: File[]
@@ -55,11 +56,20 @@ export class EnhancedVoiceService {
   }
 
   /**
+   * Helper to compute SHA-256 hash of a File
+   */
+  private async fileHash(file: File): Promise<string> {
+    const arrayBuffer = await file.arrayBuffer();
+    const hash = createHash('sha256');
+    hash.update(Buffer.from(arrayBuffer));
+    return hash.digest('hex');
+  }
+
+  /**
    * Create a professional voice profile using ElevenLabs API
    */
   async createVoiceProfile(config: VoiceTrainingConfig): Promise<string> {
     const startTime = Date.now()
-    
     try {
       // Validate input files
       if (config.files.length < 3) {
@@ -77,20 +87,30 @@ export class EnhancedVoiceService {
         throw new Error('Too many audio files have quality issues. Please improve audio quality and try again.')
       }
 
+      // Filter out duplicate files by content hash
+      const fileHashes = new Map<string, File>()
+      for (const file of config.files) {
+        const hash = await this.fileHash(file)
+        if (!fileHashes.has(hash)) {
+          fileHashes.set(hash, file)
+        }
+      }
+      const uniqueFiles = Array.from(fileHashes.values())
+      if (uniqueFiles.length < 3) {
+        throw new Error('At least 3 unique audio files are required for voice training')
+      }
+
       // Prepare form data for ElevenLabs API
       const formData = new FormData()
       formData.append('name', config.name)
       formData.append('description', config.description || '')
-      
-      // Add audio files
-      config.files.forEach((file, index) => {
+      // Add unique audio files
+      uniqueFiles.forEach((file, index) => {
         formData.append('files', file, `sample_${index + 1}.${file.name.split('.').pop()}`)
       })
-
       // Add voice settings
       formData.append('remove_background_noise', 'true')
       formData.append('enhance_audio_quality', 'true')
-
       // Make API request to create voice
       const response = await fetch(`${this.baseUrl}/voices/add`, {
         method: 'POST',
@@ -99,19 +119,15 @@ export class EnhancedVoiceService {
         },
         body: formData
       })
-
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
         throw new Error(`Voice creation failed: ${errorData.detail || response.statusText}`)
       }
-
       const result = await response.json()
       const voiceId = result.voice_id
-
       if (!voiceId) {
         throw new Error('Voice creation succeeded but no voice ID was returned')
       }
-
       // Save voice profile to user's account
       const userId = await this.getCurrentUserId()
       if (userId) {
@@ -119,16 +135,13 @@ export class EnhancedVoiceService {
           userId,
           voiceId,
           config.settings,
-          config.files.length
+          uniqueFiles.length
         )
-
         // Update with emotional calibration
         await this.profileService.updateEmotionalCalibration(userId, config.emotionalCalibration)
       }
-
       const processingTime = Date.now() - startTime
       console.log(`Voice profile created successfully in ${processingTime}ms:`, voiceId)
-
       return voiceId
     } catch (error) {
       console.error('Error creating voice profile:', error)
