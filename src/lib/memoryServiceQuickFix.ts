@@ -22,6 +22,14 @@ export async function retrieveRelevantMemoriesWithAvatarIsolation(
     includeContext = true
   } = options;
 
+  console.log('🔍 Retrieving memories with avatar isolation:', { 
+    userId, 
+    avatarId, 
+    limit, 
+    similarityThreshold,
+    query: query.substring(0, 50) + '...'
+  });
+
   try {
     // Generate embedding for the query
     const response = await fetch('/api/embedding', {
@@ -35,6 +43,7 @@ export async function retrieveRelevantMemoriesWithAvatarIsolation(
     }
     
     const { embedding } = await response.json();
+    console.log('✅ Generated embedding for query');
 
     // Prepare query parameters with avatar isolation
     const queryParams: any = {
@@ -47,7 +56,15 @@ export async function retrieveRelevantMemoriesWithAvatarIsolation(
     // Add avatarId to the query if provided
     if (avatarId) {
       queryParams.target_avatar_id = avatarId;
+      console.log('🎭 Using avatar isolation with avatarId:', avatarId);
+    } else {
+      console.log('👤 No avatar isolation - searching all user memories');
     }
+
+    console.log('📡 Calling match_memory_fragments with params:', {
+      ...queryParams,
+      query_embedding: '[embedding array]' // Don't log the full embedding
+    });
 
     // Call the updated match_memory_fragments function with avatar support
     const { data, error } = await supabase.rpc(
@@ -56,13 +73,51 @@ export async function retrieveRelevantMemoriesWithAvatarIsolation(
     );
 
     if (error) {
-      console.error('Memory retrieval error:', error);
-      return [];
+      console.error('❌ Memory retrieval RPC error:', error);
+      
+      // Try a fallback query without avatar isolation to see if the basic function works
+      console.log('🔄 Trying fallback query without avatar isolation...');
+      const fallbackParams = {
+        query_embedding: embedding,
+        match_threshold: similarityThreshold,
+        match_count: limit,
+        target_user_id: userId
+      };
+      
+      const { data: fallbackData, error: fallbackError } = await supabase.rpc(
+        'match_memory_fragments',
+        fallbackParams
+      );
+      
+      if (fallbackError) {
+        console.error('❌ Fallback query also failed:', fallbackError);
+        return [];
+      } else {
+        console.log('✅ Fallback query succeeded, returning', fallbackData?.length || 0, 'memories');
+        return fallbackData?.map((item: any) => ({
+          id: item.id,
+          userId: item.user_id,
+          avatarId: item.avatar_id,
+          fragmentText: item.fragment_text,
+          embedding: item.embedding,
+          conversationContext: includeContext ? item.conversation_context : undefined,
+          createdAt: new Date(item.created_at),
+          updatedAt: new Date(item.updated_at),
+          similarity: item.similarity
+        })) || [];
+      }
     }
 
     if (!data) {
+      console.log('⚠️ No data returned from memory search');
       return [];
     }
+
+    console.log('✅ Memory search successful:', {
+      totalResults: data.length,
+      avatarSpecific: data.filter((item: any) => item.avatar_id === avatarId).length,
+      similarities: data.map((item: any) => item.similarity)
+    });
 
     // Transform the results
     return data.map((item: any) => ({
@@ -77,7 +132,7 @@ export async function retrieveRelevantMemoriesWithAvatarIsolation(
       similarity: item.similarity
     }));
   } catch (error) {
-    console.error('Failed to retrieve memories:', error);
+    console.error('❌ Failed to retrieve memories:', error);
     return [];
   }
 }
@@ -140,6 +195,8 @@ export async function getAvatarSpecificMemories(
   avatarId?: string,
   limit: number = 10
 ) {
+  console.log('🔍 Getting avatar-specific memories:', { query: query.substring(0, 50), userId, avatarId, limit });
+  
   try {
     const memories = await retrieveRelevantMemoriesWithAvatarIsolation(
       query,
@@ -148,7 +205,14 @@ export async function getAvatarSpecificMemories(
       { limit, similarityThreshold: 0.65 }
     );
     
+    console.log('📝 Retrieved memories:', { 
+      count: memories.length, 
+      avatarId,
+      memoryTexts: memories.map(m => m.fragmentText.substring(0, 50) + '...') 
+    });
+    
     if (memories.length === 0) {
+      console.log('⚠️ No memories found for avatar:', avatarId);
       return {
         memories: [],
         contextPrompt: '',
@@ -162,12 +226,19 @@ export async function getAvatarSpecificMemories(
       .join('\n');
     
     const contextPrompt = `
-You have the following memories about this user:
+MEMORY CONTEXT - Previous conversations with this user:
 
 ${memoryText}
 
-Use these memories to personalize your responses. Refer to these memories naturally when relevant.
+INSTRUCTIONS FOR USING MEMORIES:
+- Reference these memories naturally when relevant to the conversation
+- Show that you remember by using phrases like "I remember when you told me..." or "You mentioned that..."
+- Build upon previous conversations to create continuity
+- Don't force memories into every response, but use them when they add value
+- These are YOUR memories of what this specific user has shared with you
 `;
+    
+    console.log('✅ Generated memory context with', memories.length, 'memories');
     
     return {
       memories,
@@ -175,7 +246,7 @@ Use these memories to personalize your responses. Refer to these memories natura
       personalityEnhancements: []
     };
   } catch (error) {
-    console.error('Failed to get avatar-specific memories:', error);
+    console.error('❌ Failed to get avatar-specific memories:', error);
     return {
       memories: [],
       contextPrompt: '',

@@ -135,15 +135,26 @@ export default function AvatarsPage() {
       <main className="min-h-screen text-white flex flex-col items-center p-6 max-w-6xl mx-auto">
         <div className="flex justify-between items-center w-full mb-8">
           <h1 className="text-3xl font-bold">Your Avatars</h1>
-          <Link 
-            href="/avatars/voices" 
-            className="bg-indigo-700 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
-            </svg>
-            Manage Voices
-          </Link>
+          <div className="flex gap-3">
+            <Link 
+              href="/test-memory-isolation" 
+              className="bg-green-700 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Test Memory
+            </Link>
+            <Link 
+              href="/avatars/voices" 
+              className="bg-indigo-700 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
+              </svg>
+              Manage Voices
+            </Link>
+          </div>
         </div>
 
         {error && (

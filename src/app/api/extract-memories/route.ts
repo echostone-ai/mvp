@@ -8,7 +8,7 @@ const openai = new OpenAI({
 });
 
 const EXTRACTION_PROMPT = `
-You are an AI assistant that extracts meaningful personal information from user messages to create memory fragments for future conversations.
+You are an AI assistant that extracts meaningful personal information from user messages to create memory fragments for future conversations with a specific avatar.
 
 Your task is to identify and extract:
 - Personal relationships (family, friends, colleagues, pets)
@@ -28,8 +28,20 @@ IMPORTANT RULES:
 3. Be SPECIFIC - include names, places, and concrete details whenever possible
 4. Focus on information that reveals character, relationships, or preferences
 5. Include information they might expect you to remember later
-6. Format each memory as a complete sentence starting with "The user..."
-7. If no meaningful personal information is found, return an empty array
+6. Format each memory as a complete sentence that can be naturally referenced in conversation
+7. Make memories conversational and personal, as if the avatar is remembering what the user told them
+8. Use first person perspective from the avatar's point of view when possible
+9. If no meaningful personal information is found, return an empty array
+
+MEMORY FORMAT EXAMPLES:
+Instead of: "User likes pizza"
+Use: "You mentioned that you love pizza, especially with pepperoni"
+
+Instead of: "User is moving to Kansas next week"
+Use: "You told me you're moving to Kansas next week and you're excited about it"
+
+Instead of: "User has a dog named Max"
+Use: "You have a dog named Max who you said is a golden retriever"
 
 Return your response as a JSON array of strings, where each string is a meaningful memory fragment.
 `;
