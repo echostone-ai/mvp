@@ -210,27 +210,31 @@ export default function AvatarsPage() {
                 />
               </label>
             </div>
-            <div className="avatar-name-section">
-              <label className="avatar-name-label">Name</label>
-              <input
-                type="text"
-                value={newAvatar.name}
-                onChange={(e) => setNewAvatar({ ...newAvatar, name: e.target.value })}
-                className="avatar-name-input"
-                placeholder="Enter avatar name"
-                required
-              />
+            
+            <div className="avatar-form-fields">
+              <div className="avatar-name-section">
+                <label className="avatar-name-label">Name</label>
+                <input
+                  type="text"
+                  value={newAvatar.name}
+                  onChange={(e) => setNewAvatar({ ...newAvatar, name: e.target.value })}
+                  className="avatar-name-input"
+                  placeholder="Enter avatar name"
+                  required
+                />
+              </div>
+              <div className="avatar-description-section">
+                <label className="avatar-description-label">Description</label>
+                <textarea
+                  value={newAvatar.description}
+                  onChange={(e) => setNewAvatar({ ...newAvatar, description: e.target.value })}
+                  className="avatar-description-input"
+                  placeholder="Enter a brief description of this avatar"
+                  rows={3}
+                />
+              </div>
             </div>
-            <div className="avatar-description-section">
-              <label className="avatar-description-label">Description</label>
-              <textarea
-                value={newAvatar.description}
-                onChange={(e) => setNewAvatar({ ...newAvatar, description: e.target.value })}
-                className="avatar-description-input"
-                placeholder="Enter a brief description of this avatar"
-                rows={3}
-              />
-            </div>
+            
             <button
               type="submit"
               disabled={creating}
@@ -262,7 +266,25 @@ export default function AvatarsPage() {
                   <div className="avatars-card-body">
                     <div className="avatars-card-icon-section">
                       <div className="avatars-card-icon-bg">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="avatars-card-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        {avatar.photo_url ? (
+                          <img 
+                            src={avatar.photo_url} 
+                            alt={avatar.name}
+                            className="avatars-card-photo"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement
+                              target.style.display = 'none'
+                              target.nextElementSibling?.classList.remove('hidden')
+                            }}
+                          />
+                        ) : null}
+                        <svg 
+                          xmlns="http://www.w3.org/2000/svg" 
+                          className={`avatars-card-icon ${avatar.photo_url ? 'hidden' : ''}`} 
+                          fill="none" 
+                          viewBox="0 0 24 24" 
+                          stroke="currentColor"
+                        >
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
                       </div>
