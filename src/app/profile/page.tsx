@@ -6,6 +6,8 @@ import { useState, useEffect } from 'react'
 import { QUESTIONS } from '@/data/questions'
 import { supabase } from '@/components/supabaseClient'
 import VoiceRecorder from '@/components/VoiceRecorder'
+import VoiceTraining from '@/components/VoiceTraining'
+import AvatarIdentity from '@/components/AvatarIdentity'
 import StoriesSection from '@/components/StoriesSection'
 import MemoryManagement from '@/components/MemoryManagement'
 import AccountMenu from '@/components/AccountMenu'
@@ -45,7 +47,7 @@ export default function ProfilePage() {
   const [user, setUser] = useState<any>(null)
   const [loadingUser, setLoadingUser] = useState(true)
   const [selectedAvatar, setSelectedAvatar] = useState<Avatar | null>(null)
-  const [activeTab, setActiveTab] = useState<'voice' | 'stories' | 'personality' | 'memories' | 'voicetuning'>('voice')
+  const [activeTab, setActiveTab] = useState<'identity' | 'voice' | 'stories' | 'personality' | 'memories' | 'voicetuning'>('identity')
   const [progress, setProgress] = useState<Record<string, Progress>>({})
   const [voiceId, setVoiceId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -259,11 +261,12 @@ export default function ProfilePage() {
           {/* Tab navigation */}
           <div className="profile-tabs-container">
             {[
-              { id: 'voice', label: 'Voice', icon: '🎤' },
+              { id: 'identity', label: 'Identity', icon: '👤' },
+              { id: 'voice', label: 'Voice Training', icon: '🎤' },
               { id: 'voicetuning', label: 'Voice Tuning', icon: '🎛️' },
+              { id: 'personality', label: 'Personality', icon: '🧠' },
               { id: 'stories', label: 'Your Stories', icon: '📚' },
-              { id: 'personality', label: 'Personality', icon: '👤' },
-              { id: 'memories', label: 'New Memories', icon: '🧠' }
+              { id: 'memories', label: 'Memories', icon: '💭' }
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -284,10 +287,24 @@ export default function ProfilePage() {
             </div>
           )}
 
+          {activeTab === 'identity' && (
+            <div className="profile-tab-panel">
+              <AvatarIdentity
+                avatar={selectedAvatar}
+                onUpdate={(updatedAvatar) => {
+                  setSelectedAvatar(updatedAvatar)
+                }}
+                userId={user?.id || ''}
+              />
+            </div>
+          )}
+
           {activeTab === 'voice' && (
             <div className="profile-tab-panel">
-              <VoiceRecorder
-                userName={selectedAvatar.name}
+              <VoiceTraining
+                avatarName={selectedAvatar.name}
+                avatarId={selectedAvatar.id}
+                currentVoiceId={selectedAvatar.voice_id}
                 onVoiceUploaded={async (voiceId) => {
                   setVoiceId(voiceId)
                   if (user?.id) {
@@ -296,6 +313,9 @@ export default function ProfilePage() {
                       .update({ voice_id: voiceId })
                       .eq('id', selectedAvatar.id)
                       .eq('user_id', user.id)
+                    
+                    // Update local state
+                    setSelectedAvatar(prev => prev ? { ...prev, voice_id: voiceId } : null)
                   }
                 }}
               />
