@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { supabase } from '@/components/supabaseClient'
+import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import PageShell from '@/components/PageShell'
 
@@ -21,8 +21,11 @@ export default function AvatarsPage() {
   const [error, setError] = useState<string | null>(null)
   const [newAvatar, setNewAvatar] = useState({
     name: '',
-    description: ''
+    description: '',
+    photo_url: ''
   })
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
 
   useEffect(() => {
@@ -55,33 +58,74 @@ export default function AvatarsPage() {
 
   const handleCreateAvatar = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!newAvatar.name.trim()) {
-      setError('Avatar name is required')
-      return
-    }
+    if (!newAvatar.name.trim()) return
 
     setCreating(true)
-    setError(null)
+    setError('')
 
     try {
+      let photoUrl = ''
+      
+      // Upload photo if selected
+      if (photoFile) {
+        const fileExt = photoFile.name.split('.').pop()
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
+        const filePath = `avatar-photos/${fileName}`
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(filePath, photoFile)
+
+        if (uploadError) {
+          throw new Error(`Failed to upload photo: ${uploadError.message}`)
+        }
+
+        // Get public URL
+        const { data: urlData } = supabase.storage
+          .from('avatars')
+          .getPublicUrl(filePath)
+
+        photoUrl = urlData.publicUrl
+      }
+
       const { data, error } = await supabase
         .from('avatar_profiles')
-        .insert({
-          name: newAvatar.name.trim(),
-          description: newAvatar.description.trim(),
-          profile_data: {}
-        })
+        .insert([
+          {
+            user_id: user.id,
+            name: newAvatar.name.trim(),
+            description: newAvatar.description.trim(),
+            photo_url: photoUrl
+          }
+        ])
         .select()
         .single()
 
       if (error) throw error
 
       setAvatars([data, ...avatars])
-      setNewAvatar({ name: '', description: '' })
+      setNewAvatar({ name: '', description: '', photo_url: '' })
+      setPhotoFile(null)
+      setPhotoPreview(null)
     } catch (err: any) {
       setError(`Failed to create avatar: ${err.message}`)
     } finally {
       setCreating(false)
+    }
+  }
+
+  // Handle photo file selection
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null
+    setPhotoFile(file)
+    if (file) {
+      const reader = new FileReader()
+      reader.onload = (ev) => {
+        setPhotoPreview(ev.target?.result as string)
+      }
+      reader.readAsDataURL(file)
+    } else {
+      setPhotoPreview(null)
     }
   }
 
@@ -163,25 +207,45 @@ export default function AvatarsPage() {
           </div>
         )}
 
-        <div className="bg-purple-900/50 p-8 rounded-xl w-full mb-10 shadow-lg border border-purple-500/30">
-          <h2 className="text-2xl font-semibold mb-6 text-white">Create New Avatar</h2>
-          <form onSubmit={handleCreateAvatar} className="space-y-6">
-            <div>
-              <label className="block mb-2 text-lg font-medium text-white">Name</label>
+        <div className="avatar-create-form">
+          <h2 className="avatar-create-title">Create New Avatar</h2>
+          <form onSubmit={handleCreateAvatar} className="avatar-create-fields">
+            <div className="avatar-photo-upload-section">
+              <label htmlFor="avatar-photo-upload" className="avatar-photo-label">
+                <div className="avatar-photo-preview" style={{ backgroundImage: photoPreview ? `url(${photoPreview})` : newAvatar.photo_url ? `url(${newAvatar.photo_url})` : undefined }}>
+                  {!photoPreview && !newAvatar.photo_url && (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="avatar-photo-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  )}
+                  <span className="avatar-photo-upload-btn">{photoPreview || newAvatar.photo_url ? 'Change Photo' : 'Add Photo'}</span>
+                </div>
+                <input
+                  id="avatar-photo-upload"
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={handlePhotoChange}
+                />
+              </label>
+            </div>
+            <div className="avatar-name-section">
+              <label className="avatar-name-label">Name</label>
               <input
                 type="text"
                 value={newAvatar.name}
                 onChange={(e) => setNewAvatar({ ...newAvatar, name: e.target.value })}
-                className="w-full bg-purple-800/40 border-2 border-purple-400/50 rounded-lg px-5 py-3 text-white placeholder-purple-300/70 focus:border-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
+                className="avatar-name-input"
                 placeholder="Enter avatar name"
+                required
               />
             </div>
-            <div>
-              <label className="block mb-2 text-lg font-medium text-white">Description</label>
+            <div className="avatar-description-section">
+              <label className="avatar-description-label">Description</label>
               <textarea
                 value={newAvatar.description}
                 onChange={(e) => setNewAvatar({ ...newAvatar, description: e.target.value })}
-                className="w-full bg-purple-800/40 border-2 border-purple-400/50 rounded-lg px-5 py-3 text-white placeholder-purple-300/70 focus:border-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
+                className="avatar-description-input"
                 placeholder="Enter a brief description of this avatar"
                 rows={3}
               />
@@ -189,7 +253,7 @@ export default function AvatarsPage() {
             <button
               type="submit"
               disabled={creating}
-              className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="avatar-create-submit-btn"
             >
               {creating ? 'Creating...' : 'Create Avatar'}
             </button>

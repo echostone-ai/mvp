@@ -12,8 +12,19 @@ import AccountMenu from '@/components/AccountMenu'
 import PageShell from '@/components/PageShell'
 import VoicePreview from '@/components/VoicePreview'
 import VoicePreviewTesting from '@/components/VoicePreviewTesting'
+import AvatarSelector from '@/components/AvatarSelector'
 
 type Progress = { total: number; answered: number; isComplete: boolean }
+
+interface Avatar {
+  id: string
+  name: string
+  description: string
+  voice_id: string | null
+  photo_url?: string
+  profile_data: any
+  created_at: string
+}
 
 async function ensureProfileExists(userId: string) {
   const { data, error } = await supabase
@@ -33,6 +44,7 @@ async function ensureProfileExists(userId: string) {
 export default function ProfilePage() {
   const [user, setUser] = useState<any>(null)
   const [loadingUser, setLoadingUser] = useState(true)
+  const [selectedAvatar, setSelectedAvatar] = useState<Avatar | null>(null)
   const [activeTab, setActiveTab] = useState<'voice' | 'stories' | 'personality' | 'memories' | 'voicetuning'>('voice')
   const [progress, setProgress] = useState<Record<string, Progress>>({})
   const [voiceId, setVoiceId] = useState<string | null>(null)
@@ -106,6 +118,10 @@ export default function ProfilePage() {
     return () => { mounted = false }
   }, [])
 
+  const handleAvatarSelect = (avatar: Avatar) => {
+    setSelectedAvatar(avatar)
+  }
+
   // Show loading state
   if (loadingUser) {
     return (
@@ -166,9 +182,67 @@ export default function ProfilePage() {
     )
   }
 
+  // Show avatar selector if no avatar is selected
+  if (!selectedAvatar) {
+    return (
+      <PageShell>
+        <main className="min-h-screen text-white">
+          <AvatarSelector
+            onAvatarSelect={handleAvatarSelect}
+            title="Select Avatar for Profile"
+            subtitle="Choose which avatar you'd like to configure and train"
+            showCreateOption={true}
+          />
+        </main>
+      </PageShell>
+    )
+  }
+
   return (
     <PageShell>
       <main className="min-h-screen text-white flex flex-col items-center p-0 max-w-full">
+        {/* Avatar Header Banner */}
+        <div className="avatar-header">
+          <div className="avatar-header-info">
+            <div className="avatar-header-photo">
+              {selectedAvatar.photo_url ? (
+                <img 
+                  src={selectedAvatar.photo_url} 
+                  alt={selectedAvatar.name}
+                  className="avatar-photo"
+                  onError={(e) => {
+                    // Fallback to icon if image fails to load
+                    const target = e.target as HTMLImageElement
+                    target.style.display = 'none'
+                    target.nextElementSibling?.classList.remove('avatar-photo-fallback-hidden')
+                  }}
+                />
+              ) : null}
+              <div className={`avatar-photo-fallback ${selectedAvatar.photo_url ? 'avatar-photo-fallback-hidden' : ''}`}>
+                <svg xmlns="http://www.w3.org/2000/svg" className="avatar-header-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+            </div>
+            <div>
+              <h2 className="avatar-header-title">Working with: {selectedAvatar.name}</h2>
+              <p className="avatar-header-desc">{selectedAvatar.description || "No description provided"}</p>
+            </div>
+          </div>
+          <div className="avatar-header-status">
+            <button
+              onClick={() => setSelectedAvatar(null)}
+              className="avatar-header-change-btn"
+            >
+              Change Avatar
+            </button>
+            <div className="avatar-header-active">
+              <span className="avatar-header-active-dot"></span>
+              <span>Active</span>
+            </div>
+          </div>
+        </div>
+
         <div className="flex flex-col items-center my-8 mb-2">
           <a href="/" className="inline-block">
             <Image
@@ -180,7 +254,7 @@ export default function ProfilePage() {
             />
           </a>
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white mb-4 px-4 text-center">
-            Your Profile
+            {selectedAvatar.name}'s Profile
           </h1>
 
           {/* Tab navigation with inline styles that actually work */}
@@ -259,28 +333,32 @@ export default function ProfilePage() {
               className="w-full"
             >
               <VoiceRecorder
-                userName={userName}
+                userName={selectedAvatar.name}
                 onVoiceUploaded={async (voiceId) => {
                   setVoiceId(voiceId)
                   if (user?.id) {
-                    await supabase.from('profiles').update({ voice_id: voiceId }).eq('user_id', user.id)
+                    // Update the avatar's voice_id
+                    await supabase
+                      .from('avatar_profiles')
+                      .update({ voice_id: voiceId })
+                      .eq('id', selectedAvatar.id)
                   }
                 }}
               />
               {/* Show basic voice preview if a voiceId is available */}
-              {voiceId && (
+              {(voiceId || selectedAvatar.voice_id) && (
                 <div className="mt-6 sm:mt-10">
-                  <h2 className="text-xl sm:text-2xl font-bold mb-4 text-white text-center">Test Your Digital Voice</h2>
+                  <h2 className="text-xl sm:text-2xl font-bold mb-4 text-white text-center">Test {selectedAvatar.name}'s Voice</h2>
                   <VoicePreview
-                    voiceId={voiceId}
-                    userName={userName}
+                    voiceId={voiceId || selectedAvatar.voice_id || ''}
+                    userName={selectedAvatar.name}
                   />
                 </div>
               )}
             </div>
           )}
 
-          {activeTab === 'voicetuning' && voiceId && (
+          {activeTab === 'voicetuning' && (voiceId || selectedAvatar.voice_id) && (
             <div
               role="tabpanel"
               id="voicetuning-panel"
@@ -288,10 +366,10 @@ export default function ProfilePage() {
               className="mt-6 sm:mt-10 w-full"
             >
               <h2 className="text-xl sm:text-2xl font-bold mb-4 text-white text-center">Voice Tuning</h2>
-              <p className="text-base sm:text-lg text-gray-300 mb-6 text-center px-2">Fine-tune your digital voice with advanced controls, emotional previews, and parameter adjustments.</p>
+              <p className="text-base sm:text-lg text-gray-300 mb-6 text-center px-2">Fine-tune {selectedAvatar.name}'s digital voice with advanced controls, emotional previews, and parameter adjustments.</p>
               <VoicePreviewTesting
-                voiceId={voiceId}
-                userName={userName}
+                voiceId={voiceId || selectedAvatar.voice_id || ''}
+                userName={selectedAvatar.name}
                 userId={user?.id}
               />
             </div>
@@ -327,7 +405,7 @@ export default function ProfilePage() {
                 return (
                   <Link
                     key={section}
-                    href={`/profile/edit/${section}`}
+                    href={`/profile/edit/${section}?avatarId=${selectedAvatar.id}`}
                     style={{
                       textDecoration: 'none',
                       color: 'inherit',

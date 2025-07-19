@@ -1,6 +1,6 @@
 'use client'
 
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState, useCallback } from 'react'
 import { QUESTIONS, Question } from '@/data/questions'
 import useEmblaCarousel from 'embla-carousel-react'
@@ -8,13 +8,26 @@ import LogoHeader from '@/components/LogoHeader'
 import AccountMenu from '@/components/AccountMenu'
 import { supabase } from '@/components/supabaseClient'
 
+interface Avatar {
+  id: string
+  name: string
+  description: string
+  voice_id: string | null
+  photo_url?: string
+  profile_data: any
+  created_at: string
+}
+
 export default function EditSectionPage() {
   const params = useParams() as { section: string }
+  const searchParams = useSearchParams()
   const section = params.section
+  const avatarId = searchParams.get('avatarId')
   const router = useRouter()
   const questions: Question[] = QUESTIONS[section] || []
 
   const [user, setUser] = useState<any>(null)
+  const [selectedAvatar, setSelectedAvatar] = useState<Avatar | null>(null)
   const [loadingUser, setLoadingUser] = useState(true)
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [saved, setSaved] = useState(false)
@@ -24,7 +37,7 @@ export default function EditSectionPage() {
   // No skipSnaps! Just use loop: false for natural UX
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false })
 
-  // Check authentication
+  // Check authentication and load avatar if avatarId is provided
   useEffect(() => {
     async function checkAuth() {
       try {
@@ -36,6 +49,28 @@ export default function EditSectionPage() {
         }
         const currentUser = sessionData.session?.user ?? null
         setUser(currentUser)
+        
+        // Load avatar data if avatarId is provided
+        if (avatarId && currentUser) {
+          try {
+            const { data: avatarData, error: avatarError } = await supabase
+              .from('avatar_profiles')
+              .select('*')
+              .eq('id', avatarId)
+              .single()
+            
+            if (avatarError) {
+              console.error('Avatar load error:', avatarError)
+              setError('Failed to load avatar data')
+            } else {
+              setSelectedAvatar(avatarData)
+            }
+          } catch (e: any) {
+            console.error('Avatar load error:', e)
+            setError('Failed to load avatar data')
+          }
+        }
+        
         setLoadingUser(false)
       } catch (e: any) {
         console.error('Auth check error:', e)
@@ -43,19 +78,26 @@ export default function EditSectionPage() {
       }
     }
     checkAuth()
-  }, [])
+  }, [avatarId])
 
   // Set/restore answers
   useEffect(() => {
-    const stored = localStorage.getItem(`echostone_profile_${section}`)
+    const storageKey = avatarId ? `echostone_avatar_${avatarId}_profile_${section}` : `echostone_profile_${section}`
+    const stored = localStorage.getItem(storageKey)
     if (stored) {
       setAnswers(JSON.parse(stored))
     } else {
-      const initial: Record<string, string> = {}
-      questions.forEach(q => { initial[q.key] = '' })
-      setAnswers(initial)
+      // If we have avatar data, try to load existing answers from avatar profile_data
+      if (selectedAvatar?.profile_data?.[section]) {
+        setAnswers(selectedAvatar.profile_data[section])
+      } else {
+        const initial: Record<string, string> = {}
+        questions.forEach(q => { initial[q.key] = '' })
+        setAnswers(initial)
+      }
     }
-  }, [section, questions])
+  }, [section, questions, selectedAvatar, avatarId])
+
   // Arrow key navigation for Embla
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -72,49 +114,71 @@ export default function EditSectionPage() {
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [emblaApi])
+
   // Save & route
   const handleSave = useCallback(async () => {
     setSaving(true)
     setError(null)
     try {
+      const storageKey = avatarId ? `echostone_avatar_${avatarId}_profile_${section}` : `echostone_profile_${section}`
       // Save to localStorage as backup
-      localStorage.setItem(`echostone_profile_${section}`, JSON.stringify(answers))
+      localStorage.setItem(storageKey, JSON.stringify(answers))
 
       // Fetch session & user info
       const { data: { session } } = await supabase.auth.getSession()
       const user = session?.user
       if (!user) throw new Error('Not logged in!')
 
-      // Fetch current profile_data for this user (if it exists)
-      const { data: profileData, error: profileErr } = await supabase
-        .from('profiles')
-        .select('profile_data')
-        .eq('user_id', user.id)
-        .maybeSingle()
-      if (profileErr) throw profileErr
+      if (avatarId && selectedAvatar) {
+        // Save to avatar profile_data
+        const prevData = selectedAvatar.profile_data || {}
+        const newProfileData = { ...prevData, [section]: answers }
 
-      // Merge updated answers for this section with previous data
-      const prevData = profileData?.profile_data || {}
-      const newProfileData = { ...prevData, [section]: answers }
+        const { error: updateErr } = await supabase
+          .from('avatar_profiles')
+          .update({ profile_data: newProfileData })
+          .eq('id', avatarId)
+        if (updateErr) throw updateErr
 
-      // Update the profile_data column in Supabase
-      const { error: updateErr } = await supabase
-        .from('profiles')
-        .update({ profile_data: newProfileData })
-        .eq('user_id', user.id)
-      if (updateErr) throw updateErr
+        // Update local avatar state
+        setSelectedAvatar(prev => prev ? { ...prev, profile_data: newProfileData } : null)
+      } else {
+        // Save to user profile_data (original behavior)
+        const { data: profileData, error: profileErr } = await supabase
+          .from('profiles')
+          .select('profile_data')
+          .eq('user_id', user.id)
+          .maybeSingle()
+        if (profileErr) throw profileErr
+
+        // Merge updated answers for this section with previous data
+        const prevData = profileData?.profile_data || {}
+        const newProfileData = { ...prevData, [section]: answers }
+
+        // Update the profile_data column in Supabase
+        const { error: updateErr } = await supabase
+          .from('profiles')
+          .update({ profile_data: newProfileData })
+          .eq('user_id', user.id)
+        if (updateErr) throw updateErr
+      }
 
       setSaved(true)
       setTimeout(() => {
         setSaved(false)
-        router.push('/profile')
+        // Redirect back to profile page with avatar context if applicable
+        if (avatarId) {
+          router.push('/profile')
+        } else {
+          router.push('/profile')
+        }
       }, 800)
     } catch (err: any) {
       setError(err.message || 'Failed to save.')
     } finally {
       setSaving(false)
     }
-  }, [answers, section, router])
+  }, [answers, section, router, avatarId, selectedAvatar])
 
   // Answer edit
   const handleChange = (key: string, value: string) => {
@@ -220,6 +284,50 @@ export default function EditSectionPage() {
       </div>
       
       <main className="profile-edit-main">
+        {/* Avatar Header Banner */}
+        {selectedAvatar && (
+          <div className="avatar-header">
+            <div className="avatar-header-info">
+              <div className="avatar-header-photo">
+                {selectedAvatar.photo_url ? (
+                  <img 
+                    src={selectedAvatar.photo_url} 
+                    alt={selectedAvatar.name}
+                    className="avatar-photo"
+                    onError={(e) => {
+                      // Fallback to icon if image fails to load
+                      const target = e.target as HTMLImageElement
+                      target.style.display = 'none'
+                      target.nextElementSibling?.classList.remove('avatar-photo-fallback-hidden')
+                    }}
+                  />
+                ) : null}
+                <div className={`avatar-photo-fallback ${selectedAvatar.photo_url ? 'avatar-photo-fallback-hidden' : ''}`}>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="avatar-header-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+              </div>
+              <div>
+                <h2 className="avatar-header-title">Editing: {selectedAvatar.name}</h2>
+                <p className="avatar-header-desc">{selectedAvatar.description || "No description provided"}</p>
+              </div>
+            </div>
+            <div className="avatar-header-status">
+              <button
+                onClick={() => router.push('/profile')}
+                className="avatar-header-change-btn"
+              >
+                Back to Profile
+              </button>
+              <div className="avatar-header-active">
+                <span className="avatar-header-active-dot"></span>
+                <span>Editing</span>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="profile-edit-header">
           <img
             src="/echostone_logo.png"
@@ -227,10 +335,13 @@ export default function EditSectionPage() {
             className="logo-pulse profile-edit-logo"
           />
           <h1 className="profile-edit-title">
-            {section.replace(/_/g, ' ')}
+            {selectedAvatar ? `${selectedAvatar.name}'s ${section.replace(/_/g, ' ')}` : section.replace(/_/g, ' ')}
           </h1>
           <p className="profile-edit-subtitle">
-            Share your thoughts and experiences to help build your digital profile
+            {selectedAvatar 
+              ? `Share your thoughts and experiences to help build ${selectedAvatar.name}'s personality profile`
+              : 'Share your thoughts and experiences to help build your digital profile'
+            }
           </p>
         </div>
 

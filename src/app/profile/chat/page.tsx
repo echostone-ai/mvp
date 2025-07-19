@@ -5,6 +5,17 @@ import { supabase } from '@/components/supabaseClient'
 import ChatInterface from '@/components/ChatInterface'
 import AccountMenu from '@/components/AccountMenu'
 import PageShell from '@/components/PageShell'
+import AvatarSelector from '@/components/AvatarSelector'
+
+interface Avatar {
+  id: string
+  name: string
+  description: string
+  voice_id: string | null
+  photo_url?: string
+  profile_data: any
+  created_at: string
+}
 
 const buttonStyle: React.CSSProperties = {
   display: 'inline-block',
@@ -22,6 +33,7 @@ const buttonStyle: React.CSSProperties = {
 
 export default function ProfileChat() {
   const [user, setUser] = useState<any>(null)
+  const [selectedAvatar, setSelectedAvatar] = useState<Avatar | null>(null)
   const [profileData, setProfileData] = useState<any>(null)
   const [voiceId, setVoiceId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -78,6 +90,10 @@ export default function ProfileChat() {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
   }, [])
 
+  const handleAvatarSelect = (avatar: Avatar) => {
+    setSelectedAvatar(avatar)
+  }
+
   return (
     <PageShell>
       {loading ? (
@@ -121,8 +137,65 @@ export default function ProfileChat() {
         <main className="min-h-screen flex flex-col items-center justify-center text-white">
           <p className="text-center text-xl">No profile data found.</p>
         </main>
+      ) : !selectedAvatar ? (
+        <main className="min-h-screen text-white">
+          <AvatarSelector
+            onAvatarSelect={handleAvatarSelect}
+            title="Select Avatar to Chat With"
+            subtitle="Choose which avatar you'd like to have a conversation with"
+            showCreateOption={true}
+          />
+        </main>
       ) : (
-        <ChatInterface profileData={profileData} voiceId={voiceId} userId={user.id} />
+        <main className="min-h-screen text-white flex flex-col items-center p-0 max-w-full">
+          {/* Avatar Header Banner */}
+          <div className="avatar-header">
+            <div className="avatar-header-info">
+              <div className="avatar-header-photo">
+                {selectedAvatar.photo_url ? (
+                  <img 
+                    src={selectedAvatar.photo_url} 
+                    alt={selectedAvatar.name}
+                    className="avatar-photo"
+                    onError={(e) => {
+                      // Fallback to icon if image fails to load
+                      const target = e.target as HTMLImageElement
+                      target.style.display = 'none'
+                      target.nextElementSibling?.classList.remove('avatar-photo-fallback-hidden')
+                    }}
+                  />
+                ) : null}
+                <div className={`avatar-photo-fallback ${selectedAvatar.photo_url ? 'avatar-photo-fallback-hidden' : ''}`}>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="avatar-header-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+              </div>
+              <div>
+                <h2 className="avatar-header-title">Chatting with: {selectedAvatar.name}</h2>
+                <p className="avatar-header-desc">{selectedAvatar.description || "No description provided"}</p>
+              </div>
+            </div>
+            <div className="avatar-header-status">
+              <button
+                onClick={() => setSelectedAvatar(null)}
+                className="avatar-header-change-btn"
+              >
+                Change Avatar
+              </button>
+              <div className="avatar-header-active">
+                <span className="avatar-header-active-dot"></span>
+                <span>Active</span>
+              </div>
+            </div>
+          </div>
+          <ChatInterface 
+            profileData={selectedAvatar.profile_data || profileData} 
+            voiceId={selectedAvatar.voice_id || voiceId} 
+            userId={user.id}
+            avatarId={selectedAvatar.id}
+          />
+        </main>
       )}
     </PageShell>
   )
