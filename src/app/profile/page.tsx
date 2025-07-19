@@ -200,7 +200,7 @@ export default function ProfilePage() {
 
   return (
     <PageShell>
-      <main className="min-h-screen text-white flex flex-col items-center p-0 max-w-full">
+      <main className="profile-main">
         {/* Avatar Header Banner */}
         <div className="avatar-header">
           <div className="avatar-header-info">
@@ -211,7 +211,6 @@ export default function ProfilePage() {
                   alt={selectedAvatar.name}
                   className="avatar-photo"
                   onError={(e) => {
-                    // Fallback to icon if image fails to load
                     const target = e.target as HTMLImageElement
                     target.style.display = 'none'
                     target.nextElementSibling?.classList.remove('avatar-photo-fallback-hidden')
@@ -243,30 +242,22 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        <div className="flex flex-col items-center my-8 mb-2">
-          <a href="/" className="inline-block">
+        <div className="profile-header">
+          <a href="/" className="profile-logo-link">
             <Image
-              className="logo-pulse mb-6 cursor-pointer hover:scale-110 transition-transform duration-300"
+              className="profile-logo"
               src="/echostone_logo.png"
               width={160}
               height={160}
               alt="EchoStone Logo"
             />
           </a>
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white mb-4 px-4 text-center">
+          <h1 className="profile-title">
             {selectedAvatar.name}'s Profile
           </h1>
 
-          {/* Tab navigation with inline styles that actually work */}
-          <div style={{
-            display: 'flex',
-            gap: '12px',
-            flexWrap: 'wrap',
-            justifyContent: 'center',
-            alignItems: 'center',
-            marginBottom: '2rem',
-            padding: '0 1rem'
-          }}>
+          {/* Tab navigation */}
+          <div className="profile-tabs-container">
             {[
               { id: 'voice', label: 'Voice', icon: '🎤' },
               { id: 'voicetuning', label: 'Voice Tuning', icon: '🎛️' },
@@ -277,67 +268,29 @@ export default function ProfilePage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '12px 24px',
-                  background: activeTab === tab.id
-                    ? 'linear-gradient(135deg, #9147ff, #7c3aed)'
-                    : 'rgba(147, 71, 255, 0.8)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '12px',
-                  fontSize: '18px',
-                  fontWeight: '700',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  minHeight: '48px',
-                  boxShadow: activeTab === tab.id
-                    ? '0 8px 24px rgba(145, 71, 255, 0.5)'
-                    : '0 4px 12px rgba(147, 71, 255, 0.3)',
-                  transform: activeTab === tab.id ? 'translateY(-1px)' : 'none'
-                }}
-                onMouseEnter={(e) => {
-                  if (activeTab !== tab.id) {
-                    e.currentTarget.style.background = 'rgba(147, 71, 255, 0.9)';
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (activeTab !== tab.id) {
-                    e.currentTarget.style.background = 'rgba(147, 71, 255, 0.8)';
-                    e.currentTarget.style.transform = 'none';
-                  }
-                }}
+                className={`profile-tab ${activeTab === tab.id ? 'active' : ''}`}
               >
-                <span style={{ fontSize: '20px' }}>{tab.icon}</span>
-                <span>{tab.label}</span>
+                <span className="tab-icon">{tab.icon}</span>
+                <span className="tab-label">{tab.label}</span>
               </button>
             ))}
           </div>
         </div>
 
-        <div className="max-w-5xl w-full px-4 sm:px-6 lg:px-8 mx-auto mb-12 tab-content">
+        <div className="profile-content">
           {error && (
-            <div className="text-red-400 bg-purple-900/50 px-6 py-4 rounded-xl mb-5 text-lg text-center font-medium">
+            <div className="profile-error">
               {error}
             </div>
           )}
 
           {activeTab === 'voice' && (
-            <div
-              role="tabpanel"
-              id="voice-panel"
-              aria-labelledby="voice-tab"
-              className="w-full"
-            >
+            <div className="profile-tab-panel">
               <VoiceRecorder
                 userName={selectedAvatar.name}
                 onVoiceUploaded={async (voiceId) => {
                   setVoiceId(voiceId)
                   if (user?.id) {
-                    // Update the avatar's voice_id
                     await supabase
                       .from('avatar_profiles')
                       .update({ voice_id: voiceId })
@@ -345,10 +298,9 @@ export default function ProfilePage() {
                   }
                 }}
               />
-              {/* Show basic voice preview if a voiceId is available */}
               {(voiceId || selectedAvatar.voice_id) && (
-                <div className="mt-6 sm:mt-10">
-                  <h2 className="text-xl sm:text-2xl font-bold mb-4 text-white text-center">Test {selectedAvatar.name}'s Voice</h2>
+                <div className="voice-preview-section">
+                  <h2 className="voice-preview-title">Test {selectedAvatar.name}'s Voice</h2>
                   <VoicePreview
                     voiceId={voiceId || selectedAvatar.voice_id || ''}
                     userName={selectedAvatar.name}
@@ -359,14 +311,11 @@ export default function ProfilePage() {
           )}
 
           {activeTab === 'voicetuning' && (voiceId || selectedAvatar.voice_id) && (
-            <div
-              role="tabpanel"
-              id="voicetuning-panel"
-              aria-labelledby="voicetuning-tab"
-              className="mt-6 sm:mt-10 w-full"
-            >
-              <h2 className="text-xl sm:text-2xl font-bold mb-4 text-white text-center">Voice Tuning</h2>
-              <p className="text-base sm:text-lg text-gray-300 mb-6 text-center px-2">Fine-tune {selectedAvatar.name}'s digital voice with advanced controls, emotional previews, and parameter adjustments.</p>
+            <div className="profile-tab-panel">
+              <h2 className="voice-tuning-title">Voice Tuning</h2>
+              <p className="voice-tuning-description">
+                Fine-tune {selectedAvatar.name}'s digital voice with advanced controls, emotional previews, and parameter adjustments.
+              </p>
               <VoicePreviewTesting
                 voiceId={voiceId || selectedAvatar.voice_id || ''}
                 userName={selectedAvatar.name}
@@ -376,151 +325,51 @@ export default function ProfilePage() {
           )}
 
           {activeTab === 'stories' && (
-            <div
-              role="tabpanel"
-              id="stories-panel"
-              aria-labelledby="stories-tab"
-              className="w-full"
-            >
+            <div className="profile-tab-panel">
               <StoriesSection userId={user?.id} />
             </div>
           )}
 
           {activeTab === 'personality' && (
-            <div
-              role="tabpanel"
-              id="personality-panel"
-              aria-labelledby="personality-tab"
-              style={{
-                marginTop: '2rem',
-                width: '100%',
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-                gap: '16px',
-                padding: '0 16px'
-              }}
-            >
-              {Object.entries(QUESTIONS || {}).map(([section, qs]) => {
-                const prog = progress[section] || { total: qs.length, answered: 0, isComplete: false }
-                return (
-                  <Link
-                    key={section}
-                    href={`/profile/edit/${section}?avatarId=${selectedAvatar.id}`}
-                    style={{
-                      textDecoration: 'none',
-                      color: 'inherit',
-                      display: 'block',
-                      touchAction: 'manipulation'
-                    }}
-                  >
-                    <div style={{
-                      padding: '16px',
-                      borderRadius: '16px',
-                      boxShadow: prog.isComplete
-                        ? '0 10px 25px rgba(0, 0, 0, 0.2), 0 0 15px rgba(74, 222, 128, 0.2)'
-                        : '0 8px 20px rgba(0, 0, 0, 0.2)',
-                      transition: 'all 0.3s ease',
-                      textAlign: 'left',
-                      minHeight: '120px',
-                      position: 'relative',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'flex-start',
-                      background: prog.isComplete
-                        ? 'rgba(107, 33, 168, 0.95)'
-                        : 'rgba(88, 28, 135, 0.75)',
-                      opacity: prog.isComplete ? 1 : 0.9,
-                      cursor: 'pointer'
-                    }}
-                      onMouseOver={(e) => {
-                        e.currentTarget.style.transform = 'scale(1.03)';
-                        e.currentTarget.style.opacity = '1';
-                      }}
-                      onMouseOut={(e) => {
-                        e.currentTarget.style.transform = 'scale(1)';
-                        if (!prog.isComplete) {
-                          e.currentTarget.style.opacity = '0.9';
-                        }
-                      }}
-                      onMouseDown={(e) => {
-                        e.currentTarget.style.transform = 'scale(0.98)';
-                      }}
-                      onMouseUp={(e) => {
-                        e.currentTarget.style.transform = 'scale(1.03)';
-                      }}
+            <div className="profile-tab-panel">
+              <div className="personality-grid">
+                {Object.entries(QUESTIONS || {}).map(([section, qs]) => {
+                  const prog = progress[section] || { total: qs.length, answered: 0, isComplete: false }
+                  return (
+                    <Link
+                      key={section}
+                      href={`/profile/edit/${section}?avatarId=${selectedAvatar.id}`}
+                      className="personality-card"
                     >
-                      <h2 style={{
-                        margin: 0,
-                        fontSize: '20px',
-                        fontWeight: 600,
-                        color: 'white',
-                        textTransform: 'capitalize',
-                        marginBottom: '8px',
-                        lineHeight: 1.2
-                      }}>
-                        {section.replace(/_/g, ' ')}
-                      </h2>
-                      <p style={{
-                        margin: 0,
-                        marginBottom: '4px',
-                        fontSize: '16px',
-                        color: 'rgb(233, 213, 255)'
-                      }}>
-                        {prog.answered} of {prog.total} answered
-                      </p>
-                      {prog.answered > 0 && prog.answered < prog.total && (
-                        <div style={{
-                          fontSize: '12px',
-                          color: 'rgb(191, 219, 254)',
-                          marginTop: '4px'
-                        }}>
-                          ✨ Some auto-filled from stories
+                      <div className="personality-card-header">
+                        <h3 className="personality-card-title">{section.replace(/_/g, ' ')}</h3>
+                        <div className="personality-card-progress">
+                          <div className="progress-bar">
+                            <div 
+                              className="progress-fill" 
+                              style={{ width: `${(prog.answered / prog.total) * 100}%` }}
+                            ></div>
+                          </div>
+                          <span className="progress-text">{prog.answered}/{prog.total}</span>
                         </div>
-                      )}
-                      {prog.isComplete && (
-                        <span style={{
-                          color: 'rgb(74, 222, 128)',
-                          fontSize: '24px',
-                          position: 'absolute',
-                          top: '16px',
-                          right: '16px'
-                        }}>✓</span>
-                      )}
-
-                      {/* Mobile-friendly progress indicator */}
-                      <div style={{
-                        marginTop: '12px',
-                        width: '100%',
-                        backgroundColor: 'rgba(107, 33, 168, 0.5)',
-                        borderRadius: '9999px',
-                        height: '8px',
-                        overflow: 'hidden'
-                      }}>
-                        <div
-                          style={{
-                            width: `${(prog.answered / prog.total) * 100}%`,
-                            height: '100%',
-                            borderRadius: '9999px',
-                            background: 'linear-gradient(to right, rgb(168, 85, 247), rgb(236, 72, 153))',
-                            transition: 'width 0.3s ease'
-                          }}
-                        />
                       </div>
-                    </div>
-                  </Link>
-                )
-              })}
+                      <div className="personality-card-status">
+                        {prog.isComplete ? (
+                          <span className="status-complete">✓ Complete</span>
+                        ) : (
+                          <span className="status-incomplete">Continue</span>
+                        )}
+                      </div>
+                    </Link>
+                  )
+                })}
+              </div>
             </div>
           )}
 
-          {activeTab === 'memories' && user?.id && (
-            <div
-              role="tabpanel"
-              id="memories-panel"
-              aria-labelledby="memories-tab"
-              className="w-full"
-            >
-              <MemoryManagement userId={user.id} />
+          {activeTab === 'memories' && (
+            <div className="profile-tab-panel">
+              <MemoryManagement userId={user?.id} />
             </div>
           )}
         </div>

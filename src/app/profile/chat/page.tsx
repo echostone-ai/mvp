@@ -97,32 +97,32 @@ export default function ProfileChat() {
   return (
     <PageShell>
       {loading ? (
-        <main className="min-h-screen flex flex-col items-center justify-center text-white">
-          <div className="loading-spinner"></div>
-          <p className="text-center text-xl mt-4">Loading...</p>
+        <main className="chat-loading-main">
+          <div className="chat-loading-spinner"></div>
+          <p className="chat-loading-text">Loading...</p>
         </main>
       ) : !user ? (
-        <main className="min-h-screen flex flex-col items-center justify-center text-white p-4 text-center">
+        <main className="chat-auth-main">
           <img
             src="/echostone_logo.png"
             alt="EchoStone Logo"
-            className="logo-pulse w-36 mb-6 select-none"
+            className="chat-auth-logo"
           />
-          <div className="auth-required-card">
-            <h1 className="auth-required-title">Chat with Your Avatar</h1>
-            <p className="auth-required-subtitle mb-6">
+          <div className="chat-auth-card">
+            <h1 className="chat-auth-title">Chat with Your Avatar</h1>
+            <p className="chat-auth-subtitle">
               Please sign up or log in to chat with your EchoStone.
             </p>
-            <div className="flex justify-center gap-4">
+            <div className="chat-auth-actions">
               <a 
                 href="/login" 
-                className="auth-submit-btn inline-block px-8 py-4 text-white rounded-xl font-bold no-underline cursor-pointer shadow-lg transition-all"
+                className="chat-auth-btn primary"
               >
                 Log In
               </a>
               <a 
                 href="/signup" 
-                className="auth-submit-btn inline-block px-8 py-4 text-white rounded-xl font-bold no-underline cursor-pointer shadow-lg transition-all"
+                className="chat-auth-btn secondary"
               >
                 Sign Up
               </a>
@@ -130,15 +130,15 @@ export default function ProfileChat() {
           </div>
         </main>
       ) : error ? (
-        <main className="min-h-screen flex flex-col items-center justify-center text-white">
-          <p className="text-center text-xl text-red-400">{error}</p>
+        <main className="chat-error-main">
+          <p className="chat-error-text">{error}</p>
         </main>
       ) : !profileData ? (
-        <main className="min-h-screen flex flex-col items-center justify-center text-white">
-          <p className="text-center text-xl">No profile data found.</p>
+        <main className="chat-error-main">
+          <p className="chat-error-text">No profile data found.</p>
         </main>
       ) : !selectedAvatar ? (
-        <main className="min-h-screen text-white">
+        <main className="chat-selector-main">
           <AvatarSelector
             onAvatarSelect={handleAvatarSelect}
             title="Select Avatar to Chat With"
@@ -147,7 +147,7 @@ export default function ProfileChat() {
           />
         </main>
       ) : (
-        <main className="min-h-screen text-white flex flex-col items-center p-0 max-w-full">
+        <main className="chat-main">
           {/* Avatar Header Banner */}
           <div className="avatar-header">
             <div className="avatar-header-info">
@@ -158,7 +158,6 @@ export default function ProfileChat() {
                     alt={selectedAvatar.name}
                     className="avatar-photo"
                     onError={(e) => {
-                      // Fallback to icon if image fails to load
                       const target = e.target as HTMLImageElement
                       target.style.display = 'none'
                       target.nextElementSibling?.classList.remove('avatar-photo-fallback-hidden')
