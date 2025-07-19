@@ -341,6 +341,7 @@ export async function POST(req: Request) {
       }
     } else {
       console.log('⚠️  No userId provided for memory processing')
+    }
 
     // Return the AI answer, voiceId, and memory information for transparency
     return NextResponse.json({ 
