@@ -230,9 +230,9 @@ export default function HomePage() {
       <div className="fixed top-4 right-4 z-50">
         <AccountMenu />
       </div>
-      <main className="min-h-screen flex flex-col items-center justify-center p-8 text-center relative overflow-hidden">
+      <main className="main-container"
         <audio ref={audioRef} />
-        <div className="mb-6 select-none">
+        <div className="mb-lg select-none">
           <Image
             src="/echostone_logo.png"
             alt="EchoStone Logo"
@@ -242,7 +242,7 @@ export default function HomePage() {
             draggable={false}
           />
         </div>
-        <h1 className="text-4xl font-bold mb-8 text-shadow-lg">
+        <h1 className="main-title">
           {jonathanProfile?.full_name?.split(' ')[0] || 'Jonathan'} says:
         </h1>
 
@@ -267,7 +267,7 @@ export default function HomePage() {
         >
           {listening ? '🎤 Listening… (tap to stop)' : '🎤 Speak'}
         </button>
-        <div className="text-xs opacity-70 my-2 select-none">
+        <div className="main-subtitle">
           {hasSpeechRecognition
             ? 'Speech recognition supported on this device.'
             : 'On this device, your voice will be transcribed after recording.'}

@@ -38,12 +38,12 @@ export default function LoginPage() {
         <AccountMenu />
       </div>
       
-      <main className="min-h-screen flex flex-col items-center justify-center text-white p-4 text-center">
+      <main className="auth-container">
         <a href="/" className="inline-block">
           <img
             src="/echostone_logo.png"
             alt="EchoStone Logo"
-            className="logo-pulse w-36 mb-8 select-none cursor-pointer hover:scale-110 transition-transform duration-300"
+            className="auth-logo"
           />
         </a>
         
@@ -55,11 +55,11 @@ export default function LoginPage() {
             Sign in to access your digital voice and personality profile.
           </p>
           
-          <form onSubmit={handleLogin} className="w-full mb-6">
-            <div className="mb-6 text-left">
+          <form onSubmit={handleLogin} className="auth-form">
+            <div className="auth-form-group">
               <label 
                 htmlFor="email" 
-                className="block text-white font-semibold text-lg mb-3"
+                className="auth-form-label"
               >
                 Email Address
               </label>
@@ -69,7 +69,7 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                className="w-full px-5 py-4 rounded-2xl border-2 border-purple-500/30 bg-purple-950/60 text-white text-lg shadow-lg outline-none focus:border-purple-400 focus:shadow-purple-400/20 focus:shadow-xl transition-all font-sans"
+                className="auth-form-input"
                 placeholder="Enter your email address"
               />
             </div>
@@ -77,19 +77,19 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={!email.trim()}
-              className="auth-submit-btn w-full py-4 rounded-2xl font-bold text-lg cursor-pointer shadow-lg transition-all"
+              className="auth-submit-btn"
             >
               Send Magic Link
             </button>
           </form>
           
           {message && (
-            <div className="mb-6 p-4 bg-green-500/20 border border-green-500/30 rounded-xl text-green-400 font-medium">
+            <div className="auth-message success">
               {message}
             </div>
           )}
           {error && (
-            <div className="mb-6 p-4 bg-red-500/20 border border-red-500/30 rounded-xl text-red-400 font-medium">
+            <div className="auth-message error">
               {error}
             </div>
           )}

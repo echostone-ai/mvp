@@ -46,9 +46,9 @@ export default function AvatarChatPage() {
   if (loading) {
     return (
       <PageShell>
-        <main className="min-h-screen flex flex-col items-center justify-center text-white">
+        <main className="loading-container">
           <div className="loading-spinner"></div>
-          <p className="mt-4 text-xl">Loading avatar...</p>
+          <p className="loading-text">Loading avatar...</p>
         </main>
       </PageShell>
     )
@@ -57,14 +57,14 @@ export default function AvatarChatPage() {
   if (error) {
     return (
       <PageShell>
-        <main className="min-h-screen flex flex-col items-center justify-center text-white p-6">
-          <div className="bg-red-900/30 border border-red-500/50 rounded-xl p-8 max-w-lg w-full text-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-red-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <main className="error-container">
+          <div className="error-card">
+            <svg xmlns="http://www.w3.org/2000/svg" className="error-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <h2 className="text-2xl font-bold text-white mb-2">Error Loading Avatar</h2>
-            <p className="text-red-200 mb-6">{error}</p>
-            <Link href="/avatars" className="bg-purple-700 hover:bg-purple-600 text-white px-6 py-2 rounded-lg transition-colors">
+            <h2 className="error-title">Error Loading Avatar</h2>
+            <p className="error-message">{error}</p>
+            <Link href="/avatars" className="error-button">
               Return to Avatars
             </Link>
           </div>
@@ -76,14 +76,14 @@ export default function AvatarChatPage() {
   if (!avatarProfile) {
     return (
       <PageShell>
-        <main className="min-h-screen flex flex-col items-center justify-center text-white p-6">
-          <div className="bg-yellow-900/30 border border-yellow-500/50 rounded-xl p-8 max-w-lg w-full text-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-yellow-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <main className="warning-container">
+          <div className="warning-card">
+            <svg xmlns="http://www.w3.org/2000/svg" className="warning-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <h2 className="text-2xl font-bold text-white mb-2">Avatar Not Found</h2>
-            <p className="text-yellow-200 mb-6">The avatar you're looking for doesn't exist or has been deleted.</p>
-            <Link href="/avatars" className="bg-purple-700 hover:bg-purple-600 text-white px-6 py-2 rounded-lg transition-colors">
+            <h2 className="warning-title">Avatar Not Found</h2>
+            <p className="warning-message">The avatar you're looking for doesn't exist or has been deleted.</p>
+            <Link href="/avatars" className="error-button">
               Return to Avatars
             </Link>
           </div>
@@ -94,7 +94,7 @@ export default function AvatarChatPage() {
 
   return (
     <PageShell>
-      <main className="min-h-screen text-white flex flex-col items-center p-0 max-w-full">
+      <main className="avatar-detail-container">
         {/* Avatar Header Banner */}
         <div className="w-full bg-gradient-to-r from-purple-900 to-indigo-900 py-6 px-8 mb-6 shadow-lg">
           <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between">
