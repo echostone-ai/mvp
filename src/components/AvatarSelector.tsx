@@ -11,7 +11,7 @@ interface Avatar {
   voice_id: string | null
   profile_data: any
   created_at: string
-  photo_url?: string // Added photo_url to the interface
+  photo_url?: string
 }
 
 interface AvatarSelectorProps {
@@ -33,7 +33,17 @@ export default function AvatarSelector({
   const [avatars, setAvatars] = useState<Avatar[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [selectedAvatarId, setSelectedAvatarId] = useState<string | null>(null) // Added state for selected avatar
+  const [selectedAvatarId, setSelectedAvatarId] = useState<string | null>(null)
+  const [editingAvatar, setEditingAvatar] = useState<Avatar | null>(null)
+  const [editModalOpen, setEditModalOpen] = useState(false)
+  const [editForm, setEditForm] = useState({
+    name: '',
+    description: '',
+    photo_url: ''
+  })
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     async function loadData() {
@@ -56,6 +66,122 @@ export default function AvatarSelector({
     }
     loadData()
   }, [])
+
+  const handleEditAvatar = (avatar: Avatar, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setEditingAvatar(avatar)
+    setEditForm({
+      name: avatar.name,
+      description: avatar.description || '',
+      photo_url: avatar.photo_url || ''
+    })
+    setPhotoFile(null)
+    setPhotoPreview(null)
+    setEditModalOpen(true)
+  }
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null
+    setPhotoFile(file)
+    if (file) {
+      const reader = new FileReader()
+      reader.onload = (ev) => {
+        setPhotoPreview(ev.target?.result as string)
+      }
+      reader.readAsDataURL(file)
+    } else {
+      setPhotoPreview(null)
+    }
+  }
+
+  const handleSaveEdit = async () => {
+    if (!editingAvatar || !editForm.name.trim()) return
+
+    setSaving(true)
+    try {
+      let photoUrl = editingAvatar.photo_url || ''
+      
+      // Upload new photo if selected
+      if (photoFile) {
+        const fileExt = photoFile.name.split('.').pop()
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
+        const filePath = `avatar-photos/${fileName}`
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(filePath, photoFile)
+
+        if (uploadError) {
+          throw new Error(`Failed to upload photo: ${uploadError.message}`)
+        }
+
+        // Get public URL
+        const { data: urlData } = supabase.storage
+          .from('avatars')
+          .getPublicUrl(filePath)
+
+        photoUrl = urlData.publicUrl
+      }
+
+      const { data, error } = await supabase
+        .from('avatar_profiles')
+        .update({
+          name: editForm.name.trim(),
+          description: editForm.description.trim(),
+          photo_url: photoUrl
+        })
+        .eq('id', editingAvatar.id)
+        .select()
+        .single()
+
+      if (error) throw error
+
+      // Update local state
+      setAvatars(avatars.map(avatar => 
+        avatar.id === editingAvatar.id ? { ...avatar, ...data } : avatar
+      ))
+
+      setEditModalOpen(false)
+      setEditingAvatar(null)
+      setEditForm({ name: '', description: '', photo_url: '' })
+      setPhotoFile(null)
+      setPhotoPreview(null)
+    } catch (err: any) {
+      setError(`Failed to update avatar: ${err.message}`)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDeleteAvatar = async () => {
+    if (!editingAvatar) return
+
+    if (!confirm(`Are you sure you want to delete "${editingAvatar.name}"? This action cannot be undone.`)) {
+      return
+    }
+
+    setSaving(true)
+    try {
+      const { error } = await supabase
+        .from('avatar_profiles')
+        .delete()
+        .eq('id', editingAvatar.id)
+
+      if (error) throw error
+
+      // Update local state
+      setAvatars(avatars.filter(avatar => avatar.id !== editingAvatar.id))
+      setEditModalOpen(false)
+      setEditingAvatar(null)
+      setEditForm({ name: '', description: '', photo_url: '' })
+      setPhotoFile(null)
+      setPhotoPreview(null)
+    } catch (err: any) {
+      setError(`Failed to delete avatar: ${err.message}`)
+    } finally {
+      setSaving(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -106,74 +232,180 @@ export default function AvatarSelector({
   };
 
   return (
-    <div className={`avatar-selector-container ${className}`}>
-      <div className="avatar-selector-header">
-        <h1 className="avatar-selector-title">{title}</h1>
-        <p className="avatar-selector-subtitle">{subtitle}</p>
-      </div>
-      {avatars.length === 0 ? (
-        <div className="avatar-empty-card">
-          <div className="avatar-empty-icon">🎭</div>
-          <h2 className="avatar-empty-title">No Avatars Found</h2>
-          <p className="avatar-empty-message">
-            You haven't created any avatars yet. Create your first avatar to get started.
-          </p>
-          <Link 
-            href="/avatars" 
-            className="avatar-create-btn"
-          >
-            Create Your First Avatar
-          </Link>
+    <>
+      <div className={`avatar-selector-container ${className}`}>
+        <div className="avatar-selector-header">
+          <h1 className="avatar-selector-title">{title}</h1>
+          <p className="avatar-selector-subtitle">{subtitle}</p>
         </div>
-      ) : (
-        <div className="avatar-selector-grid">
-          {avatars.map((avatar) => (
-            <div
-              key={avatar.id}
-              className={`avatar-selector-card ${selectedAvatarId === avatar.id ? 'avatar-selector-card-selected' : ''}`}
-              onClick={() => onSelectAvatar(avatar.id)}
+        {avatars.length === 0 ? (
+          <div className="avatar-empty-card">
+            <div className="avatar-empty-icon">🎭</div>
+            <h2 className="avatar-empty-title">No Avatars Found</h2>
+            <p className="avatar-empty-message">
+              You haven't created any avatars yet. Create your first avatar to get started.
+            </p>
+            <Link 
+              href="/avatars" 
+              className="avatar-create-btn"
             >
-              <div className="avatar-selector-photo">
-                {avatar.photo_url ? (
-                  <img 
-                    src={avatar.photo_url} 
-                    alt={avatar.name}
-                    className="avatar-photo"
-                    onError={(e) => {
-                      // Fallback to icon if image fails to load
-                      const target = e.target as HTMLImageElement
-                      target.style.display = 'none'
-                      target.nextElementSibling?.classList.remove('avatar-photo-fallback-hidden')
-                    }}
-                  />
-                ) : null}
-                <div className={`avatar-photo-fallback ${avatar.photo_url ? 'avatar-photo-fallback-hidden' : ''}`}>
+              Create Your First Avatar
+            </Link>
+          </div>
+        ) : (
+          <div className="avatar-selector-grid">
+            {avatars.map((avatar) => (
+              <div
+                key={avatar.id}
+                className={`avatar-selector-card ${selectedAvatarId === avatar.id ? 'avatar-selector-card-selected' : ''}`}
+                onClick={() => onSelectAvatar(avatar.id)}
+              >
+                <div className="avatar-selector-photo">
+                  {avatar.photo_url ? (
+                    <img 
+                      src={avatar.photo_url} 
+                      alt={avatar.name}
+                      className="avatar-photo"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement
+                        target.style.display = 'none'
+                        target.nextElementSibling?.classList.remove('avatar-photo-fallback-hidden')
+                      }}
+                    />
+                  ) : null}
+                  <div className={`avatar-photo-fallback ${avatar.photo_url ? 'avatar-photo-fallback-hidden' : ''}`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="avatar-selector-info">
+                  <h3 className="avatar-selector-name">{avatar.name}</h3>
+                  {avatar.description && (
+                    <p className="avatar-selector-description">{avatar.description}</p>
+                  )}
+                </div>
+                <button
+                  className="avatar-edit-btn"
+                  onClick={(e) => handleEditAvatar(avatar, e)}
+                  title="Edit Avatar"
+                >
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        {showCreateOption && avatars.length > 0 && (
+          <div className="avatar-create-section">
+            <p className="avatar-create-message">Don't see the avatar you want?</p>
+            <Link 
+              href="/avatars" 
+              className="avatar-create-btn-secondary"
+            >
+              Create New Avatar
+            </Link>
+          </div>
+        )}
+      </div>
+
+      {/* Edit Avatar Modal */}
+      {editModalOpen && editingAvatar && (
+        <div className="avatar-edit-modal-overlay" onClick={() => setEditModalOpen(false)}>
+          <div className="avatar-edit-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="avatar-edit-modal-header">
+              <h2 className="avatar-edit-modal-title">Edit Avatar</h2>
+              <button 
+                className="avatar-edit-modal-close"
+                onClick={() => setEditModalOpen(false)}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="avatar-edit-modal-content">
+              <div className="avatar-edit-photo-section">
+                <label htmlFor="avatar-edit-photo-upload" className="avatar-edit-photo-label">
+                  <div className="avatar-edit-photo-preview" style={{ 
+                    backgroundImage: photoPreview ? `url(${photoPreview})` : editForm.photo_url ? `url(${editForm.photo_url})` : undefined 
+                  }}>
+                    {!photoPreview && !editForm.photo_url && (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="avatar-edit-photo-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    )}
+                    <span className="avatar-edit-photo-upload-btn">
+                      {photoPreview || editForm.photo_url ? 'Change Photo' : 'Add Photo'}
+                    </span>
+                  </div>
+                  <input
+                    id="avatar-edit-photo-upload"
+                    type="file"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={handlePhotoChange}
+                  />
+                </label>
+              </div>
+
+              <div className="avatar-edit-form">
+                <div className="avatar-edit-field">
+                  <label className="avatar-edit-label">Name</label>
+                  <input
+                    type="text"
+                    value={editForm.name}
+                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                    className="avatar-edit-input"
+                    placeholder="Enter avatar name"
+                    required
+                  />
+                </div>
+
+                <div className="avatar-edit-field">
+                  <label className="avatar-edit-label">Description</label>
+                  <textarea
+                    value={editForm.description}
+                    onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                    className="avatar-edit-textarea"
+                    placeholder="Enter a brief description of this avatar"
+                    rows={3}
+                  />
                 </div>
               </div>
-              <div className="avatar-selector-info">
-                <h3 className="avatar-selector-name">{avatar.name}</h3>
-                {avatar.description && (
-                  <p className="avatar-selector-description">{avatar.description}</p>
-                )}
+            </div>
+
+            <div className="avatar-edit-modal-actions">
+              <button
+                onClick={handleDeleteAvatar}
+                disabled={saving}
+                className="avatar-edit-delete-btn"
+              >
+                Delete Avatar
+              </button>
+              <div className="avatar-edit-action-buttons">
+                <button
+                  onClick={() => setEditModalOpen(false)}
+                  disabled={saving}
+                  className="avatar-edit-cancel-btn"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveEdit}
+                  disabled={saving || !editForm.name.trim()}
+                  className="avatar-edit-save-btn"
+                >
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </button>
               </div>
             </div>
-          ))}
+          </div>
         </div>
       )}
-      {showCreateOption && avatars.length > 0 && (
-        <div className="avatar-create-section">
-          <p className="avatar-create-message">Don't see the avatar you want?</p>
-          <Link 
-            href="/avatars" 
-            className="avatar-create-btn-secondary"
-          >
-            Create New Avatar
-          </Link>
-        </div>
-      )}
-    </div>
+    </>
   )
 }
