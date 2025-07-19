@@ -75,6 +75,8 @@ export default function ProfileChat() {
           if (avatarError) {
             setError('Failed to load avatar: ' + avatarError.message)
           } else {
+            console.log('Loaded avatar data:', avatarData)
+            console.log('Avatar voice_id:', avatarData.voice_id)
             setSelectedAvatar(avatarData)
             setProfileData(avatarData.profile_data)
             setVoiceId(avatarData.voice_id)
@@ -228,6 +230,10 @@ export default function ProfileChat() {
             userId={user.id}
             avatarId={selectedAvatar.id}
           />
+          {/* Debug info */}
+          <div style={{ position: 'fixed', bottom: '10px', right: '10px', background: 'rgba(0,0,0,0.8)', color: 'white', padding: '10px', fontSize: '12px', borderRadius: '5px' }}>
+            Debug: voiceId = {selectedAvatar.voice_id || voiceId || 'null'}
+          </div>
         </main>
       )}
     </PageShell>

@@ -1,8 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 
 export async function POST(request: NextRequest) {
   try {
+    // Get the authorization header
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader) {
+      return NextResponse.json(
+        { success: false, error: 'Authorization required' },
+        { status: 401 }
+      )
+    }
+
+    // Create supabase client with the user's session
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        global: {
+          headers: {
+            Authorization: authHeader,
+          },
+        },
+      }
+    )
+
+    // Verify the user session
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid authentication' },
+        { status: 401 }
+      )
+    }
+
     const formData = await request.formData()
     const name = formData.get('name') as string
     const script = formData.get('script') as string
@@ -50,18 +81,33 @@ export async function POST(request: NextRequest) {
 
     // Save the voice_id to the avatar profile if avatarId is provided
     if (avatarId) {
-      const { error: updateError } = await supabase
+      console.log('Updating avatar voice_id:', { avatarId, voice_id, userId: user.id })
+      const { data: updateData, error: updateError } = await supabase
         .from('avatar_profiles')
         .update({ voice_id })
         .eq('id', avatarId)
+        .eq('user_id', user.id) // Ensure user owns the avatar
+        .select()
       
       if (updateError) {
         console.error('Failed to update avatar voice_id:', updateError)
         return NextResponse.json(
-          { success: false, error: 'Failed to save voice to avatar profile' },
+          { success: false, error: 'Failed to save voice to avatar profile: ' + updateError.message },
           { status: 500 }
         )
       }
+      
+      if (!updateData || updateData.length === 0) {
+        console.error('No avatar found to update')
+        return NextResponse.json(
+          { success: false, error: 'Avatar not found or you do not have permission to update it' },
+          { status: 404 }
+        )
+      }
+      
+      console.log('Avatar voice_id updated successfully:', updateData)
+    } else {
+      console.log('No avatarId provided, skipping database update')
     }
     
     return NextResponse.json({

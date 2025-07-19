@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useRef } from 'react'
+import { supabase } from '@/components/supabaseClient'
 
 interface VoiceTrainingProps {
   avatarName: string
@@ -127,8 +128,15 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
         formData.append('avatarId', avatarId)
       }
       
+      // Get the current session for authorization
+      const { data: { session } } = await supabase.auth.getSession()
+      const authHeader = session?.access_token ? `Bearer ${session.access_token}` : ''
+      
       const response = await fetch('/api/train-voice', {
         method: 'POST',
+        headers: {
+          'Authorization': authHeader
+        },
         body: formData
       })
       

@@ -311,9 +311,30 @@ export default function ProfilePage() {
                 avatarName={selectedAvatar.name}
                 avatarId={selectedAvatar.id}
                 onVoiceUploaded={async (voiceId) => {
+                  console.log('Voice uploaded with ID:', voiceId)
                   setVoiceId(voiceId)
                   // Update local state
                   setSelectedAvatar(prev => prev ? { ...prev, voice_id: voiceId } : null)
+                  
+                  // Refresh avatar data from database to ensure consistency
+                  if (user?.id) {
+                    try {
+                      const { data: refreshedAvatar, error } = await supabase
+                        .from('avatar_profiles')
+                        .select('*')
+                        .eq('id', selectedAvatar.id)
+                        .eq('user_id', user.id)
+                        .single()
+                      
+                      if (!error && refreshedAvatar) {
+                        console.log('Refreshed avatar data:', refreshedAvatar)
+                        setSelectedAvatar(refreshedAvatar)
+                        setVoiceId(refreshedAvatar.voice_id)
+                      }
+                    } catch (err) {
+                      console.error('Failed to refresh avatar data:', err)
+                    }
+                  }
                 }}
               />
               {(voiceId || selectedAvatar.voice_id) && (
