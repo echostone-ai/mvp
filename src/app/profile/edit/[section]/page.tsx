@@ -57,7 +57,7 @@ export default function EditSectionPage() {
               .from('avatar_profiles')
               .select('*')
               .eq('id', avatarId)
-              .eq('user_id', user.id)
+              .eq('user_id', currentUser.id)
               .single()
             
             if (avatarError) {

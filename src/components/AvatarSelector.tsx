@@ -124,6 +124,10 @@ export default function AvatarSelector({
         photoUrl = urlData.publicUrl
       }
 
+      if (!user?.id) {
+        throw new Error('User not authenticated')
+      }
+
       const { data, error } = await supabase
         .from('avatar_profiles')
         .update({
@@ -132,7 +136,7 @@ export default function AvatarSelector({
           photo_url: photoUrl
         })
         .eq('id', editingAvatar.id)
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .select()
         .single()
 
@@ -162,13 +166,18 @@ export default function AvatarSelector({
       return
     }
 
+    if (!user?.id) {
+      setError('User not authenticated')
+      return
+    }
+
     setSaving(true)
     try {
       const { error } = await supabase
         .from('avatar_profiles')
         .delete()
         .eq('id', editingAvatar.id)
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
 
       if (error) throw error
 
@@ -189,8 +198,10 @@ export default function AvatarSelector({
   if (loading) {
     return (
       <div className={`avatar-selector-container ${className}`}>
-        <div className="avatar-loading-spinner"></div>
-        <p className="avatar-loading-text">Loading avatars...</p>
+        <div className="avatar-selector-loading">
+          <div className="avatar-selector-loading-spinner"></div>
+          <p className="avatar-selector-loading-text">Loading avatars...</p>
+        </div>
       </div>
     )
   }
@@ -250,7 +261,7 @@ export default function AvatarSelector({
             </p>
             <Link 
               href="/avatars" 
-              className="avatar-create-btn"
+              className="avatar-empty-create-btn"
             >
               Create Your First Avatar
             </Link>
@@ -260,42 +271,52 @@ export default function AvatarSelector({
             {avatars.map((avatar) => (
               <div
                 key={avatar.id}
-                className={`avatar-selector-card ${selectedAvatarId === avatar.id ? 'avatar-selector-card-selected' : ''}`}
+                className={`avatar-selector-card ${selectedAvatarId === avatar.id ? 'selected' : ''}`}
                 onClick={() => onSelectAvatar(avatar.id)}
               >
-                <div className="avatar-selector-photo">
-                  {avatar.photo_url ? (
-                    <img 
-                      src={avatar.photo_url} 
-                      alt={avatar.name}
-                      className="avatar-photo"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement
-                        target.style.display = 'none'
-                        target.nextElementSibling?.classList.remove('avatar-photo-fallback-hidden')
-                      }}
-                    />
-                  ) : null}
-                  <div className={`avatar-photo-fallback ${avatar.photo_url ? 'avatar-photo-fallback-hidden' : ''}`}>
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
+                <div className="avatar-card-header">
+                  <div className="avatar-card-photo">
+                    {avatar.photo_url ? (
+                      <img 
+                        src={avatar.photo_url} 
+                        alt={avatar.name}
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement
+                          target.style.display = 'none'
+                          target.nextElementSibling?.classList.remove('hidden')
+                        }}
+                      />
+                    ) : (
+                      <div className="avatar-card-photo-fallback">
+                        👤
+                      </div>
+                    )}
+                  </div>
+                  <div className="avatar-card-info">
+                    <h3 className="avatar-card-name">{avatar.name}</h3>
+                    {avatar.description && (
+                      <p className="avatar-card-description">{avatar.description}</p>
+                    )}
+                    <div className="avatar-card-voice-status">
+                      <div className={`avatar-card-voice-dot ${avatar.voice_id ? 'ready' : 'missing'}`}></div>
+                      <span className={avatar.voice_id ? 'avatar-card-voice-ready' : 'avatar-card-voice-missing'}>
+                        {avatar.voice_id ? 'Voice Ready' : 'No Voice'}
+                      </span>
+                    </div>
                   </div>
                 </div>
-                <div className="avatar-selector-info">
-                  <h3 className="avatar-selector-name">{avatar.name}</h3>
-                  {avatar.description && (
-                    <p className="avatar-selector-description">{avatar.description}</p>
-                  )}
+                <div className="avatar-card-actions">
+                  <button className="avatar-card-select-btn">
+                    Select Avatar
+                  </button>
+                  <button
+                    className="avatar-card-edit-btn"
+                    onClick={(e) => handleEditAvatar(avatar, e)}
+                    title="Edit Avatar"
+                  >
+                    ✏️
+                  </button>
                 </div>
-                <button
-                  className="avatar-edit-btn"
-                  onClick={(e) => handleEditAvatar(avatar, e)}
-                  title="Edit Avatar"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
                 </button>
               </div>
             ))}

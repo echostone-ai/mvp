@@ -57,13 +57,18 @@ export default function AvatarVoicesPage() {
       return
     }
 
+    if (!user?.id) {
+      setError('User not authenticated')
+      return
+    }
+
     setUpdating(avatarId)
     try {
       const { error } = await supabase
         .from('avatar_profiles')
         .update({ voice_id: null })
         .eq('id', avatarId)
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
 
       if (error) throw error
 
@@ -81,9 +86,9 @@ export default function AvatarVoicesPage() {
   if (loading) {
     return (
       <PageShell>
-        <main className="min-h-screen flex flex-col items-center justify-center text-white">
+        <main className="loading-container">
           <div className="loading-spinner"></div>
-          <p className="mt-4 text-xl">Loading...</p>
+          <p className="loading-text">Loading...</p>
         </main>
       </PageShell>
     )

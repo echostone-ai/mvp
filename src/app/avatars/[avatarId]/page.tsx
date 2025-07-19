@@ -24,18 +24,22 @@ export default function AvatarChatPage() {
       setUser(currentUser)
 
       // Load avatar profile
-      try {
-        const { data, error } = await supabase
-          .from('avatar_profiles')
-          .select('*')
-          .eq('id', avatarId)
-          .eq('user_id', user.id)
-          .single()
+      if (currentUser) {
+        try {
+          const { data, error } = await supabase
+            .from('avatar_profiles')
+            .select('*')
+            .eq('id', avatarId)
+            .eq('user_id', currentUser.id)
+            .single()
 
-        if (error) throw error
-        setAvatarProfile(data)
-      } catch (err: any) {
-        setError(`Failed to load avatar: ${err.message}`)
+          if (error) throw error
+          setAvatarProfile(data)
+        } catch (err: any) {
+          setError(`Failed to load avatar: ${err.message}`)
+        }
+      } else {
+        setError('User not authenticated')
       }
 
       setLoading(false)
