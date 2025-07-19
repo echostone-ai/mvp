@@ -317,7 +317,6 @@ export default function AvatarSelector({
                     ✏️
                   </button>
                 </div>
-                </button>
               </div>
             ))}
           </div>
