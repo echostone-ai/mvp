@@ -1,8 +1,5 @@
 /* Core global styles - streamlined */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
 :root {
   --color-bg-voice: #160C23;
@@ -57,95 +54,7 @@ html, body {
 }
 
 /* Component-specific styles that can't be easily replaced with Tailwind */
-@layer components {
-  .logo-pulse {
-    animation: logo-pulse 2.6s cubic-bezier(0.7,0,0.2,1) infinite;
-  }
-  
-  .soundbars {
-    @apply flex gap-1 items-end justify-center w-12 h-7 ml-3;
-  }
-  
-  .soundbar {
-    @apply w-1 bg-gradient-to-t from-purple-600 to-purple-400 rounded-sm opacity-85;
-    animation: soundbar-move 1.4s infinite ease-in-out;
-    transform-origin: bottom;
-  }
-  
-  .soundbar:nth-child(1) { animation-delay: 0s; height: 8px; }
-  .soundbar:nth-child(2) { animation-delay: 0.2s; height: 12px; }
-  .soundbar:nth-child(3) { animation-delay: 0.4s; height: 16px; }
-  .soundbar:nth-child(4) { animation-delay: 0.6s; height: 12px; }
-  .soundbar:nth-child(5) { animation-delay: 0.8s; height: 8px; }
-  
-  /* Account Menu Styles */
-  .account-menu-dropdown {
-    animation: fadeInMenu 0.2s ease-out;
-  }
-  
-  .account-menu-item {
-    @apply block px-5 py-3 mb-1 text-white bg-transparent no-underline border-none outline-none text-base rounded-lg font-medium text-left cursor-pointer transition-all duration-150;
-  }
-  
-  .account-menu-item:hover,
-  .account-menu-item:focus {
-    @apply bg-purple-700 text-white font-semibold outline-none;
-  }
-  
-  /* Form Styles */
-  .ask-form {
-    @apply flex gap-5 w-full max-w-2xl mx-auto mt-7 items-center;
-  }
-  
-  .ask-form input[type="text"] {
-    @apply flex-1 px-4 py-5 text-lg rounded-2xl border-2 border-purple-500/30 bg-purple-900/60 text-gray-100 font-sans outline-none shadow-lg transition-all duration-200;
-  }
-  
-  .ask-form input[type="text"]:focus {
-    @apply border-purple-400 shadow-purple-400/20 shadow-xl;
-  }
-  
-  .ask-form button[type="submit"] {
-    @apply bg-gradient-to-r from-purple-600 to-purple-500 text-white text-lg font-bold border-none rounded-2xl px-9 py-4 cursor-pointer shadow-lg transition-all duration-200 font-sans min-w-28 ml-1;
-  }
-  
-  .ask-form button[type="submit"]:hover,
-  .ask-form button[type="submit"]:focus {
-    @apply bg-gradient-to-r from-purple-500 to-purple-600 shadow-purple-500/30 shadow-2xl;
-  }
-  
-  /* Mic Button */
-  .mic-btn {
-    @apply mt-6 text-lg px-9 py-4 bg-purple-900/80 border-none rounded-2xl text-white font-semibold cursor-pointer shadow-lg transition-all duration-200 font-sans;
-  }
-  
-  .mic-btn.active,
-  .mic-btn:hover {
-    @apply bg-purple-700 shadow-purple-500/30 shadow-2xl;
-  }
-  
-  /* Answer Box */
-  .answer {
-    @apply mt-10 mb-6 max-w-3xl bg-purple-900/80 rounded-2xl p-8 shadow-lg text-gray-100 text-lg leading-relaxed border-l-4 border-purple-500 break-words text-left;
-  }
-  
-  .answer h2 {
-    @apply text-xl m-0 mb-3 text-purple-300 font-semibold tracking-wide;
-  }
-  
-  .answer p {
-    @apply m-0 text-base;
-  }
-  
-  .play-btn {
-    @apply bg-gradient-to-r from-purple-600 to-purple-500 text-white text-base border-none rounded-xl px-8 py-3 cursor-pointer shadow-lg font-semibold transition-all duration-200 flex items-center gap-2 mt-2;
-  }
-  
-  .play-btn:hover,
-  .play-btn:active {
-    @apply bg-gradient-to-r from-purple-500 to-purple-600 shadow-purple-500/30 shadow-2xl;
-  }
-}
+/* Removed: @layer components { ... } */
 
 @keyframes fadeInMenu {
   from { 
@@ -772,229 +681,65 @@ Mobile-Optimized Profile Page Styles */
   }
 }/* Pro
 file Page Tab Navigation - Works without Tailwind */
-.profile-tabs-container {
-  width: 100%;
-  margin-bottom: 2rem;
-  display: flex;
-  justify-content: center;
-}
+/* Removed: .profile-tabs-container { ... } */
 
-.profile-tabs {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
-}
+/* Removed: .profile-tabs { ... } */
 
-.profile-tab {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  background: rgba(147, 51, 234, 0.2);
-  color: white;
-  border: 2px solid rgba(147, 51, 234, 0.4);
-  border-radius: 0.75rem;
-  font-size: 1rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  min-height: 3rem;
-  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.2);
-  backdrop-filter: blur(10px);
-}
+/* Removed: .profile-tab { ... } */
 
-.profile-tab:hover {
-  background: rgba(147, 51, 234, 0.3);
-  border-color: rgba(147, 51, 234, 0.6);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(147, 51, 234, 0.3);
-}
+/* Removed: .profile-tab:hover { ... } */
 
-.profile-tab.active {
-  background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%);
-  border-color: rgba(147, 51, 234, 0.8);
-  box-shadow: 0 8px 25px rgba(147, 51, 234, 0.4);
-  transform: translateY(-1px);
-}
+/* Removed: .profile-tab.active { ... } */
 
-.tab-icon {
-  font-size: 1.25rem;
-}
+/* Removed: .tab-icon { ... } */
 
-.tab-label {
-  font-size: 1rem;
-  font-weight: 600;
-}
+/* Removed: .tab-label { ... } */
 
 /* Profile Content */
-.profile-content {
-  max-width: 1200px;
-  width: 100%;
-  padding: 0 1rem 3rem 1rem;
-  margin: 0 auto;
-}
+/* Removed: .profile-content { ... } */
 
-.profile-error {
-  color: #fca5a5;
-  background: rgba(239, 68, 68, 0.1);
-  border: 2px solid rgba(239, 68, 68, 0.3);
-  padding: 1rem 1.5rem;
-  border-radius: 0.75rem;
-  margin-bottom: 1.5rem;
-  text-align: center;
-  font-size: 1.125rem;
-  font-weight: 600;
-}
+/* Removed: .profile-error { ... } */
 
-.profile-tab-panel {
-  width: 100%;
-  animation: fadeIn 0.3s ease-in-out;
-}
+/* Removed: .profile-tab-panel { ... } */
 
 /* Voice Preview Section */
-.voice-preview-section {
-  margin-top: 2.5rem;
-}
+/* Removed: .voice-preview-section { ... } */
 
-.voice-preview-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: white;
-  margin-bottom: 1rem;
-  text-align: center;
-}
+/* Removed: .voice-preview-title { ... } */
 
 /* Voice Tuning Section */
-.voice-tuning-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: white;
-  margin-bottom: 1rem;
-  text-align: center;
-}
+/* Removed: .voice-tuning-title { ... } */
 
-.voice-tuning-description {
-  font-size: 1.125rem;
-  color: rgba(255, 255, 255, 0.8);
-  margin-bottom: 1.5rem;
-  text-align: center;
-  padding: 0 1rem;
-  line-height: 1.6;
-}
+/* Removed: .voice-tuning-description { ... } */
 
 /* Personality Grid */
-.personality-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.5rem;
-  padding: 1rem 0;
-}
+/* Removed: .personality-grid { ... } */
 
-.personality-card {
-  text-decoration: none;
-  color: inherit;
-  display: block;
-  background: rgba(147, 51, 234, 0.1);
-  border: 2px solid rgba(147, 51, 234, 0.3);
-  border-radius: 1rem;
-  padding: 1.5rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  backdrop-filter: blur(10px);
-  position: relative;
-  overflow: hidden;
-}
+/* Removed: .personality-card { ... } */
 
-.personality-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba(147, 51, 234, 0.1) 0%, rgba(99, 102, 241, 0.1) 100%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  z-index: 0;
-}
+/* Removed: .personality-card::before { ... } */
 
-.personality-card:hover {
-  border-color: rgba(147, 51, 234, 0.6);
-  transform: translateY(-4px);
-  box-shadow: 0 20px 40px rgba(147, 51, 234, 0.2);
-}
+/* Removed: .personality-card:hover { ... } */
 
-.personality-card:hover::before {
-  opacity: 1;
-}
+/* Removed: .personality-card:hover::before { ... } */
 
-.personality-card-header {
-  position: relative;
-  z-index: 1;
-}
+/* Removed: .personality-card-header { ... } */
 
-.personality-card-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: white;
-  margin: 0 0 1rem 0;
-  text-transform: capitalize;
-  line-height: 1.3;
-}
+/* Removed: .personality-card-title { ... } */
 
-.personality-card-progress {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
+/* Removed: .personality-card-progress { ... } */
 
-.progress-bar {
-  flex: 1;
-  height: 8px;
-  background: rgba(147, 51, 234, 0.3);
-  border-radius: 9999px;
-  overflow: hidden;
-}
+/* Removed: .progress-bar { ... } */
 
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #9333ea 0%, #6366f1 100%);
-  border-radius: 9999px;
-  transition: width 0.3s ease;
-}
+/* Removed: .progress-fill { ... } */
 
-.progress-text {
-  font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.8);
-  font-weight: 600;
-  min-width: 3rem;
-  text-align: right;
-}
+/* Removed: .progress-text { ... } */
 
-.personality-card-status {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-}
+/* Removed: .personality-card-status { ... } */
 
-.status-complete {
-  color: #4ade80;
-  font-size: 0.875rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
+/* Removed: .status-complete { ... } */
 
-.status-incomplete {
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 0.875rem;
-  font-weight: 600;
-}
+/* Removed: .status-incomplete { ... } */
 
 /* Responsive Design */
 @media (max-width: 768px) {
@@ -1078,272 +823,76 @@ file Page Tab Navigation - Works without Tailwind */
 }
 
 /* Profile Page Styling */
-.profile-main {
-  min-height: 100vh;
-  color: white;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 0;
-  max-width: 100%;
-}
+/* Removed: .profile-main { ... } */
 
-.profile-header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin: 2rem 0 1rem 0;
-  text-align: center;
-}
+/* Removed: .profile-header { ... } */
 
-.profile-logo-link {
-  display: inline-block;
-  margin-bottom: 1.5rem;
-}
+/* Removed: .profile-logo-link { ... } */
 
-.profile-logo {
-  cursor: pointer;
-  transition: transform 0.3s ease;
-  animation: logo-pulse 2s ease-in-out infinite;
-}
+/* Removed: .profile-logo { ... } */
 
-.profile-logo:hover {
-  transform: scale(1.1);
-}
+/* Removed: .profile-logo:hover { ... } */
 
-.profile-title {
-  font-size: 2.5rem;
-  font-weight: 900;
-  color: white;
-  margin-bottom: 2rem;
-  padding: 0 1rem;
-  text-align: center;
-  background: linear-gradient(135deg, #9333ea 0%, #6366f1 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  text-shadow: 0 4px 20px rgba(147, 51, 234, 0.3);
-}
+/* Removed: .profile-title { ... } */
 
 /* Profile Tabs */
-.profile-tabs-container {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 2rem;
-  padding: 0 1rem;
-}
+/* Removed: .profile-tabs-container { ... } */
 
-.profile-tab {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  background: rgba(147, 51, 234, 0.2);
-  color: white;
-  border: 2px solid rgba(147, 51, 234, 0.4);
-  border-radius: 0.75rem;
-  font-size: 1rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  min-height: 3rem;
-  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.2);
-  backdrop-filter: blur(10px);
-}
+/* Removed: .profile-tab { ... } */
 
-.profile-tab:hover {
-  background: rgba(147, 51, 234, 0.3);
-  border-color: rgba(147, 51, 234, 0.6);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(147, 51, 234, 0.3);
-}
+/* Removed: .profile-tab:hover { ... } */
 
-.profile-tab.active {
-  background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%);
-  border-color: rgba(147, 51, 234, 0.8);
-  box-shadow: 0 8px 25px rgba(147, 51, 234, 0.4);
-  transform: translateY(-1px);
-}
+/* Removed: .profile-tab.active { ... } */
 
-.tab-icon {
-  font-size: 1.25rem;
-}
+/* Removed: .tab-icon { ... } */
 
-.tab-label {
-  font-size: 1rem;
-  font-weight: 600;
-}
+/* Removed: .tab-label { ... } */
 
 /* Profile Content */
-.profile-content {
-  max-width: 1200px;
-  width: 100%;
-  padding: 0 1rem 3rem 1rem;
-  margin: 0 auto;
-}
+/* Removed: .profile-content { ... } */
 
-.profile-error {
-  color: #fca5a5;
-  background: rgba(239, 68, 68, 0.1);
-  border: 2px solid rgba(239, 68, 68, 0.3);
-  padding: 1rem 1.5rem;
-  border-radius: 0.75rem;
-  margin-bottom: 1.5rem;
-  text-align: center;
-  font-size: 1.125rem;
-  font-weight: 600;
-}
+/* Removed: .profile-error { ... } */
 
-.profile-tab-panel {
-  width: 100%;
-  animation: fadeIn 0.3s ease-in-out;
-}
+/* Removed: .profile-tab-panel { ... } */
 
 /* Voice Preview Section */
-.voice-preview-section {
-  margin-top: 2.5rem;
-}
+/* Removed: .voice-preview-section { ... } */
 
-.voice-preview-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: white;
-  margin-bottom: 1rem;
-  text-align: center;
-}
+/* Removed: .voice-preview-title { ... } */
 
 /* Voice Tuning Section */
-.voice-tuning-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: white;
-  margin-bottom: 1rem;
-  text-align: center;
-}
+/* Removed: .voice-tuning-title { ... } */
 
-.voice-tuning-description {
-  font-size: 1.125rem;
-  color: rgba(255, 255, 255, 0.8);
-  margin-bottom: 1.5rem;
-  text-align: center;
-  padding: 0 1rem;
-  line-height: 1.6;
-}
+/* Removed: .voice-tuning-description { ... } */
 
 /* Personality Grid */
-.personality-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.5rem;
-  padding: 1rem 0;
-}
+/* Removed: .personality-grid { ... } */
 
-.personality-card {
-  text-decoration: none;
-  color: inherit;
-  display: block;
-  background: rgba(147, 51, 234, 0.1);
-  border: 2px solid rgba(147, 51, 234, 0.3);
-  border-radius: 1rem;
-  padding: 1.5rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  backdrop-filter: blur(10px);
-  position: relative;
-  overflow: hidden;
-}
+/* Removed: .personality-card { ... } */
 
-.personality-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba(147, 51, 234, 0.1) 0%, rgba(99, 102, 241, 0.1) 100%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  z-index: 0;
-}
+/* Removed: .personality-card::before { ... } */
 
-.personality-card:hover {
-  border-color: rgba(147, 51, 234, 0.6);
-  transform: translateY(-4px);
-  box-shadow: 0 20px 40px rgba(147, 51, 234, 0.2);
-}
+/* Removed: .personality-card:hover { ... } */
 
-.personality-card:hover::before {
-  opacity: 1;
-}
+/* Removed: .personality-card:hover::before { ... } */
 
-.personality-card-header {
-  position: relative;
-  z-index: 1;
-}
+/* Removed: .personality-card-header { ... } */
 
-.personality-card-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: white;
-  margin: 0 0 1rem 0;
-  text-transform: capitalize;
-  line-height: 1.3;
-}
+/* Removed: .personality-card-title { ... } */
 
-.personality-card-progress {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
+/* Removed: .personality-card-progress { ... } */
 
-.progress-bar {
-  flex: 1;
-  height: 8px;
-  background: rgba(147, 51, 234, 0.3);
-  border-radius: 9999px;
-  overflow: hidden;
-}
+/* Removed: .progress-bar { ... } */
 
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #9333ea 0%, #6366f1 100%);
-  border-radius: 9999px;
-  transition: width 0.3s ease;
-}
+/* Removed: .progress-fill { ... } */
 
-.progress-text {
-  font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.8);
-  font-weight: 600;
-  min-width: 3rem;
-  text-align: right;
-}
+/* Removed: .progress-text { ... } */
 
-.personality-card-status {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-}
+/* Removed: .personality-card-status { ... } */
 
-.status-complete {
-  color: #4ade80;
-  font-size: 0.875rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
+/* Removed: .status-complete { ... } */
 
-.status-incomplete {
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 0.875rem;
-  font-weight: 600;
-}
+/* Removed: .status-incomplete { ... } */
 
 /* Responsive Design */
 @media (max-width: 768px) {
