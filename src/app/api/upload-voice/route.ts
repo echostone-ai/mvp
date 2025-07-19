@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { serverAudioAnalyzer, ServerAudioAnalysis, ServerAudioEnhancement } from '../../../lib/serverAudioAnalyzer'
+import crypto from 'crypto'
 
 // Professional Voice Cloning interfaces
 interface ProfessionalVoiceSettings {
@@ -208,6 +209,16 @@ async function validateAudioQuality(files: File[]): Promise<{
   }
 }
 
+/**
+ * Helper to compute SHA-256 hash of a File
+ */
+async function fileHash(file: File): Promise<string> {
+  const arrayBuffer = await file.arrayBuffer();
+  const hash = crypto.createHash('sha256');
+  hash.update(Buffer.from(arrayBuffer));
+  return hash.digest('hex');
+}
+
 export async function POST(req: NextRequest) {
   try {
     // Parse multipart form data
@@ -242,8 +253,22 @@ export async function POST(req: NextRequest) {
 
     console.log(`Processing ${audioFiles.length} audio files for professional voice training`)
 
+    // Deduplicate files by content hash
+    const fileHashes = new Map<string, File>()
+    for (const file of audioFiles) {
+      const hash = await fileHash(file)
+      console.log(`[UPLOAD-VOICE DEBUG] File: ${file.name}, Size: ${file.size}, Hash: ${hash}`)
+      if (!fileHashes.has(hash)) {
+        fileHashes.set(hash, file)
+      }
+    }
+    const uniqueFiles = Array.from(fileHashes.values())
+    if (uniqueFiles.length === 0) {
+      return NextResponse.json({ error: 'No unique audio files provided' }, { status: 400 })
+    }
+
     // Enhanced audio quality validation using VoiceQualityOptimizer
-    const validationResult = await validateAudioQuality(audioFiles)
+    const validationResult = await validateAudioQuality(uniqueFiles)
     
     if (!validationResult.isValid) {
       return NextResponse.json({ 
@@ -282,7 +307,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Enhanced audio preprocessing using VoiceQualityOptimizer
-    const processingResult = await processAudioFiles(audioFiles, useProfessional && enableAudioEnhancement)
+    const processingResult = await processAudioFiles(uniqueFiles, useProfessional && enableAudioEnhancement)
     const processedFiles = processingResult.processed_files
 
     const elevenForm = new FormData()

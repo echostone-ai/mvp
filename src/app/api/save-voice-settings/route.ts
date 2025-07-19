@@ -4,6 +4,7 @@ import { supabase } from '@/components/supabaseClient'
 export async function POST(req: Request) {
   try {
     const { voiceId, settings, userId } = await req.json()
+    console.log(`[SAVE-VOICE-SETTINGS DEBUG] Incoming: voiceId=${voiceId}, userId=${userId}, settings=`, settings)
 
     if (!voiceId || !settings) {
       return NextResponse.json({ error: 'Missing voiceId or settings' }, { status: 400 })
@@ -34,10 +35,11 @@ export async function POST(req: Request) {
               updated_at: new Date().toISOString()
             })
             .eq('user_id', userId)
-
           if (updateError) {
             console.error('Error updating voice settings:', updateError)
             throw updateError
+          } else {
+            console.log(`[SAVE-VOICE-SETTINGS DEBUG] Updated profile for userId=${userId}`)
           }
         } else {
           // Create new profile entry
@@ -49,10 +51,11 @@ export async function POST(req: Request) {
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             })
-
           if (insertError) {
             console.error('Error creating profile with voice settings:', insertError)
             throw insertError
+          } else {
+            console.log(`[SAVE-VOICE-SETTINGS DEBUG] Created new profile for userId=${userId}`)
           }
         }
 
