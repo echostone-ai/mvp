@@ -6,7 +6,7 @@ import { authOptions } from '@/lib/auth';
 // Accept an invitation
 export async function POST(
   request: NextRequest,
-  { params }: { params: { token: string } }
+  context: { params: { token: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);

@@ -8,7 +8,7 @@ import crypto from 'crypto';
 // Get invitations for a hub
 export async function GET(
   request: NextRequest,
-  { params }: { params: { hubId: string } }
+  context: { params: { hubId: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -51,7 +51,7 @@ export async function GET(
 // Create a new invitation
 export async function POST(
   request: NextRequest,
-  { params }: { params: { hubId: string } }
+  context: { params: { hubId: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);

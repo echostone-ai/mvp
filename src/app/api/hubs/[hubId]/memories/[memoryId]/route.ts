@@ -7,7 +7,7 @@ import { checkHubAccess } from '@/lib/hubAccess';
 // Get a specific memory
 export async function GET(
   request: NextRequest,
-  { params }: { params: { hubId: string; memoryId: string } }
+  context: { params: { hubId: string; memoryId: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -17,7 +17,7 @@ export async function GET(
     }
     
     const userId = session.user.id;
-    const { hubId, memoryId } = params;
+    const { hubId, memoryId  } = context.params;
     
     // Check if user has access to the hub
     const access = await checkHubAccess(hubId, userId);
@@ -73,7 +73,7 @@ export async function GET(
 // Delete a memory
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { hubId: string; memoryId: string } }
+  context: { params: { hubId: string; memoryId: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -83,7 +83,7 @@ export async function DELETE(
     }
     
     const userId = session.user.id;
-    const { hubId, memoryId } = params;
+    const { hubId, memoryId  } = context.params;
     
     // Check if user has access to the hub
     const access = await checkHubAccess(hubId, userId);

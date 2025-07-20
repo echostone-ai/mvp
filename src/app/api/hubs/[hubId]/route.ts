@@ -6,7 +6,7 @@ import { authOptions } from '@/lib/auth';
 // Get hub details
 export async function GET(
   request: NextRequest,
-  { params }: { params: { hubId: string } }
+  context: { params: { hubId: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -88,7 +88,7 @@ export async function GET(
 // Update hub details
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { hubId: string } }
+  context: { params: { hubId: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -139,7 +139,7 @@ export async function PUT(
 // Delete hub
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { hubId: string } }
+  context: { params: { hubId: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);

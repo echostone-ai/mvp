@@ -7,7 +7,7 @@ import { checkHubAccess } from '@/lib/hubAccess';
 // Flag a memory
 export async function POST(
   request: NextRequest,
-  { params }: { params: { hubId: string; memoryId: string } }
+  context: { params: { hubId: string; memoryId: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -17,7 +17,7 @@ export async function POST(
     }
     
     const userId = session.user.id;
-    const { hubId, memoryId } = params;
+    const { hubId, memoryId  } = context.params;
     
     // Check if user has access to the hub
     const access = await checkHubAccess(hubId, userId);

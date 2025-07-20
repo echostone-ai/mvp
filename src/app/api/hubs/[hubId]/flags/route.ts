@@ -7,7 +7,7 @@ import { checkHubAccess } from '@/lib/hubAccess';
 // Get flags for a hub
 export async function GET(
   request: NextRequest,
-  { params }: { params: { hubId: string } }
+  context: { params: { hubId: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);

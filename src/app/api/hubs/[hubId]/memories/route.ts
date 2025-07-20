@@ -7,7 +7,7 @@ import { checkHubAccess } from '@/lib/hubAccess';
 // Get memories for a hub
 export async function GET(
   request: NextRequest,
-  { params }: { params: { hubId: string } }
+  context: { params: { hubId: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -97,7 +97,7 @@ export async function GET(
 // Create a new memory
 export async function POST(
   request: NextRequest,
-  { params }: { params: { hubId: string } }
+  context: { params: { hubId: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
