@@ -21,6 +21,7 @@
     "dotenv": "^17.0.1",
     "embla-carousel-react": "^8.6.0",
     "formidable": "^3.5.4",
+    "glob": "^11.0.3",
     "next": "15.3.4",
     "next-auth": "^4.24.11",
     "openai": "^5.8.2",

@@ -4,17 +4,11 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { checkHubAccess } from '@/lib/hubAccess';
 
-// Define the params type
-type RouteParams = {
-  params: {
-    hubId: string;
-    memoryId: string;
-  }
-};
+
 
 
 // Get a specific memory
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(request: NextRequest, { params }: { params: { hubId: string, memoryId: string } }) {
   try {
     const session = await getServerSession(authOptions);
     
@@ -77,7 +71,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 }
 
 // Delete a memory
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export async function DELETE(request: NextRequest, { params }: { params: { hubId: string, memoryId: string } }) {
   try {
     const session = await getServerSession(authOptions);
     

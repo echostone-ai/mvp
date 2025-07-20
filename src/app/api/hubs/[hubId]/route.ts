@@ -3,16 +3,11 @@ import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
-// Define the params type
-type RouteParams = {
-  params: {
-    hubId: string;
-  }
-};
+
 
 
 // Get hub details
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(request: NextRequest, { params }: { params: { hubId: string } }) {
   try {
     const session = await getServerSession(authOptions);
     
@@ -91,7 +86,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 }
 
 // Update hub details
-export async function PUT(request: NextRequest, { params }: RouteParams) {
+export async function PUT(request: NextRequest, { params }: { params: { hubId: string } }) {
   try {
     const session = await getServerSession(authOptions);
     
@@ -139,7 +134,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 }
 
 // Delete hub
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export async function DELETE(request: NextRequest, { params }: { params: { hubId: string } }) {
   try {
     const session = await getServerSession(authOptions);
     

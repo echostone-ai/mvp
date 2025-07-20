@@ -8,10 +8,7 @@ export const runtime = 'edge'
 /**
  * GET /api/memories/[id] - Get a specific memory fragment by ID
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     // Initialize Supabase client with cookies for authentication
     const cookieStore = cookies()
@@ -63,10 +60,7 @@ export async function GET(
  * PUT /api/memories/[id] - Update a specific memory fragment
  * Body: { fragmentText?: string, conversationContext?: object }
  */
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     // Initialize Supabase client with cookies for authentication
     const cookieStore = cookies()
@@ -178,10 +172,7 @@ export async function PUT(
 /**
  * DELETE /api/memories/[id] - Delete a specific memory fragment
  */
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     // Initialize Supabase client with cookies for authentication
     const cookieStore = cookies()

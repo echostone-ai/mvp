@@ -1,16 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-// Define the params type
-type RouteParams = {
-  params: {
-    token: string;
-  }
-};
+
 
 
 // Validate an invitation token
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(request: NextRequest, { params }: { params: { token: string } }) {
   try {
     const token = params.token;
     

@@ -5,10 +5,7 @@ import { authOptions } from '@/lib/auth';
 import { checkHubAccess } from '@/lib/hubAccess';
 
 // Get viewers for a hub
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { hubId: string } }
-) {
+export async function GET(request: NextRequest, { params }: { params: { hubId: string } }) {
   try {
     const session = await getServerSession(authOptions);
     

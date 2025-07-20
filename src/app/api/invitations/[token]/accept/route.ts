@@ -3,16 +3,11 @@ import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
-// Define the params type
-type RouteParams = {
-  params: {
-    token: string;
-  }
-};
+
 
 
 // Accept an invitation
-export async function POST(request: NextRequest, { params }: RouteParams) {
+export async function POST(request: NextRequest, { params }: { params: { token: string } }) {
   try {
     const session = await getServerSession(authOptions);
     

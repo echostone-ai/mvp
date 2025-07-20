@@ -5,10 +5,7 @@ import { authOptions } from '@/lib/auth';
 import { checkHubAccess } from '@/lib/hubAccess';
 
 // Delete a viewer's access
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { hubId: string; viewerId: string } }
-) {
+export async function DELETE(request: NextRequest, { params }: { params: { hubId: string, viewerId: string } }) {
   try {
     const session = await getServerSession(authOptions);
     
