@@ -57,14 +57,15 @@ export default function ChatInterface({
     if (userId) {
       loadConversation()
     }
-  }, [userId])
+  }, [userId, avatarId]) // Add avatarId as dependency to reload when avatar changes
 
   const loadConversation = async () => {
     if (!userId) return
     
     setConversationLoading(true)
     try {
-      const conversation = await ConversationService.getCurrentConversation(userId)
+      // Pass avatarId to get avatar-specific conversation
+      const conversation = await ConversationService.getCurrentConversation(userId, avatarId)
       if (conversation) {
         setConversationId(conversation.id || null)
         setMessages(conversation.messages || [])
@@ -80,7 +81,13 @@ export default function ChatInterface({
     if (!userId) return
 
     try {
-      const result = await ConversationService.addMessage(userId, newMessage, conversationId || undefined)
+      // Pass avatarId to associate message with specific avatar
+      const result = await ConversationService.addMessage(
+        userId, 
+        newMessage, 
+        conversationId || undefined,
+        avatarId // Pass avatarId to ensure conversation is associated with this avatar
+      )
       if (result.success && result.conversationId) {
         setConversationId(result.conversationId)
       }
