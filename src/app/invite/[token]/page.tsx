@@ -40,7 +40,18 @@ export default function InvitationPage({ params }: { params: { token: string } }
         }
         
         const data = await response.json();
-        setInvitation(data.invitation);
+        
+        if (!data.valid) {
+          throw new Error('Invalid invitation');
+        }
+        
+        setInvitation({
+          valid: true,
+          hubId: data.hub.id,
+          hubName: data.hub.name,
+          expired: false,
+          used: false
+        });
 
         // Check if user is logged in
         const { data: { session } } = await supabase.auth.getSession();

@@ -90,7 +90,7 @@ export default function HubCreationForm() {
       }
 
       // Redirect to the new hub
-      router.push(`/dashboard/hubs/${data.hub.id}`);
+      router.push(`/hubs/${data.hub.id}`);
     } catch (error) {
       setSubmitError(
         error instanceof Error ? error.message : 'An unexpected error occurred'

@@ -53,25 +53,29 @@ export default function HubsPage() {
       setLoading(true);
       setError(null);
 
-      // Fetch hubs owned by the user
-      const ownedResponse = await fetch('/api/hubs?role=owner');
+      // Fetch all hubs (API will return both owned and viewable hubs)
+      const response = await fetch('/api/hubs');
       
-      if (!ownedResponse.ok) {
-        throw new Error('Failed to load your hubs');
+      if (!response.ok) {
+        throw new Error('Failed to load hubs');
       }
       
-      const ownedData = await ownedResponse.json();
-      setOwnedHubs(ownedData.hubs || []);
-
-      // Fetch hubs where the user is a viewer
-      const viewableResponse = await fetch('/api/hubs?role=viewer');
+      const data = await response.json();
       
-      if (!viewableResponse.ok) {
-        throw new Error('Failed to load shared hubs');
-      }
+      // Separate owned and viewable hubs
+      const owned: Hub[] = [];
+      const viewable: Hub[] = [];
       
-      const viewableData = await viewableResponse.json();
-      setViewableHubs(viewableData.hubs || []);
+      data.hubs.forEach((hub: any) => {
+        if (hub.ownerId === userId) {
+          owned.push(hub);
+        } else if (hub.accessLevel) {
+          viewable.push(hub);
+        }
+      });
+      
+      setOwnedHubs(owned);
+      setViewableHubs(viewable);
     } catch (err) {
       console.error('Error loading hubs:', err);
       setError(err instanceof Error ? err.message : 'Failed to load hubs');

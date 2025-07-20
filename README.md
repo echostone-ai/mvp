@@ -1,37 +1,78 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Legacy Hub Feature
+
+This project implements the Legacy Hub feature for EchoStone, allowing users to create and share memory collections with friends and family.
+
+## Features
+
+- Create and manage Legacy Hubs
+- Add memories (text, images, audio)
+- Invite others to view and contribute
+- Flag inappropriate content
+- Moderate content as a hub owner
+- Secure invitation system
+- Notification system
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
+- Node.js 18+
+- PostgreSQL database
+- npm or yarn
+
+### Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/your-username/echostones-legacy-hub.git
+cd echostones-legacy-hub
+```
+
+2. Install dependencies:
+```bash
+npm install
+# or
+yarn install
+```
+
+3. Set up environment variables:
+```
+# Create a .env file with the following variables
+DATABASE_URL="postgresql://username:password@localhost:5432/echostones"
+NEXTAUTH_SECRET="your-secret-key"
+NEXT_PUBLIC_BASE_URL="http://localhost:3000"
+```
+
+4. Run database migrations:
+```bash
+npx prisma migrate dev
+```
+
+5. Start the development server:
 ```bash
 npm run dev
 # or
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+6. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Documentation
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+For detailed usage instructions, see [LEGACY_HUB_USAGE.md](LEGACY_HUB_USAGE.md).
 
-## Learn More
+## Project Structure
 
-To learn more about Next.js, take a look at the following resources:
+- `/prisma` - Database schema and migrations
+- `/src/app` - Next.js app router pages
+- `/src/app/api` - API routes
+- `/src/components` - React components
+- `/src/lib` - Utility functions and services
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## API Endpoints
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+See [LEGACY_HUB_USAGE.md](LEGACY_HUB_USAGE.md) for a complete list of API endpoints.
 
-## Deploy on Vercel
+## License
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# mvp
+This project is licensed under the MIT License - see the LICENSE file for details.
