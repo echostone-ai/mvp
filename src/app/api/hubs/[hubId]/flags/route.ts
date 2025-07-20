@@ -4,11 +4,15 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { checkHubAccess } from '@/lib/hubAccess';
 
+// Define the params type
+type RouteParams = {
+  params: {
+    hubId: string;
+  }
+};
+
 // Get flags for a hub
-export async function GET(
-  request: NextRequest,
-  context: { params: { hubId: string } }
-) {
+export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const session = await getServerSession(authOptions);
     

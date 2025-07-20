@@ -4,11 +4,16 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { checkHubAccess } from '@/lib/hubAccess';
 
+// Define the params type
+type RouteParams = {
+  params: {
+    hubId: string;
+    flagId: string;
+  }
+};
+
 // Resolve a flag
-export async function POST(
-  request: NextRequest,
-  context: { params: { hubId: string; flagId: string } }
-) {
+export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
     const session = await getServerSession(authOptions);
     
@@ -17,7 +22,7 @@ export async function POST(
     }
     
     const userId = session.user.id;
-    const { hubId, flagId  } = context.params;
+    const { hubId, flagId } = params;
     
     // Check if user has access to the hub
     const access = await checkHubAccess(hubId, userId);

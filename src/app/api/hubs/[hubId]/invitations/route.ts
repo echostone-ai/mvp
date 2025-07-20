@@ -5,11 +5,16 @@ import { authOptions } from '@/lib/auth';
 import { checkHubAccess } from '@/lib/hubAccess';
 import crypto from 'crypto';
 
+// Define the params type
+type RouteParams = {
+  params: {
+    hubId: string;
+  }
+};
+
+
 // Get invitations for a hub
-export async function GET(
-  request: NextRequest,
-  context: { params: { hubId: string } }
-) {
+export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const session = await getServerSession(authOptions);
     
@@ -49,10 +54,7 @@ export async function GET(
 }
 
 // Create a new invitation
-export async function POST(
-  request: NextRequest,
-  context: { params: { hubId: string } }
-) {
+export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
     const session = await getServerSession(authOptions);
     
