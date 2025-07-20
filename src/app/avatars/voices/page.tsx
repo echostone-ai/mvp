@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/components/supabaseClient'
+import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import PageShell from '@/components/PageShell'
 

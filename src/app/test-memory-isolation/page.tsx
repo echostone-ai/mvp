@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { supabase } from '@/components/supabaseClient'
+import { supabase } from '@/lib/supabase'
 import PageShell from '@/components/PageShell'
 
 export default function TestMemoryIsolationPage() {

@@ -1,6 +1,6 @@
 // Test endpoint to check if avatar memory system is working
 import { NextResponse } from 'next/server';
-import { supabase } from '@/components/supabaseClient';
+import { supabase } from '@/lib/supabase';
 
 export async function GET(req: Request) {
   try {

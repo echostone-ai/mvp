@@ -3,7 +3,7 @@
  * Handles storage and retrieval of voice profiles with emotional calibration data
  */
 
-import { supabase } from '../components/supabaseClient'
+import { supabase } from './supabase'
 import { EmotionalCalibration, VoiceParameters } from './emotionalCalibrationService'
 
 export interface VoiceProfile {

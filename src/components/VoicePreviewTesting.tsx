@@ -48,6 +48,16 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
     console.log('VoicePreviewTesting received userName:', userName)
     console.log('VoicePreviewTesting received userId:', userId)
   }, [voiceId, userName, userId])
+
+  // Update voice settings when initialSettings changes
+  useEffect(() => {
+    if (initialSettings && 
+        typeof initialSettings.stability === 'number' && 
+        typeof initialSettings.similarity_boost === 'number' && 
+        typeof initialSettings.style === 'number') {
+      setVoiceSettings(prev => ({ ...prev, ...initialSettings }));
+    }
+  }, [initialSettings])
   const [activeTab, setActiveTab] = useState<'emotional' | 'scenarios' | 'parameters'>('emotional');
   const [isGeneratingAll, setIsGeneratingAll] = useState(false);
   const [customText, setCustomText] = useState('');
@@ -57,17 +67,28 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
   const [comparisonSettings, setComparisonSettings] = useState<ProfessionalVoiceSettings | null>(null);
   const audioRefs = useRef<Record<string, HTMLAudioElement>>({});
 
-  // Voice parameter controls
-  const [voiceSettings, setVoiceSettings] = useState<ProfessionalVoiceSettings>(
-    initialSettings || {
+  // Voice parameter controls with proper null safety
+  const [voiceSettings, setVoiceSettings] = useState<ProfessionalVoiceSettings>(() => {
+    // Ensure we always have valid default values
+    const defaults: ProfessionalVoiceSettings = {
       stability: 0.75,
       similarity_boost: 0.85,
       style: 0.2,
       use_speaker_boost: true,
       optimize_streaming_latency: 0.5,
-      model_id: 'eleven_turbo_v2_5'
+      model_id: 'eleven_turbo_v2_5' as const
+    };
+    
+    // If initialSettings is provided and has valid numeric values, use them
+    if (initialSettings && 
+        typeof initialSettings.stability === 'number' && 
+        typeof initialSettings.similarity_boost === 'number' && 
+        typeof initialSettings.style === 'number') {
+      return { ...defaults, ...initialSettings };
     }
-  );  // 
+    
+    return defaults;
+  });  // 
   // Emotional previews state - all emotions from EmotionalCalibration
   const [emotionalPreviews, setEmotionalPreviews] = useState<EmotionalPreview[]>([
     // Core Positive Emotions
@@ -644,7 +665,7 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
             <div className="voice-tuning-param">
               <div className="voice-tuning-param-label">
                 <label>Stability</label>
-                <span>{voiceSettings.stability.toFixed(2)}</span>
+                <span>{(voiceSettings.stability ?? 0.75).toFixed(2)}</span>
               </div>
               <input
                 type="range"
@@ -664,7 +685,7 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
             <div className="voice-tuning-param">
               <div className="voice-tuning-param-label">
                 <label>Similarity Boost</label>
-                <span>{voiceSettings.similarity_boost.toFixed(2)}</span>
+                <span>{(voiceSettings.similarity_boost ?? 0.85).toFixed(2)}</span>
               </div>
               <input
                 type="range"
@@ -684,7 +705,7 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
             <div className="voice-tuning-param">
               <div className="voice-tuning-param-label">
                 <label>Style</label>
-                <span>{voiceSettings.style.toFixed(2)}</span>
+                <span>{(voiceSettings.style ?? 0.2).toFixed(2)}</span>
               </div>
               <input
                 type="range"

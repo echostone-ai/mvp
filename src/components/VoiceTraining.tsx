@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useRef } from 'react'
-import { supabase } from '@/components/supabaseClient'
+import { supabase } from '@/lib/supabase'
 
 interface VoiceTrainingProps {
   avatarName: string

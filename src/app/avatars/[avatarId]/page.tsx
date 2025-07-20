@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
-import { supabase } from '@/components/supabaseClient'
+import { supabase } from '@/lib/supabase'
 import ChatInterface from '@/components/ChatInterface'
 import PageShell from '@/components/PageShell'
 import Link from 'next/link'

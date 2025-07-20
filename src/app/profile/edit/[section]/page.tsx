@@ -6,7 +6,7 @@ import { QUESTIONS, Question } from '@/data/questions'
 import useEmblaCarousel from 'embla-carousel-react'
 import LogoHeader from '@/components/LogoHeader'
 import AccountMenu from '@/components/AccountMenu'
-import { supabase } from '@/components/supabaseClient'
+import { supabase } from '@/lib/supabase'
 
 interface Avatar {
   id: string

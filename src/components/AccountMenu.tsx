@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { supabase } from "@/components/supabaseClient"
+import { supabase } from "@/lib/supabase"
 
 export default function AccountMenu() {
   const [open, setOpen] = useState(false)

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useRef } from 'react'
-import { supabase } from './supabaseClient'
+import { supabase } from '@/lib/supabase'
 
 interface AvatarIdentityProps {
   avatar: {

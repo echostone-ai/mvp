@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { supabase } from '@/components/supabaseClient'
+import { supabase } from '@/lib/supabase'
 import ChatInterface from '@/components/ChatInterface'
 import AccountMenu from '@/components/AccountMenu'
 import PageShell from '@/components/PageShell'

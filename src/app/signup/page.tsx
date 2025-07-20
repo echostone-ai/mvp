@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { supabase } from '@/components/supabaseClient'
+import { supabase } from '@/lib/supabase'
 import AccountMenu from '@/components/AccountMenu'
 import { useRouter } from 'next/navigation'
 

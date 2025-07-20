@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '@/lib/supabase'
 import AccountMenu from '@/components/AccountMenu'
 import PageShell from '@/components/PageShell'
 
@@ -123,10 +123,7 @@ export default function OnboardingPage() {
 
   useEffect(() => {
     // Initialize Supabase client and get user
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    if (!supabaseUrl || !supabaseAnonKey) return
-    const supabase = createClient(supabaseUrl, supabaseAnonKey)
+    // Use the shared supabase client
     async function getUser() {
       const { data, error } = await supabase.auth.getUser()
       if (data?.user?.id) {
