@@ -16,6 +16,7 @@ const openai = new OpenAI({
 export interface MemoryFragment {
   id?: string
   userId: string
+  avatarId?: string
   fragmentText: string
   embedding?: number[]
   conversationContext?: {
@@ -300,6 +301,7 @@ export class MemoryStorageService {
    * Stores a memory fragment with its embedding in Supabase
    */
   static async storeMemoryFragment(fragment: MemoryFragment): Promise<string> {
+    // Make sure avatarId is included in the fragment
     return MemoryErrorHandler.withRetry(
       async () => {
         // Generate embedding if not provided
@@ -307,14 +309,21 @@ export class MemoryStorageService {
           fragment.embedding = await this.generateEmbedding(fragment.fragmentText)
         }
 
+        const insertData: any = {
+          user_id: fragment.userId,
+          fragment_text: fragment.fragmentText,
+          embedding: fragment.embedding,
+          conversation_context: fragment.conversationContext,
+        }
+        
+        // Include avatarId if it exists in the fragment
+        if (fragment.avatarId) {
+          insertData.avatar_id = fragment.avatarId
+        }
+        
         const { data, error } = await supabase
           .from('memory_fragments')
-          .insert({
-            user_id: fragment.userId,
-            fragment_text: fragment.fragmentText,
-            embedding: fragment.embedding,
-            conversation_context: fragment.conversationContext,
-          })
+          .insert(insertData)
           .select('id')
           .single()
 
@@ -482,13 +491,20 @@ export class MemoryStorageService {
   /**
    * Deletes all memory fragments for a user
    */
-  static async deleteAllUserMemories(userId: string): Promise<void> {
+  static async deleteAllUserMemories(userId: string, avatarId?: string | null): Promise<void> {
     return MemoryErrorHandler.withRetry(
       async () => {
-        const { error } = await supabase
+        let query = supabase
           .from('memory_fragments')
           .delete()
           .eq('user_id', userId)
+          
+        // Filter by avatarId if provided
+        if (avatarId) {
+          query = query.eq('avatar_id', avatarId)
+        }
+        
+        const { error } = await query
 
         if (error) {
           throw MemoryErrorHandler.categorizeError(error, {
@@ -604,13 +620,15 @@ export class MemoryRetrievalService {
       offset?: number
       orderBy?: 'created_at' | 'updated_at'
       orderDirection?: 'asc' | 'desc'
+      avatarId?: string | null
     } = {}
   ): Promise<MemoryFragment[]> {
     const {
       limit = 100,
       offset = 0,
       orderBy = 'created_at',
-      orderDirection = 'desc'
+      orderDirection = 'desc',
+      avatarId = null
     } = options
 
     // Create cache key for user memories
@@ -631,7 +649,13 @@ export class MemoryRetrievalService {
           .from('memory_fragments')
           .select('*')
           .eq('user_id', userId)
-          .order(orderBy, { ascending: orderDirection === 'asc' })
+          
+          // Filter by avatarId if provided
+          if (avatarId) {
+            query = query.eq('avatar_id', avatarId)
+          }
+          
+          query = query.order(orderBy, { ascending: orderDirection === 'asc' })
 
         if (limit > 0) {
           query = query.range(offset, offset + limit - 1)
@@ -735,14 +759,22 @@ export class MemoryRetrievalService {
   static async searchMemoriesByText(
     searchText: string,
     userId: string,
-    limit: number = 10
+    limit: number = 10,
+    avatarId?: string | null
   ): Promise<MemoryFragment[]> {
     return MemoryErrorHandler.withGracefulDegradation(
       async () => {
-        const { data, error } = await supabase
+        let query = supabase
           .from('memory_fragments')
           .select('*')
           .eq('user_id', userId)
+          
+        // Filter by avatarId if provided
+        if (avatarId) {
+          query = query.eq('avatar_id', avatarId)
+        }
+        
+        const { data, error } = await query
           .textSearch('fragment_text', searchText)
           .order('created_at', { ascending: false })
           .limit(limit)
@@ -782,18 +814,24 @@ export class MemoryRetrievalService {
   /**
    * Gets memory statistics for a user
    */
-  static async getMemoryStats(userId: string): Promise<{
+  static async getMemoryStats(userId: string, avatarId?: string | null): Promise<{
     totalFragments: number
     oldestMemory?: Date
     newestMemory?: Date
   }> {
     return MemoryErrorHandler.withRetry(
       async () => {
-        const { data, error } = await supabase
+        let query = supabase
           .from('memory_fragments')
           .select('created_at')
           .eq('user_id', userId)
-          .order('created_at', { ascending: true })
+          
+        // Filter by avatarId if provided
+        if (avatarId) {
+          query = query.eq('avatar_id', avatarId)
+        }
+        
+        const { data, error } = await query.order('created_at', { ascending: true })
 
         if (error) {
           throw MemoryErrorHandler.categorizeError(error, {

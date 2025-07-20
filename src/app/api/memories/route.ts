@@ -38,6 +38,7 @@ export async function GET(request: NextRequest) {
     const orderBy = (searchParams.get('orderBy') as 'created_at' | 'updated_at') || 'created_at'
     const orderDirection = (searchParams.get('orderDirection') as 'asc' | 'desc') || 'desc'
     const searchQuery = searchParams.get('search')
+    const avatarId = searchParams.get('avatarId')
 
     // Validate parameters
     if (limit < 1 || limit > 1000) {
@@ -61,7 +62,8 @@ export async function GET(request: NextRequest) {
       memories = await MemoryService.Retrieval.searchMemoriesByText(
         searchQuery,
         user.id,
-        limit
+        limit,
+        avatarId
       )
     } else {
       // Get user memories with pagination
@@ -69,12 +71,13 @@ export async function GET(request: NextRequest) {
         limit,
         offset,
         orderBy,
-        orderDirection
+        orderDirection,
+        avatarId
       })
     }
 
     // Get memory statistics
-    const stats = await MemoryService.Retrieval.getMemoryStats(user.id)
+    const stats = await MemoryService.Retrieval.getMemoryStats(user.id, avatarId)
 
     return NextResponse.json({
       memories,
@@ -186,9 +189,9 @@ export async function POST(request: NextRequest) {
  */
 export async function DELETE(request: NextRequest) {
   try {
-    // Get userId from request body
+    // Get userId and avatarId from request body
     const body = await request.json()
-    const { userId } = body
+    const { userId, avatarId } = body
     
     if (!userId) {
       return NextResponse.json(
@@ -201,7 +204,7 @@ export async function DELETE(request: NextRequest) {
     const user = { id: userId }
 
     // Get current memory count for confirmation
-    const stats = await MemoryService.Retrieval.getMemoryStats(user.id)
+    const stats = await MemoryService.Retrieval.getMemoryStats(user.id, avatarId)
     
     if (stats.totalFragments === 0) {
       return NextResponse.json({
@@ -210,8 +213,8 @@ export async function DELETE(request: NextRequest) {
       })
     }
 
-    // Delete all user memories
-    await MemoryService.Storage.deleteAllUserMemories(user.id)
+    // Delete all user memories (filtered by avatarId if provided)
+    await MemoryService.Storage.deleteAllUserMemories(user.id, avatarId)
 
     return NextResponse.json({
       message: `Successfully deleted all ${stats.totalFragments} memory fragments`,

@@ -417,7 +417,7 @@ export default function ProfilePage() {
 
           {activeTab === 'memories' && (
             <div className="profile-tab-panel">
-              <MemoryManagement userId={user?.id} />
+              <MemoryManagement userId={user?.id} avatarId={selectedAvatar.id} />
             </div>
           )}
         </div>

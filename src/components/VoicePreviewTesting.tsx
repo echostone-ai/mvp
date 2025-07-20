@@ -42,11 +42,9 @@ const VoicePreviewTesting: React.FC<VoicePreviewTestingProps> = ({
   onSettingsSaved,
   initialSettings
 }) => {
-  // Debug logging
+  // Initialize component when props change
   useEffect(() => {
-    console.log('VoicePreviewTesting received voiceId:', voiceId)
-    console.log('VoicePreviewTesting received userName:', userName)
-    console.log('VoicePreviewTesting received userId:', userId)
+    // Component initialized with voice settings
   }, [voiceId, userName, userId])
 
   // Update voice settings when initialSettings changes

@@ -6,6 +6,7 @@ import styles from './MemoryManagement.module.css'
 
 interface MemoryManagementProps {
   userId: string
+  avatarId?: string
 }
 
 interface MemoryStats {
@@ -24,7 +25,7 @@ interface MemoryResponse {
   }
 }
 
-export default function MemoryManagement({ userId }: MemoryManagementProps) {
+export default function MemoryManagement({ userId, avatarId }: MemoryManagementProps) {
   const [memories, setMemories] = useState<MemoryFragment[]>([])
   const [stats, setStats] = useState<MemoryStats>({ totalFragments: 0 })
   const [loading, setLoading] = useState(true)
@@ -81,6 +82,11 @@ export default function MemoryManagement({ userId }: MemoryManagementProps) {
         orderBy: 'created_at',
         orderDirection: 'desc'
       })
+      
+      // Add avatarId to params if provided
+      if (avatarId) {
+        params.append('avatarId', avatarId)
+      }
 
       if (searchQuery.trim()) {
         params.append('search', searchQuery.trim())
@@ -206,7 +212,8 @@ export default function MemoryManagement({ userId }: MemoryManagementProps) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: userId
+          userId: userId,
+          avatarId: avatarId
         })
       })
 
