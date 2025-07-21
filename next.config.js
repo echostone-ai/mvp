@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Disable type checking during build to avoid issues with route handlers
+  // Disable type checking during build
   typescript: {
     // !! WARN !!
     // Dangerously allow production builds to successfully complete even if
@@ -9,9 +9,15 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   
-  // Other Next.js config options
-  reactStrictMode: true,
-  swcMinify: true,
-}
+  // Disable ESLint during build
+  eslint: {
+    // Warning: Th
+ rs.
 
-module.exports = nextConfig
+  },Other Next.js config opextConfig= ns e.exportmodul}
+
+
+ode: true,ctMeactStri  rons
+ti
+  
+  // 

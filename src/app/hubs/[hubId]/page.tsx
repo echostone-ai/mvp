@@ -44,7 +44,7 @@ export default function HubDetailPage() {
     async function fetchHubDetails() {
       try {
         // Fetch hub details from the API
-        const hubResponse = await fetch(`/api/hub-details?id=${hubId}`);
+        const hubResponse = await fetch(`/api/hub-api?hubId=${hubId}&action=details`);
         if (!hubResponse.ok) {
           throw new Error('Failed to fetch hub details');
         }
@@ -52,31 +52,10 @@ export default function HubDetailPage() {
         setHub(hubData.hub);
 
         // Fetch memories for this hub
-        const memoriesResponse = await fetch(`/api/hub-invites?hubId=${hubId}`);
+        const memoriesResponse = await fetch(`/api/hub-api?hubId=${hubId}&action=memories`);
         if (memoriesResponse.ok) {
           const memoriesData = await memoriesResponse.json();
-          
-          // If no memories are returned, use mock data for example-1
-          if (memoriesData.invites.length === 0 && hubId === 'example-1') {
-            setMemories([
-              {
-                id: '1',
-                title: 'Summer Vacation 2023',
-                content: 'We had an amazing time at the beach house. The kids loved building sandcastles and swimming in the ocean.',
-                createdAt: '2023-07-15T12:00:00Z',
-                createdBy: 'John Doe'
-              },
-              {
-                id: '2',
-                title: 'Grandma\'s Birthday',
-                content: 'We celebrated Grandma\'s 80th birthday with a surprise party. Everyone from the family was there!',
-                createdAt: '2023-05-22T14:30:00Z',
-                createdBy: 'Jane Smith'
-              }
-            ]);
-          } else {
-            setMemories(memoriesData.memories || []);
-          }
+          setMemories(memoriesData.memories || []);
         }
         
         setLoading(false);
@@ -108,21 +87,28 @@ export default function HubDetailPage() {
     setIsSubmitting(true);
 
     try {
-      // In a real app, this would be a fetch to your API
-      // For now, we'll simulate it
+      // Add memory via the API
+      const response = await fetch('/api/hub-api', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          hubId: hubId,
+          action: 'add-memory',
+          title: newMemory.title,
+          content: newMemory.content
+        })
+      });
 
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+      if (!response.ok) {
+        throw new Error('Failed to add memory');
+      }
 
-      const newMemoryItem: Memory = {
-        id: Math.random().toString(36).substring(2, 9),
-        title: newMemory.title,
-        content: newMemory.content,
-        createdAt: new Date().toISOString(),
-        createdBy: 'Current User'
-      };
-
-      setMemories([newMemoryItem, ...memories]);
+      const data = await response.json();
+      
+      // Add the new memory to the list
+      setMemories([data.memory, ...memories]);
       setNewMemory({ title: '', content: '' });
       setIsAddingMemory(false);
     } catch (err) {
@@ -137,13 +123,14 @@ export default function HubDetailPage() {
 
     try {
       // Update the hub via the API
-      const response = await fetch('/api/hub-details', {
+      const response = await fetch('/api/hub-api', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           hubId: hub.id,
+          action: 'update',
           isPublished: !hub.isPublished
         })
       });
@@ -152,9 +139,7 @@ export default function HubDetailPage() {
         throw new Error('Failed to update hub');
       }
 
-      const data = await response.json();
-      
-      // Update the local state with the response
+      // Update the local state
       setHub({
         ...hub,
         isPublished: !hub.isPublished
