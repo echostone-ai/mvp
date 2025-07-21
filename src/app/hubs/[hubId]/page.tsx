@@ -43,47 +43,42 @@ export default function HubDetailPage() {
   useEffect(() => {
     async function fetchHubDetails() {
       try {
-        // In a real app, this would be a fetch to your API
-        // For now, we'll simulate it with mock data
-        const mockHub: Hub = {
-          id: hubId,
-          name: hubId === 'example-1' ? 'Family Memories' : 'Travel Adventures',
-          description: hubId === 'example-1'
-            ? 'A collection of family memories and stories from our adventures together.'
-            : 'Memories from my travels around the world.',
-          isPublished: hubId === 'example-1',
-          createdAt: new Date().toISOString(),
-          ownerId: 'user-123',
-          _count: {
-            memories: hubId === 'example-1' ? 5 : 10,
-            viewers: hubId === 'example-1' ? 2 : 0
-          }
-        };
-
-        setHub(mockHub);
-
-        // Mock memories
-        const mockMemories: Memory[] = [];
-        if (hubId === 'example-1') {
-          mockMemories.push(
-            {
-              id: '1',
-              title: 'Summer Vacation 2023',
-              content: 'We had an amazing time at the beach house. The kids loved building sandcastles and swimming in the ocean.',
-              createdAt: '2023-07-15T12:00:00Z',
-              createdBy: 'John Doe'
-            },
-            {
-              id: '2',
-              title: 'Grandma\'s Birthday',
-              content: 'We celebrated Grandma\'s 80th birthday with a surprise party. Everyone from the family was there!',
-              createdAt: '2023-05-22T14:30:00Z',
-              createdBy: 'Jane Smith'
-            }
-          );
+        // Fetch hub details from the API
+        const hubResponse = await fetch(`/api/hub-details?id=${hubId}`);
+        if (!hubResponse.ok) {
+          throw new Error('Failed to fetch hub details');
         }
+        const hubData = await hubResponse.json();
+        setHub(hubData.hub);
 
-        setMemories(mockMemories);
+        // Fetch memories for this hub
+        const memoriesResponse = await fetch(`/api/hub-invites?hubId=${hubId}`);
+        if (memoriesResponse.ok) {
+          const memoriesData = await memoriesResponse.json();
+          
+          // If no memories are returned, use mock data for example-1
+          if (memoriesData.invites.length === 0 && hubId === 'example-1') {
+            setMemories([
+              {
+                id: '1',
+                title: 'Summer Vacation 2023',
+                content: 'We had an amazing time at the beach house. The kids loved building sandcastles and swimming in the ocean.',
+                createdAt: '2023-07-15T12:00:00Z',
+                createdBy: 'John Doe'
+              },
+              {
+                id: '2',
+                title: 'Grandma\'s Birthday',
+                content: 'We celebrated Grandma\'s 80th birthday with a surprise party. Everyone from the family was there!',
+                createdAt: '2023-05-22T14:30:00Z',
+                createdBy: 'Jane Smith'
+              }
+            ]);
+          } else {
+            setMemories(memoriesData.memories || []);
+          }
+        }
+        
         setLoading(false);
       } catch (err) {
         setError('Failed to load hub details');
@@ -141,12 +136,25 @@ export default function HubDetailPage() {
     if (!hub) return;
 
     try {
-      // In a real app, this would be a fetch to your API
-      // For now, we'll simulate it
+      // Update the hub via the API
+      const response = await fetch('/api/hub-details', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          hubId: hub.id,
+          isPublished: !hub.isPublished
+        })
+      });
 
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+      if (!response.ok) {
+        throw new Error('Failed to update hub');
+      }
 
+      const data = await response.json();
+      
+      // Update the local state with the response
       setHub({
         ...hub,
         isPublished: !hub.isPublished

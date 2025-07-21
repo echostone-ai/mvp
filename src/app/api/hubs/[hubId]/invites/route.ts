@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// GET handler for invites
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { hubId: string } }
+  req: NextRequest,
+  context: { params: { hubId: string } }
 ) {
-  const hubId = context.params.hubId;
+  const { hubId } = context.params;
   
   // Mock invites data
   const invites = [];
@@ -12,13 +13,14 @@ export async function GET(
   return NextResponse.json({ invites });
 }
 
+// POST handler for invites
 export async function POST(
-  request: NextRequest,
-  { params }: { params: { hubId: string } }
+  req: NextRequest,
+  context: { params: { hubId: string } }
 ) {
   try {
-    const hubId = params.hubId;
-    const body = await request.json();
+    const { hubId } = context.params;
+    const body = await req.json();
     
     // Mock creating a new invite
     const newInvite = {

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// GET handler for memories
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { hubId: string } }
+  req: NextRequest,
+  context: { params: { hubId: string } }
 ) {
-  const hubId = params.hubId;
+  const { hubId } = context.params;
   
   // Mock memories data
   const memories = [];
@@ -31,13 +32,14 @@ export async function GET(
   return NextResponse.json({ memories });
 }
 
+// POST handler for memories
 export async function POST(
-  request: NextRequest,
-  { params }: { params: { hubId: string } }
+  req: NextRequest,
+  context: { params: { hubId: string } }
 ) {
   try {
-    const hubId = params.hubId;
-    const body = await request.json();
+    const { hubId } = context.params;
+    const body = await req.json();
     
     // Mock creating a new memory
     const newMemory = {

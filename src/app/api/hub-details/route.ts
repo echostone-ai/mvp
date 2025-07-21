@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// GET handler for hub details
-export async function GET(
-  req: NextRequest,
-  context: { params: { hubId: string } }
-) {
-  const { hubId } = context.params;
+// Simple route handler without dynamic segments
+export async function GET(request: NextRequest) {
+  const url = new URL(request.url);
+  const hubId = url.searchParams.get('id');
+  
+  if (!hubId) {
+    return NextResponse.json({ error: 'Hub ID is required' }, { status: 400 });
+  }
   
   // Mock hub data
   const hub = {
@@ -26,19 +28,19 @@ export async function GET(
   return NextResponse.json({ hub });
 }
 
-// PATCH handler for updating hub
-export async function PATCH(
-  req: NextRequest,
-  context: { params: { hubId: string } }
-) {
+export async function POST(request: NextRequest) {
   try {
-    const { hubId } = context.params;
-    const body = await req.json();
+    const body = await request.json();
+    const { hubId, ...updates } = body;
+    
+    if (!hubId) {
+      return NextResponse.json({ error: 'Hub ID is required' }, { status: 400 });
+    }
     
     // Mock updating a hub
     const updatedHub = {
       id: hubId,
-      ...body,
+      ...updates,
       updatedAt: new Date().toISOString()
     };
     
@@ -49,18 +51,14 @@ export async function PATCH(
   }
 }
 
-// DELETE handler for removing hub
-export async function DELETE(
-  req: NextRequest,
-  context: { params: { hubId: string } }
-) {
-  try {
-    const { hubId } = context.params;
-    
-    // Mock deleting a hub
-    return NextResponse.json({ success: true, message: `Hub ${hubId} deleted successfully` });
-  } catch (error) {
-    console.error('Error deleting hub:', error);
-    return NextResponse.json({ error: 'Failed to delete hub' }, { status: 500 });
+export async function DELETE(request: NextRequest) {
+  const url = new URL(request.url);
+  const hubId = url.searchParams.get('id');
+  
+  if (!hubId) {
+    return NextResponse.json({ error: 'Hub ID is required' }, { status: 400 });
   }
+  
+  // Mock deleting a hub
+  return NextResponse.json({ success: true, message: `Hub ${hubId} deleted successfully` });
 }
