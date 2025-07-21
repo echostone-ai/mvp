@@ -111,7 +111,10 @@ export default function HomePage() {
         const vr = await fetch('/api/voice', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: data.answer })
+          body: JSON.stringify({ 
+            text: data.answer,
+            voiceId: process.env.NEXT_PUBLIC_ELEVENLABS_VOICE_ID || 'CO6pxVrMZfyL61ZIglyr'
+          })
         })
         const blob = await vr.blob()
         playAudioBlob(blob)
@@ -216,7 +219,10 @@ export default function HomePage() {
       const vr = await fetch('/api/voice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: answer })
+        body: JSON.stringify({ 
+          text: answer,
+          voiceId: process.env.NEXT_PUBLIC_ELEVENLABS_VOICE_ID || 'CO6pxVrMZfyL61ZIglyr'
+        })
       })
       const blob = await vr.blob()
       playAudioBlob(blob)

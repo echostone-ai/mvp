@@ -89,22 +89,33 @@ export async function POST(req: Request) {
   try {
     const { text, voiceId, settings, emotionalContext } = await req.json()
     
+    console.log('Voice API request:', { 
+      textLength: text?.length,
+      voiceIdProvided: !!voiceId,
+      settingsProvided: !!settings,
+      emotionalContextProvided: !!emotionalContext
+    })
+    
     if (!text) {
       return NextResponse.json({ error: 'Text is required' }, { status: 400 })
     }
     
     // Use provided voiceId or fallback to environment variable
-    const finalVoiceId = voiceId || process.env.NEXT_PUBLIC_ELEVENLABS_VOICE_ID
+    const finalVoiceId = voiceId || process.env.NEXT_PUBLIC_ELEVENLABS_VOICE_ID || process.env.ELEVENLABS_VOICE_ID || 'CO6pxVrMZfyL61ZIglyr'
     
     if (!finalVoiceId) {
       return NextResponse.json({ error: 'Voice ID is required' }, { status: 400 })
     }
     
-    const apiKey = process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY
+    console.log('Using voice ID:', finalVoiceId)
+    
+    const apiKey = process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY || process.env.ELEVENLABS_API_KEY
     
     if (!apiKey) {
       return NextResponse.json({ error: 'API key not configured' }, { status: 500 })
     }
+    
+    console.log('ElevenLabs API key available:', !!apiKey)
     
     // Clean the text for better voice quality
     const cleanedText = cleanTextForVoice(text)
