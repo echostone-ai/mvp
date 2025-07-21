@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Define the correct context type for Next.js App Router
+type RouteContext = {
+  params: {
+    hubId: string;
+  };
+};
+
 export async function GET(
   request: NextRequest,
-  { params }: { params: { hubId: string } }
+  context: RouteContext
 ) {
-  const hubId = params.hubId;
+  const hubId = context.params.hubId;
   
   // Mock hub data
   const hub = {
@@ -27,10 +34,10 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { hubId: string } }
+  context: RouteContext
 ) {
   try {
-    const hubId = params.hubId;
+    const hubId = context.params.hubId;
     const body = await request.json();
     
     // Mock updating a hub
@@ -49,10 +56,10 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { hubId: string } }
+  context: RouteContext
 ) {
   try {
-    const hubId = params.hubId;
+    const hubId = context.params.hubId;
     
     // Mock deleting a hub
     return NextResponse.json({ success: true, message: `Hub ${hubId} deleted successfully` });

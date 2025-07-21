@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Define the correct context type for Next.js App Router
+type RouteContext = {
+  params: {
+    hubId: string;
+  };
+};
+
 export async function GET(
   request: NextRequest,
-  { params }: { params: { hubId: string } }
+  context: RouteContext
 ) {
-  const hubId = params.hubId;
+  const hubId = context.params.hubId;
   
   // Mock memories data
   const memories = [];
@@ -33,10 +40,10 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { hubId: string } }
+  context: RouteContext
 ) {
   try {
-    const hubId = params.hubId;
+    const hubId = context.params.hubId;
     const body = await request.json();
     
     // Mock creating a new memory
