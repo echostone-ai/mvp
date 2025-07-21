@@ -6,6 +6,18 @@ import { supabase } from '@/lib/supabase'
 import ChatInterface from '@/components/ChatInterface'
 import PageShell from '@/components/PageShell'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
+
+// Dynamically import VoiceTrainingDebug component
+const VoiceTrainingDebug = dynamic(() => import('@/components/VoiceTrainingDebug'), {
+  ssr: false,
+  loading: () => <div className="text-center p-4">Loading debug tools...</div>
+})
+
+// Wrapper component to handle the dynamic import
+function VoiceTrainingDebugWrapper({ avatarId }: { avatarId: string }) {
+  return <VoiceTrainingDebug avatarId={avatarId} />
+}
 
 export default function AvatarChatPage() {
   const params = useParams() as { avatarId: string }
@@ -171,12 +183,10 @@ export default function AvatarChatPage() {
                           If you're having trouble training your avatar's voice, you can use the debug tools below to diagnose the issue.
                         </p>
                         <div className="mt-4">
-                          <dynamic-import>
-                            {() => {
-                              const VoiceTrainingDebug = require('@/components/VoiceTrainingDebug').default;
-                              return <VoiceTrainingDebug avatarId={avatarId} />;
-                            }}
-                          </dynamic-import>
+                          {/* Import VoiceTrainingDebug component */}
+                          {typeof window !== 'undefined' && (
+                            <VoiceTrainingDebugWrapper avatarId={avatarId} />
+                          )}
                         </div>
                       </div>
                     </div>
