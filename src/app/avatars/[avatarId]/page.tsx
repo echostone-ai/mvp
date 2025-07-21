@@ -152,13 +152,36 @@ export default function AvatarChatPage() {
                 This avatar doesn't have a voice yet. Record a voice sample to give it a unique voice.
               </p>
               
-              <div className="flex justify-center">
+              <div className="flex flex-col items-center">
                 <Link 
                   href={`/avatars/voices`}
-                  className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
+                  className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 mb-4"
                 >
                   Train Voice
                 </Link>
+                
+                {/* Voice Training Debug Component */}
+                <div className="w-full mt-6">
+                  <details className="text-sm opacity-70">
+                    <summary className="cursor-pointer hover:text-purple-300">Advanced Options</summary>
+                    <div className="pt-4">
+                      <div className="bg-gray-900/50 p-4 rounded-lg">
+                        <h4 className="text-purple-300 mb-2 font-medium">Voice Training Troubleshooting</h4>
+                        <p className="text-gray-400 mb-4 text-sm">
+                          If you're having trouble training your avatar's voice, you can use the debug tools below to diagnose the issue.
+                        </p>
+                        <div className="mt-4">
+                          <dynamic-import>
+                            {() => {
+                              const VoiceTrainingDebug = require('@/components/VoiceTrainingDebug').default;
+                              return <VoiceTrainingDebug avatarId={avatarId} />;
+                            }}
+                          </dynamic-import>
+                        </div>
+                      </div>
+                    </div>
+                  </details>
+                </div>
               </div>
             </div>
           </div>
