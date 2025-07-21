@@ -67,6 +67,26 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { hubId, action, ...data } = body;
     
+    // Special case for hub creation which doesn't require a hubId
+    if (action === 'create') {
+      // Create a new hub
+      const newHub = {
+        id: Math.random().toString(36).substring(2, 9),
+        name: data.name || 'Untitled Hub',
+        description: data.description || '',
+        isPublished: data.isPublished || false,
+        createdAt: new Date().toISOString(),
+        ownerId: 'user-123',
+        _count: {
+          memories: 0,
+          viewers: 0
+        }
+      };
+      
+      return NextResponse.json({ success: true, hub: newHub }, { status: 201 });
+    }
+    
+    // For all other actions, hubId is required
     if (!hubId) {
       return NextResponse.json({ error: 'Hub ID is required' }, { status: 400 });
     }

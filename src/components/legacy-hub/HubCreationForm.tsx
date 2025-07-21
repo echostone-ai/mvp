@@ -75,12 +75,16 @@ export default function HubCreationForm() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('/api/hubs', {
+      // Use our unified API endpoint for hub creation
+      const response = await fetch('/api/hub-api', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          action: 'create',
+          ...formData
+        }),
       });
 
       const data = await response.json();

@@ -373,10 +373,48 @@ export default function HubDetailPage() {
             <div className="invite-form">
               <input
                 type="email"
+                id="invite-email"
                 className="form-input"
                 placeholder="Enter email address"
               />
-              <button className="btn btn-primary">
+              <button 
+                className="btn btn-primary"
+                onClick={() => {
+                  const emailInput = document.getElementById('invite-email') as HTMLInputElement;
+                  const email = emailInput?.value;
+                  
+                  if (!email) {
+                    setError('Please enter an email address');
+                    return;
+                  }
+                  
+                  // Send invitation via API
+                  fetch('/api/hub-api', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                      hubId: hubId,
+                      action: 'add-invite',
+                      email: email
+                    })
+                  })
+                  .then(response => {
+                    if (!response.ok) {
+                      throw new Error('Failed to send invitation');
+                    }
+                    return response.json();
+                  })
+                  .then(data => {
+                    alert(`Invitation sent to ${email}`);
+                    emailInput.value = '';
+                  })
+                  .catch(err => {
+                    setError('Failed to send invitation');
+                  });
+                }}
+              >
                 Send Invite
               </button>
             </div>
