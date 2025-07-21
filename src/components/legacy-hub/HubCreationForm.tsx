@@ -101,18 +101,16 @@ export default function HubCreationForm() {
   };
 
   return (
-    <div className="hub-creation-form">
-      <h2 className="text-2xl font-bold mb-6">Create a Legacy Hub</h2>
-
+    <div>
       {submitError && (
-        <div className="error-message mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+        <div className="alert alert-error">
           {submitError}
         </div>
       )}
 
       <form onSubmit={handleSubmit}>
-        <div className="form-group mb-4">
-          <label htmlFor="name" className="block text-sm font-medium mb-1">
+        <div className="form-group">
+          <label htmlFor="name" className="form-label">
             Hub Name*
           </label>
           <input
@@ -121,18 +119,16 @@ export default function HubCreationForm() {
             name="name"
             value={formData.name}
             onChange={handleChange}
-            className={`w-full p-2 border rounded ${
-              errors.name ? 'border-red-500' : 'border-gray-300'
-            }`}
+            className={`form-input ${errors.name ? 'border-red-500' : ''}`}
             placeholder="My Legacy Hub"
           />
           {errors.name && (
-            <p className="text-red-500 text-sm mt-1">{errors.name}</p>
+            <p className="form-error">{errors.name}</p>
           )}
         </div>
 
-        <div className="form-group mb-4">
-          <label htmlFor="description" className="block text-sm font-medium mb-1">
+        <div className="form-group">
+          <label htmlFor="description" className="form-label">
             Description
           </label>
           <textarea
@@ -141,44 +137,37 @@ export default function HubCreationForm() {
             value={formData.description}
             onChange={handleChange}
             rows={4}
-            className={`w-full p-2 border rounded ${
-              errors.description ? 'border-red-500' : 'border-gray-300'
-            }`}
+            className={`form-textarea ${errors.description ? 'border-red-500' : ''}`}
             placeholder="A place to share memories and stories..."
           />
           {errors.description && (
-            <p className="text-red-500 text-sm mt-1">{errors.description}</p>
+            <p className="form-error">{errors.description}</p>
           )}
         </div>
 
-        <div className="form-group mb-6">
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="isPublished"
-              name="isPublished"
-              checked={formData.isPublished}
-              onChange={handleChange}
-              className="mr-2"
-            />
-            <label htmlFor="isPublished" className="text-sm font-medium">
-              Publish immediately
-            </label>
-          </div>
-          <p className="text-sm text-gray-500 mt-1">
+        <div className="form-group form-checkbox">
+          <input
+            type="checkbox"
+            id="isPublished"
+            name="isPublished"
+            checked={formData.isPublished}
+            onChange={handleChange}
+          />
+          <label htmlFor="isPublished">
+            Publish immediately
+          </label>
+          <p className="form-help">
             When published, people with invitations can view and contribute to your hub.
           </p>
         </div>
 
-        <div className="form-actions">
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-blue-300"
-          >
-            {isSubmitting ? 'Creating...' : 'Create Hub'}
-          </button>
-        </div>
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="btn btn-primary"
+        >
+          {isSubmitting ? 'Creating...' : 'Create Hub'}
+        </button>
       </form>
     </div>
   );

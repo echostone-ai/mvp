@@ -10,9 +10,13 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 export async function POST(req: Request) {
   try {
     // 1) Parse incoming payload
-    const { question, history } = await req.json()
-    if (typeof question !== 'string') {
-      return NextResponse.json({ error: 'Invalid request: `question` is required.' },
+    const { question, prompt, history, profileData } = await req.json()
+    
+    // Support both the old and new API formats
+    const userQuestion = question || prompt
+    
+    if (typeof userQuestion !== 'string') {
+      return NextResponse.json({ error: 'Invalid request: `question` or `prompt` is required.' },
       { status: 400 })
     }
 
@@ -31,12 +35,18 @@ export async function POST(req: Request) {
       humorStyle: {},
       catchphrases: []
     }
-    try {
-      const raw = await fs.readFile(path.join(process.cwd(), 'public', 'jonathan_profile.json'),
-      'utf-8')
-      profile = JSON.parse(raw)
-    } catch (e) {
-      console.warn('[api/chat] Failed to load profile, using defaults', e)
+    
+    // Use provided profileData if available
+    if (profileData) {
+      profile = profileData;
+    } else {
+      try {
+        const raw = await fs.readFile(path.join(process.cwd(), 'public', 'jonathan_profile.json'),
+        'utf-8')
+        profile = JSON.parse(raw)
+      } catch (e) {
+        console.warn('[api/chat] Failed to load profile, using defaults', e)
+      }
     }
 
     // 3) Build system prompt
@@ -65,7 +75,7 @@ export async function POST(req: Request) {
     const messages = [
       { role: 'system', content: systemPrompt },
       ...safeHistory,
-      { role: 'user', content: question }
+      { role: 'user', content: userQuestion }
     ]
 
     // 5) Query OpenAI
