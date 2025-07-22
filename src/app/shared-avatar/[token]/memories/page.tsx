@@ -4,8 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import SharedAvatarMemories from '@/components/SharedAvatarMemories';
-import '@/styles/legacy-hub.css';
-import '@/styles/avatar-sharing.css';
+// CSS is imported in the layout file
 
 export default function SharedAvatarMemoriesPage() {
   const params = useParams();

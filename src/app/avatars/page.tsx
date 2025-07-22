@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
-import PageShell from '@/components/PageShell'
 
 interface Avatar {
   id: string

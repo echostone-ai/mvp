@@ -48,9 +48,9 @@ export async function POST(request: NextRequest) {
 
       case 'accept-share':
         // Accept a shared avatar invitation
-        const { shareToken, userEmail } = data;
+        const { shareToken: acceptToken, userEmail } = data;
         
-        if (!shareToken || !userEmail) {
+        if (!acceptToken || !userEmail) {
           return NextResponse.json({ 
             error: 'Share token and user email are required' 
           }, { status: 400 });
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
 
         // In a real app, validate token and create user access
         const acceptedShare = {
-          shareToken,
+          shareToken: acceptToken,
           userEmail,
           acceptedAt: new Date().toISOString(),
           status: 'accepted'

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import '@/styles/avatar-sharing.css';
+// CSS is imported in the layout file
 
 interface Memory {
   id: string;

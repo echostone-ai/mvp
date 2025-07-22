@@ -4,8 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ChatInterface from '@/components/ChatInterface';
-import '@/styles/legacy-hub.css';
-import '@/styles/avatar-sharing.css';
+// CSS is imported in the layout file
 
 export default function SharedAvatarChatPage() {
   const params = useParams();

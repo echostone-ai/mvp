@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import '@/styles/avatar-sharing.css';
+// CSS is imported in the layout file
 
 interface SharedAvatarNavigationProps {
   shareToken: string;
