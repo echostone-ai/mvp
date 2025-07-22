@@ -23,6 +23,9 @@ interface ChatInterfaceProps {
   avatarId?: string // avatar ID for memory isolation
   initialMessages?: ChatMessage[]
   onAsk?: (question: string) => void
+  visitorName?: string // Name of the visitor for shared avatars
+  isSharedAvatar?: boolean // Whether this is a shared avatar session
+  shareToken?: string // Share token for shared avatar sessions
 }
 
 export default function ChatInterface({
@@ -32,6 +35,9 @@ export default function ChatInterface({
   avatarId,
   initialMessages = [],
   onAsk,
+  visitorName,
+  isSharedAvatar = false,
+  shareToken,
 }: ChatInterfaceProps) {
   const [question, setQuestion] = useState('')
   const [answer, setAnswer] = useState('')
@@ -243,6 +249,9 @@ export default function ChatInterface({
           voiceId,
           userId, // Pass userId for memory operations
           avatarId, // Pass avatarId for memory isolation
+          visitorName, // Pass visitor's name for personalized responses
+          isSharedAvatar, // Indicate if this is a shared avatar session
+          shareToken, // Pass share token for shared avatar sessions
           partnerProfile: profileData, // Pass the current user's profile as partnerProfile
         }),
       })

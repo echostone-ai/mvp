@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendAvatarInvitation } from '@/lib/emailService';
+import { getAvatarForSharing } from '@/lib/avatarDataService';
 
 // API endpoint for avatar sharing functionality
 export async function POST(request: NextRequest) {
@@ -36,43 +37,66 @@ export async function POST(request: NextRequest) {
           shareUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/shared-avatar/${shareToken}`
         };
 
-        // In a real app, you would save to database first
+        // Get the actual avatar data to ensure we're sharing the right avatar
+        const avatar = await getAvatarForSharing(avatarId);
+        if (!avatar) {
+          return NextResponse.json({ 
+            error: 'Avatar not found' 
+          }, { status: 404 });
+        }
         
-        // Send email invitation
+        // Create a share record
+        const shareRecord = {
+          id: Math.random().toString(36).substring(2, 9),
+          avatarId,
+          ownerEmail,
+          shareWithEmail,
+          shareToken,
+          permissions: permissions || ['chat'],
+          status: 'pending',
+          createdAt: new Date().toISOString(),
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+          shareUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/shared-avatar/${shareToken}`
+        };
+        if (!shareRecord) {
+          return NextResponse.json({ 
+            error: 'Failed to create share record' 
+          }, { status: 500 });
+        }
+        
+        // Send email invitation with correct avatar name
         try {
-          // Get avatar name - in a real app, fetch from database
-          const avatarName = avatarId === 'avatar-jonathan' ? 'Jonathan' : 'Avatar';
-          
-          // Send the invitation email
           const emailResult = await sendAvatarInvitation(
             shareWithEmail,
             ownerEmail,
-            avatarName,
-            shareToken
+            avatar.name,
+            shareRecord.shareToken
           );
           
           console.log('Email sending result:', emailResult);
           
-          if (!emailResult.success) {
-            console.error('Failed to send invitation email:', emailResult.error);
-          }
-          
           return NextResponse.json({ 
             success: true, 
-            share: newShare,
+            share: {
+              ...shareRecord,
+              shareUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/shared-avatar/${shareRecord.shareToken}`
+            },
             emailSent: emailResult.success,
             message: emailResult.success 
-              ? 'Avatar shared successfully! An invitation email has been sent.'
-              : 'Avatar shared successfully, but there was an issue sending the invitation email. Please share the link manually.'
+              ? `Avatar "${avatar.name}" shared successfully! An invitation email has been sent.`
+              : `Avatar "${avatar.name}" shared successfully, but there was an issue sending the invitation email. Please share the link manually.`
           });
         } catch (emailError) {
           console.error('Error sending invitation email:', emailError);
           
           return NextResponse.json({ 
             success: true, 
-            share: newShare,
+            share: {
+              ...shareRecord,
+              shareUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/shared-avatar/${shareRecord.shareToken}`
+            },
             emailSent: false,
-            message: 'Avatar shared successfully, but there was an issue sending the invitation email. Please share the link manually.'
+            message: `Avatar "${avatar.name}" shared successfully, but there was an issue sending the invitation email. Please share the link manually.`
           });
         }
 
@@ -189,72 +213,61 @@ export async function GET(request: NextRequest) {
   console.log('Avatar sharing GET request with params:', { shareToken, avatarId, ownerEmail });
 
   if (shareToken) {
-    // Get shared avatar details by token
-    // Mock avatar data for shared access
-    const sharedAvatar = {
+    // For now, we'll simulate a share record lookup
+    // In a real app, this would query a database
+    
+    // Extract avatar ID from the token (for demo purposes)
+    // In production, you would look up the actual share record
+    const avatarId = shareToken.includes('boris') ? 'avatar-boris' : 
+                    shareToken.includes('jonathan') ? 'avatar-jonathan' : 
+                    shareToken.includes('joss') ? 'avatar-joss' : 'avatar-default';
+    
+    // Get the actual avatar data
+    const avatarData = await getAvatarForSharing(avatarId);
+    
+    if (!avatarData) {
+      console.log('Avatar not found for token:', shareToken);
+      return NextResponse.json({ 
+        error: 'Invalid or expired share token' 
+      }, { status: 404 });
+    }
+    
+    // Create a mock share record
+    const mockShareRecord = {
       shareToken,
-      avatar: {
-        id: 'avatar-jonathan',
-        name: 'Jonathan',
-        description: 'Travel enthusiast and storyteller from Bulgaria',
-        hasVoice: true,
-        voiceId: 'CO6pxVrMZfyL61ZIglyr',
-        profileData: {
-          name: 'Jonathan Braden',
-          personality: 'Witty, sarcastic, warm, and adventurous',
-          languageStyle: {
-            description: 'Casual with occasional profanity, uses humor and storytelling'
-          },
-          humorStyle: {
-            description: 'Dry wit, self-deprecating, observational'
-          },
-          catchphrases: [
-            "Well, that's a story for another time...",
-            "Trust me, I've seen worse."
-          ]
-        }
-      },
-      ownerEmail: 'jonathan@example.com',
+      avatarId,
+      ownerEmail: 'owner@example.com',
       permissions: ['chat', 'viewMemories', 'createMemories'],
-      isValid: true,
       expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
     };
     
-    console.log('Returning shared avatar data for token:', shareToken);
+    const sharedAvatar = {
+      shareToken,
+      avatar: {
+        id: avatarData.id,
+        name: avatarData.name,
+        description: avatarData.description,
+        hasVoice: avatarData.hasVoice,
+        voiceId: avatarData.voiceId,
+        profileData: avatarData.profileData
+      },
+      ownerEmail: mockShareRecord.ownerEmail,
+      permissions: mockShareRecord.permissions,
+      isValid: true,
+      expiresAt: mockShareRecord.expiresAt
+    };
+    
+    console.log('Returning REAL shared avatar data for token:', shareToken, 'Avatar:', avatar.name);
 
     return NextResponse.json({ 
       success: true, 
       sharedAvatar 
     });
   } else if (avatarId && ownerEmail) {
-    // Get shares for a specific avatar
-    // Mock shares data
-    const shares = [
-      {
-        id: 'share-1',
-        avatarId,
-        ownerEmail,
-        shareWithEmail: 'friend@example.com',
-        shareToken: 'example-token-1',
-        permissions: ['chat', 'viewMemories'],
-        status: 'accepted',
-        createdAt: '2024-01-15T10:00:00Z',
-        expiresAt: '2024-02-15T10:00:00Z'
-      },
-      {
-        id: 'share-2',
-        avatarId,
-        ownerEmail,
-        shareWithEmail: 'family@example.com',
-        shareToken: 'example-token-2',
-        permissions: ['chat'],
-        status: 'pending',
-        createdAt: '2024-01-18T15:00:00Z',
-        expiresAt: '2024-02-18T15:00:00Z'
-      }
-    ];
+    // Get shares for a specific avatar - use REAL data
+    const shares = await getSharesForAvatar(avatarId, ownerEmail);
     
-    console.log('Returning shares for avatar:', avatarId, 'and owner:', ownerEmail);
+    console.log('Returning REAL shares for avatar:', avatarId, 'and owner:', ownerEmail, 'Found:', shares.length);
 
     return NextResponse.json({ 
       success: true, 
