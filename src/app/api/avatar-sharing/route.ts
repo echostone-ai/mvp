@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { sendAvatarInvitation } from '@/lib/emailService';
 
 // API endpoint for avatar sharing functionality
 export async function POST(request: NextRequest) {
@@ -35,16 +36,45 @@ export async function POST(request: NextRequest) {
           shareUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/shared-avatar/${shareToken}`
         };
 
-        // In a real app, you would:
-        // 1. Save to database
-        // 2. Send email notification to recipient
-        // 3. Set up proper permissions
-
-        return NextResponse.json({ 
-          success: true, 
-          share: newShare,
-          message: 'Avatar shared successfully! An invitation email will be sent.'
-        });
+        // In a real app, you would save to database first
+        
+        // Send email invitation
+        try {
+          // Get avatar name - in a real app, fetch from database
+          const avatarName = avatarId === 'avatar-jonathan' ? 'Jonathan' : 'Avatar';
+          
+          // Send the invitation email
+          const emailResult = await sendAvatarInvitation(
+            shareWithEmail,
+            ownerEmail,
+            avatarName,
+            shareToken
+          );
+          
+          console.log('Email sending result:', emailResult);
+          
+          if (!emailResult.success) {
+            console.error('Failed to send invitation email:', emailResult.error);
+          }
+          
+          return NextResponse.json({ 
+            success: true, 
+            share: newShare,
+            emailSent: emailResult.success,
+            message: emailResult.success 
+              ? 'Avatar shared successfully! An invitation email has been sent.'
+              : 'Avatar shared successfully, but there was an issue sending the invitation email. Please share the link manually.'
+          });
+        } catch (emailError) {
+          console.error('Error sending invitation email:', emailError);
+          
+          return NextResponse.json({ 
+            success: true, 
+            share: newShare,
+            emailSent: false,
+            message: 'Avatar shared successfully, but there was an issue sending the invitation email. Please share the link manually.'
+          });
+        }
 
       case 'accept-share':
         // Accept a shared avatar invitation

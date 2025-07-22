@@ -21,6 +21,7 @@ export default function AvatarSharingForm({ avatarId, avatarName, ownerEmail }: 
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [shareHistory, setShareHistory] = useState<any[]>([]);
+  const [lastCreatedShare, setLastCreatedShare] = useState<any>(null);
 
   // Load existing shares when component mounts
   React.useEffect(() => {
@@ -101,8 +102,48 @@ export default function AvatarSharingForm({ avatarId, avatarName, ownerEmail }: 
         throw new Error(data.error || 'Failed to share avatar');
       }
 
-      setSuccessMessage(`Avatar successfully shared with ${email}! An invitation email will be sent.`);
+      // Store the created share for display
+      const shareUrl = data.share?.shareUrl || `${window.location.origin}/shared-avatar/${data.share?.shareToken}`;
+      
+      setLastCreatedShare({
+        ...data.share,
+        shareWithEmail: email,
+        shareUrl
+      });
+      
+      setSuccessMessage(`Avatar successfully shared with ${email}!`);
       setEmail('');
+      
+      // Optionally send email notification
+      try {
+        const emailResponse = await fetch('/api/send-invitation-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            recipientEmail: email,
+            avatarName,
+            ownerEmail,
+            shareUrl,
+            personalMessage: '' // Could add a field for this in the form
+          })
+        });
+        
+        if (emailResponse.ok) {
+          const emailData = await emailResponse.json();
+          console.log('Email notification sent:', emailData);
+          
+          // In development, show what the email would contain
+          if (emailData.emailContent && process.env.NODE_ENV === 'development') {
+            console.log('Email content that would be sent:', emailData.emailContent);
+          }
+        } else {
+          console.warn('Failed to send email notification, but share was created successfully');
+        }
+      } catch (emailError) {
+        console.warn('Email notification failed, but share was created successfully:', emailError);
+      }
       
       // Refresh share history
       fetchShareHistory();
@@ -152,10 +193,67 @@ export default function AvatarSharingForm({ avatarId, avatarName, ownerEmail }: 
       <h2 className="section-title">Share {avatarName} with Others</h2>
       <p className="section-description">
         Share your avatar with friends and family. Each person will have their own private conversations and memories with your avatar.
+        <br />
+        <a href="/sharing-help" target="_blank" style={{ color: '#9b7cff', textDecoration: 'underline' }}>
+          Need help with sharing? Click here for detailed instructions.
+        </a>
       </p>
 
       {error && <div className="alert alert-error">{error}</div>}
       {successMessage && <div className="alert alert-success">{successMessage}</div>}
+      
+      {lastCreatedShare && (
+        <div className="share-link-display">
+          <h4>Share Link Created</h4>
+          <p>Send this link to {lastCreatedShare.shareWithEmail} to give them access to your avatar:</p>
+          <div className="share-link-container">
+            <input
+              type="text"
+              value={lastCreatedShare.shareUrl}
+              readOnly
+              className="form-input"
+            />
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(lastCreatedShare.shareUrl);
+                alert('Share link copied to clipboard!');
+              }}
+              className="btn btn-secondary btn-sm"
+            >
+              Copy Link
+            </button>
+          </div>
+          <div className="share-actions">
+            <button
+              onClick={() => {
+                const subject = encodeURIComponent(`You've been invited to chat with ${avatarName}!`);
+                const body = encodeURIComponent(`Hi there!
+
+I'd like to share my avatar "${avatarName}" with you. This is a digital version of me that you can chat with privately.
+
+Click this link to start chatting:
+${lastCreatedShare.shareUrl}
+
+Your conversations will be completely private - only you will be able to see them. The avatar will remember things from your conversations and build memories specific to your relationship.
+
+Hope you enjoy chatting with ${avatarName}!
+
+Best regards`);
+                window.open(`mailto:${lastCreatedShare.shareWithEmail}?subject=${subject}&body=${body}`);
+              }}
+              className="btn btn-primary btn-sm"
+            >
+              📧 Compose Email
+            </button>
+            <button
+              onClick={() => setLastCreatedShare(null)}
+              className="btn btn-secondary btn-sm"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="sharing-form">
         <div className="form-group">
