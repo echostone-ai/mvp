@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+// import { useRouter } from 'next/navigation';
 
 interface AvatarSharingFormProps {
   avatarId: string;
@@ -10,7 +10,7 @@ interface AvatarSharingFormProps {
 }
 
 export default function AvatarSharingForm({ avatarId, avatarName, ownerEmail }: AvatarSharingFormProps) {
-  const router = useRouter();
+  // const router = useRouter();
   const [email, setEmail] = useState('');
   const [permissions, setPermissions] = useState({
     chat: true,
@@ -29,15 +29,29 @@ export default function AvatarSharingForm({ avatarId, avatarName, ownerEmail }: 
 
   const fetchShareHistory = async () => {
     try {
-      const response = await fetch(`/api/avatar-sharing?avatarId=${avatarId}&ownerEmail=${ownerEmail}`);
+      // Make sure we have the required parameters
+      if (!avatarId || !ownerEmail) {
+        console.error('Missing required parameters for fetching share history');
+        return;
+      }
+      
+      const response = await fetch(`/api/avatar-sharing?avatarId=${encodeURIComponent(avatarId)}&ownerEmail=${encodeURIComponent(ownerEmail)}`);
+      
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.shares) {
           setShareHistory(data.shares);
+        } else {
+          console.log('No shares found or invalid response format:', data);
+          setShareHistory([]);
         }
+      } else {
+        console.error('Failed to fetch share history, status:', response.status);
+        setShareHistory([]);
       }
     } catch (error) {
       console.error('Failed to fetch share history:', error);
+      setShareHistory([]);
     }
   };
 

@@ -155,6 +155,8 @@ export async function GET(request: NextRequest) {
   const shareToken = url.searchParams.get('shareToken');
   const avatarId = url.searchParams.get('avatarId');
   const ownerEmail = url.searchParams.get('ownerEmail');
+  
+  console.log('Avatar sharing GET request with params:', { shareToken, avatarId, ownerEmail });
 
   if (shareToken) {
     // Get shared avatar details by token
@@ -187,6 +189,8 @@ export async function GET(request: NextRequest) {
       isValid: true,
       expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
     };
+    
+    console.log('Returning shared avatar data for token:', shareToken);
 
     return NextResponse.json({ 
       success: true, 
@@ -219,12 +223,16 @@ export async function GET(request: NextRequest) {
         expiresAt: '2024-02-18T15:00:00Z'
       }
     ];
+    
+    console.log('Returning shares for avatar:', avatarId, 'and owner:', ownerEmail);
 
     return NextResponse.json({ 
       success: true, 
       shares 
     });
   } else {
+    console.log('Invalid request parameters for avatar sharing GET');
+    
     return NextResponse.json({ 
       error: 'Invalid request parameters' 
     }, { status: 400 });

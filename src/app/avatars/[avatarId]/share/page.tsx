@@ -18,17 +18,28 @@ export default function AvatarSharingPage() {
   useEffect(() => {
     async function fetchAvatarDetails() {
       try {
+        console.log('Fetching avatar details for ID:', avatarId);
+        
         // In a real app, fetch from your API
         const response = await fetch(`/api/avatars/${avatarId}`);
         
+        console.log('Avatar API response status:', response.status);
+        
         if (!response.ok) {
-          throw new Error('Failed to fetch avatar details');
+          throw new Error(`Failed to fetch avatar details: ${response.status}`);
         }
         
         const data = await response.json();
+        console.log('Avatar data received:', data);
+        
+        if (!data.avatar) {
+          throw new Error('Invalid response format: missing avatar data');
+        }
+        
         setAvatar(data.avatar);
         setLoading(false);
       } catch (err) {
+        console.error('Error fetching avatar details:', err);
         setError('Failed to load avatar details');
         setLoading(false);
       }
@@ -52,9 +63,32 @@ export default function AvatarSharingPage() {
         <div className="error-message">
           {error || 'Avatar not found'}
         </div>
-        <Link href="/avatars" className="btn btn-primary">
-          Back to Avatars
-        </Link>
+        <p>
+          Attempted to load avatar with ID: {avatarId}
+        </p>
+        <div className="form-actions" style={{ marginTop: '1rem' }}>
+          <button 
+            onClick={() => {
+              setError(null);
+              setLoading(true);
+              // Create a fallback avatar
+              setAvatar({
+                id: avatarId,
+                name: `Avatar ${avatarId.substring(0, 4)}`,
+                description: 'A digital avatar',
+                hasVoice: false,
+                voiceId: null
+              });
+              setLoading(false);
+            }}
+            className="btn btn-secondary"
+          >
+            Use Fallback Data
+          </button>
+          <Link href="/avatars" className="btn btn-primary">
+            Back to Avatars
+          </Link>
+        </div>
       </div>
     );
   }
@@ -77,7 +111,7 @@ export default function AvatarSharingPage() {
       <div className="card">
         <AvatarSharingForm 
           avatarId={avatarId} 
-          avatarName={avatar.name} 
+          avatarName={avatar.name || 'Avatar'} 
           ownerEmail="current-user@example.com" // In a real app, get from auth
         />
       </div>
