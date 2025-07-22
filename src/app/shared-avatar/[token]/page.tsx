@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import '@/styles/legacy-hub.css';
+import '@/styles/avatar-sharing.css';
 
 export default function SharedAvatarPage() {
   const params = useParams();

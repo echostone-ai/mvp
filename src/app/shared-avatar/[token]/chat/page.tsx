@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ChatInterface from '@/components/ChatInterface';
 import '@/styles/legacy-hub.css';
+import '@/styles/avatar-sharing.css';
 
 export default function SharedAvatarChatPage() {
   const params = useParams();

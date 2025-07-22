@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import '@/styles/legacy-hub.css';
+import '@/styles/avatar-sharing.css';
 
 interface SharedAvatar {
   id: string;

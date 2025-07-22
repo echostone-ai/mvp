@@ -177,8 +177,8 @@ export async function GET(request: NextRequest) {
             description: 'Dry wit, self-deprecating, observational'
           },
           catchphrases: [
-            'Well, that's a story for another time...',
-            'Trust me, I've seen worse.'
+            "Well, that's a story for another time...",
+            "Trust me, I've seen worse."
           ]
         }
       },

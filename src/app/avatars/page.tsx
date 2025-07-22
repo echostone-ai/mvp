@@ -133,18 +133,18 @@ export default function AvatarsPage() {
 
   if (loading) {
     return (
-      <PageShell>
+      <div className="container">
         <main className="min-h-screen flex flex-col items-center justify-center text-white">
           <div className="loading-spinner"></div>
           <p className="mt-4 text-xl">Loading...</p>
         </main>
-      </PageShell>
+      </div>
     )
   }
 
   if (!user) {
     return (
-      <PageShell>
+      <div className="container">
         <main className="avatars-auth-main">
           <h1 className="avatars-auth-title">Authentication Required</h1>
           <p className="avatars-auth-subtitle">Please sign in to access avatars.</p>
@@ -152,12 +152,12 @@ export default function AvatarsPage() {
             Sign In
           </Link>
         </main>
-      </PageShell>
+      </div>
     )
   }
 
   return (
-    <PageShell>
+    <div className="container">
       <main className="avatars-main">
         <div className="avatars-header">
           <h1 className="avatars-title">Your Avatars</h1>
@@ -352,6 +352,6 @@ export default function AvatarsPage() {
           </div>
         )}
       </main>
-    </PageShell>
+    </div>
   )
 }
