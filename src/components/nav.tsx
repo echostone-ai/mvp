@@ -1,19 +1,40 @@
-// src/components/Nav.tsx
-'use client'
+'use client';
 
-import Link from 'next/link'
-import AccountMenu from './AccountMenu'
+import React from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
-export default function Nav() {
+export default function Navigation() {
+  const pathname = usePathname();
+  
+  const navItems = [
+    { name: 'Home', path: '/' },
+    { name: 'Avatars', path: '/avatars' },
+    { name: 'Shared Avatars', path: '/shared-avatars' },
+    { name: 'Hubs', path: '/hubs' },
+    { name: 'Profile', path: '/profile' }
+  ];
+
   return (
-    <nav className="navbar">
-      <div className="nav-links">
-        <Link href="/" aria-label="Home" className="nav-link">Home</Link>
-        <Link href="/about" aria-label="About" className="nav-link">About</Link>
-        <Link href="/profile" aria-label="Profile" className="nav-link">Profile</Link>
-        {/* Add more links here with the same className */}
+    <nav className="main-navigation">
+      <div className="nav-container">
+        <Link href="/" className="nav-logo">
+          <img src="/echostone_logo.png" alt="EchoStone" width={32} height={32} />
+          <span>EchoStone</span>
+        </Link>
+        
+        <div className="nav-links">
+          {navItems.map((item) => (
+            <Link
+              key={item.name}
+              href={item.path}
+              className={`nav-link ${pathname === item.path ? 'active' : ''}`}
+            >
+              {item.name}
+            </Link>
+          ))}
+        </div>
       </div>
-      <AccountMenu />
     </nav>
-  )
+  );
 }

@@ -414,6 +414,287 @@
   margin-top: 1rem;
 }
 
+/* Avatar Sharing Styles */
+.sharing-actions {
+  margin-bottom: 2rem;
+}
+
+.share-link-container {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.share-link-container input {
+  flex: 1;
+}
+
+.share-details {
+  background: rgba(30, 30, 60, 0.3);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+.share-summary {
+  margin-top: 1rem;
+}
+
+.share-summary h3 {
+  color: #ffffff;
+  margin-bottom: 0.5rem;
+}
+
+.share-summary ul {
+  list-style: none;
+  padding: 0;
+}
+
+.share-summary li {
+  color: #b8b8d9;
+  margin-bottom: 0.25rem;
+}
+
+.permissions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.shared-access-section {
+  margin-bottom: 2rem;
+}
+
+.shared-access-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.shared-access-card {
+  background: rgba(30, 30, 60, 0.5);
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid #3a3a5e;
+}
+
+.shared-access-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.shared-access-info h3 {
+  color: #ffffff;
+  margin: 0 0 0.25rem 0;
+  font-size: 1.1rem;
+}
+
+.access-status {
+  font-size: 0.875rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-weight: 500;
+}
+
+.access-status-pending {
+  background: rgba(237, 137, 54, 0.2);
+  color: #ed8936;
+}
+
+.access-status-accepted {
+  background: rgba(72, 187, 120, 0.2);
+  color: #48bb78;
+}
+
+.access-status-expired {
+  background: rgba(255, 107, 107, 0.2);
+  color: #ff6b6b;
+}
+
+.shared-access-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.shared-access-details {
+  color: #b8b8d9;
+  font-size: 0.875rem;
+}
+
+.access-permissions {
+  margin-bottom: 0.5rem;
+}
+
+.access-dates {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.access-dates span {
+  opacity: 0.8;
+}
+
+/* Shared Avatar Styles */
+.shared-avatar-details {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: rgba(20, 20, 40, 0.5);
+  border-radius: 8px;
+}
+
+.shared-detail {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.detail-label {
+  color: #9b7cff;
+  font-weight: 500;
+}
+
+.detail-value {
+  color: #b8b8d9;
+}
+
+.hub-card-badges {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* Privacy and Information Styles */
+.privacy-notice {
+  margin: 2rem 0;
+}
+
+.privacy-card {
+  background: rgba(72, 187, 120, 0.1);
+  border: 1px solid rgba(72, 187, 120, 0.3);
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.privacy-card h3 {
+  color: #48bb78;
+  margin-bottom: 1rem;
+}
+
+.privacy-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.privacy-card li {
+  color: #b8b8d9;
+  margin-bottom: 0.5rem;
+  padding-left: 1.5rem;
+  position: relative;
+}
+
+.privacy-card li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: #48bb78;
+  font-weight: bold;
+}
+
+.privacy-info-section {
+  margin-top: 3rem;
+}
+
+.privacy-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.privacy-feature {
+  background: rgba(30, 30, 60, 0.3);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.privacy-feature h4 {
+  color: #9b7cff;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+
+.privacy-feature p {
+  color: #b8b8d9;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.info-section {
+  margin-top: 3rem;
+}
+
+/* Session Management Styles */
+.session-management {
+  margin-top: 2rem;
+}
+
+.session-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.conversation-stats {
+  display: flex;
+  gap: 2rem;
+  margin-top: 1rem;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-number {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #9b7cff;
+}
+
+.stat-label {
+  display: block;
+  font-size: 0.875rem;
+  color: #b8b8d9;
+  margin-top: 0.25rem;
+}
+
+.chat-section {
+  margin: 2rem 0;
+}
+
+.invitation-details {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #3a3a5e;
+}
+
+.invitation-details .text-sm {
+  color: #b8b8d9;
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.empty-state-actions {
+  margin-top: 1.5rem;
+}
+
 /* Loading and error states */
 .loading-spinner {
   border: 4px solid rgba(155, 124, 255, 0.3);

@@ -13,45 +13,54 @@ export async function GET(request: NextRequest) {
   // Handle different actions
   switch (action) {
     case 'details':
-      // Get hub details
+      // Get hub details with published avatar info
       const hub = {
         id: hubId,
-        name: hubId === 'example-1' ? 'Family Memories' : 'Travel Adventures',
+        name: hubId === 'example-1' ? 'Chat with Jonathan' : 'Meet Sarah',
         description: hubId === 'example-1' 
-          ? 'A collection of family memories and stories from our adventures together.'
-          : 'Memories from my travels around the world.',
+          ? 'Interact with Jonathan\'s digital avatar - ask him about his travels, experiences, and memories.'
+          : 'Have a conversation with Sarah\'s avatar and learn about her life and stories.',
         isPublished: hubId === 'example-1',
         createdAt: new Date().toISOString(),
         ownerId: 'user-123',
+        publishedAvatar: {
+          id: hubId === 'example-1' ? 'avatar-jonathan' : 'avatar-sarah',
+          name: hubId === 'example-1' ? 'Jonathan' : 'Sarah',
+          voiceId: hubId === 'example-1' ? 'CO6pxVrMZfyL61ZIglyr' : null,
+          profileData: hubId === 'example-1' ? { /* Jonathan's personality data */ } : {},
+          hasVoice: hubId === 'example-1'
+        },
         _count: {
-          memories: hubId === 'example-1' ? 5 : 10,
-          viewers: hubId === 'example-1' ? 2 : 0
+          conversations: hubId === 'example-1' ? 12 : 3,
+          visitors: hubId === 'example-1' ? 5 : 1
         }
       };
       return NextResponse.json({ hub });
       
-    case 'memories':
-      // Get memories for this hub
-      const memories = [];
+    case 'conversations':
+      // Get visitor conversations with the avatar
+      const conversations = [];
       if (hubId === 'example-1') {
-        memories.push(
+        conversations.push(
           {
             id: '1',
-            title: 'Summer Vacation 2023',
-            content: 'We had an amazing time at the beach house. The kids loved building sandcastles and swimming in the ocean.',
-            createdAt: '2023-07-15T12:00:00Z',
-            createdBy: 'John Doe'
+            visitorName: 'Emily',
+            lastMessage: 'Tell me about your time in Bulgaria',
+            avatarResponse: 'Sofia is such a beautiful city! I love the cobblestone streets and morning coffee culture...',
+            createdAt: '2024-01-15T14:30:00Z',
+            messageCount: 8
           },
           {
             id: '2',
-            title: 'Grandma\'s Birthday',
-            content: 'We celebrated Grandma\'s 80th birthday with a surprise party. Everyone from the family was there!',
-            createdAt: '2023-05-22T14:30:00Z',
-            createdBy: 'Jane Smith'
+            visitorName: 'Michael',
+            lastMessage: 'What was your favorite travel destination?',
+            avatarResponse: 'That\'s a tough question! Each place had its own magic, but I have a soft spot for...',
+            createdAt: '2024-01-14T10:15:00Z',
+            messageCount: 12
           }
         );
       }
-      return NextResponse.json({ memories });
+      return NextResponse.json({ conversations });
       
     case 'invites':
       // Get invites for this hub

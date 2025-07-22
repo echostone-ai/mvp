@@ -58,17 +58,35 @@ export default function ChatInterface({
       loadConversation()
     }
   }, [userId, avatarId]) // Add avatarId as dependency to reload when avatar changes
+  
+  // Check if this is a shared avatar conversation
+  const isSharedAvatar = userId?.toString().includes('shared_') || false;
 
   const loadConversation = async () => {
     if (!userId) return
     
     setConversationLoading(true)
     try {
-      // Pass avatarId to get avatar-specific conversation
-      const conversation = await ConversationService.getCurrentConversation(userId, avatarId)
-      if (conversation) {
-        setConversationId(conversation.id || null)
-        setMessages(conversation.messages || [])
+      if (isSharedAvatar) {
+        // For shared avatars, use the private-conversations API
+        const response = await fetch(`/api/private-conversations?userId=${userId}&avatarId=${avatarId}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.conversation) {
+            setConversationId(data.conversation.id || null);
+            setMessages(data.conversation.messages?.map((msg: any) => ({
+              role: msg.role,
+              content: msg.content
+            })) || []);
+          }
+        }
+      } else {
+        // For regular avatars, use the ConversationService
+        const conversation = await ConversationService.getCurrentConversation(userId, avatarId)
+        if (conversation) {
+          setConversationId(conversation.id || null)
+          setMessages(conversation.messages || [])
+        }
       }
     } catch (error) {
       console.error('Failed to load conversation:', error)
@@ -81,15 +99,42 @@ export default function ChatInterface({
     if (!userId) return
 
     try {
-      // Pass avatarId to associate message with specific avatar
-      const result = await ConversationService.addMessage(
-        userId, 
-        newMessage, 
-        conversationId || undefined,
-        avatarId // Pass avatarId to ensure conversation is associated with this avatar
-      )
-      if (result.success && result.conversationId) {
-        setConversationId(result.conversationId)
+      if (isSharedAvatar) {
+        // For shared avatars, use the private-conversations API
+        const response = await fetch('/api/private-conversations', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            action: 'add-message',
+            conversationId: conversationId || undefined,
+            userId,
+            avatarId,
+            message: {
+              role: newMessage.role,
+              content: newMessage.content
+            }
+          })
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.conversationId) {
+            setConversationId(data.conversationId);
+          }
+        }
+      } else {
+        // For regular avatars, use the ConversationService
+        const result = await ConversationService.addMessage(
+          userId, 
+          newMessage, 
+          conversationId || undefined,
+          avatarId // Pass avatarId to ensure conversation is associated with this avatar
+        )
+        if (result.success && result.conversationId) {
+          setConversationId(result.conversationId)
+        }
       }
     } catch (error) {
       console.error('Failed to save message:', error)
