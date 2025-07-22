@@ -85,8 +85,29 @@ export async function getAvatarForSharing(avatarId: string): Promise<SharedAvata
     return convertToSharedAvatarData(profile);
   }
 
+  // Try direct Supabase query as a backup
+  try {
+    const { data, error } = await supabase
+      .from('avatar_profiles')
+      .select('*')
+      .eq('id', avatarId)
+      .single();
+      
+    if (!error && data) {
+      console.log('Found avatar via direct Supabase query:', data.name);
+      return convertToSharedAvatarData(data);
+    }
+  } catch (err) {
+    console.error('Error in direct Supabase query:', err);
+  }
+
   // Fallback for development/testing
   console.warn(`Avatar ${avatarId} not found in database, using fallback data`);
+  
+  // Extract a short ID for naming
+  const shortId = avatarId.includes('-') 
+    ? avatarId.split('-')[0] 
+    : avatarId.substring(0, 6);
   
   // Create fallback data based on avatar ID
   const fallbackData: SharedAvatarData = {
@@ -94,7 +115,7 @@ export async function getAvatarForSharing(avatarId: string): Promise<SharedAvata
     name: avatarId.includes('boris') ? 'Boris' : 
           avatarId.includes('jonathan') ? 'Jonathan' : 
           avatarId.includes('joss') ? 'Joss' :
-          `Avatar ${avatarId.substring(0, 8)}`,
+          `Avatar ${shortId}`,
     description: `A digital avatar ready to chat with you.`,
     hasVoice: false, // Default to no voice for safety
     voiceId: null,
@@ -102,7 +123,7 @@ export async function getAvatarForSharing(avatarId: string): Promise<SharedAvata
       name: avatarId.includes('boris') ? 'Boris' : 
             avatarId.includes('jonathan') ? 'Jonathan' : 
             avatarId.includes('joss') ? 'Joss' :
-            `Avatar ${avatarId.substring(0, 8)}`,
+            `Avatar ${shortId}`,
       personality: `I am a digital avatar. I'm here to chat with you and learn about your interests.`,
       languageStyle: {
         description: 'Friendly and conversational'

@@ -58,36 +58,40 @@ export default function AvatarSharingPage() {
   }
 
   if (error || !avatar) {
+    // Create a fallback avatar automatically
+    const fallbackAvatar = {
+      id: avatarId,
+      name: `Avatar ${avatarId.substring(0, 4)}`,
+      description: 'A digital avatar',
+      hasVoice: false,
+      voiceId: null
+    };
+    
     return (
       <div className="container">
-        <div className="error-message">
-          {error || 'Avatar not found'}
+        <Link href="/avatars" className="back-link">
+          &larr; Back to Avatars
+        </Link>
+        
+        <div className="hub-header">
+          <h1 className="hub-title">Share {fallbackAvatar.name}</h1>
+          <p className="hub-description">
+            Share your avatar with friends and family. Each person will have their own private conversations and memories.
+          </p>
         </div>
-        <p>
-          Attempted to load avatar with ID: {avatarId}
-        </p>
-        <div className="form-actions" style={{ marginTop: '1rem' }}>
-          <button 
-            onClick={() => {
-              setError(null);
-              setLoading(true);
-              // Create a fallback avatar
-              setAvatar({
-                id: avatarId,
-                name: `Avatar ${avatarId.substring(0, 4)}`,
-                description: 'A digital avatar',
-                hasVoice: false,
-                voiceId: null
-              });
-              setLoading(false);
-            }}
-            className="btn btn-secondary"
-          >
-            Use Fallback Data
-          </button>
-          <Link href="/avatars" className="btn btn-primary">
-            Back to Avatars
-          </Link>
+        
+        <div className="card">
+          <AvatarSharingForm 
+            avatarId={avatarId} 
+            avatarName={fallbackAvatar.name} 
+            ownerEmail="current-user@example.com" // In a real app, get from auth
+          />
+        </div>
+        
+        <div className="info-section">
+          <h3>Note: Using Fallback Data</h3>
+          <p>We couldn't load the complete avatar data, but you can still share this avatar.</p>
+          <p>Original error: {error || 'Avatar not found'}</p>
         </div>
       </div>
     );
