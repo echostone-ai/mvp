@@ -64,12 +64,12 @@ export async function POST(req: Request) {
     
     // Add visitor name context for shared avatars
     const visitorContext = visitorName 
-      ? `\nYou are talking to ${visitorName}. Address them by name occasionally in a natural way.` 
+      ? `\nYou are talking to ${visitorName}. Address them by name occasionally in a natural way. Make them feel welcome and remembered.` 
       : '';
       
     // Add memory isolation context for shared avatars
     const memoryContext = isSharedAvatar 
-      ? `\nThis is a shared avatar session. You are being shared with multiple people, but each person has their own private conversation with you. The current conversation is with ${visitorName || 'a visitor'}. Your memories with this person are isolated from your memories with other people.` 
+      ? `\nIMPORTANT: This is a shared avatar session. You are being shared with multiple people, but each person has their own private conversation with you. The current conversation is with ${visitorName || 'a visitor'}. Your memories with this person are isolated from your memories with other people. You must maintain your identity as ${profile.name} with this specific personality and voice.` 
       : '';
     
     const systemPrompt = [

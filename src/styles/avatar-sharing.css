@@ -338,21 +338,23 @@
 
 /* Welcome Message */
 .welcome-message {
-  background: linear-gradient(135deg, rgba(155, 124, 255, 0.2) 0%, rgba(124, 93, 255, 0.2) 100%);
-  border: 1px solid rgba(155, 124, 255, 0.5);
+  background: linear-gradient(135deg, rgba(155, 124, 255, 0.3) 0%, rgba(124, 93, 255, 0.3) 100%);
+  border: 1px solid rgba(155, 124, 255, 0.6);
   border-radius: 8px;
-  padding: 1rem;
+  padding: 1.25rem;
   margin-bottom: 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
   animation: fadeIn 0.5s ease-in-out;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .welcome-content h3 {
-  color: #9b7cff;
+  color: #ffffff;
   margin-bottom: 0.25rem;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
+  font-weight: 600;
 }
 
 .welcome-content p {

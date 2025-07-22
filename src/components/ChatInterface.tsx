@@ -65,15 +65,15 @@ export default function ChatInterface({
     }
   }, [userId, avatarId]) // Add avatarId as dependency to reload when avatar changes
   
-  // Check if this is a shared avatar conversation
-  const isSharedAvatar = userId?.toString().includes('shared_') || false;
+  // Check if this is a shared avatar conversation by ID format (legacy check)
+  const isSharedAvatarByUserId = userId?.toString().includes('shared_') || false;
 
   const loadConversation = async () => {
     if (!userId) return
     
     setConversationLoading(true)
     try {
-      if (isSharedAvatar) {
+      if (isSharedAvatar || isSharedAvatarByUserId) {
         // For shared avatars, use the private-conversations API
         const response = await fetch(`/api/private-conversations?userId=${userId}&avatarId=${avatarId}`);
         if (response.ok) {
@@ -105,7 +105,7 @@ export default function ChatInterface({
     if (!userId) return
 
     try {
-      if (isSharedAvatar) {
+      if (isSharedAvatar || isSharedAvatarByUserId) {
         // For shared avatars, use the private-conversations API
         const response = await fetch('/api/private-conversations', {
           method: 'POST',
@@ -117,6 +117,7 @@ export default function ChatInterface({
             conversationId: conversationId || undefined,
             userId,
             avatarId,
+            shareToken,
             message: {
               role: newMessage.role,
               content: newMessage.content
