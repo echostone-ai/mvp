@@ -1,7 +1,7 @@
 // src/app/layout.tsx
 import './globals.css'
-import '../styles/legacy-hub.css'
-import '../styles/avatar-sharing.css'
+import '@/styles/legacy-hub.css'
+import '@/styles/avatar-sharing.css'
 import { ReactNode } from 'react'
 import SupabaseProvider from '@/components/SupabaseProvider'
 // import Navigation from '@/components/nav'

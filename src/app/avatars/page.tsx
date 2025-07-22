@@ -345,7 +345,6 @@ export default function AvatarsPage() {
                     Share Avatar
                   </Link>
                 </div>
-                </Link>
               </div>
             ))}
           </div>
