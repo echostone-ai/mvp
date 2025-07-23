@@ -40,12 +40,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Action is required' }, { status: 400 });
     }
 
-    const handler = handlers[action];
-    if (!handler) {
-      return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+    // Type-safe check for action
+    if (action === 'test-avatar-isolation' || action === 'test-user-isolation') {
+      const handler = handlers[action];
+      return handler(request);
     }
 
-    return handler(request);
+    return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   } catch (error) {
     console.error('Error in test-memory-isolation:', error);
     return NextResponse.json({ error: 'Failed to process request' }, { status: 500 });

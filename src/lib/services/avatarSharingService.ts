@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendAvatarInvitation } from '@/lib/emailService';
-import { getAvatarForSharing, getSharesForAvatar } from '@/lib/avatarDataService';
+import { getAvatarForSharing } from '@/lib/services/avatarService';
 import { getCached, setCached } from '@/lib/cache';
 
 export interface AvatarShare {
