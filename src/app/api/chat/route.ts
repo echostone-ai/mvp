@@ -6,34 +6,34 @@ import path from 'path'
 import { MemoryService } from '@/lib/memoryService'
 
 // Initialize OpenAI client with better error handling
-const openai = new OpenAI({ 
-  apiKey: process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY || '' 
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY || ''
 });
 
 export async function POST(req: Request) {
   try {
     // 1) Parse incoming payload
-    const { 
-      question, 
-      prompt, 
-      history, 
-      profileData, 
-      visitorName, 
+    const {
+      question,
+      prompt,
+      history,
+      profileData,
+      visitorName,
       isSharedAvatar,
       shareToken,
       userId,
       avatarId
     } = await req.json()
-    
+
     // Support both the old and new API formats
     const userQuestion = question || prompt
-    
+
     if (typeof userQuestion !== 'string') {
       return NextResponse.json({ error: 'Invalid request: `question` or `prompt` is required.' },
-      { status: 400 })
+        { status: 400 })
     }
 
-    console.log('[api/chat] Received request:', { 
+    console.log('[api/chat] Received request:', {
       questionLength: userQuestion.length,
       hasHistory: Array.isArray(history),
       historyLength: Array.isArray(history) ? history.length : 0,
@@ -48,8 +48,8 @@ export async function POST(req: Request) {
     // Sanitize history
     const safeHistory = Array.isArray(history)
       ? history.filter((turn: any) =>
-          ['system', 'user', 'assistant'].includes(turn.role) &&
-          typeof turn.content === 'string')
+        ['system', 'user', 'assistant'].includes(turn.role) &&
+        typeof turn.content === 'string')
       : []
 
     // 2) Load profile JSON
@@ -60,14 +60,14 @@ export async function POST(req: Request) {
       humorStyle: {},
       catchphrases: []
     }
-    
+
     // Use provided profileData if available
     if (profileData) {
       profile = profileData;
     } else {
       try {
         const raw = await fs.readFile(path.join(process.cwd(), 'public', 'jonathan_profile.json'),
-        'utf-8')
+          'utf-8')
         profile = JSON.parse(raw)
       } catch (e) {
         console.warn('[api/chat] Failed to load profile, using defaults', e)
@@ -76,17 +76,17 @@ export async function POST(req: Request) {
 
     // 3) Build system prompt
     const now = new Date()
-    
+
     // Add visitor name context for shared avatars
-    const visitorContext = visitorName 
-      ? `\nYou are talking to ${visitorName}. Address them by name occasionally in a natural way. Make them feel welcome and remembered.` 
+    const visitorContext = visitorName
+      ? `\nYou are talking to ${visitorName}. Address them by name occasionally in a natural way. Make them feel welcome and remembered.`
       : '';
-      
+
     // Add memory isolation context for shared avatars
-    const memoryContext = isSharedAvatar 
-      ? `\nIMPORTANT: This is a shared avatar session. You are being shared with multiple people, but each person has their own private conversation with you. The current conversation is with ${visitorName || 'a visitor'}. Your memories with this person are isolated from your memories with other people. You must maintain your identity as ${profile.name} with this specific personality and voice.` 
+    const sharedAvatarContext = isSharedAvatar
+      ? `\nIMPORTANT: This is a shared avatar session. You are being shared with multiple people, but each person has their own private conversation with you. The current conversation is with ${visitorName || 'a visitor'}. Your memories with this person are isolated from your memories with other people. You must maintain your identity as ${profile.name} with this specific personality and voice.`
       : '';
-    
+
     const systemPrompt = [
       `You are ${profile.name}. Persona: ${profile.personality}`,
       `Language: ${profile.languageStyle?.description || ''}`,
@@ -104,7 +104,7 @@ export async function POST(req: Request) {
         hour12: true
       })}`,
       visitorContext,
-      memoryContext,
+      sharedAvatarContext,
       `Full profile JSON:`,
       JSON.stringify(profile, null, 2)
     ].filter(Boolean).join('\n')
@@ -135,22 +135,22 @@ export async function POST(req: Request) {
     // Check if OpenAI API key is available
     if (!openai.apiKey) {
       console.log('[api/chat] No OpenAI API key found, using mock response');
-      
+
       // Generate a mock response based on the user's input
       let mockAnswer = '';
-      
-      if (userQuestion.toLowerCase().includes('guinea pig') || 
-          userQuestion.toLowerCase().includes('otis')) {
+
+      if (userQuestion.toLowerCase().includes('guinea pig') ||
+        userQuestion.toLowerCase().includes('otis')) {
         mockAnswer = "That's wonderful! I love hearing about childhood pets. Tell me more about Otis the guinea pig. What was he like? Did he have any funny habits?";
-      } else if (userQuestion.toLowerCase().includes('hello') || 
-                userQuestion.toLowerCase().includes('hi')) {
+      } else if (userQuestion.toLowerCase().includes('hello') ||
+        userQuestion.toLowerCase().includes('hi')) {
         mockAnswer = `Hi there! It's great to chat with you. How can I help you today?`;
       } else if (userQuestion.toLowerCase().includes('story')) {
         mockAnswer = "I'd love to hear your story! Please share it with me.";
       } else {
         mockAnswer = "That's interesting! Tell me more about that.";
       }
-      
+
       // Even with mock response, try to extract and store memories
       if (userId) {
         try {
@@ -164,7 +164,7 @@ export async function POST(req: Request) {
           console.warn('[api/chat] Memory storage failed (mock mode):', memoryError);
         }
       }
-      
+
       return NextResponse.json({ answer: mockAnswer });
     }
 
@@ -199,11 +199,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ answer })
   } catch (err: any) {
     console.error('[api/chat] Error:', err)
-    
+
     // Provide a fallback response even if the API call fails
-    return NextResponse.json({ 
+    return NextResponse.json({
       answer: "I understand what you're saying. That's an interesting point! Would you like to tell me more?",
-      error: err.message 
+      error: err.message
     });
   }
 }
