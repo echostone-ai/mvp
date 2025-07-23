@@ -9,6 +9,9 @@ import {
   deleteMemory 
 } from '@/lib/services/memoryService';
 
+// Define action literals for type safety
+type ActionType = 'create' | 'update' | 'get' | 'list' | 'delete';
+
 // Define schemas for validation
 const createMemorySchema = z.object({
   action: z.literal('create'),
@@ -45,8 +48,8 @@ const deleteMemorySchema = z.object({
   userId: z.string()
 });
 
-// Create handlers for each action
-const handlers = {
+// Create handlers for each action with proper type safety
+const handlers: Record<ActionType, (request: NextRequest) => Promise<Response>> = {
   'create': createApiHandler(createMemorySchema, createMemory),
   'update': createApiHandler(updateMemorySchema, updateMemory),
   'get': createApiHandler(getMemorySchema, getMemory),
@@ -70,8 +73,7 @@ export async function POST(request: NextRequest) {
         action === 'get' || 
         action === 'list' || 
         action === 'delete') {
-      const handler = handlers[action];
-      return handler(request);
+      return handlers[action](request);
     }
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
@@ -96,10 +98,19 @@ export async function GET(request: NextRequest) {
 
     if (memoryId) {
       // Get specific memory
-      return getMemory({ memoryId, userId }, request);
+      return getMemory({ 
+        action: 'get',
+        memoryId, 
+        userId 
+      }, request);
     } else {
       // List memories
-      return listMemories({ userId, avatarId, shareToken }, request);
+      return listMemories({ 
+        action: 'list',
+        userId, 
+        avatarId, 
+        shareToken 
+      }, request);
     }
   } catch (error) {
     console.error('Error in memories GET API:', error);

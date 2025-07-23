@@ -116,8 +116,17 @@ export default function SharedAvatarMemories({ userId, avatarId, shareToken, ava
     try {
       setRecordingError(null);
       
+      // Check if MediaDevices API is available
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        console.error('MediaDevices API not available');
+        setRecordingError('Your browser does not support audio recording. Please try a different browser like Chrome or Firefox.');
+        return;
+      }
+      
       // Request microphone access
       console.log('Requesting microphone access...');
+      console.log('Browser info:', navigator.userAgent);
+      
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           echoCancellation: true,
@@ -153,6 +162,7 @@ export default function SharedAvatarMemories({ userId, avatarId, shareToken, ava
       const chunks: Blob[] = [];
       
       recorder.ondataavailable = (e) => {
+        console.log('Data available event:', e.data.size, 'bytes');
         if (e.data.size > 0) {
           chunks.push(e.data);
         }

@@ -10,6 +10,9 @@ import {
   revokeShare 
 } from '@/lib/services/avatarSharingService';
 
+// Define action literals for type safety
+type ActionType = 'create-share' | 'accept-share' | 'get-shared-avatars' | 'revoke-share';
+
 // Define schemas for validation
 const createShareSchema = z.object({
   action: z.literal('create-share'),
@@ -35,8 +38,8 @@ const revokeShareSchema = z.object({
   shareId: z.string()
 });
 
-// Create handlers for each action
-const handlers = {
+// Create handlers for each action with proper type safety
+const handlers: Record<ActionType, (request: NextRequest) => Promise<Response>> = {
   'create-share': createApiHandler(createShareSchema, createShare),
   'accept-share': createApiHandler(acceptShareSchema, acceptShare),
   'get-shared-avatars': createApiHandler(getSharedAvatarsSchema, getSharedAvatars),
@@ -58,8 +61,7 @@ export async function POST(request: NextRequest) {
         action === 'accept-share' || 
         action === 'get-shared-avatars' || 
         action === 'revoke-share') {
-      const handler = handlers[action];
-      return handler(request);
+      return handlers[action](request);
     }
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });

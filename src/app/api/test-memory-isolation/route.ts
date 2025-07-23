@@ -10,6 +10,9 @@ import { testAvatarIsolation, testUserIsolation } from '@/lib/services/memoryIso
  * and different users of the same shared avatar.
  */
 
+// Define action literals for type safety
+type ActionType = 'test-avatar-isolation' | 'test-user-isolation';
+
 // Define schemas for validation
 const avatarIsolationSchema = z.object({
   action: z.literal('test-avatar-isolation'),
@@ -25,8 +28,8 @@ const userIsolationSchema = z.object({
   message: z.string().optional()
 });
 
-// Create handlers for each action
-const handlers = {
+// Create handlers for each action with proper type safety
+const handlers: Record<ActionType, (request: NextRequest) => Promise<Response>> = {
   'test-avatar-isolation': createApiHandler(avatarIsolationSchema, testAvatarIsolation),
   'test-user-isolation': createApiHandler(userIsolationSchema, testUserIsolation)
 };
@@ -42,8 +45,7 @@ export async function POST(request: NextRequest) {
 
     // Type-safe check for action
     if (action === 'test-avatar-isolation' || action === 'test-user-isolation') {
-      const handler = handlers[action];
-      return handler(request);
+      return handlers[action](request);
     }
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
@@ -52,4 +54,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to process request' }, { status: 500 });
   }
 }
-
