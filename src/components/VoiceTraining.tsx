@@ -180,14 +180,20 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
       }
       
       // Get the current session for authorization
-      const { data: { session } } = await supabase.auth.getSession()
-      const authHeader = session?.access_token ? `Bearer ${session.access_token}` : ''
+      let authHeader = '';
+      try {
+        const { data } = await supabase.auth.getSession();
+        authHeader = data?.session?.access_token ? `Bearer ${data.session.access_token}` : '';
+      } catch (authError) {
+        console.error('Auth error:', authError);
+        // Continue without auth header
+      }
       
       const response = await fetch('/api/train-voice', {
         method: 'POST',
-        headers: {
+        headers: authHeader ? {
           'Authorization': authHeader
-        },
+        } : {},
         body: formData
       })
       

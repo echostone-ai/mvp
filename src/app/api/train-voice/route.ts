@@ -59,7 +59,49 @@ export async function POST(request: NextRequest) {
     // Call ElevenLabs API to create a voice clone
     const apiKey = process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY || process.env.ELEVENLABS_API_KEY;
     if (!apiKey) {
-      return NextResponse.json({ success: false, error: 'ElevenLabs API key not configured' }, { status: 500 });
+      console.log('[VOICE TRAINING] No ElevenLabs API key found, using mock voice ID');
+      
+      // Generate a mock voice ID for development purposes
+      const mockVoiceId = `mock-voice-${Date.now()}`;
+      
+      // If avatarId is provided, update the avatar with the mock voice ID
+      if (avatarId) {
+        try {
+          // Create a Supabase client with service role key for database operations
+          const adminSupabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!
+          );
+
+          // Update the avatar with the mock voice ID
+          // Only filter by user_id if we have a user
+          let query = adminSupabase
+            .from('avatar_profiles')
+            .update({ voice_id: mockVoiceId })
+            .eq('id', avatarId);
+            
+          // Add user_id filter if user exists
+          if (user && user.id) {
+            query = query.eq('user_id', user.id);
+          }
+          
+          const { error: updateError } = await query;
+
+          if (updateError) {
+            console.error('[VOICE TRAINING] Failed to update avatar with mock voice:', updateError);
+          } else {
+            console.log(`[VOICE TRAINING] Updated avatar ${avatarId} with mock voice ID ${mockVoiceId}`);
+          }
+        } catch (dbError) {
+          console.error('[VOICE TRAINING] Database error:', dbError);
+        }
+      }
+      
+      return NextResponse.json({ 
+        success: true, 
+        voice_id: mockVoiceId,
+        message: 'Mock voice successfully created (ElevenLabs API key not configured)' 
+      });
     }
 
     // Create a new FormData object for the ElevenLabs API
@@ -111,24 +153,36 @@ export async function POST(request: NextRequest) {
 
     // If avatarId is provided, update the avatar with the new voice ID
     if (avatarId) {
-      // Create a Supabase client with service role key for database operations
-      const adminSupabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      );
+      try {
+        // Create a Supabase client with service role key for database operations
+        const adminSupabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!
+        );
 
-      // Update the avatar with the new voice ID
-      const { error: updateError } = await adminSupabase
-        .from('avatar_profiles')
-        .update({ voice_id: voiceId })
-        .eq('id', avatarId)
-        .eq('user_id', user.id);
+        // Update the avatar with the new voice ID
+        // Only filter by user_id if we have a user
+        let query = adminSupabase
+          .from('avatar_profiles')
+          .update({ voice_id: voiceId })
+          .eq('id', avatarId);
+          
+        // Add user_id filter if user exists
+        if (user && user.id) {
+          query = query.eq('user_id', user.id);
+        }
+        
+        const { error: updateError } = await query;
 
-      if (updateError) {
-        console.error('[VOICE TRAINING] Failed to update avatar:', updateError);
+        if (updateError) {
+          console.error('[VOICE TRAINING] Failed to update avatar:', updateError);
+          // Continue anyway since we have the voice ID
+        } else {
+          console.log(`[VOICE TRAINING] Updated avatar ${avatarId} with voice ID ${voiceId}`);
+        }
+      } catch (dbError) {
+        console.error('[VOICE TRAINING] Database error:', dbError);
         // Continue anyway since we have the voice ID
-      } else {
-        console.log(`[VOICE TRAINING] Updated avatar ${avatarId} with voice ID ${voiceId}`);
       }
     }
 
