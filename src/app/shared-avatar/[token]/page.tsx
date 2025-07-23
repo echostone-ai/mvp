@@ -121,14 +121,83 @@ export default function SharedAvatarPage() {
   }
 
   if (error || !sharedAvatar) {
+    // Create a fallback avatar for a better user experience
+    const fallbackAvatar = {
+      name: 'Digital Avatar',
+      description: 'A digital avatar ready to chat with you',
+      hasVoice: false
+    };
+    
     return (
       <div className="hub-container">
-        <div className="error-message">
-          {error || 'Shared avatar not found'}
+        <div className="card">
+          <div className="avatar-preview-section">
+            <div className="avatar-preview-card">
+              <div className="avatar-preview-header">
+                <h2>Welcome to Shared Avatar</h2>
+                <span className="avatar-no-voice">Digital Avatar</span>
+              </div>
+              <div className="avatar-preview-content">
+                <div className="avatar-preview-image">
+                  <div className="avatar-placeholder">A</div>
+                </div>
+                <div className="avatar-preview-info">
+                  <h3>Digital Avatar</h3>
+                  <p>Someone has shared their digital avatar with you. Enter your email to start chatting!</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <form onSubmit={handleAcceptInvitation} className="invitation-form">
+            <div className="form-group">
+              <label htmlFor="userEmail" className="form-label">Your Email Address</label>
+              <input
+                type="email"
+                id="userEmail"
+                value={userEmail}
+                onChange={(e) => setUserEmail(e.target.value)}
+                className="form-input"
+                placeholder="Enter your email address"
+                required
+              />
+              <p className="form-help">
+                This helps the avatar remember you for future conversations.
+              </p>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="userName" className="form-label">Your Name (Optional)</label>
+              <input
+                type="text"
+                id="userName"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+                className="form-input"
+                placeholder="How should the avatar address you?"
+              />
+            </div>
+
+            <div className="alert alert-info">
+              Note: We couldn't load the avatar details, but you can still start chatting.
+              <br />
+              Error: {error || 'Shared avatar not found'}
+            </div>
+
+            <div className="form-actions">
+              <Link href="/" className="btn btn-secondary">
+                Cancel
+              </Link>
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Getting Ready...' : 'Start Chatting'}
+              </button>
+            </div>
+          </form>
         </div>
-        <Link href="/" className="btn btn-primary">
-          Return to Home
-        </Link>
       </div>
     );
   }

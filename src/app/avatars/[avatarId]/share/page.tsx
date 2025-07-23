@@ -74,9 +74,9 @@ export default function AvatarSharingPage() {
         </Link>
         
         <div className="hub-header">
-          <h1 className="hub-title">Share {fallbackAvatar.name}</h1>
+          <h1 className="hub-title">Share Your Avatar</h1>
           <p className="hub-description">
-            Share your avatar with friends and family. Each person will have their own private conversations and memories.
+            Share your digital avatar with friends and family. Each person will have their own private conversations and memories with your avatar.
           </p>
         </div>
         
@@ -105,10 +105,10 @@ export default function AvatarSharingPage() {
 
       <div className="avatar-header">
         <div className="avatar-title-section">
-          <h1 className="avatar-title">Share {avatar.name}</h1>
+          <h1 className="avatar-title">Share Your Avatar</h1>
         </div>
         <p className="avatar-description">
-          Share your avatar with friends and family. Each person will have their own private conversations and memories.
+          Share your digital avatar with friends and family. Each person will have their own private conversations and memories with your avatar.
         </p>
       </div>
       
