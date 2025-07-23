@@ -1,17 +1,9 @@
-/**
- * Email Service
- * Handles sending emails for avatar sharing and other notifications
- */
-
 export interface EmailResult {
   success: boolean;
   message?: string;
   error?: string;
 }
 
-/**
- * Send an invitation email for a shared avatar
- */
 export async function sendAvatarInvitation(
   recipientEmail: string,
   ownerEmail: string,
