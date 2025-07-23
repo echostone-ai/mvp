@@ -6,7 +6,7 @@ import * as os from 'os'
 import * as path from 'path'
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY,
 })
 
 export const runtime = 'nodejs' // Required for file system access
@@ -22,6 +22,15 @@ export async function POST(req: Request) {
     const tempDir = os.tmpdir()
     const tempPath = path.join(tempDir, `upload-${Date.now()}.webm`)
     fs.writeFileSync(tempPath, buffer)
+
+    // Check if OpenAI API key is available
+    if (!openai.apiKey) {
+      console.error('OpenAI API key is not configured');
+      // Return a mock response for development purposes
+      return NextResponse.json({ 
+        transcript: "This is a mock transcription. Please configure your OpenAI API key for actual transcription." 
+      });
+    }
 
     // Use OpenAI Whisper
     const transcription = await openai.audio.transcriptions.create({
