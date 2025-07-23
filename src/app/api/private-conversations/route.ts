@@ -9,8 +9,11 @@ import {
   deleteConversation 
 } from '@/lib/services/conversationService';
 
+// Define action literals for type safety
+type ActionType = 'create' | 'add-message' | 'get-conversation' | 'list-conversations' | 'delete';
+
 // Define schemas for validation
-const createConversationSchema = z.object({
+const createSchema = z.object({
   action: z.literal('create'),
   userId: z.string(),
   avatarId: z.string(),
@@ -40,65 +43,87 @@ const listConversationsSchema = z.object({
   shareToken: z.string().optional()
 });
 
-const deleteConversationSchema = z.object({
+const deleteSchema = z.object({
   action: z.literal('delete'),
   conversationId: z.string(),
   userId: z.string()
 });
 
-// Create handlers for each action
-const handlers = {
-  'create': createApiHandler(createConversationSchema, createConversation),
+// Create handlers for each action with proper type safety
+const handlers: Record<ActionType, (request: NextRequest) => Promise<Response>> = {
+  'create': createApiHandler(createSchema, createConversation),
   'add-message': createApiHandler(addMessageSchema, addMessage),
   'get-conversation': createApiHandler(getConversationSchema, getConversation),
   'list-conversations': createApiHandler(listConversationsSchema, listConversations),
-  'delete': createApiHandler(deleteConversationSchema, deleteConversation)
+  'delete': createApiHandler(deleteSchema, deleteConversation)
 };
 
-// POST handler for all conversation operations
+// API endpoint for managing private conversations with shared avatars
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { action } = body;
 
     if (!action) {
-      return NextResponse.json({ error: 'Action is required' }, { status: 400 });
+      return NextResponse.json({
+        error: 'Action is required'
+      }, { status: 400 });
     }
 
-    const handler = handlers[action];
-    if (!handler) {
-      return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+    // Type-safe check for action
+    if (action === 'create' || 
+        action === 'add-message' || 
+        action === 'get-conversation' || 
+        action === 'list-conversations' || 
+        action === 'delete') {
+      return handlers[action](request);
     }
 
-    return handler(request);
+    return NextResponse.json({
+      error: 'Invalid action'
+    }, { status: 400 });
   } catch (error) {
     console.error('Private conversation error:', error);
-    return NextResponse.json({ error: 'Failed to process conversation request' }, { status: 500 });
+    return NextResponse.json({
+      error: 'Failed to process conversation request'
+    }, { status: 500 });
   }
 }
 
-// GET handler for retrieving conversations
 export async function GET(request: NextRequest) {
+  const url = new URL(request.url);
+  const userId = url.searchParams.get('userId');
+  const avatarId = url.searchParams.get('avatarId');
+  const shareToken = url.searchParams.get('shareToken');
+  const conversationId = url.searchParams.get('conversationId');
+
+  if (!userId) {
+    return NextResponse.json({
+      error: 'User ID is required'
+    }, { status: 400 });
+  }
+
   try {
-    const url = new URL(request.url);
-    const userId = url.searchParams.get('userId');
-    const avatarId = url.searchParams.get('avatarId');
-    const shareToken = url.searchParams.get('shareToken');
-    const conversationId = url.searchParams.get('conversationId');
-
-    if (!userId) {
-      return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
-    }
-
     if (conversationId) {
       // Get specific conversation
-      return getConversation({ conversationId, userId }, request);
+      return getConversation({
+        action: 'get-conversation',
+        conversationId,
+        userId
+      }, request);
     } else {
       // List conversations
-      return listConversations({ userId, avatarId, shareToken }, request);
+      return listConversations({
+        action: 'list-conversations',
+        userId,
+        avatarId: avatarId || undefined,
+        shareToken: shareToken || undefined
+      }, request);
     }
   } catch (error) {
-    console.error('Error in conversations GET API:', error);
-    return NextResponse.json({ error: 'Failed to process request' }, { status: 500 });
+    console.error('Error in conversations GET:', error);
+    return NextResponse.json({
+      error: 'Failed to process request'
+    }, { status: 500 });
   }
 }
