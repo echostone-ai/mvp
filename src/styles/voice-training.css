@@ -846,6 +846,19 @@
   cursor: not-allowed;
 }
 
+/* Auth Required */
+.auth-required-actions {
+  margin-top: 30px;
+  text-align: center;
+}
+
+.auth-required-actions .btn-primary {
+  display: inline-block;
+  text-decoration: none;
+  padding: 15px 30px;
+  font-size: 18px;
+}
+
 .audio-preview {
   flex: 1;
   background: rgba(30, 20, 60, 0.5);

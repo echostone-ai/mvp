@@ -33,12 +33,23 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      console.log('[VOICE TRAINING] No authenticated user found, proceeding with limited functionality');
-      // Continue without authentication for now, but with limited functionality
-      // In a production environment, you would want to enforce authentication
+    // Try to get user from session, but don't fail if not authenticated
+    let user = null;
+    try {
+      const { data: { user: sessionUser } } = await supabase.auth.getUser();
+      user = sessionUser;
+      if (user) {
+        console.log(`[VOICE TRAINING] Authenticated user: ${user.email || user.id}`);
+      } else {
+        console.log('[VOICE TRAINING] No authenticated user found, proceeding with limited functionality');
+      }
+    } catch (authError) {
+      console.log('[VOICE TRAINING] Auth error, proceeding without authentication:', authError);
     }
+
+    // For debugging: log the request headers
+    const authHeader = request.headers.get('authorization');
+    console.log('[VOICE TRAINING] Authorization header:', authHeader ? 'Present' : 'Missing');
 
     // Parse the multipart form data
     const formData = await request.formData();

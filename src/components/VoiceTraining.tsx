@@ -66,11 +66,28 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
   const [isProcessing, setIsProcessing] = useState(false)
   const [status, setStatus] = useState<{ type: 'success' | 'error' | 'info' | null, message: string }>({ type: null, message: '' })
   const [recordingTime, setRecordingTime] = useState(0)
+  const [userAuthenticated, setUserAuthenticated] = useState<boolean | null>(null)
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Check authentication status on component mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { data } = await supabase.auth.getSession()
+        const isAuth = !!data?.session?.user
+        setUserAuthenticated(isAuth)
+        console.log('[VOICE TRAINING] User authenticated:', isAuth)
+      } catch (error) {
+        console.error('[VOICE TRAINING] Auth check error:', error)
+        setUserAuthenticated(false)
+      }
+    }
+    checkAuth()
+  }, [])
 
   const getCurrentScript = () => {
     if (useCustomScript) return customScript
@@ -324,9 +341,11 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
       let authHeader = '';
       try {
         const { data } = await supabase.auth.getSession();
+        console.log('[VOICE TRAINING] Session data:', data?.session ? 'Session exists' : 'No session');
         authHeader = data?.session?.access_token ? `Bearer ${data.session.access_token}` : '';
+        console.log('[VOICE TRAINING] Auth header:', authHeader ? 'Header set' : 'No header');
       } catch (authError) {
-        console.error('Auth error:', authError);
+        console.error('[VOICE TRAINING] Auth error:', authError);
       }
 
       const controller = new AbortController();
@@ -489,6 +508,35 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
       }
     }
   }, [audioStream, audioUrl])
+
+  // Show loading while checking authentication
+  if (userAuthenticated === null) {
+    return (
+      <div className="voice-training-container">
+        <div className="voice-training-header">
+          <h2 className="voice-training-title">Loading...</h2>
+          <div className="loading-spinner"></div>
+        </div>
+      </div>
+    )
+  }
+
+  // Show authentication required message
+  if (userAuthenticated === false) {
+    return (
+      <div className="voice-training-container">
+        <div className="voice-training-header">
+          <h2 className="voice-training-title">Authentication Required</h2>
+          <p className="voice-training-subtitle">
+            Please sign in to train {avatarName}'s voice.
+          </p>
+          <div className="auth-required-actions">
+            <a href="/login" className="btn-primary">Sign In</a>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="voice-training-container">
