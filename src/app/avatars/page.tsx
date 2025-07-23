@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
+import '@/styles/avatars-page.css'
 
 interface Avatar {
   id: string

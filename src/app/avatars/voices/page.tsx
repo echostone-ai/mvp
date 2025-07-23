@@ -1,10 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import PageShell from '@/components/PageShell'
+import VoiceTraining from '@/components/VoiceTraining'
+import '@/styles/voice-training.css'
+import '@/styles/voice-management.css'
 
 interface Avatar {
   id: string
@@ -21,7 +24,10 @@ export default function AvatarVoicesPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [updating, setUpdating] = useState<string | null>(null)
+  const [selectedAvatar, setSelectedAvatar] = useState<Avatar | null>(null)
+  const [showTraining, setShowTraining] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   useEffect(() => {
     async function loadData() {
@@ -41,6 +47,16 @@ export default function AvatarVoicesPage() {
 
           if (error) throw error
           setAvatars(data || [])
+          
+          // Check if there's an avatarId in the URL params
+          const avatarIdParam = searchParams.get('avatarId')
+          if (avatarIdParam && data) {
+            const avatar = data.find(a => a.id === avatarIdParam)
+            if (avatar) {
+              setSelectedAvatar(avatar)
+              setShowTraining(true)
+            }
+          }
         } catch (err: any) {
           setError(`Failed to load avatars: ${err.message}`)
         }
@@ -50,7 +66,7 @@ export default function AvatarVoicesPage() {
     }
 
     loadData()
-  }, [])
+  }, [searchParams])
 
   const clearVoice = async (avatarId: string) => {
     if (!confirm('Are you sure you want to clear this avatar\'s voice? This action cannot be undone.')) {
@@ -108,107 +124,176 @@ export default function AvatarVoicesPage() {
     )
   }
 
+  const handleTrainVoice = (avatar: Avatar) => {
+    setSelectedAvatar(avatar)
+    setShowTraining(true)
+  }
+  
+  const handleVoiceUploaded = async (voiceId: string) => {
+    if (!selectedAvatar) return
+    
+    try {
+      // Update local state
+      setAvatars(avatars.map(avatar => 
+        avatar.id === selectedAvatar.id ? { ...avatar, voice_id: voiceId } : avatar
+      ))
+      
+      // Reset training view after a delay
+      setTimeout(() => {
+        setShowTraining(false)
+        setSelectedAvatar(null)
+      }, 3000)
+    } catch (err: any) {
+      setError(`Failed to update avatar: ${err.message}`)
+    }
+  }
+
   return (
     <PageShell>
-      <main className="min-h-screen text-white flex flex-col items-center p-6 max-w-5xl mx-auto">
-        <h1 className="text-3xl font-bold mb-4">Manage Avatar Voices</h1>
-        <p className="text-gray-300 mb-8 text-center">
-          Each avatar can have its own unique voice. Clear a voice to start fresh or assign a different voice.
-        </p>
-
-        {error && (
-          <div className="bg-red-900/50 text-red-200 p-4 rounded-lg mb-6 w-full">
-            {error}
-          </div>
-        )}
-
-        <div className="w-full mb-6">
-          <Link 
-            href="/avatars" 
-            className="bg-purple-700 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition-colors inline-flex items-center"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
-            </svg>
-            Back to Avatars
-          </Link>
-        </div>
-
-        {avatars.length === 0 ? (
-          <div className="bg-purple-900/30 p-8 rounded-xl text-center">
-            <p className="text-gray-300 text-lg">No avatars found. Create an avatar first.</p>
-            <Link 
-              href="/avatars" 
-              className="mt-4 bg-purple-700 hover:bg-purple-600 text-white px-6 py-2 rounded-lg inline-block"
-            >
-              Create Avatar
-            </Link>
+      <main className="voice-management-container">
+        {showTraining && selectedAvatar ? (
+          <div className="voice-training-wrapper">
+            <div className="voice-training-header-nav">
+              <button 
+                onClick={() => setShowTraining(false)}
+                className="voice-back-button"
+              >
+                ← Back to Voice Management
+              </button>
+            </div>
+            <VoiceTraining 
+              avatarName={selectedAvatar.name}
+              avatarId={selectedAvatar.id}
+              onVoiceUploaded={handleVoiceUploaded}
+            />
           </div>
         ) : (
-          <div className="w-full">
-            <div className="bg-purple-900/30 rounded-xl overflow-hidden">
-              <table className="w-full">
-                <thead>
-                  <tr className="bg-purple-800/50">
-                    <th className="py-3 px-4 text-left">Avatar Name</th>
-                    <th className="py-3 px-4 text-left">Voice Status</th>
-                    <th className="py-3 px-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {avatars.map((avatar) => (
-                    <tr key={avatar.id} className="border-t border-purple-700/30">
-                      <td className="py-4 px-4">
-                        <div className="font-medium text-lg">{avatar.name}</div>
-                        {avatar.description && (
-                          <div className="text-gray-400 text-sm mt-1">{avatar.description}</div>
-                        )}
-                      </td>
-                      <td className="py-4 px-4">
-                        {avatar.voice_id ? (
-                          <span className="bg-green-700/50 text-green-200 px-3 py-1 rounded-full text-sm">
-                            Voice Ready
-                          </span>
-                        ) : (
-                          <span className="bg-yellow-700/50 text-yellow-200 px-3 py-1 rounded-full text-sm">
-                            No Voice
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-4 px-4 text-right">
-                        <div className="flex justify-end gap-2">
-                          <Link
-                            href={`/avatars/${avatar.id}`}
-                            className="bg-blue-700 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
-                          >
-                            Chat
-                          </Link>
-                          {avatar.voice_id && (
-                            <button
-                              onClick={() => clearVoice(avatar.id)}
-                              disabled={updating === avatar.id}
-                              className="bg-red-700 hover:bg-red-600 text-white px-3 py-1 rounded text-sm disabled:opacity-50"
-                            >
-                              {updating === avatar.id ? 'Clearing...' : 'Clear Voice'}
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <>
+            <div className="voice-management-header">
+              <h1 className="voice-management-title">Manage Avatar Voices</h1>
+              <p className="voice-management-subtitle">
+                Each avatar can have its own unique voice. Train a new voice or clear an existing one.
+              </p>
             </div>
+
+            {error && (
+              <div className="voice-management-error">
+                {error}
+              </div>
+            )}
+
+            <div className="voice-management-actions">
+              <Link 
+                href="/avatars" 
+                className="voice-back-link"
+              >
+                ← Back to Avatars
+              </Link>
+            </div>
+
+            {avatars.length === 0 ? (
+              <div className="voice-empty-state">
+                <p className="voice-empty-message">No avatars found. Create an avatar first.</p>
+                <Link 
+                  href="/avatars" 
+                  className="voice-create-button"
+                >
+                  Create Avatar
+                </Link>
+              </div>
+            ) : (
+              <div className="voice-management-table-container">
+                <table className="voice-management-table">
+                  <thead>
+                    <tr>
+                      <th>Avatar</th>
+                      <th>Voice Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {avatars.map((avatar) => (
+                      <tr key={avatar.id}>
+                        <td className="avatar-info-cell">
+                          <div className="avatar-info">
+                            <div className="avatar-photo">
+                              {avatar.photo_url ? (
+                                <img 
+                                  src={avatar.photo_url} 
+                                  alt={avatar.name}
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement
+                                    target.style.display = 'none'
+                                    target.nextElementSibling?.classList.remove('hidden')
+                                  }}
+                                />
+                              ) : (
+                                <div className="avatar-photo-fallback">
+                                  👤
+                                </div>
+                              )}
+                            </div>
+                            <div>
+                              <div className="avatar-name">{avatar.name}</div>
+                              {avatar.description && (
+                                <div className="avatar-description">{avatar.description}</div>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          {avatar.voice_id ? (
+                            <span className="voice-status voice-ready">
+                              Voice Ready
+                            </span>
+                          ) : (
+                            <span className="voice-status voice-missing">
+                              No Voice
+                            </span>
+                          )}
+                        </td>
+                        <td className="voice-actions-cell">
+                          <div className="voice-actions">
+                            <button
+                              onClick={() => handleTrainVoice(avatar)}
+                              className="voice-train-button"
+                            >
+                              {avatar.voice_id ? 'Retrain Voice' : 'Train Voice'}
+                            </button>
+                            <Link
+                              href={`/avatars/${avatar.id}`}
+                              className="voice-chat-button"
+                            >
+                              Chat
+                            </Link>
+                            {avatar.voice_id && (
+                              <button
+                                onClick={() => clearVoice(avatar.id)}
+                                disabled={updating === avatar.id}
+                                className="voice-clear-button"
+                              >
+                                {updating === avatar.id ? 'Clearing...' : 'Clear Voice'}
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
             
-            <div className="mt-8 bg-blue-900/30 border border-blue-500/30 rounded-lg p-4">
-              <h2 className="text-xl font-semibold mb-2">How to Assign a Voice to an Avatar</h2>
-              <ol className="list-decimal list-inside space-y-2 text-gray-200">
-                <li>Click "Chat" to go to the avatar's chat page</li>
-                <li>Record a voice sample for the avatar</li>
-                <li>The voice will be automatically assigned to that avatar</li>
+            <div className="voice-help-section">
+              <h2>How to Train an Avatar Voice</h2>
+              <ol>
+                <li>Click the "Train Voice" button next to your avatar</li>
+                <li>Choose to record audio directly or upload audio files</li>
+                <li>Follow the prompts to complete the voice training process</li>
+                <li>Once trained, your avatar will use this voice when chatting</li>
               </ol>
             </div>
-          </div>
+          </>
         )}
       </main>
     </PageShell>

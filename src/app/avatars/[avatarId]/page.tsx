@@ -166,7 +166,7 @@ export default function AvatarChatPage() {
               
               <div className="flex flex-col items-center">
                 <Link 
-                  href={`/avatars/voices`}
+                  href={`/avatars/voices?avatarId=${avatarId}`}
                   className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 mb-4"
                 >
                   Train Voice
