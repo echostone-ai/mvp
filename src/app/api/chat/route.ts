@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { OpenAI } from 'openai'
 import fs from 'fs/promises'
 import path from 'path'
+import { MemoryService } from '@/lib/memoryService'
 
 // Initialize OpenAI client with better error handling
 const openai = new OpenAI({ 
@@ -108,9 +109,25 @@ export async function POST(req: Request) {
       JSON.stringify(profile, null, 2)
     ].filter(Boolean).join('\n')
 
-    // 4) Assemble message list
+    // 4) Retrieve relevant memories for context (if userId is provided)
+    let memoryContext = '';
+    if (userId && openai.apiKey) {
+      try {
+        console.log('[api/chat] Retrieving memories for user:', userId);
+        memoryContext = await MemoryService.getMemoriesForChat(userQuestion, userId, 5);
+        if (memoryContext) {
+          console.log('[api/chat] Found relevant memories:', memoryContext.length, 'characters');
+        }
+      } catch (memoryError) {
+        console.warn('[api/chat] Memory retrieval failed:', memoryError);
+        // Continue without memories - don't fail the entire chat
+      }
+    }
+
+    // 5) Assemble message list with memory context
+    const enhancedSystemPrompt = systemPrompt + (memoryContext ? `\n\n${memoryContext}` : '');
     const messages = [
-      { role: 'system', content: systemPrompt },
+      { role: 'system', content: enhancedSystemPrompt },
       ...safeHistory,
       { role: 'user', content: userQuestion }
     ]
@@ -134,10 +151,24 @@ export async function POST(req: Request) {
         mockAnswer = "That's interesting! Tell me more about that.";
       }
       
+      // Even with mock response, try to extract and store memories
+      if (userId) {
+        try {
+          await MemoryService.processAndStoreMemories(userQuestion, userId, {
+            timestamp: new Date().toISOString(),
+            messageContext: userQuestion,
+            avatarId: avatarId || 'default'
+          });
+          console.log('[api/chat] Stored memories from user message (mock mode)');
+        } catch (memoryError) {
+          console.warn('[api/chat] Memory storage failed (mock mode):', memoryError);
+        }
+      }
+      
       return NextResponse.json({ answer: mockAnswer });
     }
 
-    // 5) Query OpenAI
+    // 6) Query OpenAI
     console.log('[api/chat] Calling OpenAI API...');
     const resp = await openai.chat.completions.create({
       model: 'gpt-4o-2024-08-06',
@@ -147,7 +178,24 @@ export async function POST(req: Request) {
     const answer = resp.choices?.[0]?.message?.content ?? ''
     console.log('[api/chat] Received response from OpenAI');
 
-    // 6) Respond
+    // 7) Extract and store memories from user message (async, don't block response)
+    if (userId) {
+      // Don't await this - let it run in background
+      MemoryService.processAndStoreMemories(userQuestion, userId, {
+        timestamp: new Date().toISOString(),
+        messageContext: userQuestion,
+        avatarId: avatarId || 'default',
+        emotionalTone: 'neutral'
+      }).then((storedMemories) => {
+        if (storedMemories.length > 0) {
+          console.log(`[api/chat] Stored ${storedMemories.length} memories for user ${userId}`);
+        }
+      }).catch((memoryError) => {
+        console.warn('[api/chat] Memory storage failed:', memoryError);
+      });
+    }
+
+    // 8) Respond
     return NextResponse.json({ answer })
   } catch (err: any) {
     console.error('[api/chat] Error:', err)

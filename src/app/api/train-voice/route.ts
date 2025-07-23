@@ -194,14 +194,53 @@ export async function POST(request: NextRequest) {
         console.log('[VOICE TRAINING] Duplicate detected, attempting to clear existing voices and retry...');
         
         try {
-          // Try to clear the avatar's existing voice
-          const clearResponse = await fetch(`${request.url.replace('/train-voice', '/clear-avatar-voice')}`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ avatarId }),
-          });
+          // Try to clear the avatar's existing voice directly in the database
+          console.log('[VOICE TRAINING] Attempting to clear existing voice for avatar:', avatarId);
+          
+          const adminSupabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!
+          );
+
+          // Get current voice ID to delete from ElevenLabs
+          let existingQuery = adminSupabase
+            .from('avatar_profiles')
+            .select('voice_id')
+            .eq('id', avatarId);
+            
+          if (user && user.id) {
+            existingQuery = existingQuery.eq('user_id', user.id);
+          }
+          
+          const { data: existingAvatar } = await existingQuery.single();
+          
+          // Delete from ElevenLabs if it exists
+          if (existingAvatar?.voice_id && !existingAvatar.voice_id.startsWith('mock-voice-')) {
+            try {
+              await fetch(`https://api.elevenlabs.io/v1/voices/${existingAvatar.voice_id}`, {
+                method: 'DELETE',
+                headers: {
+                  'xi-api-key': apiKey,
+                },
+              });
+              console.log('[VOICE TRAINING] Deleted existing voice from ElevenLabs:', existingAvatar.voice_id);
+            } catch (deleteError) {
+              console.log('[VOICE TRAINING] Could not delete existing voice from ElevenLabs:', deleteError);
+            }
+          }
+          
+          // Clear from database
+          let clearQuery = adminSupabase
+            .from('avatar_profiles')
+            .update({ voice_id: null })
+            .eq('id', avatarId);
+            
+          if (user && user.id) {
+            clearQuery = clearQuery.eq('user_id', user.id);
+          }
+          
+          const { error: clearError } = await clearQuery;
+          const clearResponse = { ok: !clearError };
           
           if (clearResponse.ok) {
             console.log('[VOICE TRAINING] Cleared existing voice, retrying with new unique name...');

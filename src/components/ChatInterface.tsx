@@ -271,6 +271,9 @@ export default function ChatInterface({
       // Save assistant message
       await saveMessage(assistantMessage)
 
+      // Show memory processing status (for debugging)
+      console.log('💭 Memory processing: User message processed for memories')
+
       if (data.answer) {
         try {
           const vr = await fetch('/api/voice', {

@@ -461,11 +461,25 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
   }
 
   const clearExistingVoice = async () => {
-    if (!avatarId) return
+    if (!avatarId) {
+      setStatus({ type: 'error', message: 'No avatar ID provided for clearing voice.' })
+      return
+    }
 
+    console.log('[CLEAR VOICE] Attempting to clear voice for avatar:', avatarId)
     setStatus({ type: 'info', message: 'Clearing existing voice...' })
 
     try {
+      // First, check if the avatar exists
+      const debugResponse = await fetch(`/api/debug-avatar?id=${avatarId}`)
+      const debugData = await debugResponse.json()
+      console.log('[CLEAR VOICE] Avatar debug info:', debugData)
+
+      if (!debugData.exists) {
+        setStatus({ type: 'error', message: `Avatar with ID ${avatarId} does not exist. Please refresh the page and try again.` })
+        return
+      }
+
       const response = await fetch('/api/clear-avatar-voice', {
         method: 'POST',
         headers: {
@@ -475,6 +489,7 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
       })
 
       const data = await response.json()
+      console.log('[CLEAR VOICE] Clear response:', data)
 
       if (data.success) {
         setStatus({ type: 'success', message: '✅ Existing voice cleared. You can now train a new voice.' })
@@ -485,6 +500,7 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
         setStatus({ type: 'error', message: data.error || 'Failed to clear existing voice.' })
       }
     } catch (error) {
+      console.error('[CLEAR VOICE] Error:', error)
       setStatus({ type: 'error', message: 'Network error while clearing voice.' })
     }
   }

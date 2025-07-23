@@ -37,6 +37,7 @@ export async function POST(request: NextRequest) {
         }
 
         const { avatarId } = await request.json();
+        console.log('[CLEAR VOICE] Received avatarId:', avatarId);
 
         if (!avatarId) {
             return NextResponse.json({ success: false, error: 'Avatar ID is required' }, { status: 400 });
@@ -48,20 +49,41 @@ export async function POST(request: NextRequest) {
             process.env.SUPABASE_SERVICE_ROLE_KEY!
         );
 
-        // Build query with or without user_id filter
-        let query = adminSupabase
+        // First, try to find the avatar without user filter to see if it exists at all
+        const { data: avatarCheck, error: checkError } = await adminSupabase
             .from('avatar_profiles')
-            .select('voice_id')
-            .eq('id', avatarId);
+            .select('voice_id, user_id')
+            .eq('id', avatarId)
+            .single();
 
-        if (user && user.id) {
-            query = query.eq('user_id', user.id);
+        console.log('[CLEAR VOICE] Avatar check result:', { avatarCheck, checkError });
+
+        if (checkError || !avatarCheck) {
+            console.log('[CLEAR VOICE] Avatar does not exist in database');
+            return NextResponse.json({ 
+                success: false, 
+                error: `Avatar with ID ${avatarId} does not exist in the database` 
+            }, { status: 404 });
         }
 
-        const { data: avatar, error: fetchError } = await query.single();
+        // If user is authenticated, verify ownership
+        if (user && user.id && avatarCheck.user_id !== user.id) {
+            console.log('[CLEAR VOICE] User does not own this avatar');
+            return NextResponse.json({ 
+                success: false, 
+                error: 'You do not have permission to modify this avatar' 
+            }, { status: 403 });
+        }
+
+        const avatar = avatarCheck;
+        console.log('[CLEAR VOICE] Query result:', { avatar, fetchError });
 
         if (fetchError || !avatar) {
-            return NextResponse.json({ success: false, error: 'Avatar not found' }, { status: 404 });
+            console.log('[CLEAR VOICE] Avatar not found. Error:', fetchError);
+            return NextResponse.json({ 
+                success: false, 
+                error: `Avatar not found. ID: ${avatarId}, User: ${user?.id || 'none'}, Error: ${fetchError?.message || 'unknown'}` 
+            }, { status: 404 });
         }
 
         if (!avatar.voice_id) {
@@ -90,16 +112,10 @@ export async function POST(request: NextRequest) {
         }
 
         // Clear the voice_id from the avatar
-        let updateQuery = adminSupabase
+        const { error: updateError } = await adminSupabase
             .from('avatar_profiles')
             .update({ voice_id: null })
             .eq('id', avatarId);
-
-        if (user && user.id) {
-            updateQuery = updateQuery.eq('user_id', user.id);
-        }
-
-        const { error: updateError } = await updateQuery;
 
         if (updateError) {
             return NextResponse.json({ success: false, error: 'Failed to clear voice from avatar' }, { status: 500 });
