@@ -384,9 +384,16 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
             resetForm()
           }, 4000)
         } else {
+          let errorMessage = data.error || 'Training completed but no voice ID was returned. Please try again.'
+          
+          // Provide specific guidance for duplicate content errors
+          if (errorMessage.includes('already been used') || errorMessage.includes('duplicate') || errorMessage.includes('already exists')) {
+            errorMessage += '\n\n💡 Tips to fix this:\n• Record completely new audio\n• Use different words or sentences\n• Try recording in a different environment\n• Use a different microphone or device'
+          }
+          
           setStatus({
             type: 'error',
-            message: data.error || 'Training completed but no voice ID was returned. Please try again.'
+            message: errorMessage
           })
         }
       } catch (fetchError: any) {
@@ -432,6 +439,35 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
 
   const removeFile = (index: number) => {
     setUploadedFiles(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const clearExistingVoice = async () => {
+    if (!avatarId) return
+
+    setStatus({ type: 'info', message: 'Clearing existing voice...' })
+
+    try {
+      const response = await fetch('/api/clear-avatar-voice', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ avatarId }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setStatus({ type: 'success', message: '✅ Existing voice cleared. You can now train a new voice.' })
+        setTimeout(() => {
+          setStatus({ type: null, message: '' })
+        }, 3000)
+      } else {
+        setStatus({ type: 'error', message: data.error || 'Failed to clear existing voice.' })
+      }
+    } catch (error) {
+      setStatus({ type: 'error', message: 'Network error while clearing voice.' })
+    }
   }
 
   // Cleanup effect
@@ -793,6 +829,20 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
                       {method === 'record' ? '1 recording' : `${uploadedFiles.length} file(s)`}
                     </span>
                   </div>
+                </div>
+                
+                <div className="preview-note">
+                  <h5>📝 Important:</h5>
+                  <p>Each voice training requires unique audio content. If you get a "duplicate" error, please record new audio or use different files.</p>
+                  {avatarId && (
+                    <button
+                      onClick={clearExistingVoice}
+                      className="clear-voice-btn"
+                      disabled={isProcessing}
+                    >
+                      🗑️ Clear Existing Voice (if any)
+                    </button>
+                  )}
                 </div>
               </div>
 

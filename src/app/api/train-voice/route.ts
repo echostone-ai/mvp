@@ -104,10 +104,47 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // If this avatar already has a voice, try to delete it first to avoid conflicts
+    if (avatarId && user) {
+      try {
+        const adminSupabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!
+        );
+
+        const { data: existingAvatar } = await adminSupabase
+          .from('avatar_profiles')
+          .select('voice_id')
+          .eq('id', avatarId)
+          .eq('user_id', user.id)
+          .single();
+
+        if (existingAvatar?.voice_id && existingAvatar.voice_id.startsWith('mock-voice-') === false) {
+          console.log(`[VOICE TRAINING] Attempting to delete existing voice: ${existingAvatar.voice_id}`);
+          try {
+            await fetch(`https://api.elevenlabs.io/v1/voices/${existingAvatar.voice_id}`, {
+              method: 'DELETE',
+              headers: {
+                'xi-api-key': apiKey,
+              },
+            });
+            console.log(`[VOICE TRAINING] Deleted existing voice: ${existingAvatar.voice_id}`);
+          } catch (deleteError) {
+            console.log(`[VOICE TRAINING] Could not delete existing voice (may not exist): ${deleteError}`);
+          }
+        }
+      } catch (error) {
+        console.log(`[VOICE TRAINING] Error checking existing voice: ${error}`);
+      }
+    }
+
     // Create a new FormData object for the ElevenLabs API
     const elevenLabsFormData = new FormData();
-    elevenLabsFormData.append('name', name);
-    elevenLabsFormData.append('description', `Voice for ${name} with ${accent} accent`);
+    
+    // Make the voice name more unique to avoid conflicts
+    const uniqueVoiceName = `${name}_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+    elevenLabsFormData.append('name', uniqueVoiceName);
+    elevenLabsFormData.append('description', `Voice for ${name} (${accent} accent) - Created ${new Date().toISOString()}`);
     
     // Add all audio files with unique names and metadata
     audioFiles.forEach((file, index) => {
@@ -115,12 +152,12 @@ export async function POST(request: NextRequest) {
       const timestamp = Date.now();
       const randomId = Math.random().toString(36).substring(2, 8);
       const originalExt = file.name.split('.').pop() || 'webm';
-      const uniqueFilename = `voice_${timestamp}_${index}_${randomId}.${originalExt}`;
+      const uniqueFilename = `${uniqueVoiceName}_${index}_${randomId}.${originalExt}`;
       
-      // Create a new File object with unique name
+      // Create a new File object with unique name and modified timestamp
       const uniqueFile = new File([file], uniqueFilename, {
         type: file.type,
-        lastModified: Date.now() // Ensure unique timestamp
+        lastModified: Date.now() + index * 1000 // Stagger timestamps
       });
       
       console.log(`[VOICE TRAINING] Adding file: ${uniqueFilename}, size: ${uniqueFile.size}, type: ${uniqueFile.type}`);
@@ -146,12 +183,14 @@ export async function POST(request: NextRequest) {
         let errorMessage = errorData.detail?.message || `ElevenLabs API error: ${response.status}`;
         
         // Handle specific error cases
-        if (errorText.includes('duplicate') || errorText.includes('same file')) {
-          errorMessage = 'This audio file has already been used. Please try with a different recording or file.';
-        } else if (errorText.includes('quota') || errorText.includes('limit')) {
-          errorMessage = 'Voice training quota exceeded. Please try again later or upgrade your plan.';
-        } else if (errorText.includes('audio quality') || errorText.includes('too short')) {
-          errorMessage = 'Audio quality is too low or recording is too short. Please record at least 30 seconds of clear audio.';
+        if (errorText.includes('duplicate') || errorText.includes('same file') || errorText.includes('already exists')) {
+          errorMessage = 'This audio content has been used before. Please record new audio or use different files. Each voice training session needs unique audio content.';
+        } else if (errorText.includes('quota') || errorText.includes('limit') || errorText.includes('exceeded')) {
+          errorMessage = 'Voice training quota exceeded. Please try again later or upgrade your ElevenLabs plan.';
+        } else if (errorText.includes('audio quality') || errorText.includes('too short') || errorText.includes('duration')) {
+          errorMessage = 'Audio quality is too low or recording is too short. Please record at least 30 seconds of clear, high-quality audio.';
+        } else if (errorText.includes('invalid') || errorText.includes('format')) {
+          errorMessage = 'Invalid audio format. Please use MP3, WAV, or M4A files with clear speech.';
         }
         
         return NextResponse.json({ 
@@ -162,8 +201,8 @@ export async function POST(request: NextRequest) {
         // If we can't parse the error, provide a generic message
         let errorMessage = `ElevenLabs API error: ${response.status}`;
         
-        if (errorText.includes('duplicate') || errorText.includes('same file')) {
-          errorMessage = 'This audio file has already been used. Please try with a different recording or file.';
+        if (errorText.includes('duplicate') || errorText.includes('same file') || errorText.includes('already exists')) {
+          errorMessage = 'This audio content has been used before. Please record new audio or use different files. Each voice training session needs unique audio content.';
         }
         
         return NextResponse.json({ 
