@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 // CSS is imported in the layout file
 
 interface Memory {
@@ -29,6 +29,12 @@ export default function SharedAvatarMemories({ userId, avatarId, shareToken, ava
   const [newMemoryContent, setNewMemoryContent] = useState('');
   const [isAddingMemory, setIsAddingMemory] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingError, setRecordingError] = useState<string | null>(null);
+  
+  // Refs for recording
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
 
   // Fetch memories
   useEffect(() => {
@@ -104,6 +110,160 @@ export default function SharedAvatarMemories({ userId, avatarId, shareToken, ava
       setIsSubmitting(false);
     }
   };
+  
+  // Start recording audio for voice memory
+  const startRecording = async () => {
+    try {
+      setRecordingError(null);
+      
+      // Request microphone access
+      console.log('Requesting microphone access...');
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        } 
+      });
+      
+      console.log('Microphone access granted');
+      mediaStreamRef.current = stream;
+      
+      // Check if MediaRecorder is supported
+      if (!window.MediaRecorder) {
+        throw new Error('MediaRecorder not supported in this browser');
+      }
+      
+      // Find a supported MIME type
+      const mimeTypes = [
+        'audio/webm',
+        'audio/mp4',
+        'audio/ogg',
+        'audio/wav'
+      ];
+      
+      let mimeType = mimeTypes.find(type => MediaRecorder.isTypeSupported(type)) || '';
+      console.log('Using MIME type:', mimeType || 'default');
+      
+      // Create MediaRecorder
+      const options = mimeType ? { mimeType } : {};
+      const recorder = new MediaRecorder(stream, options);
+      mediaRecorderRef.current = recorder;
+      
+      const chunks: Blob[] = [];
+      
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          chunks.push(e.data);
+        }
+      };
+      
+      recorder.onstop = async () => {
+        setIsRecording(false);
+        
+        // Clean up the media stream
+        if (mediaStreamRef.current) {
+          mediaStreamRef.current.getTracks().forEach(track => track.stop());
+          mediaStreamRef.current = null;
+        }
+        
+        if (chunks.length === 0) {
+          console.warn('No audio data recorded');
+          setRecordingError('No audio was recorded. Please try again.');
+          return;
+        }
+        
+        // Create audio blob
+        const mimeType = chunks[0].type || 'audio/webm';
+        const blob = new Blob(chunks, { type: mimeType });
+        
+        if (blob.size === 0) {
+          console.warn('Empty audio blob');
+          setRecordingError('Recording failed. Please try again.');
+          return;
+        }
+        
+        console.log('Recording complete, blob size:', blob.size, 'type:', blob.type);
+        
+        // Create form data for API request
+        const formData = new FormData();
+        formData.append('audio', blob, `memory.${mimeType.split('/')[1]}`);
+        formData.append('userId', userId);
+        formData.append('avatarId', avatarId);
+        if (shareToken) {
+          formData.append('shareToken', shareToken);
+        }
+        
+        setIsSubmitting(true);
+        
+        try {
+          // Send to memory-voice API
+          const response = await fetch('/api/memory-voice', {
+            method: 'POST',
+            body: formData
+          });
+          
+          const data = await response.json();
+          
+          if (!response.ok || !data.success) {
+            throw new Error(data.error || 'Failed to process voice memory');
+          }
+          
+          console.log('Voice memory created:', data);
+          
+          // Add new memory to the list if it was created
+          if (data.memory) {
+            setMemories([data.memory, ...memories]);
+          }
+        } catch (err: any) {
+          console.error('Voice memory error:', err);
+          setRecordingError(err.message || 'Failed to create voice memory');
+        } finally {
+          setIsSubmitting(false);
+        }
+      };
+      
+      recorder.onerror = (e) => {
+        console.error('MediaRecorder error:', e);
+        setIsRecording(false);
+        setRecordingError('Recording error occurred');
+      };
+      
+      // Start recording
+      recorder.start();
+      setIsRecording(true);
+      
+      // Auto-stop after 10 seconds
+      setTimeout(() => {
+        if (recorder.state === 'recording') {
+          recorder.stop();
+        }
+      }, 10000);
+      
+    } catch (err: any) {
+      console.error('Failed to start recording:', err);
+      setIsRecording(false);
+      
+      if (err.name === 'NotAllowedError') {
+        setRecordingError('Microphone access denied. Please allow microphone access in your browser settings.');
+      } else {
+        setRecordingError(err.message || 'Failed to start recording');
+      }
+    }
+  };
+  
+  // Stop recording
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      mediaRecorderRef.current.stop();
+    }
+    
+    // Clean up the media stream immediately
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      mediaStreamRef.current = null;
+    }
+  };
 
   const handleDeleteMemory = async (memoryId: string) => {
     if (!confirm('Are you sure you want to delete this memory?')) {
@@ -147,15 +307,42 @@ export default function SharedAvatarMemories({ userId, avatarId, shareToken, ava
     <div className="memories-container">
       <div className="memories-header">
         <h2 className="memories-title">Your Memories with {avatarName}</h2>
-        <button
-          className="btn btn-primary"
-          onClick={() => setIsAddingMemory(true)}
-        >
-          Add New Memory
-        </button>
+        <div className="memory-actions">
+          <button
+            className="btn btn-primary"
+            onClick={() => setIsAddingMemory(true)}
+            disabled={isRecording}
+          >
+            ✏️ Type Memory
+          </button>
+          {!isRecording ? (
+            <button
+              className="btn btn-secondary"
+              onClick={startRecording}
+              disabled={isSubmitting}
+            >
+              🎤 Voice Memory
+            </button>
+          ) : (
+            <button
+              className="btn btn-danger"
+              onClick={stopRecording}
+            >
+              ⏹️ Stop Recording
+            </button>
+          )}
+        </div>
       </div>
 
       {error && <div className="alert alert-error">{error}</div>}
+      {recordingError && <div className="alert alert-error">{recordingError}</div>}
+      
+      {isRecording && (
+        <div className="recording-indicator">
+          <div className="recording-pulse"></div>
+          <span>Recording... (speak clearly, will auto-stop after 10 seconds)</span>
+        </div>
+      )}
 
       {isAddingMemory && (
         <form onSubmit={handleAddMemory} className="memory-form">

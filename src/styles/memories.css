@@ -1,0 +1,264 @@
+/* Memory component styles */
+
+.memories-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.memories-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.memories-title {
+  font-size: 24px;
+  color: #9b7cff;
+  margin: 0;
+}
+
+.memory-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn {
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #9b7cff 0%, #7c5dff 100%);
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #8a6bff 0%, #6b4cff 100%);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: rgba(155, 124, 255, 0.2);
+  color: #9b7cff;
+  border: 1px solid rgba(155, 124, 255, 0.5);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: rgba(155, 124, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn-danger {
+  background: rgba(255, 71, 71, 0.2);
+  color: #ff9999;
+  border: 1px solid rgba(255, 71, 71, 0.5);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: rgba(255, 71, 71, 0.3);
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 14px;
+}
+
+.memory-form {
+  background: rgba(30, 23, 57, 0.8);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+  border: 1px solid rgba(155, 124, 255, 0.3);
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 8px;
+  color: #9b7cff;
+  font-weight: 500;
+}
+
+.form-textarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  background: rgba(20, 15, 40, 0.8);
+  border: 1px solid rgba(155, 124, 255, 0.3);
+  color: #e2e2f6;
+  font-size: 16px;
+  resize: vertical;
+  min-height: 100px;
+}
+
+.form-textarea:focus {
+  outline: none;
+  border-color: #9b7cff;
+  box-shadow: 0 0 0 2px rgba(155, 124, 255, 0.2);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  background: rgba(30, 23, 57, 0.5);
+  border-radius: 12px;
+  border: 1px dashed rgba(155, 124, 255, 0.3);
+}
+
+.empty-state-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.empty-state-title {
+  font-size: 20px;
+  color: #9b7cff;
+  margin-bottom: 12px;
+}
+
+.empty-state-message {
+  color: #a9a9c8;
+  margin-bottom: 24px;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.memories-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.memory-card {
+  background: rgba(30, 23, 57, 0.8);
+  border-radius: 12px;
+  padding: 20px;
+  border-left: 4px solid #6a41f1;
+}
+
+.memory-content {
+  color: #e2e2f6;
+  font-size: 16px;
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.memory-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.memory-meta {
+  display: flex;
+  gap: 16px;
+  color: #a9a9c8;
+  font-size: 14px;
+}
+
+.memory-source {
+  display: flex;
+  align-items: center;
+}
+
+.memory-date {
+  display: flex;
+  align-items: center;
+}
+
+.alert {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.alert-error {
+  background: rgba(255, 71, 71, 0.2);
+  color: #ff9999;
+  border: 1px solid rgba(255, 71, 71, 0.3);
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(155, 124, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #9b7cff;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+.loading-text {
+  color: #9b7cff;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Recording UI */
+.recording-indicator {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 71, 71, 0.2);
+  border: 1px solid rgba(255, 71, 71, 0.3);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  color: #ff9999;
+}
+
+.recording-pulse {
+  width: 12px;
+  height: 12px;
+  background-color: #ff4747;
+  border-radius: 50%;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+}
