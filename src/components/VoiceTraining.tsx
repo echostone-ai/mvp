@@ -255,8 +255,8 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
       return
     }
 
-    // Validate audio length for recorded audio
-    if (audioBlob && recordingTime < 10) {
+    // Only validate recording time for live recordings, not uploaded files
+    if (method === 'record' && audioBlob && recordingTime < 10) {
       setStatus({ type: 'error', message: 'Recording too short. Please record at least 10 seconds of audio.' })
       return
     }
