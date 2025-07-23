@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
@@ -18,7 +18,7 @@ interface Avatar {
   created_at: string
 }
 
-export default function AvatarVoicesPage() {
+function AvatarVoicesContent() {
   const [user, setUser] = useState<any>(null)
   const [avatars, setAvatars] = useState<Avatar[]>([])
   const [loading, setLoading] = useState(true)
@@ -102,9 +102,11 @@ export default function AvatarVoicesPage() {
   if (loading) {
     return (
       <PageShell>
-        <main className="loading-container">
-          <div className="loading-spinner"></div>
-          <p className="loading-text">Loading...</p>
+        <main className="voice-management-container">
+          <div className="voice-management-header">
+            <h1 className="voice-management-title">Loading Avatar Voices...</h1>
+            <div className="loading-spinner"></div>
+          </div>
         </main>
       </PageShell>
     )
@@ -113,12 +115,15 @@ export default function AvatarVoicesPage() {
   if (!user) {
     return (
       <PageShell>
-        <main className="min-h-screen flex flex-col items-center justify-center text-white p-4 text-center">
-          <h1 className="text-2xl mb-4">Authentication Required</h1>
-          <p className="mb-6">Please sign in to manage avatar voices.</p>
-          <Link href="/login" className="bg-purple-600 px-6 py-2 rounded-lg">
-            Sign In
-          </Link>
+        <main className="voice-management-container">
+          <div className="voice-auth-required">
+            <div className="voice-auth-icon">🔐</div>
+            <h1 className="voice-auth-title">Authentication Required</h1>
+            <p className="voice-auth-message">Please sign in to manage avatar voices and train new voice models.</p>
+            <Link href="/login" className="voice-auth-button">
+              Sign In to Continue
+            </Link>
+          </div>
         </main>
       </PageShell>
     )
@@ -297,5 +302,21 @@ export default function AvatarVoicesPage() {
         )}
       </main>
     </PageShell>
+  )
+}
+
+export default function AvatarVoicesPage() {
+  return (
+    <Suspense fallback={
+      <PageShell>
+        <main className="voice-management-container">
+          <div className="voice-management-header">
+            <h1 className="voice-management-title">Loading...</h1>
+          </div>
+        </main>
+      </PageShell>
+    }>
+      <AvatarVoicesContent />
+    </Suspense>
   )
 }
