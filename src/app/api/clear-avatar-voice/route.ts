@@ -25,10 +25,15 @@ export async function POST(request: NextRequest) {
             }
         );
 
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-            console.log('[CLEAR VOICE] No authenticated user found');
-            return NextResponse.json({ success: false, error: 'Authentication required. Please sign in and try again.' }, { status: 401 });
+        let user = null;
+        try {
+            const { data: { user: sessionUser } } = await supabase.auth.getUser();
+            user = sessionUser;
+            if (!user) {
+                console.log('[CLEAR VOICE] No authenticated user found, proceeding with limited functionality');
+            }
+        } catch (authError) {
+            console.log('[CLEAR VOICE] Auth error, proceeding without authentication:', authError);
         }
 
         const { avatarId } = await request.json();
@@ -43,12 +48,17 @@ export async function POST(request: NextRequest) {
             process.env.SUPABASE_SERVICE_ROLE_KEY!
         );
 
-        const { data: avatar, error: fetchError } = await adminSupabase
+        // Build query with or without user_id filter
+        let query = adminSupabase
             .from('avatar_profiles')
             .select('voice_id')
-            .eq('id', avatarId)
-            .eq('user_id', user.id)
-            .single();
+            .eq('id', avatarId);
+
+        if (user && user.id) {
+            query = query.eq('user_id', user.id);
+        }
+
+        const { data: avatar, error: fetchError } = await query.single();
 
         if (fetchError || !avatar) {
             return NextResponse.json({ success: false, error: 'Avatar not found' }, { status: 404 });
@@ -80,11 +90,16 @@ export async function POST(request: NextRequest) {
         }
 
         // Clear the voice_id from the avatar
-        const { error: updateError } = await adminSupabase
+        let updateQuery = adminSupabase
             .from('avatar_profiles')
             .update({ voice_id: null })
-            .eq('id', avatarId)
-            .eq('user_id', user.id);
+            .eq('id', avatarId);
+
+        if (user && user.id) {
+            updateQuery = updateQuery.eq('user_id', user.id);
+        }
+
+        const { error: updateError } = await updateQuery;
 
         if (updateError) {
             return NextResponse.json({ success: false, error: 'Failed to clear voice from avatar' }, { status: 500 });

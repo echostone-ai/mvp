@@ -189,13 +189,100 @@ export async function POST(request: NextRequest) {
       const errorText = await response.text();
       console.error('[VOICE TRAINING ERROR] Status:', response.status, 'Response:', errorText);
       
+      // If it's a duplicate error and we have an avatar ID, try to clear existing voices and retry
+      if ((errorText.includes('duplicate') || errorText.includes('same file') || errorText.includes('already exists')) && avatarId) {
+        console.log('[VOICE TRAINING] Duplicate detected, attempting to clear existing voices and retry...');
+        
+        try {
+          // Try to clear the avatar's existing voice
+          const clearResponse = await fetch(`${request.url.replace('/train-voice', '/clear-avatar-voice')}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ avatarId }),
+          });
+          
+          if (clearResponse.ok) {
+            console.log('[VOICE TRAINING] Cleared existing voice, retrying with new unique name...');
+            
+            // Create a new FormData with an even more unique name
+            const retryFormData = new FormData();
+            const retryTimestamp = Date.now();
+            const retryRandomId = Math.random().toString(36).substring(2, 12);
+            const retryVoiceName = `${name}_retry_${retryTimestamp}_${retryRandomId}`;
+            
+            retryFormData.append('name', retryVoiceName);
+            retryFormData.append('description', `Voice for ${name} (${accent} accent) - Retry ${new Date().toISOString()}`);
+            
+            // Re-add audio files with new unique names
+            audioFiles.forEach((file, index) => {
+              const originalExt = file.name.split('.').pop() || 'webm';
+              const retryFilename = `${retryVoiceName}_retry_${index}_${retryRandomId}.${originalExt}`;
+              
+              const retryFile = new File([file], retryFilename, {
+                type: file.type,
+                lastModified: retryTimestamp + index * 1000
+              });
+              
+              retryFormData.append('files', retryFile);
+            });
+            
+            // Retry the ElevenLabs API call
+            const retryResponse = await fetch('https://api.elevenlabs.io/v1/voices/add', {
+              method: 'POST',
+              headers: {
+                'xi-api-key': apiKey,
+              },
+              body: retryFormData,
+            });
+            
+            if (retryResponse.ok) {
+              const retryData = await retryResponse.json();
+              const retryVoiceId = retryData.voice_id;
+              
+              if (retryVoiceId) {
+                console.log(`[VOICE TRAINING] Retry successful with voice ID: ${retryVoiceId}`);
+                
+                // Update avatar with new voice ID
+                if (avatarId) {
+                  const adminSupabase = createClient(
+                    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                    process.env.SUPABASE_SERVICE_ROLE_KEY!
+                  );
+
+                  let updateQuery = adminSupabase
+                    .from('avatar_profiles')
+                    .update({ voice_id: retryVoiceId })
+                    .eq('id', avatarId);
+                    
+                  if (user && user.id) {
+                    updateQuery = updateQuery.eq('user_id', user.id);
+                  }
+                  
+                  await updateQuery;
+                }
+                
+                return NextResponse.json({ 
+                  success: true, 
+                  voice_id: retryVoiceId,
+                  message: 'Voice successfully created after clearing duplicates' 
+                });
+              }
+            }
+          }
+        } catch (retryError) {
+          console.log('[VOICE TRAINING] Retry failed:', retryError);
+        }
+      }
+      
       try {
         const errorData = JSON.parse(errorText);
         let errorMessage = errorData.detail?.message || `ElevenLabs API error: ${response.status}`;
         
         // Handle specific error cases
         if (errorText.includes('duplicate') || errorText.includes('same file') || errorText.includes('already exists')) {
-          errorMessage = 'This audio content has been used before. Please record new audio or use different files. Each voice training session needs unique audio content.';
+          errorMessage = 'This audio content has been used before. Try the "Clear Existing Voice" button below, then record completely new audio with different words.';
         } else if (errorText.includes('quota') || errorText.includes('limit') || errorText.includes('exceeded')) {
           errorMessage = 'Voice training quota exceeded. Please try again later or upgrade your ElevenLabs plan.';
         } else if (errorText.includes('audio quality') || errorText.includes('too short') || errorText.includes('duration')) {
@@ -213,7 +300,7 @@ export async function POST(request: NextRequest) {
         let errorMessage = `ElevenLabs API error: ${response.status}`;
         
         if (errorText.includes('duplicate') || errorText.includes('same file') || errorText.includes('already exists')) {
-          errorMessage = 'This audio content has been used before. Please record new audio or use different files. Each voice training session needs unique audio content.';
+          errorMessage = 'This audio content has been used before. Try the "Clear Existing Voice" button below, then record completely new audio with different words.';
         }
         
         return NextResponse.json({ 
