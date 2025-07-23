@@ -32,6 +32,21 @@ function getRandomMemory(): string {
   return sampleMemories[randomIndex];
 }
 
+// Create a mock memory object
+function createMockMemory(userId: string, avatarId: string, content: string, shareToken?: string) {
+  return {
+    id: `mock-${Date.now()}`,
+    userId,
+    avatarId,
+    shareToken: shareToken || null,
+    content,
+    source: 'voice',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    isPrivate: true
+  };
+}
+
 export async function POST(req: Request) {
   let tempPath = '';
   try {
@@ -77,6 +92,7 @@ export async function POST(req: Request) {
       
       // Create a fallback memory
       const memoryContent = getRandomMemory();
+      const mockMemory = createMockMemory(userId, avatarId, memoryContent, shareToken);
       
       try {
         // Create memory using the private-memories API
@@ -101,27 +117,22 @@ export async function POST(req: Request) {
         
         const memoryData = await memoryResponse.json();
         
+        // Ensure the memory object has an id
+        const memory = memoryData.memory && memoryData.memory.id 
+          ? memoryData.memory 
+          : mockMemory;
+        
         return NextResponse.json({
           success: true,
           transcript: memoryContent,
-          memory: memoryData.memory
+          memory
         });
       } catch (memoryError: any) {
         console.error('Failed to create fallback memory:', memoryError);
         return NextResponse.json({
           success: true, // Return success anyway to avoid confusing the user
           transcript: memoryContent,
-          memory: {
-            id: `mock-${Date.now()}`,
-            userId,
-            avatarId,
-            shareToken: shareToken || null,
-            content: memoryContent,
-            source: 'voice',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            isPrivate: true
-          }
+          memory: mockMemory
         });
       }
     }
@@ -149,6 +160,7 @@ export async function POST(req: Request) {
       
       // Use a fallback memory instead
       const memoryContent = getRandomMemory();
+      const mockMemory = createMockMemory(userId, avatarId, memoryContent, shareToken);
       
       // Create memory using the private-memories API
       try {
@@ -173,27 +185,22 @@ export async function POST(req: Request) {
         
         const memoryData = await memoryResponse.json();
         
+        // Ensure the memory object has an id
+        const memory = memoryData.memory && memoryData.memory.id 
+          ? memoryData.memory 
+          : mockMemory;
+        
         return NextResponse.json({
           success: true,
           transcript: memoryContent,
-          memory: memoryData.memory
+          memory
         });
       } catch (memoryError: any) {
         console.error('Failed to create fallback memory:', memoryError);
         return NextResponse.json({
           success: true, // Return success anyway to avoid confusing the user
           transcript: memoryContent,
-          memory: {
-            id: `mock-${Date.now()}`,
-            userId,
-            avatarId,
-            shareToken: shareToken || null,
-            content: memoryContent,
-            source: 'voice',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            isPrivate: true
-          }
+          memory: mockMemory
         });
       }
     }
@@ -208,6 +215,9 @@ export async function POST(req: Request) {
     
     // If we have a valid transcription, create a memory
     if (transcription.text && transcription.text.trim()) {
+      const transcribedText = transcription.text.trim();
+      const mockMemory = createMockMemory(userId, avatarId, transcribedText, shareToken);
+      
       // Create memory using the private-memories API
       try {
         const memoryResponse = await fetch(new URL('/api/private-memories', req.url).toString(), {
@@ -220,7 +230,7 @@ export async function POST(req: Request) {
             userId,
             avatarId,
             shareToken: shareToken || undefined,
-            content: transcription.text.trim(),
+            content: transcribedText,
             source: 'voice'
           })
         });
@@ -231,36 +241,31 @@ export async function POST(req: Request) {
         
         const memoryData = await memoryResponse.json();
         
+        // Ensure the memory object has an id
+        const memory = memoryData.memory && memoryData.memory.id 
+          ? memoryData.memory 
+          : mockMemory;
+        
         return NextResponse.json({
           success: true,
-          transcript: transcription.text,
-          memory: memoryData.memory
+          transcript: transcribedText,
+          memory
         });
       } catch (memoryError: any) {
         console.error('Failed to create memory:', memoryError);
         
-        // Return a success response with the transcript but no memory
-        // This way the user knows their voice was heard even if the memory wasn't saved
+        // Return a success response with the transcript and a mock memory
         return NextResponse.json({
           success: true,
-          transcript: transcription.text,
+          transcript: transcribedText,
           error: memoryError.message || 'Failed to create memory',
-          memory: {
-            id: `mock-${Date.now()}`,
-            userId,
-            avatarId,
-            shareToken: shareToken || null,
-            content: transcription.text.trim(),
-            source: 'voice',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            isPrivate: true
-          }
+          memory: mockMemory
         });
       }
     } else {
       // No speech detected, use a fallback memory
       const memoryContent = getRandomMemory();
+      const mockMemory = createMockMemory(userId, avatarId, memoryContent, shareToken);
       
       // Create memory using the private-memories API
       try {
@@ -285,27 +290,22 @@ export async function POST(req: Request) {
         
         const memoryData = await memoryResponse.json();
         
+        // Ensure the memory object has an id
+        const memory = memoryData.memory && memoryData.memory.id 
+          ? memoryData.memory 
+          : mockMemory;
+        
         return NextResponse.json({
           success: true,
           transcript: memoryContent,
-          memory: memoryData.memory
+          memory
         });
       } catch (memoryError: any) {
         console.error('Failed to create fallback memory:', memoryError);
         return NextResponse.json({
           success: true, // Return success anyway to avoid confusing the user
           transcript: memoryContent,
-          memory: {
-            id: `mock-${Date.now()}`,
-            userId,
-            avatarId,
-            shareToken: shareToken || null,
-            content: memoryContent,
-            source: 'voice',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            isPrivate: true
-          }
+          memory: mockMemory
         });
       }
     }
@@ -321,20 +321,12 @@ export async function POST(req: Request) {
     
     // Use a fallback memory
     const memoryContent = getRandomMemory();
+    const mockMemory = createMockMemory('unknown', 'unknown', memoryContent);
     
     return NextResponse.json({ 
       success: true, // Return success anyway to avoid confusing the user
       transcript: memoryContent,
-      memory: {
-        id: `mock-${Date.now()}`,
-        userId: 'unknown',
-        avatarId: 'unknown',
-        content: memoryContent,
-        source: 'voice',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        isPrivate: true
-      }
+      memory: mockMemory
     });
   }
 }

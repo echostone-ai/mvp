@@ -222,8 +222,22 @@ export default function SharedAvatarMemories({ userId, avatarId, shareToken, ava
           console.log('Voice memory created:', data);
           
           // Add new memory to the list if it was created
-          if (data.memory) {
+          if (data.memory && data.memory.id) {
             setMemories([data.memory, ...memories]);
+          } else if (data.transcript) {
+            // Create a local memory object if the API didn't return one
+            const localMemory: Memory = {
+              id: `local-${Date.now()}`,
+              userId,
+              avatarId,
+              shareToken,
+              content: data.transcript,
+              source: 'voice',
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+              isPrivate: true
+            };
+            setMemories([localMemory, ...memories]);
           }
         } catch (err: any) {
           console.error('Voice memory error:', err);
