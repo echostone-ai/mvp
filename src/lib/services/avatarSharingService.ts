@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendAvatarInvitation } from '@/lib/emailService';
-import { getAvatarForSharing } from '@/lib/services/avatarService';
+import { getAvatarForSharing } from '@/lib/avatarDataService';
 import { getCached, setCached } from '@/lib/cache';
 
 export interface AvatarShare {
@@ -334,23 +334,9 @@ export async function getSharesForAvatar(data: {
   }
 
   try {
-    // Mock shares for this avatar
-    const mockShares = [
-      {
-        id: 'share-1',
-        avatarId,
-        shareToken: 'example-token-1',
-        ownerEmail,
-        shareWithEmail: 'friend@example.com',
-        permissions: ['chat', 'viewMemories'],
-        status: 'accepted',
-        createdAt: '2024-01-15T10:00:00Z',
-        expiresAt: '2024-02-15T10:00:00Z'
-      }
-    ];
-    
-    const shares = mockShares.filter(share => 
-      share.avatarId === avatarId && share.ownerEmail === ownerEmail
+    // Get shares from the avatarDataService
+    const shares = await import('@/lib/avatarDataService').then(module => 
+      module.getSharesForAvatar(avatarId, ownerEmail)
     );
     
     return NextResponse.json({ 

@@ -188,8 +188,9 @@ export function getStoredVisitorInfo(shareToken: string) {
     console.error('Error getting stored visitor info:', error);
   }
   return null;
-}/
-**
+}
+
+/**
  * Get shares for a specific avatar
  */
 export async function getSharesForAvatar(avatarId: string, ownerEmail: string): Promise<any[]> {
