@@ -139,28 +139,37 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
       const formData = new FormData()
       
       const timestamp = Date.now();
-      const randomSuffix = Math.floor(Math.random() * 10000);
-      const cloneName = `${avatarName}_${timestamp}_${randomSuffix}`;
+      const randomSuffix = Math.floor(Math.random() * 100000);
+      const sessionId = Math.random().toString(36).substring(2, 10);
+      const cloneName = `${avatarName}_${timestamp}_${randomSuffix}_${sessionId}`;
 
-      // 1) Unique voice “name”
+      // 1) Unique voice "name"
       formData.append('name', cloneName);
 
       if (audioBlob) {
         const ext = audioBlob.type.split('/')[1] || 'webm';
+        const uniqueId = Math.random().toString(36).substring(2, 8);
         const blobFile = new File(
           [audioBlob],
-          `voice_${timestamp}_${randomSuffix}.${ext}`,
-          { type: audioBlob.type }
+          `voice_${timestamp}_${randomSuffix}_${uniqueId}.${ext}`,
+          { 
+            type: audioBlob.type,
+            lastModified: Date.now() // Add unique timestamp
+          }
         );
         formData.append('audio', blobFile, blobFile.name);
       }
 
       uploadedFiles.forEach((file, i) => {
         const ext = file.name.split('.').pop() || 'webm';
+        const uniqueId = Math.random().toString(36).substring(2, 8);
         const fileCopy = new File(
           [file],
-          `upload_${timestamp}_${i}_${randomSuffix}.${ext}`,
-          { type: file.type }
+          `upload_${timestamp}_${i}_${randomSuffix}_${uniqueId}.${ext}`,
+          { 
+            type: file.type,
+            lastModified: Date.now() + i // Add unique timestamp for each file
+          }
         );
         formData.append('audio', fileCopy, fileCopy.name);
       });

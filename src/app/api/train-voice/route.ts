@@ -109,9 +109,22 @@ export async function POST(request: NextRequest) {
     elevenLabsFormData.append('name', name);
     elevenLabsFormData.append('description', `Voice for ${name} with ${accent} accent`);
     
-    // Add all audio files
-    audioFiles.forEach((file) => {
-      elevenLabsFormData.append('files', file);
+    // Add all audio files with unique names and metadata
+    audioFiles.forEach((file, index) => {
+      // Create a unique filename with timestamp and index
+      const timestamp = Date.now();
+      const randomId = Math.random().toString(36).substring(2, 8);
+      const originalExt = file.name.split('.').pop() || 'webm';
+      const uniqueFilename = `voice_${timestamp}_${index}_${randomId}.${originalExt}`;
+      
+      // Create a new File object with unique name
+      const uniqueFile = new File([file], uniqueFilename, {
+        type: file.type,
+        lastModified: Date.now() // Ensure unique timestamp
+      });
+      
+      console.log(`[VOICE TRAINING] Adding file: ${uniqueFilename}, size: ${uniqueFile.size}, type: ${uniqueFile.type}`);
+      elevenLabsFormData.append('files', uniqueFile);
     });
 
     // Call ElevenLabs API to create a voice clone
@@ -130,14 +143,32 @@ export async function POST(request: NextRequest) {
       
       try {
         const errorData = JSON.parse(errorText);
+        let errorMessage = errorData.detail?.message || `ElevenLabs API error: ${response.status}`;
+        
+        // Handle specific error cases
+        if (errorText.includes('duplicate') || errorText.includes('same file')) {
+          errorMessage = 'This audio file has already been used. Please try with a different recording or file.';
+        } else if (errorText.includes('quota') || errorText.includes('limit')) {
+          errorMessage = 'Voice training quota exceeded. Please try again later or upgrade your plan.';
+        } else if (errorText.includes('audio quality') || errorText.includes('too short')) {
+          errorMessage = 'Audio quality is too low or recording is too short. Please record at least 30 seconds of clear audio.';
+        }
+        
         return NextResponse.json({ 
           success: false, 
-          error: errorData.detail?.message || `ElevenLabs API error: ${response.status}` 
+          error: errorMessage
         }, { status: response.status });
       } catch (e) {
+        // If we can't parse the error, provide a generic message
+        let errorMessage = `ElevenLabs API error: ${response.status}`;
+        
+        if (errorText.includes('duplicate') || errorText.includes('same file')) {
+          errorMessage = 'This audio file has already been used. Please try with a different recording or file.';
+        }
+        
         return NextResponse.json({ 
           success: false, 
-          error: `ElevenLabs API error: ${response.status}` 
+          error: errorMessage
         }, { status: response.status });
       }
     }
