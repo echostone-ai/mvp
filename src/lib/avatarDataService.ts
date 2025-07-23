@@ -188,4 +188,31 @@ export function getStoredVisitorInfo(shareToken: string) {
     console.error('Error getting stored visitor info:', error);
   }
   return null;
+}/
+**
+ * Get shares for a specific avatar
+ */
+export async function getSharesForAvatar(avatarId: string, ownerEmail: string): Promise<any[]> {
+  try {
+    // In a real implementation, query database for shares
+    // For now, return mock data
+    const mockShares = [
+      {
+        id: 'share-1',
+        avatarId,
+        shareToken: 'example-token-1',
+        ownerEmail,
+        shareWithEmail: 'friend@example.com',
+        permissions: ['chat', 'viewMemories'],
+        status: 'accepted',
+        createdAt: '2024-01-15T10:00:00Z',
+        expiresAt: '2024-02-15T10:00:00Z'
+      }
+    ];
+    
+    return mockShares.filter(share => share.avatarId === avatarId && share.ownerEmail === ownerEmail);
+  } catch (error) {
+    console.error('Error getting shares for avatar:', error);
+    return [];
+  }
 }

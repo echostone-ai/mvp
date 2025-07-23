@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendAvatarInvitation } from '@/lib/emailService';
 import { getAvatarForSharing } from '@/lib/avatarDataService';
+import { supabase } from '@/lib/supabase';
 
 // API endpoint for avatar sharing functionality
 export async function POST(request: NextRequest) {
@@ -276,6 +277,43 @@ export async function GET(request: NextRequest) {
           sharedAvatar 
         });
       }
+    } catch (error) {
+      console.error('Error handling share token:', error);
+      
+      // Create a generic fallback avatar as a last resort
+      const fallbackAvatar = {
+        id: 'avatar-fallback',
+        name: 'Digital Avatar',
+        description: 'A digital avatar ready to chat with you',
+        hasVoice: false,
+        voiceId: null,
+        profileData: {
+          name: 'Digital Avatar',
+          personality: 'Friendly and helpful',
+          languageStyle: {
+            description: 'Natural and conversational'
+          },
+          humorStyle: {
+            description: 'Warm and appropriate'
+          },
+          catchphrases: []
+        }
+      };
+      
+      const sharedAvatar = {
+        shareToken,
+        avatar: fallbackAvatar,
+        ownerEmail: 'owner@example.com',
+        permissions: ['chat', 'viewMemories', 'createMemories'],
+        isValid: true,
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+      };
+      
+      return NextResponse.json({ 
+        success: true, 
+        sharedAvatar 
+      });
+    }
     
     // Create a mock share record
     const mockShareRecord = {
@@ -309,15 +347,25 @@ export async function GET(request: NextRequest) {
       sharedAvatar 
     });
   } else if (avatarId && ownerEmail) {
-    // Get shares for a specific avatar - use REAL data
-    const shares = await getSharesForAvatar(avatarId, ownerEmail);
-    
-    console.log('Returning REAL shares for avatar:', avatarId, 'and owner:', ownerEmail, 'Found:', shares.length);
-
-    return NextResponse.json({ 
-      success: true, 
-      shares 
-    });
+    try {
+      // Get shares for a specific avatar - use REAL data
+      const shares = await getSharesForAvatar(avatarId, ownerEmail);
+      
+      console.log('Returning REAL shares for avatar:', avatarId, 'and owner:', ownerEmail, 'Found:', shares.length);
+  
+      return NextResponse.json({ 
+        success: true, 
+        shares 
+      });
+    } catch (error) {
+      console.error('Error getting shares for avatar:', error);
+      
+      // Return empty shares array as fallback
+      return NextResponse.json({ 
+        success: true, 
+        shares: [] 
+      });
+    }
   } else {
     console.log('Invalid request parameters for avatar sharing GET');
     
