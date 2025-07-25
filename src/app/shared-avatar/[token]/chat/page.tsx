@@ -6,6 +6,7 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import ChatInterface from '@/components/ChatInterface';
 import { getStoredVisitorInfo, storeVisitorInfo, createVisitorId } from '@/lib/avatarDataService';
+import { v4 as uuidv4, validate as uuidValidate } from 'uuid';
 // CSS is imported in the layout file
 
 export default function SharedAvatarChatPage() {
@@ -55,10 +56,11 @@ export default function SharedAvatarChatPage() {
           storeVisitorInfo(shareToken, visitorEmail, visitorName || undefined);
         }
         
-        // Create a consistent user ID for this visitor (or use localStorage fallback)
-        let currentUserId = visitorEmail || localStorage.getItem('sharedAvatarUserId');
-        if (!currentUserId) {
-          currentUserId = `user-${Math.random().toString(36).substring(2, 9)}`;
+        // Always use a UUID for userId, never an email
+        let currentUserId = localStorage.getItem('sharedAvatarUserId');
+        // If the stored value is not a valid UUID, clear it
+        if (!currentUserId || !uuidValidate(currentUserId)) {
+          currentUserId = uuidv4();
           localStorage.setItem('sharedAvatarUserId', currentUserId);
         }
         setUserId(currentUserId);
