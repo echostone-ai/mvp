@@ -13,26 +13,39 @@ export const config = {
 };
 
 export async function POST(request: NextRequest) {
+  console.log('[VOICE TRAINING] API called');
   try {
     // Get the current user from Supabase auth
-    const cookieStore = cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name: string) {
-            return cookieStore.get(name)?.value;
+    console.log('[VOICE TRAINING] Setting up Supabase client...');
+    
+    let cookieStore, supabase;
+    try {
+      cookieStore = cookies();
+      supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          cookies: {
+            get(name: string) {
+              return cookieStore.get(name)?.value;
+            },
+            set(name: string, value: string, options: any) {
+              cookieStore.set({ name, value, ...options });
+            },
+            remove(name: string, options: any) {
+              cookieStore.set({ name, value: '', ...options });
+            },
           },
-          set(name: string, value: string, options: any) {
-            cookieStore.set({ name, value, ...options });
-          },
-          remove(name: string, options: any) {
-            cookieStore.set({ name, value: '', ...options });
-          },
-        },
-      }
-    );
+        }
+      );
+      console.log('[VOICE TRAINING] Supabase client created successfully');
+    } catch (supabaseError: any) {
+      console.error('[VOICE TRAINING] Failed to create Supabase client:', supabaseError);
+      return NextResponse.json({ 
+        success: false, 
+        error: `Failed to initialize authentication: ${supabaseError.message}` 
+      }, { status: 500 });
+    }
 
     // Try to get user from session, but don't fail if not authenticated
     let user = null;
@@ -55,14 +68,33 @@ export async function POST(request: NextRequest) {
     console.log('[VOICE TRAINING] Authorization header:', authHeader ? 'Present' : 'Missing');
 
     // Parse the multipart form data
-    const formData = await request.formData();
-    const name = formData.get('name') as string;
-    const script = formData.get('script') as string;
-    const accent = formData.get('accent') as string;
-    const avatarId = formData.get('avatarId') as string;
+    console.log('[VOICE TRAINING] Parsing form data...');
+    let formData, name, script, accent, avatarId, audioFiles;
     
-    // Get audio files
-    const audioFiles = formData.getAll('audio') as File[];
+    try {
+      formData = await request.formData();
+      name = formData.get('name') as string;
+      script = formData.get('script') as string;
+      accent = formData.get('accent') as string;
+      avatarId = formData.get('avatarId') as string;
+      
+      // Get audio files
+      audioFiles = formData.getAll('audio') as File[];
+      
+      console.log('[VOICE TRAINING] Form data parsed successfully:', {
+        name: !!name,
+        script: !!script,
+        accent: !!accent,
+        avatarId: !!avatarId,
+        audioFilesCount: audioFiles.length
+      });
+    } catch (parseError: any) {
+      console.error('[VOICE TRAINING] Form data parsing failed:', parseError);
+      return NextResponse.json({ 
+        success: false, 
+        error: `Failed to parse form data: ${parseError.message}` 
+      }, { status: 400 });
+    }
     
     if (!name || audioFiles.length === 0) {
       return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
@@ -71,7 +103,10 @@ export async function POST(request: NextRequest) {
     console.log(`[VOICE TRAINING] Processing voice for ${name}, ${audioFiles.length} files, avatar ID: ${avatarId || 'none'}`);
 
     // Call ElevenLabs API to create a voice clone
+    console.log('[VOICE TRAINING] Checking API keys...');
     const apiKey = process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY || process.env.ELEVENLABS_API_KEY;
+    console.log('[VOICE TRAINING] API key available:', !!apiKey);
+    
     if (!apiKey) {
       console.log('[VOICE TRAINING] No ElevenLabs API key found, using mock voice ID');
       
@@ -82,10 +117,21 @@ export async function POST(request: NextRequest) {
       if (avatarId) {
         try {
           // Create a Supabase client with service role key for database operations
+          console.log('[VOICE TRAINING] Creating admin Supabase client...');
+          
+          if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+            throw new Error('NEXT_PUBLIC_SUPABASE_URL environment variable is missing');
+          }
+          if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+            throw new Error('SUPABASE_SERVICE_ROLE_KEY environment variable is missing');
+          }
+          
           const adminSupabase = createClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.SUPABASE_SERVICE_ROLE_KEY!
           );
+          
+          console.log('[VOICE TRAINING] Admin Supabase client created successfully');
 
           // Update the avatar with the mock voice ID
           // Only filter by user_id if we have a user
@@ -467,10 +513,18 @@ export async function POST(request: NextRequest) {
     });
     
   } catch (error: any) {
-    console.error('[VOICE TRAINING] Error:', error);
+    console.error('[VOICE TRAINING] Unexpected error:', error);
+    console.error('[VOICE TRAINING] Error stack:', error.stack);
+    console.error('[VOICE TRAINING] Error details:', {
+      name: error.name,
+      message: error.message,
+      cause: error.cause
+    });
+    
     return NextResponse.json({ 
       success: false, 
-      error: error.message || 'An unexpected error occurred' 
+      error: `Server error: ${error.message || 'An unexpected error occurred'}`,
+      details: error.stack
     }, { status: 500 });
   }
 }

@@ -299,6 +299,21 @@ export default function ProfileChat() {
               >
                 Set Voice
               </button>
+              <button
+                onClick={async () => {
+                  const response = await fetch('/api/test-train-voice', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ test: 'data', avatarId: selectedAvatar?.id })
+                  })
+                  const data = await response.json()
+                  console.log('Test result:', data)
+                  alert(JSON.stringify(data, null, 2))
+                }}
+                style={{ padding: '2px 6px', fontSize: '10px', background: '#006600', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }}
+              >
+                Test API
+              </button>
             </div>
           </div>
         </main>
