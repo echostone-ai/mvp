@@ -50,20 +50,25 @@ const handlers: Record<ActionType, (request: NextRequest) => Promise<Response>> 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    console.log('Avatar sharing POST request body:', body);
     const { action } = body;
 
     if (!action) {
+      console.log('No action provided in request');
       return NextResponse.json({ error: 'Action is required' }, { status: 400 });
     }
+
+    console.log('Processing action:', action);
 
     // Type-safe check for action
     if (action === 'create-share' || 
         action === 'accept-share' || 
         action === 'get-shared-avatars' || 
         action === 'revoke-share') {
-      return handlers[action](request);
+      return handlers[action as ActionType](request);
     }
 
+    console.log('Invalid action provided:', action);
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   } catch (error) {
     console.error('Avatar sharing error:', error);

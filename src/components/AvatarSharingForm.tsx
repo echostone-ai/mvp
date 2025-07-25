@@ -82,23 +82,29 @@ export default function AvatarSharingForm({ avatarId, avatarName, ownerEmail }: 
         .filter(([_, value]) => value)
         .map(([key, _]) => key);
 
+      const requestData = {
+        action: 'create-share',
+        avatarId,
+        ownerEmail,
+        shareWithEmail: email,
+        permissions: permissionsArray
+      };
+      
+      console.log('Sending avatar sharing request:', requestData);
+
       const response = await fetch('/api/avatar-sharing', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          action: 'create-share',
-          avatarId,
-          ownerEmail,
-          shareWithEmail: email,
-          permissions: permissionsArray
-        })
+        body: JSON.stringify(requestData)
       });
 
       const data = await response.json();
+      console.log('Avatar sharing response:', { status: response.status, data });
 
       if (!response.ok) {
+        console.error('Avatar sharing failed:', data);
         throw new Error(data.error || 'Failed to share avatar');
       }
 
@@ -324,6 +330,40 @@ Best regards`);
           disabled={loading}
         >
           {loading ? 'Sharing...' : 'Share Avatar'}
+        </button>
+        
+        <button
+          type="button"
+          onClick={async () => {
+            const testData = {
+              action: 'create-share',
+              avatarId,
+              ownerEmail,
+              shareWithEmail: email || 'test@example.com',
+              permissions: ['chat']
+            };
+            
+            console.log('Testing with data:', testData);
+            
+            try {
+              const response = await fetch('/api/test-avatar-sharing', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(testData)
+              });
+              
+              const result = await response.json();
+              console.log('Test result:', result);
+              alert('Test result: ' + JSON.stringify(result, null, 2));
+            } catch (error) {
+              console.error('Test error:', error);
+              alert('Test error: ' + error);
+            }
+          }}
+          className="btn btn-secondary"
+          style={{ marginLeft: '10px' }}
+        >
+          Test Validation
         </button>
       </form>
 
