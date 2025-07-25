@@ -226,8 +226,8 @@ export default function SharedAvatarPage() {
   }
 
   return (
-    <div className="hub-container">
-      <div className="card">
+    <div className="hub-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minHeight: '100vh', justifyContent: 'center' }}>
+      <div className="card" style={{ maxWidth: 480, width: '100%', margin: '2rem auto', boxShadow: '0 4px 24px rgba(0,0,0,0.08)', borderRadius: 16, padding: '2.5rem 2rem', background: 'rgba(30,30,60,0.95)' }}>
         <div className="avatar-preview-section">
           <div className="avatar-preview-card">
             <div className="avatar-preview-header">
@@ -296,7 +296,7 @@ export default function SharedAvatarPage() {
           </div>
         </form>
 
-        <div className="invitation-info">
+        <div className="invitation-info" style={{ marginTop: 32 }}>
           <h3>🔒 Your Privacy is Protected:</h3>
           <ul>
             <li>Your conversations with {avatar.name} are completely private</li>
@@ -304,6 +304,18 @@ export default function SharedAvatarPage() {
             <li>The avatar owner cannot see your messages</li>
             <li>You can return anytime using this same link</li>
           </ul>
+        </div>
+        <div style={{ marginTop: 40, textAlign: 'center' }}>
+          <div style={{ fontWeight: 600, fontSize: '1.1rem', marginBottom: 8 }}>Want your own digital avatar?</div>
+          <a
+            href="https://app.echostone.ai"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-primary"
+            style={{ display: 'inline-block', margin: '0 auto', padding: '0.75rem 2rem', fontSize: '1.1rem', borderRadius: 8, background: 'linear-gradient(90deg, #9b7cff 60%, #6a00ff 100%)', color: '#fff', fontWeight: 600, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+          >
+            Create Your Own Avatar
+          </a>
         </div>
       </div>
     </div>

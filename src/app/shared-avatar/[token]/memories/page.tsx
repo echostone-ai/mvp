@@ -96,39 +96,50 @@ export default function SharedAvatarMemoriesPage() {
   }
 
   return (
-    <div className="hub-container">
-      <Link href={`/shared-avatar/${shareToken}/chat`} className="back-link">
-        &larr; Back to Chat
-      </Link>
-
-      <div className="avatar-header">
-        <div className="avatar-title-section">
-          <h1 className="avatar-title">Memories with {avatar.name}</h1>
+    <div className="hub-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minHeight: '100vh', justifyContent: 'center' }}>
+      <div style={{ maxWidth: 540, width: '100%', margin: '2rem auto', boxShadow: '0 4px 24px rgba(0,0,0,0.08)', borderRadius: 16, padding: '2.5rem 2rem', background: 'rgba(30,30,60,0.95)' }}>
+        <Link href={`/shared-avatar/${shareToken}/chat`} className="back-link" style={{ display: 'block', textAlign: 'center', marginBottom: 24, color: '#9b7cff', fontWeight: 500 }}>
+          &larr; Back to Chat
+        </Link>
+        <div className="avatar-header" style={{ textAlign: 'center' }}>
+          <div className="avatar-title-section">
+            <h1 className="avatar-title">Memories with {avatar.name}</h1>
+          </div>
+          <p className="avatar-description">
+            Your private memories with {avatar.name}. These memories help the avatar remember important information from your conversations.
+          </p>
         </div>
-        <p className="avatar-description">
-          Your private memories with {avatar.name}. These memories help the avatar remember important information from your conversations.
-        </p>
-      </div>
-
-      <div className="privacy-notice">
-        <div className="privacy-card">
-          <h3>🔒 Your Privacy</h3>
-          <ul>
-            <li>These memories are completely private to you</li>
-            <li>The avatar owner cannot see your memories</li>
-            <li>Memories help the avatar remember important details from your conversations</li>
-          </ul>
+        <div className="privacy-notice" style={{ margin: '1.5rem 0' }}>
+          <div className="privacy-card" style={{ background: 'rgba(45,37,67,0.7)', borderRadius: 10, padding: 16 }}>
+            <h3>🔒 Your Privacy</h3>
+            <ul>
+              <li>These memories are completely private to you</li>
+              <li>The avatar owner cannot see your memories</li>
+              <li>Memories help the avatar remember important details from your conversations</li>
+            </ul>
+          </div>
+        </div>
+        {userId && (
+          <SharedAvatarMemories
+            userId={userId}
+            avatarId={avatar.id}
+            shareToken={shareToken}
+            avatarName={avatar.name}
+          />
+        )}
+        <div style={{ marginTop: 40, textAlign: 'center' }}>
+          <div style={{ fontWeight: 600, fontSize: '1.1rem', marginBottom: 8 }}>Want your own digital avatar?</div>
+          <a
+            href="https://app.echostone.ai"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-primary"
+            style={{ display: 'inline-block', margin: '0 auto', padding: '0.75rem 2rem', fontSize: '1.1rem', borderRadius: 8, background: 'linear-gradient(90deg, #9b7cff 60%, #6a00ff 100%)', color: '#fff', fontWeight: 600, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+          >
+            Create Your Own Avatar
+          </a>
         </div>
       </div>
-
-      {userId && (
-        <SharedAvatarMemories
-          userId={userId}
-          avatarId={avatar.id}
-          shareToken={shareToken}
-          avatarName={avatar.name}
-        />
-      )}
     </div>
   );
 }
