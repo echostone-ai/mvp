@@ -9,10 +9,9 @@ export default function Navigation() {
   
   const navItems = [
     { name: 'Home', path: '/' },
-    { name: 'Avatars', path: '/avatars' },
+    { name: 'Profile', path: '/profile' },
     { name: 'Shared Avatars', path: '/shared-avatars' },
-    { name: 'Hubs', path: '/hubs' },
-    { name: 'Profile', path: '/profile' }
+    { name: 'Hubs', path: '/hubs' }
   ];
 
   return (

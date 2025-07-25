@@ -104,8 +104,8 @@ export default function SharingHelpPage() {
       </div>
 
       <div className="form-actions">
-        <Link href="/avatars" className="btn btn-primary">
-          Back to Avatars
+        <Link href="/profile" className="btn btn-primary">
+          Back to Profile
         </Link>
       </div>
     </div>

@@ -260,12 +260,12 @@ export default function AvatarSelector({
             <p className="avatar-empty-message">
               You haven't created any avatars yet. Create your first avatar to get started.
             </p>
-            <Link 
-              href="/avatars" 
+            <button 
+              onClick={() => window.location.href = '/profile'}
               className="avatar-empty-create-btn"
             >
               Create Your First Avatar
-            </Link>
+            </button>
           </div>
         ) : (
           <div className="avatar-selector-grid">
@@ -325,12 +325,12 @@ export default function AvatarSelector({
         {showCreateOption && avatars.length > 0 && (
           <div className="avatar-create-section">
             <p className="avatar-create-message">Don't see the avatar you want?</p>
-            <Link 
-              href="/avatars" 
+            <button 
+              onClick={() => window.location.href = '/profile'}
               className="avatar-create-btn-secondary"
             >
               Create New Avatar
-            </Link>
+            </button>
           </div>
         )}
       </div>

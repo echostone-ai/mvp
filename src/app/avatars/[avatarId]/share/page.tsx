@@ -69,8 +69,8 @@ export default function AvatarSharingPage() {
     
     return (
       <div className="container">
-        <Link href="/avatars" className="back-link">
-          &larr; Back to Avatars
+        <Link href="/profile" className="back-link">
+          &larr; Back to Profile
         </Link>
         
         <div className="hub-header">
@@ -99,7 +99,7 @@ export default function AvatarSharingPage() {
 
   return (
     <div className="container">
-      <Link href={`/avatars/${avatarId}`} className="back-link">
+      <Link href={`/profile/chat?avatarId=${avatarId}`} className="back-link">
         &larr; Back to Avatar
       </Link>
 

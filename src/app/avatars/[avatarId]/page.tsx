@@ -127,8 +127,8 @@ export default function AvatarChatPage() {
             </svg>
             <h2 className="error-title">Error Loading Avatar</h2>
             <p className="error-message">{error}</p>
-            <Link href="/avatars" className="error-button">
-              Return to Avatars
+            <Link href="/profile" className="error-button">
+              Return to Profile
             </Link>
           </div>
         </main>
@@ -146,8 +146,8 @@ export default function AvatarChatPage() {
             </svg>
             <h2 className="warning-title">Avatar Not Found</h2>
             <p className="warning-message">The avatar you're looking for doesn't exist or has been deleted.</p>
-            <Link href="/avatars" className="error-button">
-              Return to Avatars
+            <Link href="/profile" className="error-button">
+              Return to Profile
             </Link>
           </div>
         </main>
@@ -174,8 +174,8 @@ export default function AvatarChatPage() {
             </div>
             
             <div className="flex items-center">
-              <Link href="/avatars" className="bg-purple-700 hover:bg-purple-600 text-white px-4 py-2 rounded-lg mr-3 transition-colors">
-                Back to Avatars
+              <Link href="/profile" className="bg-purple-700 hover:bg-purple-600 text-white px-4 py-2 rounded-lg mr-3 transition-colors">
+                Back to Profile
               </Link>
               <div className="bg-indigo-800/70 text-white px-4 py-2 rounded-lg flex items-center">
                 <span className="mr-2">Status:</span>

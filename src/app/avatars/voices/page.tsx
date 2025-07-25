@@ -207,10 +207,10 @@ function AvatarVoicesContent() {
 
             <div className="voice-management-actions">
               <Link 
-                href="/avatars" 
+                href="/profile" 
                 className="voice-back-link"
               >
-                ← Back to Avatars
+                ← Back to Profile
               </Link>
             </div>
 
@@ -218,7 +218,7 @@ function AvatarVoicesContent() {
               <div className="voice-empty-state">
                 <p className="voice-empty-message">No avatars found. Create an avatar first.</p>
                 <Link 
-                  href="/avatars" 
+                  href="/profile" 
                   className="voice-create-button"
                 >
                   Create Avatar
@@ -284,7 +284,7 @@ function AvatarVoicesContent() {
                               {avatar.voice_id ? 'Retrain Voice' : 'Train Voice'}
                             </button>
                             <Link
-                              href={`/avatars/${avatar.id}`}
+                              href={`/profile/chat?avatarId=${avatar.id}`}
                               className="voice-chat-button"
                             >
                               Chat

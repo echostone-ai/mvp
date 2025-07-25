@@ -48,6 +48,15 @@ export default function ProfilePage() {
   const [loadingUser, setLoadingUser] = useState(true)
   const [selectedAvatar, setSelectedAvatar] = useState<Avatar | null>(null)
   const [activeTab, setActiveTab] = useState<'identity' | 'voice' | 'stories' | 'personality' | 'memories' | 'voicetuning'>('identity')
+  const [showCreateForm, setShowCreateForm] = useState(false)
+  const [newAvatar, setNewAvatar] = useState({
+    name: '',
+    description: '',
+    photo_url: ''
+  })
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null)
+  const [creating, setCreating] = useState(false)
   const [progress, setProgress] = useState<Record<string, Progress>>({})
   const [voiceId, setVoiceId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -132,6 +141,85 @@ export default function ProfilePage() {
     setSelectedAvatar(avatar)
   }
 
+  const handleCreateAvatar = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newAvatar.name.trim()) return
+
+    setCreating(true)
+
+    try {
+      let photoUrl = ''
+
+      // Upload photo if selected
+      if (photoFile) {
+        const fileExt = photoFile.name.split('.').pop()
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
+        const filePath = `avatar-photos/${fileName}`
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(filePath, photoFile)
+
+        if (uploadError) {
+          throw new Error(`Failed to upload photo: ${uploadError.message}`)
+        }
+
+        // Get public URL
+        const { data: urlData } = supabase.storage
+          .from('avatars')
+          .getPublicUrl(filePath)
+
+        photoUrl = urlData.publicUrl
+      }
+
+      const { data, error } = await supabase
+        .from('avatar_profiles')
+        .insert([
+          {
+            user_id: user.id,
+            name: newAvatar.name.trim(),
+            description: newAvatar.description.trim(),
+            photo_url: photoUrl,
+            profile_data: {
+              name: newAvatar.name.trim(),
+              personality: newAvatar.description.trim() || `I am ${newAvatar.name.trim()}, a unique digital avatar with my own personality and voice.`,
+              languageStyle: { description: 'Natural and conversational' },
+              humorStyle: { description: 'Friendly with occasional wit' },
+              catchphrases: []
+            }
+          }
+        ])
+        .select()
+        .single()
+
+      if (error) throw error
+
+      // Reset form and select the new avatar
+      setNewAvatar({ name: '', description: '', photo_url: '' })
+      setPhotoFile(null)
+      setPhotoPreview(null)
+      setShowCreateForm(false)
+      setSelectedAvatar(data)
+    } catch (err: any) {
+      console.error('Failed to create avatar:', err)
+      alert(`Failed to create avatar: ${err.message}`)
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setPhotoFile(file)
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        setPhotoPreview(e.target?.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
   // Show loading state
   if (loadingUser) {
     return (
@@ -197,12 +285,88 @@ export default function ProfilePage() {
     return (
       <PageShell>
         <main className="min-h-screen text-white">
-          <AvatarSelector
-            onAvatarSelect={handleAvatarSelect}
-            title="Select Avatar for Profile"
-            subtitle="Choose which avatar you'd like to configure and train"
-            showCreateOption={true}
-          />
+          {showCreateForm ? (
+            <div className="create-avatar-form" style={{ maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
+              <h2 style={{ marginBottom: '20px' }}>Create New Avatar</h2>
+              <form onSubmit={handleCreateAvatar}>
+                <div className="form-group" style={{ marginBottom: '15px' }}>
+                  <label htmlFor="avatar-name" style={{ display: 'block', marginBottom: '5px' }}>Avatar Name</label>
+                  <input
+                    id="avatar-name"
+                    type="text"
+                    value={newAvatar.name}
+                    onChange={(e) => setNewAvatar({ ...newAvatar, name: e.target.value })}
+                    placeholder="Enter avatar name"
+                    required
+                    style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc', color: 'black' }}
+                  />
+                </div>
+
+                <div className="form-group" style={{ marginBottom: '15px' }}>
+                  <label htmlFor="avatar-description" style={{ display: 'block', marginBottom: '5px' }}>Description</label>
+                  <textarea
+                    id="avatar-description"
+                    value={newAvatar.description}
+                    onChange={(e) => setNewAvatar({ ...newAvatar, description: e.target.value })}
+                    placeholder="Describe your avatar's personality"
+                    rows={3}
+                    style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc', color: 'black' }}
+                  />
+                </div>
+
+                <div className="form-group" style={{ marginBottom: '15px' }}>
+                  <label htmlFor="avatar-photo" style={{ display: 'block', marginBottom: '5px' }}>Photo (optional)</label>
+                  <input
+                    id="avatar-photo"
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoChange}
+                    style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}
+                  />
+                  {photoPreview && (
+                    <div className="photo-preview" style={{ marginTop: '10px' }}>
+                      <img src={photoPreview} alt="Preview" style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px' }} />
+                    </div>
+                  )}
+                </div>
+
+                <div className="form-actions" style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateForm(false)}
+                    disabled={creating}
+                    style={{ padding: '10px 20px', borderRadius: '5px', border: '1px solid #ccc', background: 'white', color: 'black' }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={creating || !newAvatar.name.trim()}
+                    style={{ padding: '10px 20px', borderRadius: '5px', border: 'none', background: '#6a00ff', color: 'white' }}
+                  >
+                    {creating ? 'Creating...' : 'Create Avatar'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          ) : (
+            <>
+              <AvatarSelector
+                onAvatarSelect={handleAvatarSelect}
+                title="Select Avatar for Profile"
+                subtitle="Choose which avatar you'd like to configure and train"
+                showCreateOption={false}
+              />
+              <div style={{ textAlign: 'center', marginTop: '20px' }}>
+                <button
+                  onClick={() => setShowCreateForm(true)}
+                  style={{ padding: '12px 24px', fontSize: '16px', borderRadius: '8px', border: 'none', background: '#6a00ff', color: 'white', cursor: 'pointer' }}
+                >
+                  Create New Avatar
+                </button>
+              </div>
+            </>
+          )}
         </main>
       </PageShell>
     )
@@ -216,8 +380,8 @@ export default function ProfilePage() {
           <div className="avatar-header-info">
             <div className="avatar-header-photo">
               {selectedAvatar.photo_url ? (
-                <img 
-                  src={selectedAvatar.photo_url} 
+                <img
+                  src={selectedAvatar.photo_url}
                   alt={selectedAvatar.name}
                   className="avatar-photo"
                   onError={(e) => {
@@ -323,7 +487,7 @@ export default function ProfilePage() {
                   setVoiceId(voiceId)
                   // Update local state
                   setSelectedAvatar(prev => prev ? { ...prev, voice_id: voiceId } : null)
-                  
+
                   // Refresh avatar data from database to ensure consistency
                   if (user?.id) {
                     try {
@@ -333,7 +497,7 @@ export default function ProfilePage() {
                         .eq('id', selectedAvatar.id)
                         .eq('user_id', user.id)
                         .single()
-                      
+
                       if (!error && refreshedAvatar) {
                         console.log('Refreshed avatar data:', refreshedAvatar)
                         setSelectedAvatar(refreshedAvatar)
@@ -393,8 +557,8 @@ export default function ProfilePage() {
                         <h3 className="personality-card-title">{section.replace(/_/g, ' ')}</h3>
                         <div className="personality-card-progress">
                           <div className="progress-bar">
-                            <div 
-                              className="progress-fill" 
+                            <div
+                              className="progress-fill"
                               style={{ width: `${(prog.answered / prog.total) * 100}%` }}
                             ></div>
                           </div>
