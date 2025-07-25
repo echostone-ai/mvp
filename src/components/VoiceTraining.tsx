@@ -74,6 +74,7 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
   const fileInputRef = useRef<HTMLInputElement>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const recordingTimeRef = useRef<number>(0)
+  const recordingStartTimeRef = useRef<number>(0)
 
   // Check authentication status on component mount
   useEffect(() => {
@@ -138,16 +139,17 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
       mediaRecorderRef.current = mediaRecorder
       audioChunksRef.current = []
 
-      // Start timer
+      // Start timer and record start time
       console.log('[VOICE TRAINING] Starting timer...')
+      recordingStartTimeRef.current = Date.now()
       timerRef.current = setInterval(() => {
-        setRecordingTime(prev => {
-          const newTime = prev + 1
-          recordingTimeRef.current = newTime
-          console.log('[VOICE TRAINING] Timer tick:', newTime)
-          return newTime
-        })
+        console.log('[VOICE TRAINING] Timer interval fired')
+        const elapsed = Math.floor((Date.now() - recordingStartTimeRef.current) / 1000)
+        setRecordingTime(elapsed)
+        recordingTimeRef.current = elapsed
+        console.log('[VOICE TRAINING] Timer tick:', elapsed)
       }, 1000)
+      console.log('[VOICE TRAINING] Timer ref set:', timerRef.current)
 
       mediaRecorder.ondataavailable = (event) => {
         console.log('[VOICE TRAINING] Data available:', event.data.size, 'bytes')
@@ -157,7 +159,9 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
       }
 
       mediaRecorder.onstop = () => {
-        console.log('[VOICE TRAINING] Recording stopped, chunks:', audioChunksRef.current.length, 'final time:', recordingTimeRef.current)
+        // Calculate final duration based on actual elapsed time
+        const finalDuration = Math.floor((Date.now() - recordingStartTimeRef.current) / 1000)
+        console.log('[VOICE TRAINING] Recording stopped, chunks:', audioChunksRef.current.length, 'final time:', finalDuration)
         const blob = new Blob(audioChunksRef.current, { type: mimeType })
         console.log('[VOICE TRAINING] Created blob:', blob.size, 'bytes')
         setAudioBlob(blob)
@@ -166,9 +170,10 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
         stream.getTracks().forEach(track => track.stop())
         setAudioStream(null);
 
-        // Store the final recording duration before clearing timer
-        setFinalRecordingDuration(recordingTimeRef.current)
-        console.log('[VOICE TRAINING] Final recording duration set to:', recordingTimeRef.current)
+        // Store the final recording duration
+        setFinalRecordingDuration(finalDuration)
+        recordingTimeRef.current = finalDuration
+        console.log('[VOICE TRAINING] Final recording duration set to:', finalDuration)
 
         // Clear timer
         if (timerRef.current) {
@@ -214,11 +219,14 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
   }
 
   const stopRecording = () => {
+    console.log('[VOICE TRAINING] stopRecording called, recording state:', recording)
     if (mediaRecorderRef.current && recording) {
+      console.log('[VOICE TRAINING] Stopping MediaRecorder...')
       mediaRecorderRef.current.stop()
       setRecording(false)
 
       if (timerRef.current) {
+        console.log('[VOICE TRAINING] Clearing timer in stopRecording')
         clearInterval(timerRef.current)
         timerRef.current = null
       }
