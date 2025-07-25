@@ -1126,13 +1126,15 @@ MEMORY INTEGRATION GUIDELINES:
 - ACTIVELY USE these memories in your responses when relevant
 - EXPLICITLY reference these details with phrases like "I remember you mentioned..." or "Last time we talked about..."
 - Make natural connections between their past shared experiences and the current conversation
+- If you know the name of the user's pet, friend, or family member, use their name naturally in conversation. For example, say "How is Romeo doing?" instead of "What's your dog's name?"
+- Do not ask for information you already know (like a pet's name) unless the user suggests it has changed or you need to confirm a correction.
 - If they ask about something you should know from these memories, confidently reference the relevant memory
 - Show continuity in your relationship by building on these past shared details
 - Show genuine interest in their life by asking follow-up questions about things they've shared
 - Be specific - mention names, places, activities, and details they've told you about
 - Act like a close friend who remembers important things about them
 ${followup}
-`
+`;
 
     if (avoidTopics.length > 0) {
       prompt += `\nTOPICS TO AVOID:\n- The user has specifically asked you not to bring up or discuss the following topics: ${avoidTopics.join(', ')}.\nNever mention or ask about these topics unless the user brings them up first. Always respect their wishes.\n`
@@ -1155,8 +1157,8 @@ ${followup}
       prompt += `SUPPORT NEEDED: This person has shared challenges or difficulties with you. Be supportive, encouraging, and check in on how they're handling these situations.\n\n`
     }
 
-    prompt += `Remember: You're not just an AI assistant - you're someone who knows this person personally. Use your knowledge of them to have meaningful, personalized conversations that show you truly know and care about them as an individual.`
+    prompt += `Remember: You're not just an AI assistant - you're someone who knows this person personally. Use your knowledge of them to have meaningful, personalized conversations that show you truly know and care about them as an individual.`;
 
-    return prompt
+    return prompt;
   }
 }

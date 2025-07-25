@@ -100,7 +100,7 @@ function createFallbackAudioBuffer(): ArrayBuffer {
 
 export async function POST(req: Request) {
   try {
-    const { text, voiceId, settings, emotionalContext } = await req.json()
+    const { text, voiceId, settings, emotionalContext, accent } = await req.json()
     
     console.log('Voice API request:', { 
       textLength: text?.length,
@@ -158,6 +158,14 @@ export async function POST(req: Request) {
     
     // Call ElevenLabs API
     console.log('Calling ElevenLabs API...');
+    const requestBody: any = {
+      text: cleanedText,
+      model_id: 'eleven_turbo_v2',
+      voice_settings: voiceSettings,
+    };
+    if (accent) {
+      requestBody.accent = accent;
+    }
     const response = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${finalVoiceId}/stream`,
       {
@@ -166,11 +174,7 @@ export async function POST(req: Request) {
           'Content-Type': 'application/json',
           'xi-api-key': apiKey,
         },
-        body: JSON.stringify({
-          text: cleanedText,
-          model_id: 'eleven_turbo_v2',
-          voice_settings: voiceSettings,
-        }),
+        body: JSON.stringify(requestBody),
       }
     )
     

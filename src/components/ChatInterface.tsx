@@ -19,6 +19,7 @@ export type ChatMessage = { role: 'user' | 'assistant'; content: string }
 interface ChatInterfaceProps {
   profileData: any // user profile JSON
   voiceId: string | null
+  accent?: string | null
   userId?: string // user ID for memory operations
   avatarId?: string // avatar ID for memory isolation
   initialMessages?: ChatMessage[]
@@ -31,6 +32,7 @@ interface ChatInterfaceProps {
 export default function ChatInterface({
   profileData,
   voiceId,
+  accent = null,
   userId,
   avatarId,
   initialMessages = [],
@@ -291,6 +293,7 @@ export default function ChatInterface({
             body: JSON.stringify({ 
               text: aiAnswer, 
               voiceId,
+              accent,
               emotionalStyle: data.emotionalStyle || 'default'
             }),
           })

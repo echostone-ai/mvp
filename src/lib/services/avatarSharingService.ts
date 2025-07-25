@@ -330,6 +330,7 @@ export async function getSharedAvatar(data: {
             name,
             description,
             voice_id,
+            accent,
             photo_url,
             profile_data
           )
@@ -365,6 +366,7 @@ export async function getSharedAvatar(data: {
           description: avatar.description,
           hasVoice: !!avatar.voice_id,
           voiceId: avatar.voice_id,
+          accent: avatar.accent,
           photoUrl: avatar.photo_url,
           profileData: avatar.profile_data
         },
@@ -393,6 +395,7 @@ export async function getSharedAvatar(data: {
               description: avatarData.description,
               hasVoice: avatarData.hasVoice,
               voiceId: avatarData.voiceId,
+              accent: avatarData.accent,
               photoUrl: avatarData.photoUrl,
               profileData: avatarData.profileData
             },
@@ -415,6 +418,7 @@ export async function getSharedAvatar(data: {
             description: 'A demo avatar for testing sharing functionality',
             hasVoice: false,
             voiceId: null,
+            accent: null,
             photoUrl: null,
             profileData: {
               name: `Demo Avatar`,

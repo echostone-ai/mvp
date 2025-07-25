@@ -235,6 +235,7 @@ export default function SharedAvatarChatPage() {
               <ChatInterface
                 profileData={avatar.profileData}
                 voiceId={avatar.voiceId}
+                accent={avatar.accent}
                 userId={userId}
                 avatarId={avatar.id}
                 initialMessages={[]}
