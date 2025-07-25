@@ -60,12 +60,57 @@ export async function POST(request: NextRequest) {
 
     console.log('Processing action:', action);
 
-    // Type-safe check for action
-    if (action === 'create-share' || 
-        action === 'accept-share' || 
-        action === 'get-shared-avatars' || 
-        action === 'revoke-share') {
-      return handlers[action as ActionType](request);
+    // Validate and handle each action directly
+    if (action === 'create-share') {
+      const result = createShareSchema.safeParse(body);
+      if (!result.success) {
+        console.log('create-share validation failed:', result.error.format());
+        return NextResponse.json({ 
+          error: 'Validation error', 
+          details: result.error.format(),
+          receivedData: body
+        }, { status: 400 });
+      }
+      return createShare(result.data, request);
+    }
+    
+    if (action === 'accept-share') {
+      const result = acceptShareSchema.safeParse(body);
+      if (!result.success) {
+        console.log('accept-share validation failed:', result.error.format());
+        return NextResponse.json({ 
+          error: 'Validation error', 
+          details: result.error.format(),
+          receivedData: body
+        }, { status: 400 });
+      }
+      return acceptShare(result.data, request);
+    }
+    
+    if (action === 'get-shared-avatars') {
+      const result = getSharedAvatarsSchema.safeParse(body);
+      if (!result.success) {
+        console.log('get-shared-avatars validation failed:', result.error.format());
+        return NextResponse.json({ 
+          error: 'Validation error', 
+          details: result.error.format(),
+          receivedData: body
+        }, { status: 400 });
+      }
+      return getSharedAvatars(result.data, request);
+    }
+    
+    if (action === 'revoke-share') {
+      const result = revokeShareSchema.safeParse(body);
+      if (!result.success) {
+        console.log('revoke-share validation failed:', result.error.format());
+        return NextResponse.json({ 
+          error: 'Validation error', 
+          details: result.error.format(),
+          receivedData: body
+        }, { status: 400 });
+      }
+      return revokeShare(result.data, request);
     }
 
     console.log('Invalid action provided:', action);
