@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCached, setCached } from '@/lib/cache';
+import { supabase } from '@/lib/supabase';
 
 export interface Memory {
   id: string;
@@ -28,17 +29,23 @@ export async function createMemory(data: {
     }, { status: 400 });
   }
 
-  const newMemory: Memory = {
-    id: Math.random().toString(36).substring(2, 15),
-    userId,
-    avatarId,
-    shareToken: shareToken || null,
-    content,
-    source: source || 'manual',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    isPrivate: true
-  };
+  // Insert the new memory into the database
+  const { data: memory, error } = await supabase
+    .from('memory_fragments')
+    .insert({
+      user_id: userId,
+      avatar_id: avatarId,
+      fragment_text: content,
+      conversation_context: {},
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    })
+    .select()
+    .single();
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 
   // Clear cache for this user's memories
   const cacheKey = `memories:${userId}:${avatarId}:${shareToken || 'none'}`;
@@ -46,7 +53,7 @@ export async function createMemory(data: {
 
   return NextResponse.json({ 
     success: true, 
-    memory: newMemory
+    memory
   });
 }
 
@@ -118,43 +125,23 @@ export async function listMemories(data: {
     }, { status: 400 });
   }
 
-  const cacheKey = `memories:${userId}:${avatarId || 'all'}:${shareToken || 'none'}`;
-  const cached = getCached<Memory[]>(cacheKey);
-  
-  if (cached) {
-    return NextResponse.json({ 
-      success: true, 
-      memories: cached
-    });
+  // Query the database for real memories
+  let query = supabase
+    .from('memory_fragments')
+    .select('*')
+    .eq('user_id', userId);
+
+  if (avatarId) {
+    query = query.eq('avatar_id', avatarId);
   }
 
-  // Mock memory list (in real app, query from database)
-  const memories: Memory[] = [
-    {
-      id: 'mem-1',
-      userId,
-      avatarId: avatarId || 'avatar-jonathan',
-      shareToken: shareToken || null,
-      content: 'Jonathan mentioned he lived in Bulgaria for 6 months and loved the local cuisine.',
-      source: 'conversation',
-      createdAt: '2024-01-15T10:00:00Z',
-      updatedAt: '2024-01-15T10:00:00Z',
-      isPrivate: true
-    },
-    {
-      id: 'mem-2',
-      userId,
-      avatarId: avatarId || 'avatar-jonathan',
-      shareToken: shareToken || null,
-      content: 'Jonathan\'s favorite travel destination is Japan, particularly Kyoto.',
-      source: 'conversation',
-      createdAt: '2024-01-10T14:00:00Z',
-      updatedAt: '2024-01-10T14:00:00Z',
-      isPrivate: true
-    }
-  ];
+  const { data: memories, error } = await query.order('created_at', { ascending: false });
 
-  setCached(cacheKey, memories, 300000); // Cache for 5 minutes
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  // Optionally, you can cache the result here if desired
 
   return NextResponse.json({ 
     success: true, 
