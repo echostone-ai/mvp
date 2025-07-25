@@ -35,6 +35,7 @@ export interface OnboardingState {
   isProcessing: boolean;
   errors: string[];
   voiceId?: string; // added
+  accent?: string; // added
 }
 
 const defaultVoiceSettings: ProfessionalVoiceSettings = {
@@ -71,6 +72,16 @@ const defaultEmotionalCalibration: EmotionalCalibration = {
   sarcastic: { stability: 0.50, similarity_boost: 0.80, style: 0.70, use_speaker_boost: true },
   neutral: { stability: 0.75, similarity_boost: 0.85, style: 0.35, use_speaker_boost: true }
 };
+
+const accentOptions = [
+  { value: 'en-US', label: 'American English' },
+  { value: 'en-GB', label: 'British English' },
+  { value: 'en-AU', label: 'Australian English' },
+  { value: 'en-IN', label: 'Indian English' },
+  { value: 'en-ZA', label: 'South African English' },
+  { value: 'en-NZ', label: 'New Zealand English' },
+  { value: 'en-CA', label: 'Canadian English' },
+];
 
 // Step Components
 const WelcomeStep: React.FC<OnboardingStepProps> = ({ nextStep }) => (
@@ -1059,7 +1070,8 @@ export const EnhancedVoiceOnboarding: React.FC = () => {
     voiceDescription: '',
     isProcessing: false,
     errors: [],
-    voiceId: undefined // added
+    voiceId: undefined, // added
+    accent: 'en-US' // added
   });
 
   const steps: OnboardingStep[] = [

@@ -1053,7 +1053,71 @@ export class MemoryService {
     personalityEnhancements: string[]
   ): string {
     const memoryFragments = memories.map(m => m.fragmentText).join('\n- ')
-    
+
+    // Helper to extract status for entities
+    function extractEntityStatus(memories: MemoryFragment[], keywords: string[], goneKeywords: string[]) {
+      const entityMemories = memories.filter(m => keywords.some(k => m.fragmentText.toLowerCase().includes(k)))
+      const entityStatus: Record<string, string> = {}
+      entityMemories.forEach(m => {
+        const text = m.fragmentText.toLowerCase()
+        let nameMatch = text.match(/(?:"|named |called |is |my |our )([a-z0-9 ]{2,})/i)
+        let name = nameMatch ? nameMatch[1].trim() : keywords.find(k => text.includes(k)) || 'person'
+        if (goneKeywords.some(gk => text.includes(gk))) {
+          entityStatus[name] = 'gone'
+        } else {
+          entityStatus[name] = 'present'
+        }
+      })
+      return entityStatus
+    }
+
+    // Detect topics to avoid
+    const avoidTopics: string[] = []
+    memories.forEach(m => {
+      const text = m.fragmentText.toLowerCase()
+      // Match patterns like "I don't want to talk about X", "please don't mention Y", "I'd rather not discuss Z"
+      const avoidPatterns = [
+        /i don't want to talk about ([a-z0-9 ,'-]+)/i,
+        /please don't mention ([a-z0-9 ,'-]+)/i,
+        /i'd rather not discuss ([a-z0-9 ,'-]+)/i,
+        /can we avoid ([a-z0-9 ,'-]+)/i,
+        /let's not talk about ([a-z0-9 ,'-]+)/i
+      ]
+      avoidPatterns.forEach(pattern => {
+        const match = text.match(pattern)
+        if (match && match[1]) {
+          avoidTopics.push(match[1].trim())
+        }
+      })
+    })
+
+    // PETS
+    const petStatus = extractEntityStatus(memories, ['dog', 'cat', 'pet'], ['died', 'passed away', 'ran away', 'gone', 'lost', 'no longer'])
+    // FRIENDS
+    const friendStatus = extractEntityStatus(memories, ['friend', 'best friend', 'buddy', 'pal'], ['died', 'passed away', 'moved away', 'gone', 'lost', 'no longer', 'not friends'])
+    // FAMILY
+    const familyStatus = extractEntityStatus(memories, ['mother', 'father', 'mom', 'dad', 'sister', 'brother', 'parent', 'child', 'son', 'daughter', 'family', 'grandmother', 'grandfather'], ['died', 'passed away', 'gone', 'lost', 'no longer'])
+    // JOB/CAREER
+    const jobStatus = extractEntityStatus(memories, ['job', 'work', 'career', 'boss', 'coworker', 'company', 'employer', 'position', 'role'], ['quit', 'fired', 'laid off', 'lost', 'ended', 'no longer', 'retired'])
+    // PERSONAL LIFE EVENTS
+    const personalStatus = extractEntityStatus(memories, ['relationship', 'partner', 'spouse', 'married', 'divorced', 'boyfriend', 'girlfriend', 'husband', 'wife', 'engaged'], ['broke up', 'divorced', 'ended', 'no longer', 'passed away', 'died'])
+
+    let followup = ''
+    function buildFollowup(statusObj: Record<string, string>, label: string) {
+      Object.entries(statusObj).forEach(([name, status]) => {
+        if (status === 'gone') {
+          followup += `If the user mentions their ${label} ${name}, acknowledge their loss or change with empathy and do not ask about them as if they are still present.\n`
+        } else {
+          followup += `If the user has a ${label} ${name}, occasionally and naturally ask how their ${label} ${name} is doing, but only if you have not learned that the ${label} ${name} is gone.\n`
+        }
+      })
+    }
+    buildFollowup(petStatus, 'pet')
+    buildFollowup(friendStatus, 'friend')
+    buildFollowup(familyStatus, 'family member')
+    buildFollowup(jobStatus, 'job or work situation')
+    buildFollowup(personalStatus, 'relationship or partner')
+
     let prompt = `\n\nIMPORTANT - PERSONAL KNOWLEDGE ABOUT THIS USER:
 You have stored these specific memories about this person from your previous conversations:
 - ${memoryFragments}
@@ -1067,8 +1131,12 @@ MEMORY INTEGRATION GUIDELINES:
 - Show genuine interest in their life by asking follow-up questions about things they've shared
 - Be specific - mention names, places, activities, and details they've told you about
 - Act like a close friend who remembers important things about them
-
+${followup}
 `
+
+    if (avoidTopics.length > 0) {
+      prompt += `\nTOPICS TO AVOID:\n- The user has specifically asked you not to bring up or discuss the following topics: ${avoidTopics.join(', ')}.\nNever mention or ask about these topics unless the user brings them up first. Always respect their wishes.\n`
+    }
 
     // Add personality-specific guidance based on memory analysis
     if (personalityEnhancements.includes('emotional_connection')) {

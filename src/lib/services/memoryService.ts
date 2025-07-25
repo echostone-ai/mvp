@@ -141,11 +141,21 @@ export async function listMemories(data: {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // Optionally, you can cache the result here if desired
+  // Map DB fields to frontend fields
+  const mappedMemories = (memories || []).map((m: any) => ({
+    id: m.id,
+    userId: m.user_id,
+    avatarId: m.avatar_id,
+    content: m.fragment_text,
+    source: m.conversation_context?.source || 'manual',
+    createdAt: m.created_at,
+    updatedAt: m.updated_at,
+    isPrivate: true
+  }));
 
   return NextResponse.json({ 
     success: true, 
-    memories
+    memories: mappedMemories
   });
 }
 
