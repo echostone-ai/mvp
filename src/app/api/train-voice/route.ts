@@ -470,12 +470,66 @@ export async function POST(request: NextRequest) {
         // Update the avatar with the new voice ID
         console.log(`[VOICE TRAINING] Attempting to update avatar ${avatarId} with voice ID ${voiceId} for user ${user?.id}`);
         
-        const { data: updateData, error: updateError } = await adminSupabase
-          .from('avatar_profiles')
-          .update({ voice_id: voiceId })
-          .eq('id', avatarId)
-          .eq('user_id', user?.id || 'no-user')
-          .select();
+        // First try with user filter
+        let updateData = null;
+        let updateError = null;
+        
+        if (user?.id) {
+          const result = await adminSupabase
+            .from('avatar_profiles')
+            .update({ voice_id: voiceId })
+            .eq('id', avatarId)
+            .eq('user_id', user.id)
+            .select();
+          
+          updateData = result.data;
+          updateError = result.error;
+          
+          console.log(`[VOICE TRAINING] Update with user filter result:`, { 
+            success: !updateError, 
+            rowsUpdated: updateData?.length || 0,
+            error: updateError?.message 
+          });
+        }
+        
+        // If that failed, try without user filter (but verify ownership)
+        if (updateError || !updateData || updateData.length === 0) {
+          console.log(`[VOICE TRAINING] Trying update without user filter...`);
+          
+          // First check if avatar exists and get its user_id
+          const { data: avatarCheck, error: checkError } = await adminSupabase
+            .from('avatar_profiles')
+            .select('user_id, name')
+            .eq('id', avatarId)
+            .single();
+          
+          if (checkError) {
+            console.error(`[VOICE TRAINING] Avatar check failed:`, checkError);
+            updateError = checkError;
+          } else if (avatarCheck && avatarCheck.user_id === user?.id) {
+            console.log(`[VOICE TRAINING] Avatar ownership verified, updating...`);
+            
+            const result = await adminSupabase
+              .from('avatar_profiles')
+              .update({ voice_id: voiceId })
+              .eq('id', avatarId)
+              .select();
+            
+            updateData = result.data;
+            updateError = result.error;
+            
+            console.log(`[VOICE TRAINING] Direct update result:`, { 
+              success: !updateError, 
+              rowsUpdated: updateData?.length || 0 
+            });
+          } else {
+            console.error(`[VOICE TRAINING] Avatar ownership mismatch:`, {
+              avatarUserId: avatarCheck?.user_id,
+              requestUserId: user?.id
+            });
+            updateError = { message: 'Avatar ownership verification failed' };
+          }
+        }
 
         if (updateError) {
           console.error('[VOICE TRAINING] Failed to update avatar:', updateError);

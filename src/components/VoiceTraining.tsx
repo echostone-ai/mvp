@@ -419,6 +419,31 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
             onVoiceUploaded(data.voice_id)
           }
           
+          // Fallback: Ensure database is updated client-side if API didn't do it
+          if (avatarId && data.voice_id) {
+            try {
+              console.log('[VOICE TRAINING] Ensuring database update client-side...')
+              const { data: { user } } = await supabase.auth.getUser()
+              
+              if (user) {
+                const { data: updateResult, error: updateError } = await supabase
+                  .from('avatar_profiles')
+                  .update({ voice_id: data.voice_id })
+                  .eq('id', avatarId)
+                  .eq('user_id', user.id)
+                  .select()
+                
+                if (updateError) {
+                  console.error('[VOICE TRAINING] Client-side update failed:', updateError)
+                } else {
+                  console.log('[VOICE TRAINING] Client-side update successful:', updateResult)
+                }
+              }
+            } catch (clientError) {
+              console.error('[VOICE TRAINING] Client-side update error:', clientError)
+            }
+          }
+          
           // Trigger refresh for any open avatar chat pages
           if (avatarId) {
             // Trigger storage event for cross-tab updates
@@ -430,6 +455,34 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
               detail: { avatarId, voiceId: data.voice_id }
             }))
           }
+
+          // Verify the voice connection after a short delay
+          setTimeout(async () => {
+            if (avatarId) {
+              try {
+                const { data: { user } } = await supabase.auth.getUser()
+                if (user) {
+                  const { data: verifyAvatar } = await supabase
+                    .from('avatar_profiles')
+                    .select('voice_id, name')
+                    .eq('id', avatarId)
+                    .eq('user_id', user.id)
+                    .single()
+                  
+                  if (verifyAvatar?.voice_id === data.voice_id) {
+                    console.log(`[VOICE TRAINING] ✅ Voice successfully connected to ${verifyAvatar.name}`)
+                  } else {
+                    console.warn(`[VOICE TRAINING] ⚠️ Voice connection verification failed`, {
+                      expected: data.voice_id,
+                      actual: verifyAvatar?.voice_id
+                    })
+                  }
+                }
+              } catch (verifyError) {
+                console.error('[VOICE TRAINING] Verification error:', verifyError)
+              }
+            }
+          }, 2000)
 
           // Reset form after delay
           setTimeout(() => {
