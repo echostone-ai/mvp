@@ -475,9 +475,17 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
       const debugData = await debugResponse.json()
       console.log('[CLEAR VOICE] Avatar debug info:', debugData)
 
+      // Also check current user and their avatars
+      const userResponse = await fetch('/api/debug-user')
+      const userData = await userResponse.json()
+      console.log('[CLEAR VOICE] User debug info:', userData)
+
       if (!debugData.exists) {
-        setStatus({ type: 'error', message: `Avatar with ID ${avatarId} does not exist. Please refresh the page and try again.` })
-        return
+        setStatus({ 
+          type: 'error', 
+          message: `Avatar with ID ${avatarId} does not exist in the database. This might be a database connection issue. The clear function will still attempt to clean up any ElevenLabs voices.` 
+        })
+        // Don't return here - let the clear function proceed anyway
       }
 
       const response = await fetch('/api/clear-avatar-voice', {

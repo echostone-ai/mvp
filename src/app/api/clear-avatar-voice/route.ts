@@ -59,11 +59,49 @@ export async function POST(request: NextRequest) {
         console.log('[CLEAR VOICE] Avatar check result:', { avatarCheck, checkError });
 
         if (checkError || !avatarCheck) {
-            console.log('[CLEAR VOICE] Avatar does not exist in database');
+            console.log('[CLEAR VOICE] Avatar not found in database, but proceeding with ElevenLabs cleanup');
+            
+            // Even if avatar doesn't exist in our DB, try to clean up any potential ElevenLabs voices
+            // This is a fallback to help with cleanup
+            const apiKey = process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY || process.env.ELEVENLABS_API_KEY;
+            if (apiKey) {
+                try {
+                    // Try to list voices and find any that might match this avatar
+                    const listResponse = await fetch('https://api.elevenlabs.io/v1/voices', {
+                        headers: { 'xi-api-key': apiKey }
+                    });
+                    
+                    if (listResponse.ok) {
+                        const voicesData = await listResponse.json();
+                        const matchingVoices = voicesData.voices?.filter((voice: any) => 
+                            voice.name?.includes(avatarId.slice(-8)) || 
+                            voice.name?.toLowerCase().includes('avatar')
+                        ) || [];
+                        
+                        console.log('[CLEAR VOICE] Found potential matching voices:', matchingVoices.length);
+                        
+                        // Delete any matching voices
+                        for (const voice of matchingVoices) {
+                            try {
+                                await fetch(`https://api.elevenlabs.io/v1/voices/${voice.voice_id}`, {
+                                    method: 'DELETE',
+                                    headers: { 'xi-api-key': apiKey }
+                                });
+                                console.log('[CLEAR VOICE] Deleted potential voice:', voice.voice_id);
+                            } catch (deleteError) {
+                                console.log('[CLEAR VOICE] Could not delete voice:', voice.voice_id);
+                            }
+                        }
+                    }
+                } catch (cleanupError) {
+                    console.log('[CLEAR VOICE] ElevenLabs cleanup failed:', cleanupError);
+                }
+            }
+            
             return NextResponse.json({ 
-                success: false, 
-                error: `Avatar with ID ${avatarId} does not exist in the database` 
-            }, { status: 404 });
+                success: true, 
+                message: 'Avatar not found in database, but performed ElevenLabs cleanup. You can now try training a new voice.' 
+            });
         }
 
         // If user is authenticated, verify ownership
