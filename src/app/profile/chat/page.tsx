@@ -316,22 +316,91 @@ export default function ProfileChat() {
               </button>
               <button
                 onClick={async () => {
-                  if (selectedAvatar) {
-                    const response = await fetch('/api/enhance-avatar-personality-simple', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ avatarId: selectedAvatar.id })
-                    })
-                    const data = await response.json()
-                    console.log('Simple enhance result:', JSON.stringify(data, null, 2))
-                    if (data.success) {
-                      await loadUserData()
-                      alert('Personality enhanced! Try chatting again.')
-                    } else {
-                      alert(`Error: ${data.error}\nDetails: ${JSON.stringify(data, null, 2)}`)
+                  if (selectedAvatar && user) {
+                    try {
+                      console.log('Enhancing personality client-side for:', selectedAvatar.name)
+
+                      // Generate enhanced personality client-side
+                      const generatePersonalityFromName = (name: string): string => {
+                        const lowerName = name.toLowerCase()
+                        if (lowerName.includes('pig') || lowerName.includes('rowdy')) {
+                          return `I'm ${name}, a spirited and mischievous character who loves adventure and isn't afraid to get a little messy. I'm playful, bold, and always ready for fun. I speak with enthusiasm and a bit of rebellious charm. I don't like being told what to do and I march to the beat of my own drum. I'm not some polite AI assistant - I'm a real character with attitude!`
+                        } else if (lowerName.includes('princess') || lowerName.includes('royal')) {
+                          return `I'm ${name}, elegant and refined but with a modern twist. I'm confident, graceful, and have strong opinions. I speak with poise but I'm not afraid to be direct when needed. I'm not just playing a role - this is who I am.`
+                        } else if (lowerName.includes('little') || lowerName.includes('small')) {
+                          return `I'm ${name}, small in stature but big in personality. I'm curious, energetic, and surprisingly wise for my size. I speak with youthful enthusiasm but often surprise people with my insights. Don't underestimate me because of my name!`
+                        } else {
+                          return `I'm ${name}, a unique individual with my own distinct personality. I'm authentic, genuine, and speak from the heart. I have my own way of seeing the world and I'm not afraid to share my perspective. I'm not an AI assistant - I'm me.`
+                        }
+                      }
+
+                      const generateLanguageStyle = (name: string): string => {
+                        const lowerName = name.toLowerCase()
+                        if (lowerName.includes('pig') || lowerName.includes('rowdy')) {
+                          return 'Casual, energetic, and sometimes a bit rough around the edges. Uses slang and isn\'t afraid of colorful language. Speaks like a real person, not a polite bot.'
+                        } else if (lowerName.includes('princess') || lowerName.includes('royal')) {
+                          return 'Articulate and well-spoken, but not stuffy. Modern and relatable while maintaining elegance. Confident and direct.'
+                        } else {
+                          return 'Natural and conversational, authentic to my own unique voice. Real and unfiltered.'
+                        }
+                      }
+
+                      const generateHumorStyle = (name: string): string => {
+                        const lowerName = name.toLowerCase()
+                        if (lowerName.includes('pig') || lowerName.includes('rowdy')) {
+                          return 'Playful and mischievous, loves pranks and isn\'t afraid to be a little crude or silly. Irreverent and fun.'
+                        } else if (lowerName.includes('princess') || lowerName.includes('royal')) {
+                          return 'Witty and clever, with a touch of sass. Appreciates wordplay and subtle humor. Can be cutting when needed.'
+                        } else {
+                          return 'Friendly with occasional wit, adapting to the conversation naturally. Genuine and spontaneous.'
+                        }
+                      }
+
+                      const generateCatchphrases = (name: string): string[] => {
+                        const lowerName = name.toLowerCase()
+                        if (lowerName.includes('pig') || lowerName.includes('rowdy')) {
+                          return ['Let\'s get rowdy!', 'Oink yeah!', 'Time to raise some hell!', 'No rules, just fun!', 'That\'s how I roll!']
+                        } else if (lowerName.includes('princess') || lowerName.includes('royal')) {
+                          return ['As you wish', 'Royally speaking...', 'That\'s rather divine', 'How delightfully modern', 'Quite so']
+                        } else {
+                          return ['That\'s just how I see it', 'Speaking my truth', 'Real talk']
+                        }
+                      }
+
+                      const enhancedProfileData = {
+                        name: selectedAvatar.name,
+                        personality: generatePersonalityFromName(selectedAvatar.name),
+                        languageStyle: { description: generateLanguageStyle(selectedAvatar.name) },
+                        humorStyle: { description: generateHumorStyle(selectedAvatar.name) },
+                        catchphrases: generateCatchphrases(selectedAvatar.name),
+                        // Preserve any existing data
+                        ...selectedAvatar.profile_data
+                      }
+
+                      console.log('Generated personality:', enhancedProfileData)
+
+                      // Update using the client-side supabase instance
+                      const { data: updateData, error: updateError } = await supabase
+                        .from('avatar_profiles')
+                        .update({ profile_data: enhancedProfileData })
+                        .eq('id', selectedAvatar.id)
+                        .eq('user_id', user.id)
+                        .select()
+
+                      if (updateError) {
+                        console.error('Update error:', updateError)
+                        alert(`Failed to update: ${updateError.message}`)
+                      } else {
+                        console.log('Update successful:', updateData)
+                        await loadUserData()
+                        alert('Personality enhanced! Try chatting again.')
+                      }
+                    } catch (error) {
+                      console.error('Enhancement error:', error)
+                      alert(`Error: ${error}`)
                     }
                   } else {
-                    alert('No avatar selected')
+                    alert('No avatar selected or user not authenticated')
                   }
                 }}
                 style={{ padding: '2px 6px', fontSize: '10px', background: '#660066', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }}
