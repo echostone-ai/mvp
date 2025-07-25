@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCached, setCached } from '@/lib/cache';
+import { supabase } from '@/lib/supabase';
 
 export interface Message {
   id: string;
@@ -164,7 +165,7 @@ export async function listConversations(data: {
   avatarId?: string;
   shareToken?: string;
 }, request: NextRequest): Promise<NextResponse> {
-  const { userId, avatarId, shareToken } = data;
+  const { userId, avatarId } = data;
 
   if (!userId) {
     return NextResponse.json({
@@ -172,50 +173,23 @@ export async function listConversations(data: {
     }, { status: 400 });
   }
 
-  const cacheKey = `conversations:${userId}:${avatarId || 'all'}:${shareToken || 'none'}`;
-  const cached = getCached<Conversation[]>(cacheKey);
-  
-  if (cached) {
-    return NextResponse.json({
-      success: true,
-      conversations: cached
-    });
+  // Query the database for real conversations
+  let query = supabase
+    .from('conversations')
+    .select('*')
+    .eq('user_id', userId);
+
+  if (avatarId) {
+    query = query.eq('avatar_id', avatarId);
   }
 
-  // Mock conversation list (in real app, query from database)
-  const conversations: Conversation[] = [
-    {
-      id: 'conv-1',
-      userId,
-      avatarId: avatarId || 'avatar-jonathan',
-      shareToken: shareToken || null,
-      createdAt: '2024-01-15T10:00:00Z',
-      updatedAt: '2024-01-15T10:30:00Z',
-      lastMessage: 'Tell me more about Bulgaria.',
-      lastResponse: 'Bulgaria is amazing! Sofia has this incredible mix of ancient history and modern city life...',
-      messageCount: 4,
-      messages: []
-    },
-    {
-      id: 'conv-2',
-      userId,
-      avatarId: avatarId || 'avatar-jonathan',
-      shareToken: shareToken || null,
-      createdAt: '2024-01-10T14:00:00Z',
-      updatedAt: '2024-01-10T14:45:00Z',
-      lastMessage: 'What foods do you recommend in Japan?',
-      lastResponse: 'Oh, Japanese cuisine is incredible! Beyond just sushi, you should try okonomiyaki in Osaka...',
-      messageCount: 8,
-      messages: []
-    }
-  ];
+  const { data: conversations, error } = await query.order('created_at', { ascending: false });
 
-  setCached(cacheKey, conversations, 300000); // Cache for 5 minutes
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 
-  return NextResponse.json({
-    success: true,
-    conversations
-  });
+  return NextResponse.json({ success: true, conversations });
 }
 
 export async function deleteConversation(data: {
