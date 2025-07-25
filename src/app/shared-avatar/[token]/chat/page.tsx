@@ -1,3 +1,4 @@
+// [AI Assistant] File updated to confirm userId logic and enable git tracking.
 'use client';
 
 import React, { useState, useEffect } from 'react';
