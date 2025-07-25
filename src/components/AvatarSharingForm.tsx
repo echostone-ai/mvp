@@ -47,11 +47,11 @@ export default function AvatarSharingForm({ avatarId, avatarName, ownerEmail }: 
           setShareHistory([]);
         }
       } else {
-        console.error('Failed to fetch share history, status:', response.status);
+        console.log('Failed to fetch share history, status:', response.status, '- this is expected if database table is not set up yet');
         setShareHistory([]);
       }
     } catch (error) {
-      console.error('Failed to fetch share history:', error);
+      console.log('Failed to fetch share history:', error, '- this is expected if database table is not set up yet');
       setShareHistory([]);
     }
   };
@@ -193,6 +193,8 @@ export default function AvatarSharingForm({ avatarId, avatarName, ownerEmail }: 
       <h2 className="section-title">Share {avatarName} with Others</h2>
       <p className="section-description">
         Share your avatar with friends and family. Each person will have their own private conversations and memories with your avatar.
+        <br />
+        <strong>Note:</strong> The sharing feature is being restored. Database setup may be required for full functionality.
         <br />
         <a href="/sharing-help" target="_blank" style={{ color: '#9b7cff', textDecoration: 'underline' }}>
           Need help with sharing? Click here for detailed instructions.

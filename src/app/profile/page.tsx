@@ -568,6 +568,22 @@ export default function ProfilePage() {
               💬 Chat with {selectedAvatar.name}
             </Link>
             <button
+              onClick={() => setActiveTab('sharing')}
+              className="avatar-header-share-btn"
+              style={{ 
+                padding: '8px 16px', 
+                marginRight: '10px',
+                backgroundColor: '#6a00ff', 
+                color: 'white', 
+                border: 'none', 
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '14px'
+              }}
+            >
+              🔗 Share Avatar
+            </button>
+            <button
               onClick={() => setSelectedAvatar(null)}
               className="avatar-header-change-btn"
             >
