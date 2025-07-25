@@ -73,6 +73,7 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
   const audioChunksRef = useRef<Blob[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const recordingTimeRef = useRef<number>(0)
 
   // Check authentication status on component mount
   useEffect(() => {
@@ -107,6 +108,7 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
     try {
       setStatus({ type: null, message: '' })
       setRecordingTime(0)
+      recordingTimeRef.current = 0
 
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -133,7 +135,11 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
 
       // Start timer
       timerRef.current = setInterval(() => {
-        setRecordingTime(prev => prev + 1)
+        setRecordingTime(prev => {
+          const newTime = prev + 1
+          recordingTimeRef.current = newTime
+          return newTime
+        })
       }, 1000)
 
       mediaRecorder.ondataavailable = (event) => {
@@ -151,7 +157,7 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
         setAudioStream(null);
 
         // Store the final recording duration before clearing timer
-        setFinalRecordingDuration(recordingTime)
+        setFinalRecordingDuration(recordingTimeRef.current)
 
         // Clear timer
         if (timerRef.current) {
@@ -278,7 +284,13 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
 
     // Only validate recording time for live recordings, not uploaded files
     if (method === 'record' && audioBlob && finalRecordingDuration < 10) {
-      setStatus({ type: 'error', message: 'Recording too short. Please record at least 10 seconds of audio.' })
+      console.log('[VOICE TRAINING] Recording validation failed:', {
+        method,
+        hasAudioBlob: !!audioBlob,
+        finalRecordingDuration,
+        recordingTime
+      })
+      setStatus({ type: 'error', message: `Recording too short. Please record at least 10 seconds of audio. (Recorded: ${finalRecordingDuration}s)` })
       return
     }
 
@@ -449,6 +461,7 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
     setRecording(false)
     setRecordingTime(0)
     setFinalRecordingDuration(0)
+    recordingTimeRef.current = 0
 
     if (timerRef.current) {
       clearInterval(timerRef.current)
