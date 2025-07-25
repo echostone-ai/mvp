@@ -39,10 +39,10 @@ export default function ProfileChat() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [reloadSignal, setReloadSignal] = useState<number>(Date.now())
-  
+
   // Get avatarId from URL parameters
   const [avatarIdFromUrl, setAvatarIdFromUrl] = useState<string | null>(null)
-  
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search)
@@ -71,7 +71,7 @@ export default function ProfileChat() {
             .eq('id', avatarIdFromUrl)
             .eq('user_id', currentUser.id)
             .single()
-          
+
           if (avatarError) {
             setError('Failed to load avatar: ' + avatarError.message)
           } else {
@@ -101,7 +101,7 @@ export default function ProfileChat() {
         setProfileData(data.profile_data)
         setVoiceId(data.voice_id)
       }
-      
+
       setLoading(false)
       setError(null)
     } catch (err: any) {
@@ -113,6 +113,31 @@ export default function ProfileChat() {
   useEffect(() => {
     loadUserData()
   }, [avatarIdFromUrl]) // Reload when avatarId changes
+
+  // Listen for voice training completion
+  useEffect(() => {
+    const handleVoiceUpdate = (e: CustomEvent) => {
+      if (e.detail.avatarId === avatarIdFromUrl) {
+        console.log('Voice training completed, refreshing avatar data...')
+        loadUserData()
+      }
+    }
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === `avatar_voice_updated_${avatarIdFromUrl}`) {
+        console.log('Voice training completed (storage), refreshing avatar data...')
+        loadUserData()
+      }
+    }
+
+    window.addEventListener('avatarVoiceUpdated', handleVoiceUpdate as EventListener)
+    window.addEventListener('storage', handleStorageChange)
+
+    return () => {
+      window.removeEventListener('avatarVoiceUpdated', handleVoiceUpdate as EventListener)
+      window.removeEventListener('storage', handleStorageChange)
+    }
+  }, [avatarIdFromUrl])
 
   // Auto-refresh when component mounts or page is revisited
   useEffect(() => {
@@ -150,14 +175,14 @@ export default function ProfileChat() {
               Please sign up or log in to chat with your EchoStone.
             </p>
             <div className="chat-auth-actions">
-              <a 
-                href="/login" 
+              <a
+                href="/login"
                 className="chat-auth-btn primary"
               >
                 Log In
               </a>
-              <a 
-                href="/signup" 
+              <a
+                href="/signup"
                 className="chat-auth-btn secondary"
               >
                 Sign Up
@@ -189,8 +214,8 @@ export default function ProfileChat() {
             <div className="avatar-header-info">
               <div className="avatar-header-photo">
                 {selectedAvatar.photo_url ? (
-                  <img 
-                    src={selectedAvatar.photo_url} 
+                  <img
+                    src={selectedAvatar.photo_url}
                     alt={selectedAvatar.name}
                     className="avatar-photo"
                     onError={(e) => {
@@ -224,15 +249,57 @@ export default function ProfileChat() {
               </div>
             </div>
           </div>
-          <ChatInterface 
-            profileData={selectedAvatar.profile_data || profileData} 
-            voiceId={selectedAvatar.voice_id || voiceId} 
+          <ChatInterface
+            profileData={{
+              name: selectedAvatar.name,
+              personality: selectedAvatar.profile_data?.personality || `I am ${selectedAvatar.name}, a unique digital avatar with my own personality and voice.`,
+              languageStyle: selectedAvatar.profile_data?.languageStyle || { description: 'Natural and conversational' },
+              humorStyle: selectedAvatar.profile_data?.humorStyle || { description: 'Friendly with occasional wit' },
+              catchphrases: selectedAvatar.profile_data?.catchphrases || [],
+              ...selectedAvatar.profile_data
+            }}
+            voiceId={selectedAvatar.voice_id || voiceId}
             userId={user.id}
             avatarId={selectedAvatar.id}
           />
           {/* Debug info */}
-          <div style={{ position: 'fixed', bottom: '10px', right: '10px', background: 'rgba(0,0,0,0.8)', color: 'white', padding: '10px', fontSize: '12px', borderRadius: '5px' }}>
-            Debug: voiceId = {selectedAvatar.voice_id || voiceId || 'null'}
+          <div style={{ position: 'fixed', bottom: '10px', right: '10px', background: 'rgba(0,0,0,0.8)', color: 'white', padding: '10px', fontSize: '12px', borderRadius: '5px', maxWidth: '300px' }}>
+            <div><strong>Avatar:</strong> {selectedAvatar.name}</div>
+            <div><strong>Avatar Voice:</strong> {selectedAvatar.voice_id || 'null'}</div>
+            <div><strong>Fallback Voice:</strong> {voiceId || 'null'}</div>
+            <div><strong>Using:</strong> {selectedAvatar.voice_id || voiceId || 'null'}</div>
+            <div style={{ marginTop: '5px', display: 'flex', gap: '5px' }}>
+              <button
+                onClick={async () => {
+                  console.log('Refreshing avatar data...')
+                  await loadUserData()
+                }}
+                style={{ padding: '2px 6px', fontSize: '10px', background: '#0066cc', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }}
+              >
+                Refresh
+              </button>
+              <button
+                onClick={async () => {
+                  const newVoiceId = prompt('Enter voice ID:')
+                  if (newVoiceId && selectedAvatar) {
+                    const response = await fetch('/api/update-avatar-voice', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ avatarId: selectedAvatar.id, voiceId: newVoiceId, userId: user.id })
+                    })
+                    const data = await response.json()
+                    console.log('Update result:', data)
+                    if (data.success) {
+                      await loadUserData()
+                    }
+                    alert(JSON.stringify(data, null, 2))
+                  }
+                }}
+                style={{ padding: '2px 6px', fontSize: '10px', background: '#cc6600', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }}
+              >
+                Set Voice
+              </button>
+            </div>
           </div>
         </main>
       )}
