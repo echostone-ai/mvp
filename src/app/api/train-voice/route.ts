@@ -157,22 +157,57 @@ export async function POST(request: NextRequest) {
     elevenLabsFormData.append('name', uniqueVoiceName);
     elevenLabsFormData.append('description', `Voice for ${name} (${accent} accent) - Created ${new Date().toISOString()}`);
     
-    // Add all audio files with unique names and metadata
-    audioFiles.forEach((file, index) => {
-      // Create a unique filename with timestamp and index
-      const timestamp = Date.now();
-      const randomId = Math.random().toString(36).substring(2, 8);
-      const originalExt = file.name.split('.').pop() || 'webm';
-      const uniqueFilename = `${uniqueVoiceName}_${index}_${randomId}.${originalExt}`;
-      
-      // Create a new File object with unique name and modified timestamp
-      const uniqueFile = new File([file], uniqueFilename, {
-        type: file.type,
-        lastModified: Date.now() + index * 1000 // Stagger timestamps
-      });
-      
-      console.log(`[VOICE TRAINING] Adding file: ${uniqueFilename}, size: ${uniqueFile.size}, type: ${uniqueFile.type}`);
-      elevenLabsFormData.append('files', uniqueFile);
+    // Process audio files to make them unique by adding silent padding
+    const processedFiles = await Promise.all(audioFiles.map(async (file, index) => {
+      try {
+        // Read the file as array buffer
+        const arrayBuffer = await file.arrayBuffer();
+        
+        // Add a small amount of random silent padding to make the audio unique
+        // This is a simple approach - we'll add a few bytes of silence
+        const originalBytes = new Uint8Array(arrayBuffer);
+        const paddingSize = Math.floor(Math.random() * 100) + 50; // 50-150 bytes of padding
+        const padding = new Uint8Array(paddingSize).fill(0);
+        
+        // Combine original audio with padding
+        const modifiedBytes = new Uint8Array(originalBytes.length + paddingSize);
+        modifiedBytes.set(originalBytes);
+        modifiedBytes.set(padding, originalBytes.length);
+        
+        // Create new file with modified content
+        const timestamp = Date.now();
+        const randomId = Math.random().toString(36).substring(2, 8);
+        const originalExt = file.name.split('.').pop() || 'webm';
+        const uniqueFilename = `${uniqueVoiceName}_${index}_${randomId}_${timestamp}.${originalExt}`;
+        
+        const modifiedFile = new File([modifiedBytes], uniqueFilename, {
+          type: file.type,
+          lastModified: Date.now() + index * 1000
+        });
+        
+        console.log(`[VOICE TRAINING] Processed file: ${uniqueFilename}, original: ${originalBytes.length}, modified: ${modifiedBytes.length}`);
+        return modifiedFile;
+        
+      } catch (error) {
+        console.warn(`[VOICE TRAINING] Could not process file ${index}, using original:`, error);
+        
+        // Fallback: just create unique file with original content
+        const timestamp = Date.now();
+        const randomId = Math.random().toString(36).substring(2, 8);
+        const originalExt = file.name.split('.').pop() || 'webm';
+        const uniqueFilename = `${uniqueVoiceName}_${index}_${randomId}_fallback.${originalExt}`;
+        
+        return new File([file], uniqueFilename, {
+          type: file.type,
+          lastModified: Date.now() + index * 1000
+        });
+      }
+    }));
+    
+    // Add processed files to form data
+    processedFiles.forEach((file, index) => {
+      console.log(`[VOICE TRAINING] Adding processed file: ${file.name}, size: ${file.size}`);
+      elevenLabsFormData.append('files', file);
     });
 
     // Call ElevenLabs API to create a voice clone

@@ -66,6 +66,7 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
   const [isProcessing, setIsProcessing] = useState(false)
   const [status, setStatus] = useState<{ type: 'success' | 'error' | 'info' | null, message: string }>({ type: null, message: '' })
   const [recordingTime, setRecordingTime] = useState(0)
+  const [finalRecordingDuration, setFinalRecordingDuration] = useState(0)
   const [userAuthenticated, setUserAuthenticated] = useState<boolean | null>(null)
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
@@ -148,6 +149,9 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
         setStep('preview')
         stream.getTracks().forEach(track => track.stop())
         setAudioStream(null);
+
+        // Store the final recording duration before clearing timer
+        setFinalRecordingDuration(recordingTime)
 
         // Clear timer
         if (timerRef.current) {
@@ -273,7 +277,7 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
     }
 
     // Only validate recording time for live recordings, not uploaded files
-    if (method === 'record' && audioBlob && recordingTime < 10) {
+    if (method === 'record' && audioBlob && finalRecordingDuration < 10) {
       setStatus({ type: 'error', message: 'Recording too short. Please record at least 10 seconds of audio.' })
       return
     }
@@ -444,6 +448,7 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
     setStatus({ type: null, message: '' })
     setRecording(false)
     setRecordingTime(0)
+    setFinalRecordingDuration(0)
 
     if (timerRef.current) {
       clearInterval(timerRef.current)
