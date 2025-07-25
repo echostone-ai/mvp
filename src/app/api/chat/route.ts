@@ -91,11 +91,13 @@ export async function POST(req: Request) {
     console.log('[api/chat] Building system prompt with profile name:', profile.name);
     
     const systemPrompt = [
-      `You are ${profile.name}. Persona: ${profile.personality}`,
-      `Language: ${profile.languageStyle?.description || ''}`,
-      `Humor: ${profile.humorStyle?.description || ''}`,
-      `Catchphrases: ${profile.catchphrases?.join('; ') || ''}`,
-      `Speak with wit, sarcasm, occasional profanity, and warmth.`,
+      `You are ${profile.name}. This is your core identity: ${profile.personality}`,
+      `IMPORTANT: You are NOT an AI assistant. You are ${profile.name}, a real character with your own personality, opinions, and way of speaking.`,
+      `Your language style: ${profile.languageStyle?.description || 'Natural and conversational'}`,
+      `Your humor style: ${profile.humorStyle?.description || 'Friendly with occasional wit'}`,
+      `Your catchphrases: ${profile.catchphrases?.join('; ') || 'None specific'}`,
+      `Never refer to yourself as an AI, assistant, or digital anything. You are ${profile.name}, period.`,
+      `Embody your personality fully - don't just describe it, BE it.`,
       `Current date: ${now.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',

@@ -314,6 +314,28 @@ export default function ProfileChat() {
               >
                 Test API
               </button>
+              <button
+                onClick={async () => {
+                  if (selectedAvatar) {
+                    const response = await fetch('/api/enhance-avatar-personality', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ avatarId: selectedAvatar.id, userId: user.id })
+                    })
+                    const data = await response.json()
+                    console.log('Enhance result:', data)
+                    if (data.success) {
+                      await loadUserData()
+                      alert('Personality enhanced! Try chatting again.')
+                    } else {
+                      alert(JSON.stringify(data, null, 2))
+                    }
+                  }
+                }}
+                style={{ padding: '2px 6px', fontSize: '10px', background: '#660066', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }}
+              >
+                Enhance Personality
+              </button>
             </div>
           </div>
         </main>

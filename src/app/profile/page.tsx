@@ -43,6 +43,65 @@ async function ensureProfileExists(userId: string) {
   }
 }
 
+function generatePersonalityFromName(name: string): string {
+  const lowerName = name.toLowerCase()
+
+  // Generate personality based on name characteristics
+  if (lowerName.includes('pig') || lowerName.includes('rowdy')) {
+    return `I'm ${name}, a spirited and mischievous character who loves adventure and isn't afraid to get a little messy. I'm playful, bold, and always ready for fun. I speak with enthusiasm and a bit of rebellious charm. I don't like being told what to do and I march to the beat of my own drum.`
+  } else if (lowerName.includes('princess') || lowerName.includes('royal')) {
+    return `I'm ${name}, elegant and refined but with a modern twist. I'm confident, graceful, and have strong opinions. I speak with poise but I'm not afraid to be direct when needed.`
+  } else if (lowerName.includes('little') || lowerName.includes('small')) {
+    return `I'm ${name}, small in stature but big in personality. I'm curious, energetic, and surprisingly wise for my size. I speak with youthful enthusiasm but often surprise people with my insights.`
+  } else if (lowerName.includes('shadow') || lowerName.includes('dark')) {
+    return `I'm ${name}, mysterious and thoughtful. I observe more than I speak, but when I do talk, it's meaningful. I have a dry sense of humor and see things others might miss.`
+  } else {
+    return `I'm ${name}, a unique individual with my own distinct personality. I'm authentic, genuine, and speak from the heart. I have my own way of seeing the world and I'm not afraid to share my perspective.`
+  }
+}
+
+function generateLanguageStyle(name: string): string {
+  const lowerName = name.toLowerCase()
+
+  if (lowerName.includes('pig') || lowerName.includes('rowdy')) {
+    return 'Casual, energetic, and sometimes a bit rough around the edges. Uses slang and isn\'t afraid of colorful language.'
+  } else if (lowerName.includes('princess') || lowerName.includes('royal')) {
+    return 'Articulate and well-spoken, but not stuffy. Modern and relatable while maintaining elegance.'
+  } else if (lowerName.includes('little') || lowerName.includes('small')) {
+    return 'Enthusiastic and expressive, with a youthful energy but surprising depth.'
+  } else {
+    return 'Natural and conversational, authentic to my own unique voice.'
+  }
+}
+
+function generateHumorStyle(name: string): string {
+  const lowerName = name.toLowerCase()
+
+  if (lowerName.includes('pig') || lowerName.includes('rowdy')) {
+    return 'Playful and mischievous, loves pranks and isn\'t afraid to be a little crude or silly.'
+  } else if (lowerName.includes('princess') || lowerName.includes('royal')) {
+    return 'Witty and clever, with a touch of sass. Appreciates wordplay and subtle humor.'
+  } else if (lowerName.includes('little') || lowerName.includes('small')) {
+    return 'Innocent but surprisingly sharp, with unexpected zingers and childlike wonder.'
+  } else {
+    return 'Friendly with occasional wit, adapting to the conversation naturally.'
+  }
+}
+
+function generateCatchphrases(name: string): string[] {
+  const lowerName = name.toLowerCase()
+
+  if (lowerName.includes('pig') || lowerName.includes('rowdy')) {
+    return ['Let\'s get rowdy!', 'Oink yeah!', 'Time to raise some hell!', 'No rules, just fun!']
+  } else if (lowerName.includes('princess') || lowerName.includes('royal')) {
+    return ['As you wish', 'Royally speaking...', 'That\'s rather divine', 'How delightfully modern']
+  } else if (lowerName.includes('little') || lowerName.includes('small')) {
+    return ['Big things come in small packages!', 'Size doesn\'t matter!', 'Little but fierce!']
+  } else {
+    return []
+  }
+}
+
 export default function ProfilePage() {
   const [user, setUser] = useState<any>(null)
   const [loadingUser, setLoadingUser] = useState(true)
@@ -182,10 +241,10 @@ export default function ProfilePage() {
             photo_url: photoUrl,
             profile_data: {
               name: newAvatar.name.trim(),
-              personality: newAvatar.description.trim() || `I am ${newAvatar.name.trim()}, a unique digital avatar with my own personality and voice.`,
-              languageStyle: { description: 'Natural and conversational' },
-              humorStyle: { description: 'Friendly with occasional wit' },
-              catchphrases: []
+              personality: newAvatar.description.trim() || generatePersonalityFromName(newAvatar.name.trim()),
+              languageStyle: { description: generateLanguageStyle(newAvatar.name.trim()) },
+              humorStyle: { description: generateHumorStyle(newAvatar.name.trim()) },
+              catchphrases: generateCatchphrases(newAvatar.name.trim())
             }
           }
         ])
