@@ -773,6 +773,18 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
                   <li>😊 Let your personality shine through</li>
                   <li>📱 Keep your device close but not too close to avoid distortion</li>
                 </ul>
+                <div className="recording-warning" style={{ 
+                  background: 'rgba(255, 193, 7, 0.1)', 
+                  border: '1px solid rgba(255, 193, 7, 0.3)', 
+                  borderRadius: '8px', 
+                  padding: '12px', 
+                  marginTop: '16px' 
+                }}>
+                  <h4 style={{ color: '#ffc107', marginBottom: '8px' }}>⚠️ Important:</h4>
+                  <p style={{ color: '#ffc107', fontSize: '14px', margin: 0 }}>
+                    Only use your own original voice recordings. AI-generated or synthetic voices cannot be used for training.
+                  </p>
+                </div>
               </div>
 
               <div className="script-display">
@@ -843,6 +855,19 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
           <div className="upload-section">
             <h3>Upload Audio Files</h3>
 
+            <div className="upload-warning" style={{ 
+              background: 'rgba(255, 193, 7, 0.1)', 
+              border: '1px solid rgba(255, 193, 7, 0.3)', 
+              borderRadius: '8px', 
+              padding: '16px', 
+              marginBottom: '20px' 
+            }}>
+              <h4 style={{ color: '#ffc107', marginBottom: '8px' }}>⚠️ Important:</h4>
+              <p style={{ color: '#ffc107', fontSize: '14px', margin: 0 }}>
+                Only upload recordings of your own original voice. AI-generated, synthetic, or other people's voices cannot be used for training and will be rejected.
+              </p>
+            </div>
+
             <div className="upload-area" onClick={() => fileInputRef.current?.click()}>
               <div className="upload-icon">📁</div>
               <h4>Click to select audio files</h4>
@@ -852,6 +877,7 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
                 <span>• Max file size: 50MB each</span>
                 <span>• Recommended: 2-5 minutes total audio</span>
                 <span>• Clear speech, minimal background noise</span>
+                <span>• Must be original recordings of your voice</span>
               </div>
             </div>
 

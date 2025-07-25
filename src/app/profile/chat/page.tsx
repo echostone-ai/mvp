@@ -317,10 +317,28 @@ export default function ProfileChat() {
               <button
                 onClick={async () => {
                   if (selectedAvatar) {
+                    console.log('Selected avatar:', selectedAvatar)
+                    console.log('User:', user)
+                    console.log('Enhancing personality for:', { avatarId: selectedAvatar.id, userId: user?.id })
+                    
+                    // First, let's check if the avatar exists by querying it directly
+                    try {
+                      const { data: testAvatar, error: testError } = await supabase
+                        .from('avatar_profiles')
+                        .select('*')
+                        .eq('id', selectedAvatar.id)
+                        .eq('user_id', user.id)
+                        .single()
+                      
+                      console.log('Direct avatar query result:', { testAvatar, testError })
+                    } catch (testErr) {
+                      console.log('Direct query error:', testErr)
+                    }
+                    
                     const response = await fetch('/api/enhance-avatar-personality', {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ avatarId: selectedAvatar.id, userId: user.id })
+                      body: JSON.stringify({ avatarId: selectedAvatar.id, userId: user?.id })
                     })
                     const data = await response.json()
                     console.log('Enhance result:', data)
@@ -328,8 +346,10 @@ export default function ProfileChat() {
                       await loadUserData()
                       alert('Personality enhanced! Try chatting again.')
                     } else {
-                      alert(JSON.stringify(data, null, 2))
+                      alert(`Error: ${data.error}\nDetails: ${JSON.stringify(data, null, 2)}`)
                     }
+                  } else {
+                    alert('No avatar selected')
                   }
                 }}
                 style={{ padding: '2px 6px', fontSize: '10px', background: '#660066', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }}

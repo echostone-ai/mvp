@@ -65,6 +65,8 @@ export async function POST(request: NextRequest) {
   try {
     const { avatarId, userId } = await request.json();
     
+    console.log('[ENHANCE PERSONALITY] Request received:', { avatarId, userId });
+    
     if (!avatarId) {
       return NextResponse.json({ 
         error: 'avatarId is required' 
@@ -72,28 +74,90 @@ export async function POST(request: NextRequest) {
     }
     
     // Create admin client
+    console.log('[ENHANCE PERSONALITY] Environment check:', {
+      hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+      hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY
+    });
+    
     const adminSupabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
     
-    // Get the current avatar
-    let query = adminSupabase
-      .from('avatar_profiles')
-      .select('*')
-      .eq('id', avatarId);
+    console.log('[ENHANCE PERSONALITY] Querying avatar...');
+    
+    // First, let's test if we can query any avatars at all
+    try {
+      const { data: allAvatars, error: allError } = await adminSupabase
+        .from('avatar_profiles')
+        .select('id, name, user_id')
+        .limit(5);
       
-    if (userId) {
-      query = query.eq('user_id', userId);
+      console.log('[ENHANCE PERSONALITY] Test query - all avatars:', { count: allAvatars?.length, error: allError });
+    } catch (testError) {
+      console.log('[ENHANCE PERSONALITY] Test query failed:', testError);
     }
     
-    const { data: avatar, error: fetchError } = await query.single();
+    // Get the current avatar - try with user filter first, then without
+    let avatar = null;
+    let fetchError = null;
+    
+    if (userId) {
+      console.log('[ENHANCE PERSONALITY] Trying with user_id filter:', userId);
+      const { data, error } = await adminSupabase
+        .from('avatar_profiles')
+        .select('*')
+        .eq('id', avatarId)
+        .eq('user_id', userId)
+        .single();
+      
+      avatar = data;
+      fetchError = error;
+      console.log('[ENHANCE PERSONALITY] Query with user_id result:', { avatar: !!avatar, error: fetchError });
+    }
+    
+    // If that failed, try without user filter (for debugging)
+    if (!avatar && fetchError) {
+      console.log('[ENHANCE PERSONALITY] Trying without user_id filter...');
+      const { data, error } = await adminSupabase
+        .from('avatar_profiles')
+        .select('*')
+        .eq('id', avatarId)
+        .single();
+      
+      if (data) {
+        console.log('[ENHANCE PERSONALITY] Found avatar without user filter:', { 
+          avatarUserId: data.user_id, 
+          requestUserId: userId,
+          match: data.user_id === userId 
+        });
+        
+        // Only use it if it belongs to the requesting user
+        if (data.user_id === userId) {
+          avatar = data;
+          fetchError = null;
+        } else {
+          fetchError = { message: 'Avatar belongs to different user' };
+        }
+      } else {
+        fetchError = error;
+      }
+    }
     
     if (fetchError || !avatar) {
+      console.error('[ENHANCE PERSONALITY] Final error:', fetchError);
       return NextResponse.json({ 
-        error: 'Avatar not found' 
+        error: 'Avatar not found',
+        details: fetchError?.message || 'No avatar data returned',
+        query: { avatarId, userId },
+        debug: {
+          hasUserId: !!userId,
+          avatarId: avatarId
+        }
       }, { status: 404 });
     }
+    
+    console.log('[ENHANCE PERSONALITY] Found avatar:', avatar.name);
     
     // Generate enhanced personality
     const enhancedProfileData = {

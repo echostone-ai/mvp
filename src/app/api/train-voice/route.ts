@@ -418,12 +418,16 @@ export async function POST(request: NextRequest) {
         // Handle specific error cases
         if (errorText.includes('duplicate') || errorText.includes('same file') || errorText.includes('already exists')) {
           errorMessage = 'This audio content has been used before. Try the "Clear Existing Voice" button below, then record completely new audio with different words.';
+        } else if (errorText.includes('generated') || errorText.includes('synthetic') || errorText.includes('artificial')) {
+          errorMessage = 'This audio appears to be AI-generated and cannot be used for voice training. Please use original recordings of your actual voice.';
         } else if (errorText.includes('quota') || errorText.includes('limit') || errorText.includes('exceeded')) {
           errorMessage = 'Voice training quota exceeded. Please try again later or upgrade your ElevenLabs plan.';
         } else if (errorText.includes('audio quality') || errorText.includes('too short') || errorText.includes('duration')) {
           errorMessage = 'Audio quality is too low or recording is too short. Please record at least 30 seconds of clear, high-quality audio.';
         } else if (errorText.includes('invalid') || errorText.includes('format')) {
           errorMessage = 'Invalid audio format. Please use MP3, WAV, or M4A files with clear speech.';
+        } else if (errorText.includes('voice') && errorText.includes('detect')) {
+          errorMessage = 'Could not detect a clear voice in the audio. Please ensure you are speaking clearly and there is minimal background noise.';
         }
         
         return NextResponse.json({ 
