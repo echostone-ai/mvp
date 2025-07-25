@@ -1,29 +1,20 @@
 // src/app/layout.tsx
-import './globals.css'
-import '@/styles/legacy-hub.css'
-import '@/styles/avatar-sharing.css'
-import { ReactNode } from 'react'
-import SupabaseProvider from '@/components/SupabaseProvider'
-// import Navigation from '@/components/nav'
+import './globals.css';
+import type { Metadata } from 'next';
+import ParticleBackground from '@/components/ParticleBackground';
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'EchoStone',
-  description: 'AI-powered voice interaction platform',
-  icons: {
-    icon: '/favicon.ico',
-  },
-}
+  description: 'Your digital memory companion',
+};
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>
-        <SupabaseProvider>
-          <main className="main-content">
-            {children}
-          </main>
-        </SupabaseProvider>
+        <ParticleBackground />
+        {children}
       </body>
     </html>
-  )
+  );
 }
