@@ -256,6 +256,8 @@ export default function ProfileChat() {
               languageStyle: selectedAvatar.profile_data?.languageStyle || { description: 'Natural and conversational' },
               humorStyle: selectedAvatar.profile_data?.humorStyle || { description: 'Friendly with occasional wit' },
               catchphrases: selectedAvatar.profile_data?.catchphrases || [],
+              personalityTraits: selectedAvatar.profile_data?.personalityTraits || [],
+              factualInfo: selectedAvatar.profile_data?.factualInfo || [],
               ...selectedAvatar.profile_data
             }}
             voiceId={selectedAvatar.voice_id || voiceId}
@@ -280,19 +282,27 @@ export default function ProfileChat() {
               </button>
               <button
                 onClick={async () => {
-                  const newVoiceId = prompt('Enter voice ID:')
+                  const newVoiceId = prompt('Enter voice ID (from your training logs):')
                   if (newVoiceId && selectedAvatar) {
-                    const response = await fetch('/api/update-avatar-voice', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ avatarId: selectedAvatar.id, voiceId: newVoiceId, userId: user.id })
-                    })
-                    const data = await response.json()
-                    console.log('Update result:', data)
-                    if (data.success) {
-                      await loadUserData()
+                    try {
+                      // Update directly with client-side supabase
+                      const { data: updateData, error: updateError } = await supabase
+                        .from('avatar_profiles')
+                        .update({ voice_id: newVoiceId })
+                        .eq('id', selectedAvatar.id)
+                        .eq('user_id', user.id)
+                        .select()
+
+                      if (updateError) {
+                        alert(`Failed to update: ${updateError.message}`)
+                      } else {
+                        console.log('Voice ID updated:', updateData)
+                        await loadUserData()
+                        alert('Voice ID updated successfully!')
+                      }
+                    } catch (error) {
+                      alert(`Error: ${error}`)
                     }
-                    alert(JSON.stringify(data, null, 2))
                   }
                 }}
                 style={{ padding: '2px 6px', fontSize: '10px', background: '#cc6600', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }}

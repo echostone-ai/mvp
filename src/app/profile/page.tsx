@@ -196,8 +196,104 @@ export default function ProfilePage() {
     return () => { mounted = false }
   }, [])
 
-  const handleAvatarSelect = (avatar: Avatar) => {
+  const handleAvatarSelect = async (avatar: Avatar) => {
     setSelectedAvatar(avatar)
+    
+    // Automatically enhance personality based on profile data
+    await enhanceAvatarPersonalityFromProfile(avatar)
+  }
+  
+  const enhanceAvatarPersonalityFromProfile = async (avatar: Avatar) => {
+    if (!user) return
+    
+    try {
+      console.log('Auto-enhancing personality for:', avatar.name)
+      
+      // Get personality data from profile sections
+      const { data: personalityData, error: personalityError } = await supabase
+        .from('profile_responses')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('avatar_id', avatar.id)
+      
+      // Get stories data
+      const { data: storiesData, error: storiesError } = await supabase
+        .from('stories')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('avatar_id', avatar.id)
+      
+      console.log('Profile data loaded:', { personalityData, storiesData })
+      
+      // Extract personality traits from responses
+      let personalityTraits = []
+      let factualInfo = []
+      
+      if (personalityData && personalityData.length > 0) {
+        personalityData.forEach(response => {
+          if (response.question && response.answer) {
+            personalityTraits.push(`${response.question}: ${response.answer}`)
+          }
+        })
+      }
+      
+      if (storiesData && storiesData.length > 0) {
+        storiesData.forEach(story => {
+          if (story.content) {
+            factualInfo.push(story.content)
+          }
+        })
+      }
+      
+      // Generate enhanced personality based on profile data
+      let enhancedPersonality = generatePersonalityFromName(avatar.name)
+      
+      if (personalityTraits.length > 0 || factualInfo.length > 0) {
+        enhancedPersonality = `I'm ${avatar.name}. Here's who I really am: `
+        
+        if (personalityTraits.length > 0) {
+          enhancedPersonality += personalityTraits.slice(0, 5).join('. ') + '. '
+        }
+        
+        if (factualInfo.length > 0) {
+          enhancedPersonality += 'Some important things about my life: ' + factualInfo.slice(0, 3).join('. ') + '. '
+        }
+        
+        enhancedPersonality += `I'm not an AI assistant - I'm a real person with my own experiences, opinions, and way of speaking. I talk naturally and authentically, just like I would in real life.`
+      }
+      
+      const enhancedProfileData = {
+        name: avatar.name,
+        personality: enhancedPersonality,
+        languageStyle: { description: generateLanguageStyle(avatar.name) },
+        humorStyle: { description: generateHumorStyle(avatar.name) },
+        catchphrases: generateCatchphrases(avatar.name),
+        personalityTraits,
+        factualInfo,
+        // Preserve any existing data
+        ...avatar.profile_data
+      }
+      
+      console.log('Enhanced personality data:', enhancedProfileData)
+      
+      // Update the avatar with enhanced personality
+      const { data: updateData, error: updateError } = await supabase
+        .from('avatar_profiles')
+        .update({ profile_data: enhancedProfileData })
+        .eq('id', avatar.id)
+        .eq('user_id', user.id)
+        .select()
+      
+      if (updateError) {
+        console.error('Failed to auto-enhance personality:', updateError)
+      } else {
+        console.log('Auto-enhanced personality successfully')
+        // Update the selected avatar with new data
+        setSelectedAvatar(updateData[0])
+      }
+    } catch (error) {
+      console.error('Error auto-enhancing personality:', error)
+    }
   }
 
   const handleCreateAvatar = async (e: React.FormEvent) => {
@@ -244,7 +340,9 @@ export default function ProfilePage() {
               personality: newAvatar.description.trim() || generatePersonalityFromName(newAvatar.name.trim()),
               languageStyle: { description: generateLanguageStyle(newAvatar.name.trim()) },
               humorStyle: { description: generateHumorStyle(newAvatar.name.trim()) },
-              catchphrases: generateCatchphrases(newAvatar.name.trim())
+              catchphrases: generateCatchphrases(newAvatar.name.trim()),
+              personalityTraits: [],
+              factualInfo: []
             }
           }
         ])
