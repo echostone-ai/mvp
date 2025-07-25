@@ -418,6 +418,12 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
           if (onVoiceUploaded) {
             onVoiceUploaded(data.voice_id)
           }
+          
+          // Trigger refresh for any open avatar chat pages
+          if (avatarId) {
+            localStorage.setItem(`avatar_voice_updated_${avatarId}`, Date.now().toString())
+            localStorage.removeItem(`avatar_voice_updated_${avatarId}`)
+          }
 
           // Reset form after delay
           setTimeout(() => {

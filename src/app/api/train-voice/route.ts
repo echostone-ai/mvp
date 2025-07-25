@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { createClient } from '@supabase/supabase-js';
+import { clearCache } from '@/lib/cache';
 
 // Set the maximum content length for file uploads
 export const config = {
@@ -102,6 +103,12 @@ export async function POST(request: NextRequest) {
             console.error('[VOICE TRAINING] Failed to update avatar with mock voice:', updateError);
           } else {
             console.log(`[VOICE TRAINING] Updated avatar ${avatarId} with mock voice ID ${mockVoiceId}`);
+            
+            // Clear avatar cache to force refresh
+            if (user && user.id) {
+              clearCache(`avatars:${user.id}`);
+              console.log(`[VOICE TRAINING] Cleared avatar cache for user ${user.id} (mock)`);
+            }
           }
         } catch (dbError) {
           console.error('[VOICE TRAINING] Database error:', dbError);
@@ -334,7 +341,13 @@ export async function POST(request: NextRequest) {
                     updateQuery = updateQuery.eq('user_id', user.id);
                   }
                   
-                  await updateQuery;
+                  const { error: retryUpdateError } = await updateQuery;
+                  
+                  if (!retryUpdateError && user && user.id) {
+                    // Clear avatar cache to force refresh
+                    clearCache(`avatars:${user.id}`);
+                    console.log(`[VOICE TRAINING] Cleared avatar cache for user ${user.id} (retry)`);
+                  }
                 }
                 
                 return NextResponse.json({ 
@@ -421,6 +434,12 @@ export async function POST(request: NextRequest) {
           // Continue anyway since we have the voice ID
         } else {
           console.log(`[VOICE TRAINING] Updated avatar ${avatarId} with voice ID ${voiceId}`);
+          
+          // Clear avatar cache to force refresh
+          if (user && user.id) {
+            clearCache(`avatars:${user.id}`);
+            console.log(`[VOICE TRAINING] Cleared avatar cache for user ${user.id}`);
+          }
         }
       } catch (dbError) {
         console.error('[VOICE TRAINING] Database error:', dbError);

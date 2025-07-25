@@ -105,6 +105,7 @@ export async function POST(req: Request) {
     console.log('Voice API request:', { 
       textLength: text?.length,
       voiceIdProvided: !!voiceId,
+      actualVoiceId: voiceId,
       settingsProvided: !!settings,
       emotionalContextProvided: !!emotionalContext
     })

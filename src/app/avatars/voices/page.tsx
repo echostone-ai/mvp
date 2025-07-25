@@ -140,14 +140,32 @@ function AvatarVoicesContent() {
     try {
       // Update local state
       setAvatars(avatars.map(avatar => 
-        avatar.id === selectedAvatar.id ? { ...avatar, voice_id: voiceId } : avatar
+        avatar.id === selectedAvatar.id ? { ...avatar, voice_id: voiceId, hasVoice: true } : avatar
       ))
       
-      // Reset training view after a delay
-      setTimeout(() => {
+      // Force refresh avatars from server to clear cache
+      setTimeout(async () => {
+        try {
+          const response = await fetch('/api/avatars', {
+            method: 'GET',
+            headers: {
+              'Cache-Control': 'no-cache',
+              'Pragma': 'no-cache'
+            }
+          })
+          if (response.ok) {
+            const data = await response.json()
+            if (data.success && data.avatars) {
+              setAvatars(data.avatars)
+            }
+          }
+        } catch (refreshError) {
+          console.warn('Failed to refresh avatars:', refreshError)
+        }
+        
         setShowTraining(false)
         setSelectedAvatar(null)
-      }, 3000)
+      }, 2000)
     } catch (err: any) {
       setError(`Failed to update avatar: ${err.message}`)
     }

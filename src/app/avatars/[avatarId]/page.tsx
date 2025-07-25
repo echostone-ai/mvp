@@ -27,6 +27,25 @@ export default function AvatarChatPage() {
   const [avatarProfile, setAvatarProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  
+  // Function to refresh avatar data
+  const refreshAvatarData = async (currentUser: any) => {
+    if (!currentUser) return
+    
+    try {
+      const { data, error } = await supabase
+        .from('avatar_profiles')
+        .select('*')
+        .eq('id', avatarId)
+        .eq('user_id', currentUser.id)
+        .single()
+
+      if (error) throw error
+      setAvatarProfile(data)
+    } catch (err: any) {
+      setError(`Failed to load avatar: ${err.message}`)
+    }
+  }
 
   useEffect(() => {
     async function loadData() {
@@ -37,19 +56,7 @@ export default function AvatarChatPage() {
 
       // Load avatar profile
       if (currentUser) {
-        try {
-          const { data, error } = await supabase
-            .from('avatar_profiles')
-            .select('*')
-            .eq('id', avatarId)
-            .eq('user_id', currentUser.id)
-            .single()
-
-          if (error) throw error
-          setAvatarProfile(data)
-        } catch (err: any) {
-          setError(`Failed to load avatar: ${err.message}`)
-        }
+        await refreshAvatarData(currentUser)
       } else {
         setError('User not authenticated')
       }
@@ -59,6 +66,21 @@ export default function AvatarChatPage() {
 
     loadData()
   }, [avatarId])
+  
+  // Listen for storage events to refresh data when voice is updated
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === `avatar_voice_updated_${avatarId}`) {
+        // Refresh avatar data when voice is updated
+        if (user) {
+          refreshAvatarData(user)
+        }
+      }
+    }
+    
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
+  }, [avatarId, user])
 
   if (loading) {
     return (
