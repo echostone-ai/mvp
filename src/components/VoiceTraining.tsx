@@ -106,10 +106,12 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
 
   const startRecording = async () => {
     try {
+      console.log('[VOICE TRAINING] Starting recording...')
       setStatus({ type: null, message: '' })
       setRecordingTime(0)
       recordingTimeRef.current = 0
 
+      console.log('[VOICE TRAINING] Requesting microphone access...')
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
@@ -118,6 +120,7 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
           sampleRate: 44100
         }
       })
+      console.log('[VOICE TRAINING] Microphone access granted, stream:', stream)
       setAudioStream(stream);
 
       let mimeType = 'audio/webm;codecs=opus'
@@ -125,31 +128,38 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
         mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' :
           MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : 'audio/ogg'
       }
+      console.log('[VOICE TRAINING] Using MIME type:', mimeType)
 
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType,
         audioBitsPerSecond: 128000
       })
+      console.log('[VOICE TRAINING] MediaRecorder created:', mediaRecorder)
       mediaRecorderRef.current = mediaRecorder
       audioChunksRef.current = []
 
       // Start timer
+      console.log('[VOICE TRAINING] Starting timer...')
       timerRef.current = setInterval(() => {
         setRecordingTime(prev => {
           const newTime = prev + 1
           recordingTimeRef.current = newTime
+          console.log('[VOICE TRAINING] Timer tick:', newTime)
           return newTime
         })
       }, 1000)
 
       mediaRecorder.ondataavailable = (event) => {
+        console.log('[VOICE TRAINING] Data available:', event.data.size, 'bytes')
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data)
         }
       }
 
       mediaRecorder.onstop = () => {
+        console.log('[VOICE TRAINING] Recording stopped, chunks:', audioChunksRef.current.length, 'final time:', recordingTimeRef.current)
         const blob = new Blob(audioChunksRef.current, { type: mimeType })
+        console.log('[VOICE TRAINING] Created blob:', blob.size, 'bytes')
         setAudioBlob(blob)
         setAudioUrl(URL.createObjectURL(blob))
         setStep('preview')
@@ -158,6 +168,7 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
 
         // Store the final recording duration before clearing timer
         setFinalRecordingDuration(recordingTimeRef.current)
+        console.log('[VOICE TRAINING] Final recording duration set to:', recordingTimeRef.current)
 
         // Clear timer
         if (timerRef.current) {
@@ -179,8 +190,11 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
         }
       }
 
+      console.log('[VOICE TRAINING] Starting MediaRecorder...')
       mediaRecorder.start(1000) // Collect data every second
+      console.log('[VOICE TRAINING] MediaRecorder started, state:', mediaRecorder.state)
       setRecording(true)
+      console.log('[VOICE TRAINING] Recording state set to true')
     } catch (error: any) {
       console.error('Recording error:', error)
       let errorMessage = 'Could not access microphone. '
