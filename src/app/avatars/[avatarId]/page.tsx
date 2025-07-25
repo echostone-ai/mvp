@@ -219,8 +219,27 @@ export default function AvatarChatPage() {
           </div>
         )}
         
+        {/* Debug Info */}
+        <div className="max-w-5xl w-full mx-auto px-4 mb-4">
+          <details className="text-sm opacity-70">
+            <summary className="cursor-pointer hover:text-purple-300">Debug Info</summary>
+            <div className="pt-2 bg-gray-900/50 p-4 rounded-lg mt-2">
+              <p><strong>Avatar Name:</strong> {avatarProfile.name}</p>
+              <p><strong>Voice ID:</strong> {avatarProfile.voice_id || 'None'}</p>
+              <p><strong>Profile Data:</strong> {JSON.stringify(avatarProfile.profile_data, null, 2)}</p>
+            </div>
+          </details>
+        </div>
+        
         <ChatInterface 
-          profileData={avatarProfile.profile_data || {}}
+          profileData={{
+            name: avatarProfile.name,
+            personality: avatarProfile.profile_data?.personality || `I am ${avatarProfile.name}, a unique digital avatar with my own personality and voice.`,
+            languageStyle: avatarProfile.profile_data?.languageStyle || { description: 'Natural and conversational' },
+            humorStyle: avatarProfile.profile_data?.humorStyle || { description: 'Friendly with occasional wit' },
+            catchphrases: avatarProfile.profile_data?.catchphrases || [],
+            ...avatarProfile.profile_data
+          }}
           voiceId={avatarProfile.voice_id}
           userId={user?.id} // Current user's ID for memory operations
           avatarId={avatarId} // Avatar ID to identify which avatar they're talking to

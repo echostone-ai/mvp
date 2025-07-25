@@ -58,6 +58,13 @@ export default function ChatInterface({
   const mediaStreamRef = useRef<MediaStream | null>(null)
   const audioUrlRef = useRef<string | null>(null)
 
+  // Debug logging
+  useEffect(() => {
+    console.log('[ChatInterface] Profile data:', profileData)
+    console.log('[ChatInterface] Voice ID:', voiceId)
+    console.log('[ChatInterface] Avatar ID:', avatarId)
+  }, [profileData, voiceId, avatarId])
+
   // Load conversation when component mounts
   useEffect(() => {
     if (userId) {
@@ -277,6 +284,7 @@ export default function ChatInterface({
 
       if (data.answer) {
         try {
+          console.log('[ChatInterface] Making voice API call with voiceId:', voiceId)
           const vr = await fetch('/api/voice', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

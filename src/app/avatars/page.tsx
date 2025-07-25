@@ -28,6 +28,7 @@ export default function AvatarsPage() {
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
+  const [fixing, setFixing] = useState(false)
 
   useEffect(() => {
     async function loadData() {
@@ -97,7 +98,14 @@ export default function AvatarsPage() {
             user_id: user.id,
             name: newAvatar.name.trim(),
             description: newAvatar.description.trim(),
-            photo_url: photoUrl
+            photo_url: photoUrl,
+            profile_data: {
+              name: newAvatar.name.trim(),
+              personality: newAvatar.description.trim() || `I am ${newAvatar.name.trim()}, a unique digital avatar with my own personality and voice.`,
+              languageStyle: { description: 'Natural and conversational' },
+              humorStyle: { description: 'Friendly with occasional wit' },
+              catchphrases: []
+            }
           }
         ])
         .select()
@@ -113,6 +121,40 @@ export default function AvatarsPage() {
       setError(`Failed to create avatar: ${err.message}`)
     } finally {
       setCreating(false)
+    }
+  }
+
+  const handleFixAvatarProfiles = async () => {
+    setFixing(true)
+    setError('')
+    
+    try {
+      const response = await fetch('/api/fix-avatar-profiles', {
+        method: 'POST'
+      })
+      
+      const data = await response.json()
+      
+      if (data.success) {
+        // Reload avatars to see the changes
+        const { data: updatedAvatars, error } = await supabase
+          .from('avatar_profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+
+        if (!error) {
+          setAvatars(updatedAvatars || [])
+        }
+        
+        alert(`Successfully updated ${data.updated} avatars`)
+      } else {
+        throw new Error(data.error || 'Failed to fix avatars')
+      }
+    } catch (err: any) {
+      setError(`Failed to fix avatar profiles: ${err.message}`)
+    } finally {
+      setFixing(false)
     }
   }
 
@@ -162,6 +204,16 @@ export default function AvatarsPage() {
         <div className="avatars-header">
           <h1 className="avatars-title">Your Avatars</h1>
           <div className="avatars-actions">
+            {avatars.length > 0 && (
+              <button
+                onClick={handleFixAvatarProfiles}
+                disabled={fixing}
+                className="avatars-action-btn"
+                style={{ backgroundColor: '#3b82f6', marginRight: '1rem' }}
+              >
+                {fixing ? 'Fixing...' : 'Fix Profiles'}
+              </button>
+            )}
             <Link 
               href="/test-memory-isolation" 
               className="avatars-action-btn test-memory"
