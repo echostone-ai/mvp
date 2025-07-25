@@ -71,6 +71,7 @@ export default function AvatarChatPage() {
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === `avatar_voice_updated_${avatarId}`) {
+        console.log('Avatar voice updated event received, refreshing data...')
         // Refresh avatar data when voice is updated
         if (user) {
           refreshAvatarData(user)
@@ -78,8 +79,23 @@ export default function AvatarChatPage() {
       }
     }
     
+    // Also listen for custom events (for same-tab updates)
+    const handleCustomEvent = (e: CustomEvent) => {
+      if (e.detail.avatarId === avatarId) {
+        console.log('Avatar voice updated custom event received, refreshing data...')
+        if (user) {
+          refreshAvatarData(user)
+        }
+      }
+    }
+    
     window.addEventListener('storage', handleStorageChange)
-    return () => window.removeEventListener('storage', handleStorageChange)
+    window.addEventListener('avatarVoiceUpdated', handleCustomEvent as EventListener)
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      window.removeEventListener('avatarVoiceUpdated', handleCustomEvent as EventListener)
+    }
   }, [avatarId, user])
 
   if (loading) {
@@ -227,6 +243,25 @@ export default function AvatarChatPage() {
               <p><strong>Avatar Name:</strong> {avatarProfile.name}</p>
               <p><strong>Voice ID:</strong> {avatarProfile.voice_id || 'None'}</p>
               <p><strong>Profile Data:</strong> {JSON.stringify(avatarProfile.profile_data, null, 2)}</p>
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={() => user && refreshAvatarData(user)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs"
+                >
+                  Refresh Data
+                </button>
+                <button
+                  onClick={async () => {
+                    const response = await fetch(`/api/debug-avatar-voice?avatarId=${avatarId}&userId=${user?.id}`)
+                    const data = await response.json()
+                    console.log('Debug avatar voice response:', data)
+                    alert(JSON.stringify(data, null, 2))
+                  }}
+                  className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs"
+                >
+                  Debug Voice
+                </button>
+              </div>
             </div>
           </details>
         </div>

@@ -427,18 +427,31 @@ export async function POST(request: NextRequest) {
           query = query.eq('user_id', user.id);
         }
         
-        const { error: updateError } = await query;
+        const { data: updateData, error: updateError } = await query;
 
         if (updateError) {
           console.error('[VOICE TRAINING] Failed to update avatar:', updateError);
           // Continue anyway since we have the voice ID
         } else {
           console.log(`[VOICE TRAINING] Updated avatar ${avatarId} with voice ID ${voiceId}`);
+          console.log(`[VOICE TRAINING] Update result:`, updateData);
           
           // Clear avatar cache to force refresh
           if (user && user.id) {
             clearCache(`avatars:${user.id}`);
             console.log(`[VOICE TRAINING] Cleared avatar cache for user ${user.id}`);
+          }
+          
+          // Verify the update worked
+          try {
+            const { data: verifyData } = await adminSupabase
+              .from('avatar_profiles')
+              .select('voice_id')
+              .eq('id', avatarId)
+              .single();
+            console.log(`[VOICE TRAINING] Verification - Avatar ${avatarId} voice_id is now:`, verifyData?.voice_id);
+          } catch (verifyError) {
+            console.warn('[VOICE TRAINING] Could not verify update:', verifyError);
           }
         }
       } catch (dbError) {

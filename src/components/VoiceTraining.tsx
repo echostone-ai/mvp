@@ -421,8 +421,14 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
           
           // Trigger refresh for any open avatar chat pages
           if (avatarId) {
+            // Trigger storage event for cross-tab updates
             localStorage.setItem(`avatar_voice_updated_${avatarId}`, Date.now().toString())
             localStorage.removeItem(`avatar_voice_updated_${avatarId}`)
+            
+            // Trigger custom event for same-tab updates
+            window.dispatchEvent(new CustomEvent('avatarVoiceUpdated', {
+              detail: { avatarId, voiceId: data.voice_id }
+            }))
           }
 
           // Reset form after delay

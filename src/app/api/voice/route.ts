@@ -117,6 +117,13 @@ export async function POST(req: Request) {
     // Use provided voiceId or fallback to environment variable
     const finalVoiceId = voiceId || process.env.NEXT_PUBLIC_ELEVENLABS_VOICE_ID || process.env.ELEVENLABS_VOICE_ID || 'CO6pxVrMZfyL61ZIglyr'
     
+    console.log('Voice ID selection:', {
+      provided: voiceId,
+      fallback_env_public: process.env.NEXT_PUBLIC_ELEVENLABS_VOICE_ID,
+      fallback_env_private: process.env.ELEVENLABS_VOICE_ID,
+      final: finalVoiceId
+    });
+    
     if (!finalVoiceId) {
       console.warn('No voice ID provided, using fallback audio');
       return new NextResponse(createFallbackAudioBuffer(), {

@@ -64,6 +64,7 @@ export async function POST(req: Request) {
     // Use provided profileData if available
     if (profileData) {
       profile = profileData;
+      console.log('[api/chat] Using provided profile data:', JSON.stringify(profile, null, 2));
     } else {
       try {
         const raw = await fs.readFile(path.join(process.cwd(), 'public', 'jonathan_profile.json'),
@@ -87,6 +88,8 @@ export async function POST(req: Request) {
       ? `\nIMPORTANT: This is a shared avatar session. You are being shared with multiple people, but each person has their own private conversation with you. The current conversation is with ${visitorName || 'a visitor'}. Your memories with this person are isolated from your memories with other people. You must maintain your identity as ${profile.name} with this specific personality and voice.`
       : '';
 
+    console.log('[api/chat] Building system prompt with profile name:', profile.name);
+    
     const systemPrompt = [
       `You are ${profile.name}. Persona: ${profile.personality}`,
       `Language: ${profile.languageStyle?.description || ''}`,
