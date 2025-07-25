@@ -505,3 +505,32 @@
 .faq-item p {
   color: #b8b8d9;
 }
+
+.tab-item {
+  display: inline-block;
+  padding: 0.75rem 2rem;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #b8b8d9;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  border-radius: 8px 8px 0 0;
+  margin-right: 0.5rem;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+  outline: none;
+}
+
+.tab-item:hover,
+.tab-item:focus {
+  color: #fff;
+  background: rgba(155, 124, 255, 0.08);
+}
+
+.tab-item.active {
+  color: #9b7cff;
+  border-bottom: 3px solid #9b7cff;
+  background: rgba(155, 124, 255, 0.12);
+  font-weight: 600;
+}
