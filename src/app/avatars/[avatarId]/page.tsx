@@ -67,6 +67,14 @@ export default function AvatarChatPage() {
     loadData()
   }, [avatarId])
   
+  // Log avatar profile changes
+  useEffect(() => {
+    if (avatarProfile) {
+      console.log('Loaded avatar data:', avatarProfile)
+      console.log('Avatar voice_id:', avatarProfile.voice_id)
+    }
+  }, [avatarProfile])
+  
   // Listen for storage events to refresh data when voice is updated
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
@@ -237,33 +245,57 @@ export default function AvatarChatPage() {
         
         {/* Debug Info */}
         <div className="max-w-5xl w-full mx-auto px-4 mb-4">
-          <details className="text-sm opacity-70">
-            <summary className="cursor-pointer hover:text-purple-300">Debug Info</summary>
-            <div className="pt-2 bg-gray-900/50 p-4 rounded-lg mt-2">
+          <div className="bg-red-900/30 border border-red-500/30 rounded-lg p-4">
+            <h3 className="text-red-300 font-bold mb-2">🔧 Debug Tools</h3>
+            <div className="text-sm text-gray-300 mb-3">
               <p><strong>Avatar Name:</strong> {avatarProfile.name}</p>
               <p><strong>Voice ID:</strong> {avatarProfile.voice_id || 'None'}</p>
-              <p><strong>Profile Data:</strong> {JSON.stringify(avatarProfile.profile_data, null, 2)}</p>
-              <div className="flex gap-2 mt-2">
-                <button
-                  onClick={() => user && refreshAvatarData(user)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs"
-                >
-                  Refresh Data
-                </button>
-                <button
-                  onClick={async () => {
-                    const response = await fetch(`/api/debug-avatar-voice?avatarId=${avatarId}&userId=${user?.id}`)
-                    const data = await response.json()
-                    console.log('Debug avatar voice response:', data)
-                    alert(JSON.stringify(data, null, 2))
-                  }}
-                  className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs"
-                >
-                  Debug Voice
-                </button>
-              </div>
+              <p><strong>Has Profile Data:</strong> {avatarProfile.profile_data ? 'Yes' : 'No'}</p>
             </div>
-          </details>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => {
+                  console.log('Refreshing avatar data...')
+                  user && refreshAvatarData(user)
+                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs"
+              >
+                Refresh Data
+              </button>
+              <button
+                onClick={async () => {
+                  const response = await fetch(`/api/debug-avatar-voice?avatarId=${avatarId}&userId=${user?.id}`)
+                  const data = await response.json()
+                  console.log('Debug avatar voice response:', data)
+                  alert(JSON.stringify(data, null, 2))
+                }}
+                className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs"
+              >
+                Debug Voice
+              </button>
+              <button
+                onClick={async () => {
+                  const voiceId = prompt('Enter voice ID to set:')
+                  if (voiceId) {
+                    const response = await fetch('/api/update-avatar-voice', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ avatarId, voiceId, userId: user?.id })
+                    })
+                    const data = await response.json()
+                    console.log('Update voice response:', data)
+                    alert(JSON.stringify(data, null, 2))
+                    if (data.success) {
+                      refreshAvatarData(user)
+                    }
+                  }
+                }}
+                className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded text-xs"
+              >
+                Set Voice ID
+              </button>
+            </div>
+          </div>
         </div>
         
         <ChatInterface 

@@ -47,6 +47,8 @@ export async function POST(request: NextRequest) {
     } catch (authError) {
       console.log('[VOICE TRAINING] Auth error, proceeding without authentication:', authError);
     }
+    
+    console.log(`[VOICE TRAINING] Request details: avatarId=${avatarId}, userId=${user?.id}, hasUser=${!!user}`);
 
     // For debugging: log the request headers
     const authHeader = request.headers.get('authorization');
@@ -416,25 +418,23 @@ export async function POST(request: NextRequest) {
         );
 
         // Update the avatar with the new voice ID
-        // Only filter by user_id if we have a user
-        let query = adminSupabase
+        console.log(`[VOICE TRAINING] Attempting to update avatar ${avatarId} with voice ID ${voiceId} for user ${user?.id}`);
+        
+        const { data: updateData, error: updateError } = await adminSupabase
           .from('avatar_profiles')
           .update({ voice_id: voiceId })
-          .eq('id', avatarId);
-          
-        // Add user_id filter if user exists
-        if (user && user.id) {
-          query = query.eq('user_id', user.id);
-        }
-        
-        const { data: updateData, error: updateError } = await query;
+          .eq('id', avatarId)
+          .eq('user_id', user?.id || 'no-user')
+          .select();
 
         if (updateError) {
           console.error('[VOICE TRAINING] Failed to update avatar:', updateError);
+          console.error('[VOICE TRAINING] Update details:', { avatarId, voiceId, userId: user?.id });
           // Continue anyway since we have the voice ID
         } else {
-          console.log(`[VOICE TRAINING] Updated avatar ${avatarId} with voice ID ${voiceId}`);
+          console.log(`[VOICE TRAINING] Successfully updated avatar ${avatarId} with voice ID ${voiceId}`);
           console.log(`[VOICE TRAINING] Update result:`, updateData);
+          console.log(`[VOICE TRAINING] Updated ${updateData?.length || 0} rows`);
           
           // Clear avatar cache to force refresh
           if (user && user.id) {
@@ -446,10 +446,10 @@ export async function POST(request: NextRequest) {
           try {
             const { data: verifyData } = await adminSupabase
               .from('avatar_profiles')
-              .select('voice_id')
+              .select('voice_id, name')
               .eq('id', avatarId)
               .single();
-            console.log(`[VOICE TRAINING] Verification - Avatar ${avatarId} voice_id is now:`, verifyData?.voice_id);
+            console.log(`[VOICE TRAINING] Verification - Avatar ${avatarId} (${verifyData?.name}) voice_id is now:`, verifyData?.voice_id);
           } catch (verifyError) {
             console.warn('[VOICE TRAINING] Could not verify update:', verifyError);
           }
