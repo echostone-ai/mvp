@@ -61,6 +61,7 @@ const handlers: Record<ActionType, (request: NextRequest) => Promise<Response>> 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    console.log('Received body:', body); // Debug log for incoming request
     const { action } = body;
 
     if (!action) {
