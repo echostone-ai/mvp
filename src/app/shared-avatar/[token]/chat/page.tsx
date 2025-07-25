@@ -54,9 +54,13 @@ export default function SharedAvatarChatPage() {
           storeVisitorInfo(shareToken, visitorEmail, visitorName || undefined);
         }
         
-        // Create a consistent user ID for this visitor
-        const visitorId = createVisitorId(shareToken, visitorEmail);
-        setUserId(visitorId);
+        // Create a consistent user ID for this visitor (or use localStorage fallback)
+        let currentUserId = visitorEmail || localStorage.getItem('sharedAvatarUserId');
+        if (!currentUserId) {
+          currentUserId = `user-${Math.random().toString(36).substring(2, 9)}`;
+          localStorage.setItem('sharedAvatarUserId', currentUserId);
+        }
+        setUserId(currentUserId);
         
         // Fetch shared avatar details
         const avatarResponse = await fetch(`/api/avatar-sharing?shareToken=${shareToken}`);
