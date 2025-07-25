@@ -119,13 +119,16 @@ export async function POST(req: Request) {
 
     // 4) Retrieve relevant memories for context (if userId is provided)
     let memoryContext = '';
+    let latestMemories = [];
     if (userId && openai.apiKey) {
       try {
-        console.log('[api/chat] Retrieving memories for user:', userId);
-        memoryContext = await MemoryService.getMemoriesForChat(userQuestion, userId, 5);
+        console.log('[api/chat] Retrieving memories for user:', userId, 'avatar:', avatarId);
+        memoryContext = await MemoryService.getMemoriesForChat(userQuestion, userId, 5, avatarId);
         if (memoryContext) {
           console.log('[api/chat] Found relevant memories:', memoryContext.length, 'characters');
         }
+        // Also fetch latest memories for UI update
+        latestMemories = await MemoryService.getLatestMemories(userId, avatarId, 10);
       } catch (memoryError) {
         console.warn('[api/chat] Memory retrieval failed:', memoryError);
         // Continue without memories - don't fail the entire chat
@@ -204,7 +207,7 @@ export async function POST(req: Request) {
     }
 
     // 8) Respond
-    return NextResponse.json({ answer })
+    return NextResponse.json({ answer, memories: latestMemories })
   } catch (err: any) {
     console.error('[api/chat] Error:', err)
 

@@ -3,6 +3,7 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import { ConversationService, ChatMessage as ConversationMessage } from '@/lib/conversationService'
+import { MemorySavedAnimation } from './MemorySavedAnimation';
 
 function getFirstName(profileData: any): string {
   if (profileData?.personal_snapshot?.full_legal_name)
@@ -54,6 +55,9 @@ export default function ChatInterface({
   const [voiceError, setVoiceError] = useState<string | null>(null)
   const [isSafari, setIsSafari] = useState(false)
   const [micPermission, setMicPermission] = useState<'granted' | 'denied' | 'prompt' | 'unknown'>('unknown')
+  const [lastMemory, setLastMemory] = useState<string | null>(null);
+  const [showMemoryAnim, setShowMemoryAnim] = useState(false);
+  const userMsgRef = useRef<HTMLDivElement>(null);
 
   const recognitionRef = useRef<any>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
@@ -280,6 +284,22 @@ export default function ChatInterface({
 
       // Save assistant message
       await saveMessage(assistantMessage)
+
+      // If the API returned updated memories, show animation for the newest one
+      if (data.memories && data.memories.length > 0) {
+        const newest = data.memories[0].fragmentText || data.memories[0].content || '';
+        if (newest && newest !== lastMemory) {
+          setLastMemory(newest);
+          setShowMemoryAnim(true);
+          setTimeout(() => setShowMemoryAnim(false), 1400);
+        }
+      }
+
+      // If the API returned updated memories, update local state (if a memory panel is present)
+      if (data.memories) {
+        // Optionally: setMemories(data.memories)
+        // (Uncomment and wire up if you want to show live memory updates)
+      }
 
       // Show memory processing status (for debugging)
       console.log('💭 Memory processing: User message processed for memories')
@@ -747,21 +767,30 @@ export default function ChatInterface({
           {messages.slice(-6).reverse().map((msg, idx) => {
             const originalIdx = messages.length - 1 - idx // Calculate original index for play button
             return (
-              <div key={`${messages.length - idx}`} className="message-pair" style={{ marginBottom: '32px' }}>
+              <div key={`${messages.length - idx}`} className="message-pair" style={{ marginBottom: '32px', position: 'relative' }}>
                 {msg.role === 'user' && (
-                  <div className="user-question" style={{
-                    background: 'rgba(147, 71, 255, 0.2)',
-                    borderRadius: '16px',
-                    padding: '16px 20px',
-                    marginBottom: '12px',
-                    borderLeft: '4px solid #9147ff'
-                  }}>
+                  <div
+                    className="user-question"
+                    ref={idx === 0 ? userMsgRef : undefined}
+                    style={{
+                      background: 'rgba(147, 71, 255, 0.2)',
+                      borderRadius: '16px',
+                      padding: '16px 20px',
+                      marginBottom: '12px',
+                      borderLeft: '4px solid #9147ff',
+                      position: 'relative',
+                      overflow: 'visible',
+                    }}
+                  >
                     <h3 style={{ margin: '0 0 8px 0', color: '#9147ff', fontSize: '16px', fontWeight: '600' }}>
                       You asked:
                     </h3>
                     <p style={{ margin: '0', fontSize: '16px', color: '#e2e2f6' }}>
                       {msg.content}
                     </p>
+                    {idx === 0 && showMemoryAnim && lastMemory && (
+                      <MemorySavedAnimation text={lastMemory} />
+                    )}
                   </div>
                 )}
                 {msg.role === 'assistant' && (

@@ -536,12 +536,14 @@ export class MemoryRetrievalService {
       limit?: number
       similarityThreshold?: number
       includeContext?: boolean
+      avatarId?: string | null
     } = {}
   ): Promise<MemoryFragment[]> {
     const {
       limit = this.DEFAULT_LIMIT,
       similarityThreshold = this.DEFAULT_SIMILARITY_THRESHOLD,
-      includeContext = true
+      includeContext = true,
+      avatarId
     } = options
 
     // Create cache key for this query
@@ -550,7 +552,8 @@ export class MemoryRetrievalService {
       userId,
       limit,
       similarityThreshold,
-      includeContext
+      includeContext,
+      avatarId
     })
 
     return MemoryPerformanceMonitor.withCaching(
@@ -566,7 +569,8 @@ export class MemoryRetrievalService {
             query_embedding: queryEmbedding,
             match_threshold: similarityThreshold,
             match_count: limit,
-            target_user_id: userId
+            target_user_id: userId,
+            target_avatar_id: avatarId || null // Pass avatarId to the function
           })
 
           if (error) {
@@ -575,7 +579,8 @@ export class MemoryRetrievalService {
               userId,
               queryLength: query.length,
               limit,
-              threshold: similarityThreshold
+              threshold: similarityThreshold,
+              avatarId
             })
           }
 
@@ -601,12 +606,12 @@ export class MemoryRetrievalService {
         async () => {
           // Fallback to text search if vector search fails
           console.warn('Vector search failed, falling back to text search')
-          return this.searchMemoriesByText(query, userId, limit)
+          return this.searchMemoriesByText(query, userId, limit, avatarId)
         },
         'retrieve_relevant_memories',
-        { userId, queryLength: query.length, limit, threshold: similarityThreshold }
+        { userId, queryLength: query.length, limit, threshold: similarityThreshold, avatarId }
       ),
-      { userId, queryLength: query.length, limit, threshold: similarityThreshold }
+      { userId, queryLength: query.length, limit, threshold: similarityThreshold, avatarId }
     )
   }
 
@@ -637,7 +642,8 @@ export class MemoryRetrievalService {
       limit,
       offset,
       orderBy,
-      orderDirection
+      orderDirection,
+      avatarId
     })
 
     return MemoryPerformanceMonitor.withCaching(
@@ -670,7 +676,8 @@ export class MemoryRetrievalService {
             limit,
             offset,
             orderBy,
-            orderDirection
+            orderDirection,
+            avatarId
           })
         }
 
@@ -698,10 +705,11 @@ export class MemoryRetrievalService {
           limit,
           offset,
           orderBy,
-          orderDirection
+          orderDirection,
+          avatarId
         }
       ),
-      { userId, limit, offset, orderBy, orderDirection }
+      { userId, limit, offset, orderBy, orderDirection, avatarId }
     )
   }
 
@@ -784,7 +792,8 @@ export class MemoryRetrievalService {
             operation: 'search_memories_by_text',
             userId,
             searchText,
-            limit
+            limit,
+            avatarId
           })
         }
 
@@ -807,7 +816,7 @@ export class MemoryRetrievalService {
       },
       () => [], // Graceful fallback - return empty array
       'search_memories_by_text',
-      { userId, searchText, limit }
+      { userId, searchText, limit, avatarId }
     )
   }
 
@@ -878,7 +887,8 @@ export class MemoryService {
     message: string,
     userId: string,
     conversationContext?: any,
-    extractionThreshold?: number
+    extractionThreshold?: number,
+    avatarId?: string
   ): Promise<MemoryFragment[]> {
     return MemoryErrorHandler.withGracefulDegradation(
       async () => {
@@ -905,7 +915,7 @@ export class MemoryService {
       },
       () => [], // Graceful fallback - return empty array
       'process_and_store_memories',
-      { userId, messageLength: message.length }
+      { userId, messageLength: message.length, avatarId }
     )
   }
 
@@ -915,14 +925,15 @@ export class MemoryService {
   static async getMemoriesForChat(
     query: string,
     userId: string,
-    maxMemories: number = 5
+    maxMemories: number = 5,
+    avatarId?: string
   ): Promise<string> {
     return MemoryErrorHandler.withGracefulDegradation(
       async () => {
         const memories = await MemoryRetrievalService.retrieveRelevantMemories(
           query,
           userId,
-          { limit: maxMemories, includeContext: false }
+          { limit: maxMemories, includeContext: false, avatarId }
         )
 
         if (memories.length === 0) {
@@ -938,7 +949,7 @@ export class MemoryService {
       },
       () => '', // Graceful fallback - return empty string
       'get_memories_for_chat',
-      { userId, queryLength: query.length, maxMemories }
+      { userId, queryLength: query.length, maxMemories, avatarId }
     )
   }
 
@@ -1160,5 +1171,13 @@ ${followup}
     prompt += `Remember: You're not just an AI assistant - you're someone who knows this person personally. Use your knowledge of them to have meaningful, personalized conversations that show you truly know and care about them as an individual.`;
 
     return prompt;
+  }
+
+  static async getLatestMemories(
+    userId: string,
+    avatarId?: string,
+    limit: number = 10
+  ): Promise<MemoryFragment[]> {
+    return MemoryRetrievalService.getUserMemories(userId, { limit, orderBy: 'created_at', orderDirection: 'desc', avatarId });
   }
 }
