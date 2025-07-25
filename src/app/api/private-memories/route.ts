@@ -68,8 +68,8 @@ export async function POST(request: NextRequest) {
     }
 
     if (action in handlers) {
-      // Pass the request to the correct handler (handler will parse the body again if needed)
-      return handlers[action](request);
+      // Pass the parsed body to the handler (new signature)
+      return handlers[action](body, request);
     }
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });

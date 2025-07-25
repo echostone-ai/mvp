@@ -10,14 +10,11 @@ export function createApiHandler<T>(
   schema: z.ZodType<T>,
   handler: ApiHandler<T>
 ) {
-  return async (request: NextRequest) => {
+  return async (body: any, request: NextRequest) => {
     try {
-      const body = await request.json().catch(() => ({}));
+      // body is already parsed!
       console.log('API Handler - Request body:', body);
-      console.log('API Handler - Schema:', schema);
-      
       const result = schema.safeParse(body);
-      
       if (!result.success) {
         console.log('Validation failed:', result.error.format());
         return NextResponse.json({ 
@@ -26,8 +23,6 @@ export function createApiHandler<T>(
           receivedData: body
         }, { status: 400 });
       }
-      
-      console.log('Validation passed, calling handler with:', result.data);
       return handler(result.data, request);
     } catch (error) {
       console.error('API error:', error);
