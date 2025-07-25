@@ -48,16 +48,31 @@ export async function createShare(data: {
     console.log('Creating share for avatar:', avatarId, 'owner:', ownerEmail, 'share with:', shareWithEmail);
 
     // Get the avatar to verify it exists and get owner info
+    console.log('Looking up avatar with ID:', avatarId);
     const { data: avatar, error: avatarError } = await supabase
       .from('avatar_profiles')
       .select('*')
       .eq('id', avatarId)
       .single();
 
+    console.log('Avatar lookup result:', { avatar, avatarError });
+
     if (avatarError || !avatar) {
       console.log('Avatar not found:', avatarError);
+      
+      // Let's also try to list all avatars to see what's available
+      const { data: allAvatars, error: listError } = await supabase
+        .from('avatar_profiles')
+        .select('id, name')
+        .limit(10);
+      
+      console.log('Available avatars:', { allAvatars, listError });
+      
       return NextResponse.json({ 
-        error: 'Avatar not found' 
+        error: 'Avatar not found',
+        avatarId,
+        availableAvatars: allAvatars || [],
+        lookupError: avatarError
       }, { status: 404 });
     }
 
