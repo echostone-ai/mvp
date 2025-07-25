@@ -331,6 +331,63 @@
   justify-content: flex-end;
 }
 
+.btn {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  background: #232946;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  outline: none;
+}
+
+.btn:focus {
+  box-shadow: 0 0 0 2px #9b7cff;
+}
+
+.btn-primary {
+  background: linear-gradient(90deg, #9b7cff 60%, #6a00ff 100%);
+  color: #fff;
+  border: none;
+}
+
+.btn-primary:hover:not(:disabled),
+.btn-primary:focus:not(:disabled) {
+  background: linear-gradient(90deg, #6a00ff 60%, #9b7cff 100%);
+  color: #fff;
+}
+
+.btn-primary:disabled {
+  background: #3a3a5e;
+  color: #b8b8d9;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.btn-secondary {
+  background: #232946;
+  color: #9b7cff;
+  border: 1.5px solid #9b7cff;
+}
+
+.btn-secondary:hover:not(:disabled),
+.btn-secondary:focus:not(:disabled) {
+  background: #9b7cff;
+  color: #fff;
+}
+
+.btn-secondary:disabled {
+  background: #3a3a5e;
+  color: #b8b8d9;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
 .btn-sm {
   padding: 0.5rem 1rem;
   font-size: 0.875rem;
