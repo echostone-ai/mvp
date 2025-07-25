@@ -245,7 +245,8 @@ export default function ChatInterface({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          prompt: text, // Send just the user's current message
+          question: text, // Send the user's current message
+          history: newHistory, // Send the full conversation history
           profileData,
           voiceId,
           userId, // Pass userId for memory operations

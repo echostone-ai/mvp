@@ -75,6 +75,7 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const recordingTimeRef = useRef<number>(0)
   const recordingStartTimeRef = useRef<number>(0)
+  const isRecordingRef = useRef<boolean>(false)
 
   // Check authentication status on component mount
   useEffect(() => {
@@ -107,12 +108,10 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
 
   const startRecording = async () => {
     try {
-      console.log('[VOICE TRAINING] Starting recording...')
       setStatus({ type: null, message: '' })
       setRecordingTime(0)
       recordingTimeRef.current = 0
 
-      console.log('[VOICE TRAINING] Requesting microphone access...')
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
@@ -121,7 +120,6 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
           sampleRate: 44100
         }
       })
-      console.log('[VOICE TRAINING] Microphone access granted, stream:', stream)
       setAudioStream(stream);
 
       let mimeType = 'audio/webm;codecs=opus'
@@ -129,30 +127,29 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
         mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' :
           MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : 'audio/ogg'
       }
-      console.log('[VOICE TRAINING] Using MIME type:', mimeType)
 
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType,
         audioBitsPerSecond: 128000
       })
-      console.log('[VOICE TRAINING] MediaRecorder created:', mediaRecorder)
       mediaRecorderRef.current = mediaRecorder
       audioChunksRef.current = []
 
       // Start timer and record start time
-      console.log('[VOICE TRAINING] Starting timer...')
       recordingStartTimeRef.current = Date.now()
-      timerRef.current = setInterval(() => {
-        console.log('[VOICE TRAINING] Timer interval fired')
-        const elapsed = Math.floor((Date.now() - recordingStartTimeRef.current) / 1000)
-        setRecordingTime(elapsed)
-        recordingTimeRef.current = elapsed
-        console.log('[VOICE TRAINING] Timer tick:', elapsed)
-      }, 1000)
-      console.log('[VOICE TRAINING] Timer ref set:', timerRef.current)
+      isRecordingRef.current = true
+      
+      const updateTimer = () => {
+        if (isRecordingRef.current) {
+          const elapsed = Math.floor((Date.now() - recordingStartTimeRef.current) / 1000)
+          setRecordingTime(elapsed)
+          recordingTimeRef.current = elapsed
+        }
+      }
+      
+      timerRef.current = setInterval(updateTimer, 1000)
 
       mediaRecorder.ondataavailable = (event) => {
-        console.log('[VOICE TRAINING] Data available:', event.data.size, 'bytes')
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data)
         }
@@ -161,9 +158,7 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
       mediaRecorder.onstop = () => {
         // Calculate final duration based on actual elapsed time
         const finalDuration = Math.floor((Date.now() - recordingStartTimeRef.current) / 1000)
-        console.log('[VOICE TRAINING] Recording stopped, chunks:', audioChunksRef.current.length, 'final time:', finalDuration)
         const blob = new Blob(audioChunksRef.current, { type: mimeType })
-        console.log('[VOICE TRAINING] Created blob:', blob.size, 'bytes')
         setAudioBlob(blob)
         setAudioUrl(URL.createObjectURL(blob))
         setStep('preview')
@@ -173,7 +168,6 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
         // Store the final recording duration
         setFinalRecordingDuration(finalDuration)
         recordingTimeRef.current = finalDuration
-        console.log('[VOICE TRAINING] Final recording duration set to:', finalDuration)
 
         // Clear timer
         if (timerRef.current) {
@@ -195,11 +189,8 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
         }
       }
 
-      console.log('[VOICE TRAINING] Starting MediaRecorder...')
       mediaRecorder.start(1000) // Collect data every second
-      console.log('[VOICE TRAINING] MediaRecorder started, state:', mediaRecorder.state)
       setRecording(true)
-      console.log('[VOICE TRAINING] Recording state set to true')
     } catch (error: any) {
       console.error('Recording error:', error)
       let errorMessage = 'Could not access microphone. '
@@ -219,14 +210,12 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
   }
 
   const stopRecording = () => {
-    console.log('[VOICE TRAINING] stopRecording called, recording state:', recording)
     if (mediaRecorderRef.current && recording) {
-      console.log('[VOICE TRAINING] Stopping MediaRecorder...')
+      isRecordingRef.current = false
       mediaRecorderRef.current.stop()
       setRecording(false)
 
       if (timerRef.current) {
-        console.log('[VOICE TRAINING] Clearing timer in stopRecording')
         clearInterval(timerRef.current)
         timerRef.current = null
       }
@@ -306,12 +295,6 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
 
     // Only validate recording time for live recordings, not uploaded files
     if (method === 'record' && audioBlob && finalRecordingDuration < 10) {
-      console.log('[VOICE TRAINING] Recording validation failed:', {
-        method,
-        hasAudioBlob: !!audioBlob,
-        finalRecordingDuration,
-        recordingTime
-      })
       setStatus({ type: 'error', message: `Recording too short. Please record at least 10 seconds of audio. (Recorded: ${finalRecordingDuration}s)` })
       return
     }
@@ -484,6 +467,7 @@ export default function VoiceTraining({ avatarName, avatarId, onVoiceUploaded }:
     setRecordingTime(0)
     setFinalRecordingDuration(0)
     recordingTimeRef.current = 0
+    isRecordingRef.current = false
 
     if (timerRef.current) {
       clearInterval(timerRef.current)
