@@ -60,10 +60,19 @@ const handlers: Record<ActionType, (request: NextRequest) => Promise<Response>> 
 // POST handler for all memory operations
 export async function POST(request: NextRequest) {
   try {
-    // Do NOT parse the body here! The handler will parse it.
-    // Just pass the request to the appropriate handler based on action.
-    // We'll let the handler do the validation and parsing.
-    return handlers['create'](request); // You can add action logic if needed
+    const body = await request.json();
+    const { action } = body;
+
+    if (!action) {
+      return NextResponse.json({ error: 'Action is required' }, { status: 400 });
+    }
+
+    if (action in handlers) {
+      // Pass the request to the correct handler (handler will parse the body again if needed)
+      return handlers[action](request);
+    }
+
+    return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   } catch (error) {
     console.error('Private memory error:', error);
     return NextResponse.json({ error: 'Failed to process memory request' }, { status: 500 });
