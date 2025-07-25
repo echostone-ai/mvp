@@ -15,6 +15,7 @@ import PageShell from '@/components/PageShell'
 import VoicePreview from '@/components/VoicePreview'
 import VoicePreviewTesting from '@/components/VoicePreviewTesting'
 import AvatarSelector from '@/components/AvatarSelector'
+import AvatarSharingForm from '@/components/AvatarSharingForm'
 
 type Progress = { total: number; answered: number; isComplete: boolean }
 
@@ -106,7 +107,7 @@ export default function ProfilePage() {
   const [user, setUser] = useState<any>(null)
   const [loadingUser, setLoadingUser] = useState(true)
   const [selectedAvatar, setSelectedAvatar] = useState<Avatar | null>(null)
-  const [activeTab, setActiveTab] = useState<'identity' | 'voice' | 'stories' | 'personality' | 'memories' | 'voicetuning'>('identity')
+  const [activeTab, setActiveTab] = useState<'identity' | 'voice' | 'stories' | 'personality' | 'memories' | 'voicetuning' | 'sharing'>('identity')
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [newAvatar, setNewAvatar] = useState({
     name: '',
@@ -601,7 +602,8 @@ export default function ProfilePage() {
               { id: 'voicetuning', label: 'Voice Tuning', icon: '🎛️' },
               { id: 'personality', label: 'Personality', icon: '🧠' },
               { id: 'stories', label: 'Your Stories', icon: '📚' },
-              { id: 'memories', label: 'Memories', icon: '💭' }
+              { id: 'memories', label: 'Memories', icon: '💭' },
+              { id: 'sharing', label: 'Share Avatar', icon: '🔗' }
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -739,6 +741,16 @@ export default function ProfilePage() {
           {activeTab === 'memories' && (
             <div className="profile-tab-panel">
               <MemoryManagement userId={user?.id} avatarId={selectedAvatar.id} />
+            </div>
+          )}
+
+          {activeTab === 'sharing' && (
+            <div className="profile-tab-panel">
+              <AvatarSharingForm
+                avatarId={selectedAvatar.id}
+                avatarName={selectedAvatar.name}
+                ownerEmail={user?.email || ''}
+              />
             </div>
           )}
         </div>
