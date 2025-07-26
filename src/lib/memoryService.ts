@@ -585,8 +585,10 @@ export class MemoryRetrievalService {
           const queryEmbedding = await MemoryStorageService.generateEmbedding(query)
 
           // Use simple text search instead of vector search for now
-          console.log('[MemoryService] Using text search for memories, user:', userId, 'avatar:', avatarId);
-          return this.searchMemoriesByText(query, userId, limit, avatarId)
+          console.log('[MemoryService] Using text search for memories, user:', userId, 'avatar:', avatarId, 'query:', query.substring(0, 30));
+          const textSearchResults = await this.searchMemoriesByText(query, userId, limit, avatarId);
+          console.log('[MemoryService] Text search returned', textSearchResults.length, 'memories');
+          return textSearchResults;
         },
         async () => {
           // Fallback to text search if vector search fails
@@ -656,6 +658,9 @@ export class MemoryRetrievalService {
 
         const { data, error } = await query
         console.log('[MemoryService] getUserMemories result:', { count: data?.length || 0, error: error?.message });
+        if (data && data.length > 0) {
+          console.log('[MemoryService] Sample memory:', data[0].fragment_text?.substring(0, 50) + '...');
+        }
 
         if (error) {
           throw MemoryErrorHandler.categorizeError(error, {
@@ -770,24 +775,13 @@ export class MemoryRetrievalService {
           query = query.eq('avatar_id', avatarId)
         }
         
-        // Try text search first, fallback to simple query if it fails
-        let data, error;
-        try {
-          const result = await query
-            .textSearch('fragment_text', searchText)
-            .order('created_at', { ascending: false })
-            .limit(limit);
-          data = result.data;
-          error = result.error;
-        } catch (textSearchError) {
-          console.log('[MemoryService] Text search failed, using simple query');
-          // Fallback to simple query without text search
-          const result = await query
-            .order('created_at', { ascending: false })
-            .limit(limit);
-          data = result.data;
-          error = result.error;
-        }
+        // Use simple query instead of text search (which might not be available)
+        console.log('[MemoryService] searchMemoriesByText - getting all memories for user:', userId, 'avatar:', avatarId);
+        const { data, error } = await query
+          .order('created_at', { ascending: false })
+          .limit(limit * 2); // Get more to allow for filtering
+        
+        console.log('[MemoryService] Retrieved', data?.length || 0, 'memories before filtering');
 
         if (error) {
           throw MemoryErrorHandler.categorizeError(error, {
@@ -960,14 +954,14 @@ export class MemoryService {
   ): Promise<string> {
     return MemoryErrorHandler.withGracefulDegradation(
       async () => {
-        console.log('[MemoryService] Retrieving memories for query:', query.substring(0, 50) + '...');
+        console.log('[MemoryService] Retrieving memories for query:', query.substring(0, 50) + '...', 'userId:', userId, 'avatarId:', avatarId);
         const memories = await MemoryRetrievalService.retrieveRelevantMemories(
           query,
           userId,
           { limit: maxMemories, includeContext: false, avatarId }
         )
 
-        console.log('[MemoryService] Found', memories.length, 'relevant memories');
+        console.log('[MemoryService] Found', memories.length, 'relevant memories for chat context');
         if (memories.length === 0) {
           return ''
         }

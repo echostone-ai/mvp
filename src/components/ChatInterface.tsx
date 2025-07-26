@@ -695,19 +695,29 @@ export default function ChatInterface({
         Speak with {getFirstName(profileData)}
       </h1>
 
-      <form className="ask-form" onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Ask me anything…"
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          spellCheck={false}
-          autoComplete="off"
-        />
-        <button type="submit" disabled={loading}>
-          {loading ? '…' : '→'}
-        </button>
-      </form>
+      <div className="chat-input-container" style={{ position: 'relative' }}>
+        <form className="ask-form" onSubmit={handleSubmit}>
+          <input
+            type="text"
+            placeholder="Ask me anything…"
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            spellCheck={false}
+            autoComplete="off"
+          />
+          <button type="submit" disabled={loading}>
+            {loading ? '…' : '→'}
+          </button>
+        </form>
+        
+        {/* Memory Animation - positioned to leap from the input bar */}
+        {showMemoryAnim && lastMemory && (
+          <>
+            {console.log('🎬 Rendering memory animation:', lastMemory.substring(0, 50) + '...')}
+            <MemorySavedAnimation text={lastMemory} />
+          </>
+        )}
+      </div>
 
       <button
         className={`mic-btn${listening ? ' active' : ''}`}
@@ -801,14 +811,7 @@ export default function ChatInterface({
                     <p style={{ margin: '0', fontSize: '16px', color: '#e2e2f6' }}>
                       {msg.content}
                     </p>
-                    {msg.role === 'user' && showMemoryAnim && lastMemory && (() => {
-                      // Show animation on the most recent user message
-                      const userMessages = messages.filter(m => m.role === 'user');
-                      const isLastUserMessage = userMessages.length > 0 && userMessages[userMessages.length - 1] === msg;
-                      return isLastUserMessage;
-                    })() && (
-                      <MemorySavedAnimation text={lastMemory} />
-                    )}
+
                   </div>
                 )}
                 {msg.role === 'assistant' && (

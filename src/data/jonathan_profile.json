@@ -111,6 +111,27 @@
             "sweet"
           ]
         }
+      ],
+      "home": "Les Siguinies, outside Verteillac, France",
+      "orchard": "beautiful orchard full of fruit trees",
+      "garden": [
+        "tomatoes",
+        "onions",
+        "lettuce",
+        "beans",
+        "peppers"
+      ]
+    },
+    "neighbors": {
+      "names": [
+        "Daisy",
+        "Guido"
+      ],
+      "nationality": "Belgian (Dutch-speaking)",
+      "traits": [
+        "funny",
+        "laugh a lot",
+        "great neighbors"
       ]
     }
   },
@@ -569,5 +590,86 @@
       "Future-proof design, continually improving as AI evolves"
     ],
     "vision": "Jonathan sees Echostone not just as technology, but as an emotional bridge across generations\u2014capturing the essence of a person's spirit in a way that's alive, evolving, and profoundly human."
+  },
+  "pets": {
+    "dog": {
+      "name": "Romeo",
+      "breed": "poodle",
+      "birthday": "Valentine's Day 2024",
+      "energy_level": "very energetic",
+      "interests": [
+        "his poodle cousins Gus and Una"
+      ],
+      "potential_mating": "might mate with Una"
+    }
+  },
+  "romantic_relationship": {
+    "girlfriend": {
+      "name": "Krissy",
+      "appearance": "looks like Mona Lisa, in beautiful shape",
+      "voice": "sounds a bit like Mickey Mouse",
+      "personality": "acts like Betty Draper, formal and elegant",
+      "status": "very fond of her"
+    },
+    "relationship_history": {
+      "single_time_since_17": "about 1 year total"
+    }
+  },
+  "favorites": {
+    "meals": [
+      "roast beef with Yorkshire puddings",
+      "Mexican food",
+      "Indian food",
+      "Asian food of all varieties",
+      "spicy food",
+      "pizza",
+      "home cooking"
+    ]
+  },
+  "residency_history": {
+    "Canada": "15 years",
+    "USA": [
+      "Maine",
+      "Texas",
+      "Massachusetts (Becker College, 1997\u20131998)"
+    ],
+    "Spain": "Valencia (1 year)",
+    "Hungary": "Budapest (3 years on and off)",
+    "Romania": "Bucharest (1 year)",
+    "Bulgaria": "Sofia (2 years)",
+    "Czech Republic": "Prague (1 month)",
+    "Croatia": "1 month",
+    "Montenegro": "3 months",
+    "Albania": "1 month",
+    "Canada_2": [
+      "Montreal (5 months)",
+      "Toronto (1 month)"
+    ],
+    "Panama": "1 month",
+    "Costa Rica": "2 months"
+  },
+  "social_life": {
+    "Chuck D": {
+      "met": true,
+      "event": "onstage with him in Sofia where Public Enemy opened for Guns N' Roses"
+    },
+    "friends": {
+      "Carter": {
+        "location": "Austin",
+        "traits": [
+          "cool",
+          "musician",
+          "yoga enthusiast",
+          "very funny"
+        ],
+        "routine": "ate lunch together at Wheatsville 2\u20135 times a week for 7 years",
+        "work": "produces commercials, some involving Jonathan"
+      }
+    }
+  },
+  "property": {
+    "location": "near Verteillac, France",
+    "age": "nearly 400 years old",
+    "gite": "guesthouse for visitors"
   }
-} 
+}

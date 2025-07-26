@@ -898,7 +898,13 @@
   position: relative;
 }
 
-/* Ensure memory animation is visible */
+/* Chat Input Container for Memory Animation */
+.chat-input-container {
+  position: relative;
+  z-index: 1;
+}
+
+/* Ensure memory animation is visible and positioned correctly */
 .memory-animation-container {
   position: relative;
   z-index: 1000;
@@ -912,6 +918,27 @@
 
 .chat-message.user-message {
   position: relative;
+}
+
+/* Enhanced chat form styling to work with animation */
+.ask-form {
+  position: relative;
+  z-index: 1;
+}
+
+/* Ensure the animation doesn't interfere with input interactions */
+.chat-input-container .ask-form {
+  position: relative;
+}
+
+.chat-input-container .ask-form input {
+  position: relative;
+  z-index: 2;
+}
+
+.chat-input-container .ask-form button {
+  position: relative;
+  z-index: 2;
 }
 
 /* Enhanced Loading States */
