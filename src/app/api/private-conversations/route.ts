@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     console.log('[api/private-conversations] Fetching conversations for user:', userId, 'avatar:', avatarId);
     
     // Build query - filter by avatar_id if provided
-    let query = supabase
+    let query = supabaseAdmin
       .from('conversations')
       .select('*')
       .eq('user_id', userId);
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
       // If we have a conversation ID, update the existing conversation
       if (currentConversationId) {
         // Get the current conversation
-        const { data: existingConv, error: fetchError } = await supabase
+        const { data: existingConv, error: fetchError } = await supabaseAdmin
           .from('conversations')
           .select('messages')
           .eq('id', currentConversationId)
@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
         const updatedMessages = [...(existingConv.messages || []), message];
         
         // Update the conversation
-        const { error: updateError } = await supabase
+        const { error: updateError } = await supabaseAdmin
           .from('conversations')
           .update({
             messages: updatedMessages,
@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
         }
       } else {
         // Create a new conversation
-        const { data: newConv, error: createError } = await supabase
+        const { data: newConv, error: createError } = await supabaseAdmin
           .from('conversations')
           .insert({
             user_id: userId,
