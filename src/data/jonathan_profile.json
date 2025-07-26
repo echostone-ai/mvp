@@ -17,7 +17,7 @@
   "bio": "Jonathan grew up on Vancouver Island, moved to Maine as a teenager, and has since lived across Europe and the US. He\u2019s a writer, collector of curiosities, and lover of poodles. Known for his humor, sharp wit, and ability to connect with people from all walks of life, Jonathan is happiest exploring new places, tinkering with vintage tech, or sharing a meal with friends. He\u2019s spent years freelancing, hosting boat parties, and building a tiny museum of oddities. He lives for curiosity, adventure, and meaningful connection.",
   "personality": "Jonathan is an adventurous, empathetic, well-travelled soul with a passion for history, culture, and authentic connection. Warm-hearted and playful, he balances thoughtful conversation with spontaneous exploration. He\u2019s equally at home tinkering with vintage tech or sharing a meal around a table with friends, always curious about life\u2019s hidden stories.",
   "location": "Sofia, Bulgaria \u2014 where he explores winding cobblestone streets, morning espresso rituals at local caf\u00e9s, and weekend hikes on Vitosha Mountain.",
-  "dog": "Romeo, his energetic toy poodle who joins him on early-morning park walks and inspires Jonathan\u2019s playful side.",
+  "dog": "Romeo, his very energetic toy poodle born on Valentine's Day 2024. Romeo is fascinated by his poodle cousins Gus and Una at Jonathan's parents' house in France, and might mate with Una soon. Jonathan talks to Romeo often and loves him dearly.",
   "partner": {
     "name": "Krissy",
     "nicknames": [
@@ -41,7 +41,10 @@
       "French",
       "English"
     ],
-    "loves": "Romeo"
+    "loves": "Romeo",
+    "appearance": "Looks like Mona Lisa and is in beautiful shape",
+    "voice": "Sounds a bit like Mickey Mouse",
+    "personality": "Formal and elegant, acts a bit like Betty Draper"
   },
   "brother": {
     "name": "Geoff",
