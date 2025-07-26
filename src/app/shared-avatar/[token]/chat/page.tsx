@@ -27,9 +27,8 @@ export default function SharedAvatarChatPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(userEmailParam);
   const [userName, setUserName] = useState<string | null>(userNameParam);
-  const [conversations, setConversations] = useState<any[]>([]);
   const [memories, setMemories] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<'chat' | 'conversations' | 'memories'>('chat');
+  const [activeTab, setActiveTab] = useState<'chat' | 'memories'>('chat');
   const [showWelcomeMessage, setShowWelcomeMessage] = useState(true);
 
   // Fetch shared avatar details and user info
@@ -82,18 +81,8 @@ export default function SharedAvatarChatPage() {
         
         setSharedAvatar(avatarData.sharedAvatar);
         
-        // Fetch conversations
+        // Fetch memories using the main memories API
         if (currentUserId) {
-          const conversationsResponse = await fetch(`/api/private-conversations?userId=${currentUserId}&avatarId=${avatarData.sharedAvatar.avatar.id}&shareToken=${shareToken}`);
-          if (conversationsResponse.ok) {
-            const conversationsData = await conversationsResponse.json();
-            console.log('[SharedAvatarChat] Fetched conversations:', conversationsData.conversations?.length || 0);
-            setConversations(conversationsData.conversations || []);
-          } else {
-            console.error('[SharedAvatarChat] Failed to fetch conversations:', conversationsResponse.status);
-          }
-          
-          // Fetch memories using the main memories API
           const memoriesResponse = await fetch(`/api/memories?userId=${currentUserId}&avatarId=${avatarData.sharedAvatar.avatar.id}`);
           if (memoriesResponse.ok) {
             const memoriesData = await memoriesResponse.json();
@@ -241,12 +230,6 @@ export default function SharedAvatarChatPage() {
           Chat
         </button>
         <button
-          className={`tab-item ${activeTab === 'conversations' ? 'active' : ''}`}
-          onClick={() => setActiveTab('conversations')}
-        >
-          Past Conversations
-        </button>
-        <button
           className={`tab-item ${activeTab === 'memories' ? 'active' : ''}`}
           onClick={() => setActiveTab('memories')}
         >
@@ -274,64 +257,6 @@ export default function SharedAvatarChatPage() {
         </div>
       )}
 
-      {activeTab === 'conversations' && (
-        <div className="tab-content">
-          <div className="tab-header">
-            <h2 className="tab-title">Your Past Conversations</h2>
-            <button
-              onClick={() => setActiveTab('chat')}
-              className="btn btn-primary"
-            >
-              Start New Conversation
-            </button>
-          </div>
-
-          {conversations.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-state-icon">💬</div>
-              <h3 className="empty-state-title">No Conversations Yet</h3>
-              <p className="empty-state-message">
-                Start chatting with {avatar.name} to create your first conversation.
-              </p>
-              <button
-                onClick={() => setActiveTab('chat')}
-                className="btn btn-primary"
-              >
-                Start Chatting
-              </button>
-            </div>
-          ) : (
-            <div className="conversations-list">
-              {conversations.map((conversation) => (
-                <div key={conversation.id} className="conversation-card">
-                  <div className="conversation-header">
-                    <h3 className="conversation-title">Conversation on {new Date(conversation.createdAt || conversation.created_at).toLocaleDateString()}</h3>
-                    <span className="conversation-date">
-                      {new Date(conversation.updatedAt || conversation.updated_at || conversation.lastActive || conversation.last_active).toLocaleTimeString()}
-                    </span>
-                  </div>
-                  <div className="conversation-preview">
-                    <p className="visitor-message"><strong>You:</strong> {conversation.lastMessage || 'No messages yet'}</p>
-                    <p className="avatar-response"><strong>{avatar.name}:</strong> {conversation.lastResponse || 'No response yet'}</p>
-                  </div>
-                  <div className="conversation-footer">
-                    <span className="message-count">{conversation.messageCount || 0} messages</span>
-                    <button
-                      onClick={() => {
-                        // In a real app, load this conversation
-                        setActiveTab('chat');
-                      }}
-                      className="btn btn-secondary btn-sm"
-                    >
-                      Continue Conversation
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
 
       {activeTab === 'memories' && (
         <div className="tab-content">
