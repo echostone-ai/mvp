@@ -146,7 +146,8 @@ export async function POST(request: NextRequest) {
         
         if (createError) {
           console.error('[api/private-conversations] Error creating conversation:', createError);
-          return NextResponse.json({ error: 'Failed to create conversation' }, { status: 500 });
+          console.error('[api/private-conversations] Insert data was:', { user_id: userId, avatar_id: avatarId, messages: [message] });
+          return NextResponse.json({ error: 'Failed to create conversation', details: createError.message }, { status: 500 });
         }
         
         currentConversationId = newConv.id;
@@ -161,6 +162,7 @@ export async function POST(request: NextRequest) {
     
   } catch (error) {
     console.error('[api/private-conversations] Error saving message:', error);
-    return NextResponse.json({ error: 'Failed to save message' }, { status: 500 });
+    console.error('[api/private-conversations] Full error details:', JSON.stringify(error, null, 2));
+    return NextResponse.json({ error: 'Failed to save message', details: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 });
   }
 }
