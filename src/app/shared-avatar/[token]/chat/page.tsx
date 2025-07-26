@@ -7,6 +7,8 @@ import Link from 'next/link';
 import ChatInterface from '@/components/ChatInterface';
 import { getStoredVisitorInfo, storeVisitorInfo, createVisitorId } from '@/lib/avatarDataService';
 import { v4 as uuidv4, validate as uuidValidate } from 'uuid';
+import { error } from 'console';
+import loading from '@/app/profile/edit/[section]/loading';
 // CSS is imported in the layout file
 
 export default function SharedAvatarChatPage() {
@@ -82,11 +84,15 @@ export default function SharedAvatarChatPage() {
         
         // Fetch conversations
         if (currentUserId) {
-          const conversationsResponse = await fetch(`/api/private-conversations?userId=${currentUserId}&shareToken=${shareToken}`);
+          const conversationsResponse = await fetch(`/api/private-conversations?userId=${currentUserId}&avatarId=${avatarData.sharedAvatar.avatar.id}&shareToken=${shareToken}`);
           if (conversationsResponse.ok) {
             const conversationsData = await conversationsResponse.json();
+            console.log('[SharedAvatarChat] Fetched conversations:', conversationsData.conversations?.length || 0);
             setConversations(conversationsData.conversations || []);
+          } else {
+            console.error('[SharedAvatarChat] Failed to fetch conversations:', conversationsResponse.status);
           }
+        }
           
           // Fetch memories using the main memories API
           const memoriesResponse = await fetch(`/api/memories?userId=${currentUserId}&avatarId=${avatarData.sharedAvatar.avatar.id}`);
@@ -300,17 +306,17 @@ export default function SharedAvatarChatPage() {
               {conversations.map((conversation) => (
                 <div key={conversation.id} className="conversation-card">
                   <div className="conversation-header">
-                    <h3 className="conversation-title">Conversation on {new Date(conversation.createdAt).toLocaleDateString()}</h3>
+                    <h3 className="conversation-title">Conversation on {new Date(conversation.createdAt || conversation.created_at).toLocaleDateString()}</h3>
                     <span className="conversation-date">
-                      {new Date(conversation.updatedAt).toLocaleTimeString()}
+                      {new Date(conversation.updatedAt || conversation.updated_at || conversation.lastActive || conversation.last_active).toLocaleTimeString()}
                     </span>
                   </div>
                   <div className="conversation-preview">
-                    <p className="visitor-message"><strong>You:</strong> {conversation.lastMessage}</p>
-                    <p className="avatar-response"><strong>{avatar.name}:</strong> {conversation.lastResponse}</p>
+                    <p className="visitor-message"><strong>You:</strong> {conversation.lastMessage || 'No messages yet'}</p>
+                    <p className="avatar-response"><strong>{avatar.name}:</strong> {conversation.lastResponse || 'No response yet'}</p>
                   </div>
                   <div className="conversation-footer">
-                    <span className="message-count">{conversation.messageCount} messages</span>
+                    <span className="message-count">{conversation.messageCount || 0} messages</span>
                     <button
                       onClick={() => {
                         // In a real app, load this conversation

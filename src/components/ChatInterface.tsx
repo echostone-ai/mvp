@@ -91,9 +91,11 @@ export default function ChatInterface({
         const response = await fetch(`/api/private-conversations?userId=${userId}&avatarId=${avatarId}`);
         if (response.ok) {
           const data = await response.json();
-          if (data.success && data.conversation) {
-            setConversationId(data.conversation.id || null);
-            setMessages(data.conversation.messages?.map((msg: any) => ({
+          if (data.success && data.conversations && data.conversations.length > 0) {
+            // Get the most recent conversation for this avatar
+            const mostRecentConversation = data.conversations[0];
+            setConversationId(mostRecentConversation.id || null);
+            setMessages(mostRecentConversation.messages?.map((msg: any) => ({
               role: msg.role,
               content: msg.content
             })) || []);

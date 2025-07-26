@@ -12,25 +12,70 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
     }
     
-    console.log('[api/private-conversations] Fetching conversation for user:', userId, 'avatar:', avatarId);
+    console.log('[api/private-conversations] Fetching conversations for user:', userId, 'avatar:', avatarId);
     
-    // For shared avatars, we'll use a simple conversation storage approach
-    // In a full implementation, you'd have a proper conversations table
+    // Build query - filter by avatar_id if provided
+    let query = supabase
+      .from('conversations')
+      .select('*')
+      .eq('user_id', userId);
     
-    // For now, return a basic conversation structure
-    // The actual conversation history will be maintained by the ChatInterface
-    const conversation = {
-      id: `${userId}_${avatarId || 'default'}`,
-      userId,
-      avatarId,
-      messages: [], // Messages will be loaded from localStorage or other storage
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
+    if (avatarId) {
+      query = query.eq('avatar_id', avatarId);
+    }
+    
+    const { data: conversations, error } = await query.order('last_active', { ascending: false });
+    
+    if (error) {
+      console.error('[api/private-conversations] Database error:', error);
+      return NextResponse.json({ error: 'Failed to fetch conversations' }, { status: 500 });
+    }
+    
+    console.log('[api/private-conversations] Found conversations:', conversations?.length || 0);
+    
+    // Transform conversations to include summary data for the UI
+    const formattedConversations = conversations?.map(conv => {
+      const messages = conv.messages || [];
+      const messageCount = messages.length;
+      
+      // Get the last user message and avatar response
+      let lastMessage = '';
+      let lastResponse = '';
+      
+      if (messages.length > 0) {
+        // Find the last user message
+        for (let i = messages.length - 1; i >= 0; i--) {
+          if (messages[i].role === 'user') {
+            lastMessage = messages[i].content;
+            break;
+          }
+        }
+        
+        // Find the last assistant message
+        for (let i = messages.length - 1; i >= 0; i--) {
+          if (messages[i].role === 'assistant') {
+            lastResponse = messages[i].content;
+            break;
+          }
+        }
+      }
+      
+      return {
+        id: conv.id,
+        userId: conv.user_id,
+        messages: messages,
+        messageCount,
+        lastMessage: lastMessage || 'No messages yet',
+        lastResponse: lastResponse || 'No response yet',
+        createdAt: conv.created_at,
+        updatedAt: conv.updated_at,
+        lastActive: conv.last_active
+      };
+    }) || [];
     
     return NextResponse.json({ 
       success: true, 
-      conversation 
+      conversations: formattedConversations
     });
     
   } catch (error) {
@@ -42,19 +87,75 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, avatarId, message, shareToken } = body;
+    const { action, conversationId, userId, avatarId, message, shareToken } = body;
     
     if (!userId || !message) {
       return NextResponse.json({ error: 'User ID and message are required' }, { status: 400 });
     }
     
-    console.log('[api/private-conversations] Saving message for user:', userId, 'avatar:', avatarId);
+    console.log('[api/private-conversations] Saving message for user:', userId, 'avatar:', avatarId, 'action:', action);
     
-    // In a full implementation, you'd save the message to a conversations table
-    // For now, we'll just return success since the ChatInterface handles message storage
+    let currentConversationId = conversationId;
+    
+    if (action === 'add-message') {
+      // If we have a conversation ID, update the existing conversation
+      if (currentConversationId) {
+        // Get the current conversation
+        const { data: existingConv, error: fetchError } = await supabase
+          .from('conversations')
+          .select('messages')
+          .eq('id', currentConversationId)
+          .eq('user_id', userId)
+          .single();
+        
+        if (fetchError) {
+          console.error('[api/private-conversations] Error fetching conversation:', fetchError);
+          return NextResponse.json({ error: 'Failed to fetch conversation' }, { status: 500 });
+        }
+        
+        // Add the new message to the existing messages
+        const updatedMessages = [...(existingConv.messages || []), message];
+        
+        // Update the conversation
+        const { error: updateError } = await supabase
+          .from('conversations')
+          .update({
+            messages: updatedMessages,
+            last_active: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', currentConversationId)
+          .eq('user_id', userId);
+        
+        if (updateError) {
+          console.error('[api/private-conversations] Error updating conversation:', updateError);
+          return NextResponse.json({ error: 'Failed to update conversation' }, { status: 500 });
+        }
+      } else {
+        // Create a new conversation
+        const { data: newConv, error: createError } = await supabase
+          .from('conversations')
+          .insert({
+            user_id: userId,
+            avatar_id: avatarId,
+            messages: [message],
+            last_active: new Date().toISOString()
+          })
+          .select('id')
+          .single();
+        
+        if (createError) {
+          console.error('[api/private-conversations] Error creating conversation:', createError);
+          return NextResponse.json({ error: 'Failed to create conversation' }, { status: 500 });
+        }
+        
+        currentConversationId = newConv.id;
+      }
+    }
     
     return NextResponse.json({ 
       success: true, 
+      conversationId: currentConversationId,
       message: 'Message saved successfully' 
     });
     
