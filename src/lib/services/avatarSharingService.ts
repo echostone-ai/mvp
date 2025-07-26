@@ -301,7 +301,10 @@ export async function getSharedAvatar(data: {
 }, request: NextRequest): Promise<NextResponse> {
   const { shareToken } = data;
   
+  console.log('🔍 getSharedAvatar called with token:', shareToken);
+  
   if (!shareToken) {
+    console.log('❌ No share token provided');
     return NextResponse.json({ 
       error: 'Share token is required' 
     }, { status: 400 });
@@ -311,10 +314,33 @@ export async function getSharedAvatar(data: {
   const cached = getCached<any>(cacheKey);
   
   if (cached) {
+    console.log('✅ Found cached data for token:', shareToken);
     return NextResponse.json({ 
       success: true, 
       sharedAvatar: cached 
     });
+  }
+  
+  console.log('🔍 No cache found, querying database for token:', shareToken);
+  
+  // Debug: Check Supabase connection
+  console.log('🔍 Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
+  console.log('🔍 Service key exists:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
+  console.log('🔍 Service key length:', process.env.SUPABASE_SERVICE_ROLE_KEY?.length || 0);
+  
+  // Validate environment variables
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    console.error('❌ NEXT_PUBLIC_SUPABASE_URL is not set');
+    return NextResponse.json({ 
+      error: 'Database configuration error' 
+    }, { status: 500 });
+  }
+  
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.error('❌ SUPABASE_SERVICE_ROLE_KEY is not set');
+    return NextResponse.json({ 
+      error: 'Database configuration error' 
+    }, { status: 500 });
   }
 
   try {
@@ -330,7 +356,6 @@ export async function getSharedAvatar(data: {
             name,
             description,
             voice_id,
-            accent,
             photo_url,
             profile_data
           )
@@ -340,7 +365,9 @@ export async function getSharedAvatar(data: {
         .single();
 
       if (shareError || !shareRecord) {
-        throw new Error('Share not found in database');
+        console.error('❌ Share record error:', shareError);
+        console.error('❌ Share record data:', shareRecord);
+        throw new Error(`Share not found in database: ${shareError?.message || 'No record returned'}`);
       }
 
       // Check if share has expired
@@ -366,7 +393,7 @@ export async function getSharedAvatar(data: {
           description: avatar.description,
           hasVoice: !!avatar.voice_id,
           voiceId: avatar.voice_id,
-          accent: avatar.accent,
+          accent: null, // Default to null since accent column doesn't exist
           photoUrl: avatar.photo_url,
           profileData: avatar.profile_data
         },
@@ -376,7 +403,13 @@ export async function getSharedAvatar(data: {
         expiresAt: shareRecord.expires_at
       };
     } catch (dbError: any) {
-      console.log('Database not ready, using fallback for share token:', shareToken);
+      console.error('❌ Database error for share token:', shareToken, 'Error:', dbError);
+      console.error('❌ Error details:', {
+        message: dbError.message,
+        code: dbError.code,
+        details: dbError.details,
+        hint: dbError.hint
+      });
       
       // Fallback: check cache first
       const tokenCacheKey = `share-token:${shareToken}`;
@@ -407,36 +440,12 @@ export async function getSharedAvatar(data: {
         }
       }
       
-      // If still no shared avatar, create a demo one
+      // If still no shared avatar, return an error instead of demo
       if (!sharedAvatar) {
-        const shortToken = shareToken.substring(0, 6);
-        sharedAvatar = {
-          shareToken,
-          avatar: {
-            id: `avatar-${shortToken}`,
-            name: `Demo Avatar`,
-            description: 'A demo avatar for testing sharing functionality',
-            hasVoice: false,
-            voiceId: null,
-            accent: null,
-            photoUrl: null,
-            profileData: {
-              name: `Demo Avatar`,
-              personality: 'Friendly, helpful, and ready to chat with you!',
-              languageStyle: {
-                description: 'Natural and engaging'
-              },
-              humorStyle: {
-                description: 'Warm and appropriate'
-              },
-              catchphrases: ['Hello there!', 'How can I help you today?']
-            }
-          },
-          ownerEmail: 'demo@example.com',
-          permissions: ['chat', 'viewMemories', 'createMemories'],
-          isValid: true,
-          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-        };
+        console.error('❌ No shared avatar found and no fallback available for token:', shareToken);
+        return NextResponse.json({ 
+          error: 'Shared avatar not found. Please check the sharing link or contact the avatar owner.' 
+        }, { status: 404 });
       }
     }
     
