@@ -88,8 +88,8 @@ export default function SharedAvatarChatPage() {
             setConversations(conversationsData.conversations || []);
           }
           
-          // Fetch memories
-          const memoriesResponse = await fetch(`/api/private-memories?userId=${currentUserId}&shareToken=${shareToken}`);
+          // Fetch memories using the main memories API
+          const memoriesResponse = await fetch(`/api/memories?userId=${currentUserId}&avatarId=${avatarData.sharedAvatar.avatar.id}`);
           if (memoriesResponse.ok) {
             const memoriesData = await memoriesResponse.json();
             setMemories(memoriesData.memories || []);
@@ -113,7 +113,8 @@ export default function SharedAvatarChatPage() {
     if (!content) return;
     
     try {
-      const response = await fetch('/api/private-memories', {
+      // Use the MemoryService to store the memory properly
+      const response = await fetch('/api/memories', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -122,9 +123,9 @@ export default function SharedAvatarChatPage() {
           action: 'create',
           userId,
           avatarId: sharedAvatar.avatar.id,
-          shareToken,
           content,
-          source: 'manual'
+          source: 'manual',
+          timestamp: new Date().toISOString()
         })
       });
       
@@ -134,9 +135,20 @@ export default function SharedAvatarChatPage() {
       
       const data = await response.json();
       
+      // Create a properly formatted memory object
+      const newMemory = {
+        id: data.id || Date.now().toString(),
+        fragment_text: content,
+        user_id: userId,
+        avatar_id: sharedAvatar.avatar.id,
+        created_at: new Date().toISOString(),
+        source: 'manual'
+      };
+      
       // Add new memory to the list
-      setMemories([data.memory, ...memories]);
+      setMemories([newMemory, ...memories]);
     } catch (err) {
+      console.error('Failed to create memory:', err);
       alert('Failed to create memory. Please try again.');
     }
   };
@@ -339,14 +351,16 @@ export default function SharedAvatarChatPage() {
               {memories.map((memory) => (
                 <div key={memory.id} className="memory-card">
                   <div className="memory-content">
-                    {memory.content}
+                    {memory.fragment_text || memory.content || 'No content available'}
                   </div>
                   <div className="memory-footer">
                     <span className="memory-source">
-                      {memory.source === 'conversation' ? 'From conversation' : 'Manually added'}
+                      {memory.source === 'manual' ? 'Manually added' : 'From conversation'}
                     </span>
                     <span className="memory-date">
-                      {new Date(memory.createdAt).toLocaleDateString()}
+                      {memory.created_at ? new Date(memory.created_at).toLocaleDateString() : 
+                       memory.createdAt ? new Date(memory.createdAt).toLocaleDateString() : 
+                       'Unknown date'}
                     </span>
                   </div>
                 </div>

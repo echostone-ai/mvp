@@ -1,118 +1,113 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { MemoryService } from '@/lib/memoryService';
+import { supabase } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-    const avatarId = searchParams.get('avatarId');
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = parseInt(searchParams.get('offset') || '0');
-
+    const url = new URL(request.url);
+    const userId = url.searchParams.get('userId');
+    const avatarId = url.searchParams.get('avatarId');
+    
     if (!userId) {
-      return NextResponse.json({ error: 'userId is required' }, { status: 400 });
+      return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
     }
-
-    console.log('[api/memories] GET request:', { userId, avatarId, limit, offset });
-
-    const memories = await MemoryService.Retrieval.getUserMemories(userId, {
-      limit,
-      offset,
-      avatarId: avatarId || undefined
+    
+    console.log('[api/memories] Fetching memories for user:', userId, 'avatar:', avatarId);
+    
+    // Build query
+    let query = supabase
+      .from('memory_fragments')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+    
+    // Add avatar filter if provided
+    if (avatarId) {
+      query = query.eq('avatar_id', avatarId);
+    }
+    
+    const { data: memories, error } = await query;
+    
+    if (error) {
+      console.error('[api/memories] Database error:', error);
+      return NextResponse.json({ error: 'Failed to fetch memories' }, { status: 500 });
+    }
+    
+    console.log(`[api/memories] Found ${memories.length} memories`);
+    
+    return NextResponse.json({ 
+      success: true, 
+      memories: memories || [] 
     });
-
-    const stats = await MemoryService.Retrieval.getMemoryStats(userId, avatarId || undefined);
-
-    return NextResponse.json({
-      success: true,
-      memories,
-      stats,
-      pagination: {
-        limit,
-        offset,
-        total: stats.totalFragments
-      }
-    });
-  } catch (error: any) {
-    console.error('[api/memories] GET error:', error);
-    return NextResponse.json({
-      success: false,
-      error: error.message || 'Failed to retrieve memories'
-    }, { status: 500 });
+    
+  } catch (error) {
+    console.error('[api/memories] Error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, avatarId, content, source } = body;
-
+    const { action, userId, avatarId, content, source, timestamp } = body;
+    
     if (!userId || !content) {
-      return NextResponse.json({ error: 'userId and content are required' }, { status: 400 });
+      return NextResponse.json({ error: 'User ID and content are required' }, { status: 400 });
     }
-
-    console.log('[api/memories] POST request:', { userId, avatarId, contentLength: content.length });
-
-    // Create a memory fragment manually
-    const fragment = {
-      userId,
-      avatarId: avatarId || 'default',
-      fragmentText: content,
-      conversationContext: {
-        timestamp: new Date().toISOString(),
-        messageContext: content,
-        source: source || 'manual'
-      }
-    };
-
-    const fragmentId = await MemoryService.Storage.storeMemoryFragment(fragment);
-
-    return NextResponse.json({
-      success: true,
-      memoryId: fragmentId,
-      message: 'Memory created successfully'
-    });
-  } catch (error: any) {
-    console.error('[api/memories] POST error:', error);
-    return NextResponse.json({
-      success: false,
-      error: error.message || 'Failed to create memory'
-    }, { status: 500 });
+    
+    console.log('[api/memories] Creating memory for user:', userId, 'avatar:', avatarId);
+    
+    if (action === 'create') {
+      // Store the memory using MemoryService
+      const memoryId = await MemoryService.storeSimpleMemory(userId, content, avatarId);
+      
+      console.log('[api/memories] Created memory with ID:', memoryId);
+      
+      return NextResponse.json({ 
+        success: true, 
+        id: memoryId,
+        message: 'Memory created successfully' 
+      });
+    }
+    
+    return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+    
+  } catch (error) {
+    console.error('[api/memories] Error creating memory:', error);
+    return NextResponse.json({ error: 'Failed to create memory' }, { status: 500 });
   }
 }
 
 export async function DELETE(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { userId, memoryId, avatarId } = body;
-
-    if (!userId) {
-      return NextResponse.json({ error: 'userId is required' }, { status: 400 });
+    const url = new URL(request.url);
+    const memoryId = url.searchParams.get('memoryId');
+    const userId = url.searchParams.get('userId');
+    
+    if (!memoryId || !userId) {
+      return NextResponse.json({ error: 'Memory ID and User ID are required' }, { status: 400 });
     }
-
-    console.log('[api/memories] DELETE request:', { userId, memoryId, avatarId });
-
-    if (memoryId) {
-      // Delete specific memory
-      await MemoryService.Storage.deleteMemoryFragment(memoryId, userId);
-      return NextResponse.json({
-        success: true,
-        message: 'Memory deleted successfully'
-      });
-    } else {
-      // Delete all memories for user (optionally filtered by avatarId)
-      await MemoryService.Storage.deleteAllUserMemories(userId, avatarId || undefined);
-      return NextResponse.json({
-        success: true,
-        message: 'All memories deleted successfully'
-      });
+    
+    console.log('[api/memories] Deleting memory:', memoryId, 'for user:', userId);
+    
+    const { error } = await supabase
+      .from('memory_fragments')
+      .delete()
+      .eq('id', memoryId)
+      .eq('user_id', userId);
+    
+    if (error) {
+      console.error('[api/memories] Delete error:', error);
+      return NextResponse.json({ error: 'Failed to delete memory' }, { status: 500 });
     }
-  } catch (error: any) {
-    console.error('[api/memories] DELETE error:', error);
-    return NextResponse.json({
-      success: false,
-      error: error.message || 'Failed to delete memories'
-    }, { status: 500 });
+    
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Memory deleted successfully' 
+    });
+    
+  } catch (error) {
+    console.error('[api/memories] Error deleting memory:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-
