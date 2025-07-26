@@ -290,7 +290,6 @@
 /* Enhanced Avatar Header */
 .avatar-header {
   margin-bottom: 3rem;
-  text-align: center;
   padding: 2rem;
   background: linear-gradient(135deg, rgba(155, 124, 255, 0.1) 0%, rgba(124, 93, 255, 0.05) 100%);
   border-radius: 20px;
@@ -299,19 +298,52 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
-.avatar-title-section {
+.avatar-profile-section {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.avatar-photo-container {
+  flex-shrink: 0;
+}
+
+.avatar-photo {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid rgba(155, 124, 255, 0.3);
+  box-shadow: 0 8px 24px rgba(155, 124, 255, 0.2);
+}
+
+.avatar-photo-placeholder {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #9b7cff 0%, #7c5dff 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 1rem;
-  gap: 1rem;
+  color: white;
+  font-size: 2.5rem;
+  font-weight: 700;
+  border: 3px solid rgba(155, 124, 255, 0.3);
+  box-shadow: 0 8px 24px rgba(155, 124, 255, 0.2);
+}
+
+.avatar-info {
+  flex: 1;
+  text-align: left;
 }
 
 .avatar-title {
-  font-size: 2.8rem;
+  font-size: 2.4rem;
   font-weight: 700;
   color: #ffffff;
-  margin: 0;
+  margin: 0 0 0.5rem 0;
   background: linear-gradient(135deg, #ffffff 0%, #e2e2f6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -323,8 +355,7 @@
   color: #b8b8d9;
   font-size: 1.1rem;
   line-height: 1.6;
-  max-width: 600px;
-  margin: 0 auto;
+  margin: 0;
 }
 
 /* Full Width Background Container */
@@ -827,15 +858,39 @@
   margin-right: auto;
 }
 
-/* Center the chat interface elements */
-.chat-container .chat-interface {
+/* Center all chat interface elements */
+.chat-container * {
   max-width: 100%;
+}
+
+/* Specifically center the input area */
+.chat-container .input-area,
+.chat-container .chat-input-container,
+.chat-container .input-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.chat-container input[type="text"],
+.chat-container textarea {
+  width: 100%;
+  max-width: 600px;
   margin: 0 auto;
 }
 
-.chat-container .input-container {
-  max-width: 100%;
-  margin: 0 auto;
+.chat-container .chat-form {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.chat-container .chat-input {
+  flex: 1;
+  max-width: 600px;
 }
 
 /* Memory Animation Container */
@@ -1388,6 +1443,31 @@
   .memory-card,
   .conversation-card {
     padding: 1.5rem;
+  }
+  
+  /* Avatar Header Mobile */
+  .avatar-profile-section {
+    flex-direction: column;
+    text-align: center;
+    gap: 1.5rem;
+  }
+  
+  .avatar-info {
+    text-align: center;
+  }
+  
+  .avatar-title {
+    font-size: 2rem;
+  }
+  
+  .avatar-photo,
+  .avatar-photo-placeholder {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .avatar-photo-placeholder {
+    font-size: 2rem;
   }
   
   /* Invitation Page Mobile */

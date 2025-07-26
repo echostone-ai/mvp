@@ -286,15 +286,19 @@ export default function ChatInterface({
       await saveMessage(assistantMessage)
 
       // If the API returned updated memories, show animation for the newest one
+      console.log('💭 Checking for memories in response:', data.memories?.length || 0);
       if (data.memories && data.memories.length > 0) {
-        const newest = data.memories[0].fragmentText || data.memories[0].content || '';
-        console.log('💭 Memory animation check:', { newest, lastMemory, hasNewMemory: newest !== lastMemory });
+        console.log('💭 First memory object:', data.memories[0]);
+        const newest = data.memories[0].fragmentText || data.memories[0].fragment_text || data.memories[0].content || '';
+        console.log('💭 Memory animation check:', { newest: newest.substring(0, 50), lastMemory: lastMemory?.substring(0, 50), hasNewMemory: newest !== lastMemory });
         if (newest && newest !== lastMemory) {
           console.log('💭 Triggering memory animation for:', newest.substring(0, 50) + '...');
           setLastMemory(newest);
           setShowMemoryAnim(true);
           setTimeout(() => setShowMemoryAnim(false), 1400);
         }
+      } else {
+        console.log('💭 No memories in API response');
       }
 
       // If the API returned updated memories, update local state (if a memory panel is present)
@@ -701,7 +705,7 @@ export default function ChatInterface({
           autoComplete="off"
         />
         <button type="submit" disabled={loading}>
-          {loading ? '…Thinking' : 'Ask'}
+          {loading ? '…' : '→'}
         </button>
       </form>
 
@@ -797,7 +801,12 @@ export default function ChatInterface({
                     <p style={{ margin: '0', fontSize: '16px', color: '#e2e2f6' }}>
                       {msg.content}
                     </p>
-                    {idx === 0 && showMemoryAnim && lastMemory && (
+                    {msg.role === 'user' && showMemoryAnim && lastMemory && (() => {
+                      // Show animation on the most recent user message
+                      const userMessages = messages.filter(m => m.role === 'user');
+                      const isLastUserMessage = userMessages.length > 0 && userMessages[userMessages.length - 1] === msg;
+                      return isLastUserMessage;
+                    })() && (
                       <MemorySavedAnimation text={lastMemory} />
                     )}
                   </div>

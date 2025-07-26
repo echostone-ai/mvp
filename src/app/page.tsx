@@ -262,7 +262,7 @@ export default function HomePage() {
             autoComplete="off"
           />
           <button type="submit" disabled={loading}>
-            {loading ? '…Thinking' : 'Ask'}
+            {loading ? '…' : '→'}
           </button>
         </form>
 

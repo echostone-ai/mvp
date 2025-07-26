@@ -50,20 +50,20 @@ IMPORTANT RULES:
 3. Be SPECIFIC - include names, places, and concrete details whenever possible
 4. Focus on information that reveals character, relationships, or preferences
 5. Include information they might expect you to remember later
-6. Format each memory as a complete sentence starting with "The user..."
+6. Format each memory as a complete sentence using the person's name when known, or "The user" if name is unknown
 7. If no meaningful personal information is found, return an empty array
 
 Return your response as a JSON array of strings, where each string is a meaningful memory fragment.
 
 Examples:
 Input: "I love hiking with my dog Max every weekend. He's a golden retriever and gets so excited when he sees the leash."
-Output: ["User loves hiking and does it every weekend", "User has a golden retriever named Max who gets excited about walks"]
+Output: ["The user loves hiking and does it every weekend", "The user has a golden retriever named Max who gets excited about walks"]
 
 Input: "It's raining today and I'm feeling tired."
 Output: []
 
 Input: "My sister Sarah is getting married next month. I'm so nervous about giving the maid of honor speech because I hate public speaking."
-Output: ["User has a sister named Sarah who is getting married", "User is the maid of honor at Sarah's wedding", "User dislikes public speaking and gets nervous about it"]
+Output: ["The user has a sister named Sarah who is getting married", "The user is the maid of honor at Sarah's wedding", "The user dislikes public speaking and gets nervous about it"]
 
 Now extract memory fragments from this message:
 `
@@ -86,10 +86,13 @@ Now extract memory fragments from this message:
         
         // Build context string if provided as object
         let contextString = '';
+        let visitorName = '';
         if (conversationContext) {
           if (typeof conversationContext === 'string') {
             contextString = conversationContext;
           } else {
+            // Extract visitor name if available
+            visitorName = conversationContext.visitorName || '';
             // Convert object to string
             contextString = Object.entries(conversationContext)
               .map(([key, value]) => `${key}: ${value}`)
@@ -97,12 +100,20 @@ Now extract memory fragments from this message:
           }
         }
         
+        // Create personalized extraction prompt
+        const personalizedPrompt = this.EXTRACTION_PROMPT.replace(
+          'Format each memory as a complete sentence using the person\'s name when known, or "The user" if name is unknown',
+          visitorName 
+            ? `Format each memory as a complete sentence using "${visitorName}" instead of "The user" when referring to the person`
+            : 'Format each memory as a complete sentence starting with "The user"'
+        );
+        
         const completion = await openai.chat.completions.create({
           model: 'gpt-4o-mini',
           messages: [
             {
               role: 'system',
-              content: this.EXTRACTION_PROMPT,
+              content: personalizedPrompt,
             },
             {
               role: 'user',
@@ -625,6 +636,7 @@ export class MemoryRetrievalService {
       cacheKey,
       () => MemoryErrorHandler.withRetry(
         async () => {
+          console.log('[MemoryService] getUserMemories query:', { userId, avatarId, limit, orderBy, orderDirection });
           let query = supabase
           .from('memory_fragments')
           .select('*')
@@ -633,6 +645,7 @@ export class MemoryRetrievalService {
           // Filter by avatarId if provided
           if (avatarId) {
             query = query.eq('avatar_id', avatarId)
+            console.log('[MemoryService] Filtering by avatarId:', avatarId);
           }
           
           query = query.order(orderBy, { ascending: orderDirection === 'asc' })
@@ -642,6 +655,7 @@ export class MemoryRetrievalService {
         }
 
         const { data, error } = await query
+        console.log('[MemoryService] getUserMemories result:', { count: data?.length || 0, error: error?.message });
 
         if (error) {
           throw MemoryErrorHandler.categorizeError(error, {
@@ -946,22 +960,29 @@ export class MemoryService {
   ): Promise<string> {
     return MemoryErrorHandler.withGracefulDegradation(
       async () => {
+        console.log('[MemoryService] Retrieving memories for query:', query.substring(0, 50) + '...');
         const memories = await MemoryRetrievalService.retrieveRelevantMemories(
           query,
           userId,
           { limit: maxMemories, includeContext: false, avatarId }
         )
 
+        console.log('[MemoryService] Found', memories.length, 'relevant memories');
         if (memories.length === 0) {
           return ''
         }
 
         // Format memories for inclusion in chat prompt
         const memoryText = memories
-          .map(memory => `- ${memory.fragmentText}`)
+          .map(memory => {
+            console.log('[MemoryService] Including memory:', memory.fragmentText.substring(0, 50) + '...');
+            return `- ${memory.fragmentText}`;
+          })
           .join('\n')
 
-        return `\nRelevant memories about the user:\n${memoryText}\n`
+        const formattedContext = `\nRelevant memories about the user:\n${memoryText}\n`;
+        console.log('[MemoryService] Formatted memory context:', formattedContext.length, 'characters');
+        return formattedContext;
       },
       () => '', // Graceful fallback - return empty string
       'get_memories_for_chat',

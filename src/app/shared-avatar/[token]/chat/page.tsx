@@ -209,15 +209,23 @@ export default function SharedAvatarChatPage() {
         )}
 
         <div className="avatar-header">
-          <div className="avatar-title-section">
-            <h1 className="avatar-title">Chat with {avatar.name}</h1>
-            <span className={avatar.hasVoice ? 'avatar-has-voice' : 'avatar-no-voice'}>
-              {avatar.hasVoice ? 'Has Voice' : 'No Voice'}
-            </span>
+          <div className="avatar-profile-section">
+            <div className="avatar-photo-container">
+              {avatar.photoUrl ? (
+                <img src={avatar.photoUrl} alt={avatar.name} className="avatar-photo" />
+              ) : (
+                <div className="avatar-photo-placeholder">
+                  {avatar.name.charAt(0)}
+                </div>
+              )}
+            </div>
+            <div className="avatar-info">
+              <h1 className="avatar-title">Chat with {avatar.name}</h1>
+              <p className="avatar-description">
+                {avatar.description || `Your private conversation with ${avatar.name}. Your chat history will be saved for future visits.`}
+              </p>
+            </div>
           </div>
-          <p className="avatar-description">
-            {avatar.description || `Your private conversation with ${avatar.name}. Your chat history will be saved for future visits.`}
-          </p>
         </div>
 
       <div className="tabs-list">

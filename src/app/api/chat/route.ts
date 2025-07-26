@@ -126,10 +126,16 @@ export async function POST(req: Request) {
         memoryContext = await MemoryService.getMemoriesForChat(userQuestion, userId, 5, avatarId);
         if (memoryContext) {
           console.log('[api/chat] Found relevant memories:', memoryContext.length, 'characters');
+          console.log('[api/chat] Memory context preview:', memoryContext.substring(0, 200) + '...');
+        } else {
+          console.log('[api/chat] No memory context found');
         }
         // Also fetch latest memories for UI update
         latestMemories = await MemoryService.getLatestMemories(userId, avatarId, 10);
         console.log('[api/chat] Latest memories for UI:', latestMemories.length);
+        if (latestMemories.length > 0) {
+          console.log('[api/chat] Sample memory:', latestMemories[0].fragmentText?.substring(0, 50) + '...');
+        }
       } catch (memoryError) {
         console.warn('[api/chat] Memory retrieval failed:', memoryError);
         // Continue without memories - don't fail the entire chat
@@ -233,30 +239,39 @@ export async function POST(req: Request) {
     const answer = resp.choices?.[0]?.message?.content ?? ''
     console.log('[api/chat] Received response from OpenAI');
 
-    // 7) Extract and store memories from user message (async, don't block response)
+    // 7) Extract and store memories from user message (wait for completion to include in response)
     if (userId) {
       console.log(`[api/chat] Processing memories for user ${userId}, avatar ${avatarId}`);
-      // Don't await this - let it run in background
-      MemoryService.processAndStoreMemories(
+      try {
+        const storedMemories = await MemoryService.processAndStoreMemories(
         userQuestion, 
         userId, 
         {
           timestamp: new Date().toISOString(),
           messageContext: userQuestion,
-          emotionalTone: 'neutral'
+          emotionalTone: 'neutral',
+          visitorName: visitorName // Include visitor name for personalized memories
         },
         undefined, // extractionThreshold
-        avatarId || 'default' // avatarId as separate parameter
-      ).then((storedMemories) => {
+          avatarId || 'default' // avatarId as separate parameter
+        );
+        
         if (storedMemories.length > 0) {
           console.log(`[api/chat] ✅ Stored ${storedMemories.length} memories for user ${userId}, avatar ${avatarId}`);
           storedMemories.forEach((memory, index) => {
             console.log(`[api/chat]   ${index + 1}. ${memory.fragmentText.substring(0, 100)}...`);
           });
+          
+          // Update latestMemories to include the newly created memories
+          latestMemories = await MemoryService.getLatestMemories(userId, avatarId, 10);
+          console.log(`[api/chat] Updated latest memories count: ${latestMemories.length}`);
+          if (latestMemories.length > 0) {
+            console.log(`[api/chat] Latest memory for animation: ${latestMemories[0].fragmentText?.substring(0, 50)}...`);
+          }
         } else {
           console.log(`[api/chat] ℹ️ No memories extracted from message for user ${userId}`);
         }
-      }).catch((memoryError) => {
+      } catch (memoryError) {
         console.error('[api/chat] ❌ Memory storage failed:', memoryError.message || memoryError);
         console.error('[api/chat] Memory error details:', {
           userId,
@@ -264,7 +279,7 @@ export async function POST(req: Request) {
           messageLength: userQuestion.length,
           hasOpenAIKey: !!openai.apiKey
         });
-      });
+      }
     }
 
     // 8) Respond with properly formatted memories
