@@ -162,15 +162,58 @@ export async function POST(req: Request) {
         mockAnswer = "That's interesting! Tell me more about that.";
       }
 
-      // Even with mock response, try to extract and store memories
+      // Even with mock response, try to create basic memories without OpenAI
       if (userId) {
         try {
-          await MemoryService.processAndStoreMemories(userQuestion, userId, {
-            timestamp: new Date().toISOString(),
-            messageContext: userQuestion,
-            avatarId: avatarId || 'default'
-          });
-          console.log('[api/chat] Stored memories from user message (mock mode)');
+          // Create simple rule-based memories for testing
+          const memories = [];
+          const lowerMessage = userQuestion.toLowerCase();
+          
+          // Extract names mentioned
+          const nameMatches = userQuestion.match(/(?:my name is|i'm|i am|call me)\s+([A-Z][a-z]+)/gi);
+          if (nameMatches) {
+            nameMatches.forEach(match => {
+              const name = match.split(/\s+/).pop();
+              memories.push(`User's name is ${name}`);
+            });
+          }
+          
+          // Extract pet mentions
+          if (lowerMessage.includes('pet') || lowerMessage.includes('dog') || lowerMessage.includes('cat') || lowerMessage.includes('guinea pig')) {
+            const petMatches = userQuestion.match(/(?:pet|dog|cat|guinea pig)(?:\s+named|\s+called)?\s+([A-Z][a-z]+)/gi);
+            if (petMatches) {
+              petMatches.forEach(match => {
+                const parts = match.split(/\s+/);
+                const name = parts[parts.length - 1];
+                const type = parts[0].toLowerCase();
+                memories.push(`User has a ${type} named ${name}`);
+              });
+            }
+          }
+          
+          // Extract family mentions
+          const familyMatches = userQuestion.match(/(?:my|i have a)\s+(sister|brother|mother|father|mom|dad|parent)(?:\s+named|\s+called)?\s+([A-Z][a-z]+)/gi);
+          if (familyMatches) {
+            familyMatches.forEach(match => {
+              const parts = match.split(/\s+/);
+              const name = parts[parts.length - 1];
+              const relation = parts.find(p => ['sister', 'brother', 'mother', 'father', 'mom', 'dad', 'parent'].includes(p.toLowerCase()));
+              memories.push(`User has a ${relation} named ${name}`);
+            });
+          }
+          
+          // Store the extracted memories
+          for (const memoryText of memories) {
+            await MemoryService.storeSimpleMemory(userId, memoryText, avatarId || 'default');
+          }
+          
+          if (memories.length > 0) {
+            console.log(`[api/chat] ✅ Stored ${memories.length} rule-based memories (mock mode)`);
+            memories.forEach((memory, index) => {
+              console.log(`[api/chat]   ${index + 1}. ${memory}`);
+            });
+          }
+          
         } catch (memoryError) {
           console.warn('[api/chat] Memory storage failed (mock mode):', memoryError);
         }
@@ -191,18 +234,35 @@ export async function POST(req: Request) {
 
     // 7) Extract and store memories from user message (async, don't block response)
     if (userId) {
+      console.log(`[api/chat] Processing memories for user ${userId}, avatar ${avatarId}`);
       // Don't await this - let it run in background
-      MemoryService.processAndStoreMemories(userQuestion, userId, {
-        timestamp: new Date().toISOString(),
-        messageContext: userQuestion,
-        avatarId: avatarId || 'default',
-        emotionalTone: 'neutral'
-      }).then((storedMemories) => {
+      MemoryService.processAndStoreMemories(
+        userQuestion, 
+        userId, 
+        {
+          timestamp: new Date().toISOString(),
+          messageContext: userQuestion,
+          emotionalTone: 'neutral'
+        },
+        undefined, // extractionThreshold
+        avatarId || 'default' // avatarId as separate parameter
+      ).then((storedMemories) => {
         if (storedMemories.length > 0) {
-          console.log(`[api/chat] Stored ${storedMemories.length} memories for user ${userId}`);
+          console.log(`[api/chat] ✅ Stored ${storedMemories.length} memories for user ${userId}, avatar ${avatarId}`);
+          storedMemories.forEach((memory, index) => {
+            console.log(`[api/chat]   ${index + 1}. ${memory.fragmentText.substring(0, 100)}...`);
+          });
+        } else {
+          console.log(`[api/chat] ℹ️ No memories extracted from message for user ${userId}`);
         }
       }).catch((memoryError) => {
-        console.warn('[api/chat] Memory storage failed:', memoryError);
+        console.error('[api/chat] ❌ Memory storage failed:', memoryError.message || memoryError);
+        console.error('[api/chat] Memory error details:', {
+          userId,
+          avatarId,
+          messageLength: userQuestion.length,
+          hasOpenAIKey: !!openai.apiKey
+        });
       });
     }
 

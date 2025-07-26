@@ -376,12 +376,21 @@ export class MemoryStorageService {
         }
 
         // Prepare data for insertion
-        const insertData = fragments.map(fragment => ({
-          user_id: fragment.userId,
-          fragment_text: fragment.fragmentText,
-          embedding: fragment.embedding,
-          conversation_context: fragment.conversationContext,
-        }))
+        const insertData = fragments.map(fragment => {
+          const data: any = {
+            user_id: fragment.userId,
+            fragment_text: fragment.fragmentText,
+            embedding: fragment.embedding,
+            conversation_context: fragment.conversationContext,
+          };
+          
+          // Include avatar_id if it exists
+          if (fragment.avatarId) {
+            data.avatar_id = fragment.avatarId;
+          }
+          
+          return data;
+        })
 
         const { data, error } = await supabase
           .from('memory_fragments')
@@ -881,6 +890,28 @@ export class MemoryService {
   static readonly Retrieval = MemoryRetrievalService
 
   /**
+   * Store a simple memory without OpenAI processing (for fallback/testing)
+   */
+  static async storeSimpleMemory(
+    userId: string, 
+    memoryText: string, 
+    avatarId?: string
+  ): Promise<string> {
+    const fragment: MemoryFragment = {
+      userId,
+      avatarId,
+      fragmentText: memoryText,
+      conversationContext: {
+        timestamp: new Date().toISOString(),
+        messageContext: 'Simple rule-based extraction',
+        emotionalTone: 'neutral'
+      }
+    };
+    
+    return MemoryStorageService.storeMemoryFragment(fragment);
+  }
+
+  /**
    * Complete workflow: extract, store, and return stored fragments
    */
   static async processAndStoreMemories(
@@ -904,11 +935,17 @@ export class MemoryService {
           return []
         }
 
+        // Add avatarId to all fragments before storing
+        const fragmentsWithAvatar = fragments.map(fragment => ({
+          ...fragment,
+          avatarId: avatarId || fragment.avatarId
+        }));
+
         // Store fragments with embeddings
-        const fragmentIds = await MemoryStorageService.batchStoreMemoryFragments(fragments)
+        const fragmentIds = await MemoryStorageService.batchStoreMemoryFragments(fragmentsWithAvatar)
 
         // Return the stored fragments with their IDs
-        return fragments.map((fragment, index) => ({
+        return fragmentsWithAvatar.map((fragment, index) => ({
           ...fragment,
           id: fragmentIds[index]
         }))

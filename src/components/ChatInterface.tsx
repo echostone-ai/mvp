@@ -301,8 +301,15 @@ export default function ChatInterface({
         // (Uncomment and wire up if you want to show live memory updates)
       }
 
-      // Show memory processing status (for debugging)
-      console.log('💭 Memory processing: User message processed for memories')
+      // Show memory processing status
+      console.log('💭 Memory processing: User message processed for memories');
+      console.log('💭 Memory system status:', {
+        userId,
+        avatarId,
+        isSharedAvatar,
+        shareToken,
+        hasMemories: data.memories && data.memories.length > 0
+      });
 
       if (data.answer) {
         try {

@@ -145,7 +145,7 @@ export async function createShare(data: {
       setCached(tokenCacheKey, shareRecord, 30 * 24 * 60 * 60);
     }
 
-    const shareUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/shared-avatar/${shareToken}`;
+    const shareUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://app.echostone.ai'}/shared-avatar/${shareToken}`;
     
     // Send invitation email
     try {

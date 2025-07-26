@@ -129,74 +129,110 @@ export default function SharedAvatarPage() {
     };
     
     return (
-      <div className="hub-container">
-        <div className="card">
-          <div className="avatar-preview-section">
-            <div className="avatar-preview-card">
-              <div className="avatar-preview-header">
-                <h2>Welcome to Shared Avatar</h2>
-                <span className="avatar-no-voice">Digital Avatar</span>
+      <div className="invitation-container">
+        <div className="invitation-card">
+          {/* Header Section */}
+          <div className="invitation-header">
+            <div className="avatar-circle">
+              <div className="avatar-initial">A</div>
+              <div className="voice-indicator no-voice">💬</div>
+            </div>
+            
+            <h1 className="invitation-title">
+              Meet <span className="avatar-name">Digital Avatar</span>
+            </h1>
+            
+            <p className="invitation-subtitle">
+              Someone has shared their digital avatar with you. Enter your email to start chatting!
+            </p>
+          </div>
+
+          {/* Quick Start Form */}
+          <form onSubmit={handleAcceptInvitation} className="quick-start-form">
+            <div className="input-group">
+              <div className="input-wrapper">
+                <input
+                  type="email"
+                  id="userEmail"
+                  value={userEmail}
+                  onChange={(e) => setUserEmail(e.target.value)}
+                  className="main-input"
+                  placeholder="Enter your email to start chatting"
+                  required
+                />
+                <div className="input-icon">✉️</div>
               </div>
-              <div className="avatar-preview-content">
-                <div className="avatar-preview-image">
-                  <div className="avatar-placeholder">A</div>
-                </div>
-                <div className="avatar-preview-info">
-                  <h3>Digital Avatar</h3>
-                  <p>Someone has shared their digital avatar with you. Enter your email to start chatting!</p>
-                </div>
+            </div>
+
+            <div className="input-group optional-group">
+              <div className="input-wrapper">
+                <input
+                  type="text"
+                  id="userName"
+                  value={userName}
+                  onChange={(e) => setUserName(e.target.value)}
+                  className="main-input"
+                  placeholder="Your name (optional)"
+                />
+                <div className="input-icon">👋</div>
               </div>
+            </div>
+
+            {error && (
+              <div className="error-message">
+                <span className="error-icon">⚠️</span>
+                We couldn't load the avatar details, but you can still start chatting. {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="start-chat-btn"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="btn-spinner"></div>
+                  Getting Ready...
+                </>
+              ) : (
+                <>
+                  <span className="btn-icon">💬</span>
+                  Start Chatting
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Features Section */}
+          <div className="features-grid">
+            <div className="feature-item">
+              <div className="feature-icon">🔒</div>
+              <div className="feature-text">Private & Secure</div>
+            </div>
+            <div className="feature-item">
+              <div className="feature-icon">🧠</div>
+              <div className="feature-text">Remembers You</div>
+            </div>
+            <div className="feature-item">
+              <div className="feature-icon">💾</div>
+              <div className="feature-text">Saves History</div>
             </div>
           </div>
 
-          <form onSubmit={handleAcceptInvitation} className="invitation-form">
-            <div className="form-group">
-              <label htmlFor="userEmail" className="form-label">Your Email Address</label>
-              <input
-                type="email"
-                id="userEmail"
-                value={userEmail}
-                onChange={(e) => setUserEmail(e.target.value)}
-                className="form-input"
-                placeholder="Enter your email address"
-                required
-              />
-              <p className="form-help">
-                This helps the avatar remember you for future conversations.
-              </p>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="userName" className="form-label">Your Name (Optional)</label>
-              <input
-                type="text"
-                id="userName"
-                value={userName}
-                onChange={(e) => setUserName(e.target.value)}
-                className="form-input"
-                placeholder="How should the avatar address you?"
-              />
-            </div>
-
-            <div className="alert alert-info">
-              Note: We couldn't load the avatar details, but you can still start chatting.
-              <br />
-              Error: {error || 'Shared avatar not found'}
-            </div>
-
-            <div className="form-actions">
-              <Link href="/" className="btn btn-secondary">
-                Cancel
-              </Link>
-              <button
-                type="submit"
-                className="btn btn-primary"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Getting Ready...' : 'Start Chatting'}
-              </button>
-            </div>
-          </form>
+          {/* CTA Section */}
+          <div className="cta-section">
+            <p className="cta-text">Want to create your own AI avatar?</p>
+            <a
+              href="https://app.echostone.ai"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="cta-btn"
+            >
+              <span className="cta-icon">✨</span>
+              Create Your Avatar
+            </a>
+          </div>
         </div>
       </div>
     );
@@ -226,95 +262,114 @@ export default function SharedAvatarPage() {
   }
 
   return (
-    <div className="hub-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minHeight: '100vh', justifyContent: 'center' }}>
-      <div className="card" style={{ maxWidth: 480, width: '100%', margin: '2rem auto', boxShadow: '0 4px 24px rgba(0,0,0,0.08)', borderRadius: 16, padding: '2.5rem 2rem', background: 'rgba(30,30,60,0.95)' }}>
-        <div className="avatar-preview-section">
-          <div className="avatar-preview-card">
-            <div className="avatar-preview-header">
-              <h2>You've been invited to chat with {avatar.name}</h2>
-              <span className={avatar.hasVoice ? 'avatar-has-voice' : 'avatar-no-voice'}>
-                {avatar.hasVoice ? 'Has Voice' : 'No Voice'}
-              </span>
-            </div>
-            <div className="avatar-preview-content">
-              <div className="avatar-preview-image">
-                <div className="avatar-placeholder">{avatar.name.charAt(0)}</div>
-              </div>
-              <div className="avatar-preview-info">
-                <h3>{avatar.name}</h3>
-                <p>{avatar.description || `${ownerEmail} has shared their avatar with you. Accept this invitation to start chatting!`}</p>
-              </div>
+    <div className="invitation-container">
+      <div className="invitation-card">
+        {/* Header Section */}
+        <div className="invitation-header">
+          <div className="avatar-circle">
+            {avatar.photoUrl ? (
+              <img src={avatar.photoUrl} alt={avatar.name} className="avatar-image" />
+            ) : (
+              <div className="avatar-initial">{avatar.name.charAt(0)}</div>
+            )}
+            <div className={`voice-indicator ${avatar.hasVoice ? 'has-voice' : 'no-voice'}`}>
+              {avatar.hasVoice ? '🎤' : '💬'}
             </div>
           </div>
+          
+          <h1 className="invitation-title">
+            Meet <span className="avatar-name">{avatar.name}</span>
+          </h1>
+          
+          <p className="invitation-subtitle">
+            {avatar.description || `You've been invited to have a private conversation with ${avatar.name}`}
+          </p>
         </div>
 
-        <form onSubmit={handleAcceptInvitation} className="invitation-form">
-          <div className="form-group">
-            <label htmlFor="userEmail" className="form-label">Your Email Address</label>
-            <input
-              type="email"
-              id="userEmail"
-              value={userEmail}
-              onChange={(e) => setUserEmail(e.target.value)}
-              className="form-input"
-              placeholder="Enter your email address"
-              required
-            />
-            <p className="form-help">
-              This helps {avatar.name} remember you for future conversations.
-            </p>
+        {/* Quick Start Form */}
+        <form onSubmit={handleAcceptInvitation} className="quick-start-form">
+          <div className="input-group">
+            <div className="input-wrapper">
+              <input
+                type="email"
+                id="userEmail"
+                value={userEmail}
+                onChange={(e) => setUserEmail(e.target.value)}
+                className="main-input"
+                placeholder="Enter your email to start chatting"
+                required
+              />
+              <div className="input-icon">✉️</div>
+            </div>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="userName" className="form-label">Your Name (Optional)</label>
-            <input
-              type="text"
-              id="userName"
-              value={userName}
-              onChange={(e) => setUserName(e.target.value)}
-              className="form-input"
-              placeholder="How should the avatar address you?"
-            />
-            <p className="form-help">
-              If not provided, we'll use the first part of your email address.
-            </p>
+          <div className="input-group optional-group">
+            <div className="input-wrapper">
+              <input
+                type="text"
+                id="userName"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+                className="main-input"
+                placeholder="Your name (optional)"
+              />
+              <div className="input-icon">👋</div>
+            </div>
           </div>
 
-          {error && <div className="alert alert-error">{error}</div>}
+          {error && (
+            <div className="error-message">
+              <span className="error-icon">⚠️</span>
+              {error}
+            </div>
+          )}
 
-          <div className="form-actions">
-            <Link href="/" className="btn btn-secondary">
-              Cancel
-            </Link>
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? 'Getting Ready...' : `Start Chatting with ${avatar.name}`}
-            </button>
-          </div>
+          <button
+            type="submit"
+            className="start-chat-btn"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <div className="btn-spinner"></div>
+                Getting Ready...
+              </>
+            ) : (
+              <>
+                <span className="btn-icon">💬</span>
+                Start Chatting with {avatar.name}
+              </>
+            )}
+          </button>
         </form>
 
-        <div className="invitation-info" style={{ marginTop: 32 }}>
-          <h3>🔒 Your Privacy is Protected:</h3>
-          <ul>
-            <li>Your conversations with {avatar.name} are completely private</li>
-            <li>{avatar.name} will remember you and your conversations</li>
-            <li>The avatar owner cannot see your messages</li>
-            <li>You can return anytime using this same link</li>
-          </ul>
+        {/* Features Section */}
+        <div className="features-grid">
+          <div className="feature-item">
+            <div className="feature-icon">🔒</div>
+            <div className="feature-text">Private & Secure</div>
+          </div>
+          <div className="feature-item">
+            <div className="feature-icon">🧠</div>
+            <div className="feature-text">Remembers You</div>
+          </div>
+          <div className="feature-item">
+            <div className="feature-icon">💾</div>
+            <div className="feature-text">Saves History</div>
+          </div>
         </div>
-        <div style={{ marginTop: 40, textAlign: 'center' }}>
-          <div style={{ fontWeight: 600, fontSize: '1.1rem', marginBottom: 8 }}>Want your own digital avatar?</div>
+
+        {/* CTA Section */}
+        <div className="cta-section">
+          <p className="cta-text">Want to create your own AI avatar?</p>
           <a
             href="https://app.echostone.ai"
             target="_blank"
             rel="noopener noreferrer"
-            className="btn btn-primary"
-            style={{ display: 'inline-block', margin: '0 auto', padding: '0.75rem 2rem', fontSize: '1.1rem', borderRadius: 8, background: 'linear-gradient(90deg, #9b7cff 60%, #6a00ff 100%)', color: '#fff', fontWeight: 600, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+            className="cta-btn"
           >
-            Create Your Own Avatar
+            <span className="cta-icon">✨</span>
+            Create Your Avatar
           </a>
         </div>
       </div>
