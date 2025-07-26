@@ -288,7 +288,9 @@ export default function ChatInterface({
       // If the API returned updated memories, show animation for the newest one
       if (data.memories && data.memories.length > 0) {
         const newest = data.memories[0].fragmentText || data.memories[0].content || '';
+        console.log('💭 Memory animation check:', { newest, lastMemory, hasNewMemory: newest !== lastMemory });
         if (newest && newest !== lastMemory) {
+          console.log('💭 Triggering memory animation for:', newest.substring(0, 50) + '...');
           setLastMemory(newest);
           setShowMemoryAnim(true);
           setTimeout(() => setShowMemoryAnim(false), 1400);

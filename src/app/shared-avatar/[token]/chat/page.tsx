@@ -190,34 +190,35 @@ export default function SharedAvatarChatPage() {
 
   return (
     <div className="hub-container">
-      {/* Welcome message for returning visitors */}
-      {showWelcomeMessage && userName && (
-        <div className="welcome-message">
-          <div className="welcome-content">
-            <h3>Welcome back, {userName}!</h3>
-            <p>{avatar.name} is ready to continue your conversation.</p>
+      <div className="content-container">
+        {/* Welcome message for returning visitors */}
+        {showWelcomeMessage && userName && (
+          <div className="welcome-message">
+            <div className="welcome-content">
+              <h3>Welcome back, {userName}!</h3>
+              <p>{avatar.name} is ready to continue your conversation.</p>
+            </div>
+            <button 
+              className="welcome-close" 
+              onClick={() => setShowWelcomeMessage(false)}
+              aria-label="Close welcome message"
+            >
+              ×
+            </button>
           </div>
-          <button 
-            className="welcome-close" 
-            onClick={() => setShowWelcomeMessage(false)}
-            aria-label="Close welcome message"
-          >
-            ×
-          </button>
-        </div>
-      )}
+        )}
 
-      <div className="avatar-header">
-        <div className="avatar-title-section">
-          <h1 className="avatar-title">Chat with {avatar.name}</h1>
-          <span className={avatar.hasVoice ? 'avatar-has-voice' : 'avatar-no-voice'}>
-            {avatar.hasVoice ? 'Has Voice' : 'No Voice'}
-          </span>
+        <div className="avatar-header">
+          <div className="avatar-title-section">
+            <h1 className="avatar-title">Chat with {avatar.name}</h1>
+            <span className={avatar.hasVoice ? 'avatar-has-voice' : 'avatar-no-voice'}>
+              {avatar.hasVoice ? 'Has Voice' : 'No Voice'}
+            </span>
+          </div>
+          <p className="avatar-description">
+            {avatar.description || `Your private conversation with ${avatar.name}. Your chat history will be saved for future visits.`}
+          </p>
         </div>
-        <p className="avatar-description">
-          {avatar.description || `Your private conversation with ${avatar.name}. Your chat history will be saved for future visits.`}
-        </p>
-      </div>
 
       <div className="tabs-list">
         <button
@@ -369,6 +370,7 @@ export default function SharedAvatarChatPage() {
           )}
         </div>
       )}
+      </div>
     </div>
   );
 }

@@ -327,13 +327,33 @@
   margin: 0 auto;
 }
 
-/* Enhanced Container */
+/* Full Width Background Container */
 .hub-container {
+  width: 100%;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+  position: relative;
+}
+
+.hub-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 30% 20%, rgba(155, 124, 255, 0.08) 0%, transparent 50%),
+              radial-gradient(circle at 70% 80%, rgba(124, 93, 255, 0.06) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+/* Content Container */
+.content-container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
-  min-height: 100vh;
-  background: linear-gradient(135deg, rgba(35, 41, 70, 0.95) 0%, rgba(30, 30, 60, 0.95) 100%);
+  position: relative;
+  z-index: 1;
 }
 
 .container {
@@ -820,6 +840,22 @@
 
 /* Memory Animation Container */
 .message-container {
+  position: relative;
+}
+
+/* Ensure memory animation is visible */
+.memory-animation-container {
+  position: relative;
+  z-index: 1000;
+}
+
+/* Chat message styling to support memory animation */
+.chat-message {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.chat-message.user-message {
   position: relative;
 }
 

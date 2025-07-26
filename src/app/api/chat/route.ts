@@ -129,6 +129,7 @@ export async function POST(req: Request) {
         }
         // Also fetch latest memories for UI update
         latestMemories = await MemoryService.getLatestMemories(userId, avatarId, 10);
+        console.log('[api/chat] Latest memories for UI:', latestMemories.length);
       } catch (memoryError) {
         console.warn('[api/chat] Memory retrieval failed:', memoryError);
         // Continue without memories - don't fail the entire chat
@@ -266,8 +267,15 @@ export async function POST(req: Request) {
       });
     }
 
-    // 8) Respond
-    return NextResponse.json({ answer, memories: latestMemories })
+    // 8) Respond with properly formatted memories
+    const formattedMemories = latestMemories.map(memory => ({
+      ...memory,
+      fragmentText: memory.fragmentText || memory.fragment_text,
+      content: memory.fragmentText || memory.fragment_text
+    }));
+    
+    console.log('[api/chat] Returning', formattedMemories.length, 'formatted memories');
+    return NextResponse.json({ answer, memories: formattedMemories })
   } catch (err: any) {
     console.error('[api/chat] Error:', err)
 

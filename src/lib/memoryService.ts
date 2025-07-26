@@ -573,44 +573,9 @@ export class MemoryRetrievalService {
           // Generate embedding for the query
           const queryEmbedding = await MemoryStorageService.generateEmbedding(query)
 
-          // Perform vector similarity search using pgvector
-          const { data, error } = await supabase.rpc('match_memory_fragments', {
-            query_embedding: queryEmbedding,
-            match_threshold: similarityThreshold,
-            match_count: limit,
-            target_user_id: userId,
-            target_avatar_id: avatarId || null // Pass avatarId to the function
-          })
-
-          if (error) {
-            throw MemoryErrorHandler.categorizeError(error, {
-              operation: 'vector_similarity_search',
-              userId,
-              queryLength: query.length,
-              limit,
-              threshold: similarityThreshold,
-              avatarId
-            })
-          }
-
-          if (!data) {
-            throw new MemoryError(
-              MemoryErrorType.VECTOR_SEARCH_FAILED,
-              'No data returned from vector similarity search'
-            )
-          }
-
-          // Transform the results to MemoryFragment format
-          return data.map((item: any) => ({
-            id: item.id,
-            userId: item.user_id,
-            fragmentText: item.fragment_text,
-            embedding: item.embedding,
-            conversationContext: includeContext ? item.conversation_context : undefined,
-            createdAt: new Date(item.created_at),
-            updatedAt: new Date(item.updated_at),
-            similarity: item.similarity // Include similarity score for debugging/ranking
-          }))
+          // Use simple text search instead of vector search for now
+          console.log('[MemoryService] Using text search for memories, user:', userId, 'avatar:', avatarId);
+          return this.searchMemoriesByText(query, userId, limit, avatarId)
         },
         async () => {
           // Fallback to text search if vector search fails
@@ -791,10 +756,24 @@ export class MemoryRetrievalService {
           query = query.eq('avatar_id', avatarId)
         }
         
-        const { data, error } = await query
-          .textSearch('fragment_text', searchText)
-          .order('created_at', { ascending: false })
-          .limit(limit)
+        // Try text search first, fallback to simple query if it fails
+        let data, error;
+        try {
+          const result = await query
+            .textSearch('fragment_text', searchText)
+            .order('created_at', { ascending: false })
+            .limit(limit);
+          data = result.data;
+          error = result.error;
+        } catch (textSearchError) {
+          console.log('[MemoryService] Text search failed, using simple query');
+          // Fallback to simple query without text search
+          const result = await query
+            .order('created_at', { ascending: false })
+            .limit(limit);
+          data = result.data;
+          error = result.error;
+        }
 
         if (error) {
           throw MemoryErrorHandler.categorizeError(error, {
