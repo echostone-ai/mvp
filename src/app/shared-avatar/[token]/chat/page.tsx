@@ -92,7 +92,6 @@ export default function SharedAvatarChatPage() {
           } else {
             console.error('[SharedAvatarChat] Failed to fetch conversations:', conversationsResponse.status);
           }
-        }
           
           // Fetch memories using the main memories API
           const memoriesResponse = await fetch(`/api/memories?userId=${currentUserId}&avatarId=${avatarData.sharedAvatar.avatar.id}`);
