@@ -112,10 +112,19 @@ export default function VoiceImprovementTool({ avatarId, voiceId, avatarName }: 
           recommendations: data.recommendations
         });
       } else {
+        console.error('Voice improvement failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          data
+        });
+        
         setResult({
           success: false,
           message: 'Failed to improve voice',
-          error: data.error || `HTTP ${response.status}: ${data.details || 'Unknown error occurred'}`
+          error: data.error || `HTTP ${response.status}: ${data.details || 'Unknown error occurred'}`,
+          details: data.details,
+          voiceId: data.voiceId,
+          checkError: data.checkError
         });
       }
     } catch (error) {
@@ -235,9 +244,26 @@ export default function VoiceImprovementTool({ avatarId, voiceId, avatarName }: 
           </p>
 
           {result.error && (
-            <p style={{ color: '#ef4444', fontSize: '0.9rem', marginBottom: '1rem' }}>
-              Error: {result.error}
-            </p>
+            <div style={{ marginBottom: '1rem' }}>
+              <p style={{ color: '#ef4444', fontSize: '0.9rem', marginBottom: '0.5rem' }}>
+                <strong>Error:</strong> {result.error}
+              </p>
+              {result.details && (
+                <p style={{ color: '#ef4444', fontSize: '0.8rem', marginBottom: '0.5rem' }}>
+                  <strong>Details:</strong> {result.details}
+                </p>
+              )}
+              {result.voiceId && (
+                <p style={{ color: '#ef4444', fontSize: '0.8rem', marginBottom: '0.5rem' }}>
+                  <strong>Voice ID:</strong> {result.voiceId}
+                </p>
+              )}
+              {result.checkError && (
+                <p style={{ color: '#ef4444', fontSize: '0.8rem' }}>
+                  <strong>Check Error:</strong> {result.checkError}
+                </p>
+              )}
+            </div>
           )}
 
           {result.testResult && (

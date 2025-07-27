@@ -12,10 +12,8 @@ export default function VoiceIdFixer({ selectedAvatar }: VoiceIdFixerProps) {
   const [newVoiceId, setNewVoiceId] = useState('');
   const [result, setResult] = useState<string | null>(null);
 
-  const correctVoiceId = 'IdAZHNBrnziWIBFFAn3C'; // The correct voice ID from your debug info
-
-  const fixVoiceId = async () => {
-    if (!selectedAvatar?.id) return;
+  const testVoiceInElevenLabs = async () => {
+    if (!selectedAvatar?.voice_id) return;
     
     setIsFixing(true);
     setResult(null);
@@ -27,23 +25,27 @@ export default function VoiceIdFixer({ selectedAvatar }: VoiceIdFixerProps) {
         return;
       }
 
-      // Update the avatar's voice_id in the database
-      const { data, error } = await supabase
-        .from('avatar_profiles')
-        .update({ voice_id: correctVoiceId })
-        .eq('id', selectedAvatar.id)
-        .eq('user_id', session.user.id)
-        .select();
+      // Test if the voice exists in ElevenLabs
+      const response = await fetch('/api/test-voice-exists', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          voiceId: selectedAvatar.voice_id
+        }),
+      });
 
-      if (error) {
-        setResult(`❌ Database error: ${error.message}`);
+      const data = await response.json();
+      
+      if (response.ok) {
+        setResult(`✅ Voice exists in ElevenLabs: ${data.name || 'Unknown name'}`);
       } else {
-        setResult(`✅ Successfully updated voice_id to: ${correctVoiceId}`);
-        // Refresh the page to see changes
-        setTimeout(() => window.location.reload(), 2000);
+        setResult(`❌ Voice not found in ElevenLabs: ${data.error || 'Unknown error'}`);
       }
     } catch (error) {
-      setResult(`❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setResult(`❌ Error testing voice: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsFixing(false);
     }
@@ -84,47 +86,42 @@ export default function VoiceIdFixer({ selectedAvatar }: VoiceIdFixerProps) {
 
   if (!selectedAvatar) return null;
 
-  const hasVoiceIdMismatch = selectedAvatar.voice_id !== correctVoiceId;
-
   return (
     <div style={{
-      background: 'rgba(239, 68, 68, 0.1)',
-      border: '2px solid rgba(239, 68, 68, 0.3)',
+      background: 'rgba(59, 130, 246, 0.1)',
+      border: '2px solid rgba(59, 130, 246, 0.3)',
       borderRadius: '12px',
       padding: '1.5rem',
       margin: '1rem 0'
     }}>
-      <h3 style={{ color: '#ef4444', marginBottom: '1rem', fontSize: '1.2rem' }}>
-        🔧 Voice ID Mismatch Fixer
+      <h3 style={{ color: '#3b82f6', marginBottom: '1rem', fontSize: '1.2rem' }}>
+        🔧 Voice Diagnostics
       </h3>
       
       <div style={{ marginBottom: '1rem', color: '#ffffff' }}>
-        <p><strong>Current avatar voice_id:</strong> <code>{selectedAvatar.voice_id || 'null'}</code></p>
-        <p><strong>Expected voice_id:</strong> <code>{correctVoiceId}</code></p>
-        <p><strong>Status:</strong> {hasVoiceIdMismatch ? '❌ Mismatch' : '✅ Correct'}</p>
+        <p><strong>Avatar voice_id:</strong> <code>{selectedAvatar.voice_id || 'null'}</code></p>
+        <p><strong>Status:</strong> Voice ID is present in database</p>
       </div>
 
-      {hasVoiceIdMismatch && (
-        <div style={{ marginBottom: '1rem' }}>
-          <button
-            onClick={fixVoiceId}
-            disabled={isFixing}
-            style={{
-              background: '#22c55e',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              padding: '0.75rem 1.5rem',
-              cursor: isFixing ? 'not-allowed' : 'pointer',
-              fontSize: '1rem',
-              fontWeight: '600',
-              marginRight: '1rem'
-            }}
-          >
-            {isFixing ? '🔄 Fixing...' : '✅ Fix Voice ID Now'}
-          </button>
-        </div>
-      )}
+      <div style={{ marginBottom: '1rem' }}>
+        <button
+          onClick={testVoiceInElevenLabs}
+          disabled={isFixing || !selectedAvatar.voice_id}
+          style={{
+            background: '#3b82f6',
+            color: 'white',
+            border: 'none',
+            borderRadius: '6px',
+            padding: '0.75rem 1.5rem',
+            cursor: (isFixing || !selectedAvatar.voice_id) ? 'not-allowed' : 'pointer',
+            fontSize: '1rem',
+            fontWeight: '600',
+            marginRight: '1rem'
+          }}
+        >
+          {isFixing ? '🔄 Testing...' : '🔍 Test Voice in ElevenLabs'}
+        </button>
+      </div>
 
       <div style={{ marginBottom: '1rem' }}>
         <h4 style={{ color: '#ffffff', marginBottom: '0.5rem' }}>Or set custom voice ID:</h4>

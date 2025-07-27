@@ -99,6 +99,40 @@ export async function POST(request: NextRequest) {
       console.log(`Updating voice settings for voice ID: ${voiceId}`);
       console.log('Optimized settings:', optimizedSettings);
       
+      // First, let's check if the voice exists in ElevenLabs
+      console.log('Checking if voice exists in ElevenLabs...');
+      const voiceCheckResponse = await fetch(`https://api.elevenlabs.io/v1/voices/${voiceId}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'xi-api-key': elevenLabsApiKey
+        }
+      });
+
+      if (!voiceCheckResponse.ok) {
+        const checkErrorText = await voiceCheckResponse.text();
+        console.error('Voice check failed:', {
+          status: voiceCheckResponse.status,
+          statusText: voiceCheckResponse.statusText,
+          error: checkErrorText,
+          voiceId
+        });
+        
+        return NextResponse.json({ 
+          error: 'Voice not found in ElevenLabs',
+          details: `Voice ID ${voiceId} does not exist or is not accessible. Status: ${voiceCheckResponse.status}`,
+          voiceId,
+          checkError: checkErrorText
+        }, { status: 404 });
+      }
+
+      const voiceInfo = await voiceCheckResponse.json();
+      console.log('Voice found in ElevenLabs:', {
+        name: voiceInfo.name,
+        voice_id: voiceInfo.voice_id,
+        category: voiceInfo.category
+      });
+      
       // Update voice settings in ElevenLabs
       const updateResponse = await fetch(`https://api.elevenlabs.io/v1/voices/${voiceId}/settings`, {
         method: 'POST',
