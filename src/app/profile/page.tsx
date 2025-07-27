@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import '@/styles/voice-sections.css'
 import Image from 'next/image'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { QUESTIONS } from '@/data/questions'
 import { supabase } from '@/lib/supabase'
@@ -106,7 +106,7 @@ function generateCatchphrases(name: string): string[] {
   }
 }
 
-export default function ProfilePage() {
+function ProfilePageContent() {
   const searchParams = useSearchParams()
   const [user, setUser] = useState<any>(null)
   const [loadingUser, setLoadingUser] = useState(true)
@@ -835,5 +835,22 @@ export default function ProfilePage() {
         </div>
       </main>
     </PageShell>
+  )
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={
+      <PageShell>
+        <main className="profile-container">
+          <div className="profile-header">
+            <h1 className="profile-title">Loading Profile...</h1>
+            <div className="loading-spinner"></div>
+          </div>
+        </main>
+      </PageShell>
+    }>
+      <ProfilePageContent />
+    </Suspense>
   )
 }
