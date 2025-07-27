@@ -5,6 +5,8 @@ import { useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import VoiceOnboarding from '@/components/VoiceOnboarding';
 import VoiceOnboardingComplete from '@/components/VoiceOnboardingComplete';
+import AvatarCreationFlow from '@/components/AvatarCreationFlow';
+import DynamicVoiceOnboarding from '@/components/DynamicVoiceOnboarding';
 import PageShell from '@/components/PageShell';
 import '@/styles/get-started.css';
 
@@ -29,6 +31,8 @@ function GetStartedContent() {
   const [avatarChoice, setAvatarChoice] = useState<'existing' | 'new' | null>(null);
   const [loading, setLoading] = useState(true);
   const [resumingSession, setResumingSession] = useState(false);
+  const [newAvatarData, setNewAvatarData] = useState<{name: string; photo: File | null; avatarId: string} | null>(null);
+  const [showDynamicOnboarding, setShowDynamicOnboarding] = useState(false);
 
   useEffect(() => {
     async function loadUserData() {
@@ -78,6 +82,17 @@ function GetStartedContent() {
   const handleOnboardingComplete = (data: any) => {
     setProfileData(data);
     setIsComplete(true);
+  };
+
+  const handleAvatarCreated = (avatarData: {name: string; photo: File | null; avatarId: string}) => {
+    setNewAvatarData(avatarData);
+    setShowDynamicOnboarding(true);
+  };
+
+  const handleBackToAvatarChoice = () => {
+    setAvatarChoice(null);
+    setNewAvatarData(null);
+    setShowDynamicOnboarding(false);
   };
 
   if (loading) {
@@ -197,11 +212,18 @@ function GetStartedContent() {
           </div>
         )}
 
-        {(avatarChoice === 'new' || selectedAvatar || resumingSession) && !isComplete && (
-          <VoiceOnboarding 
+        {avatarChoice === 'new' && !showDynamicOnboarding && (
+          <AvatarCreationFlow 
+            onComplete={handleAvatarCreated}
+            onBack={handleBackToAvatarChoice}
+          />
+        )}
+
+        {(showDynamicOnboarding || (selectedAvatar && avatarChoice === 'existing') || resumingSession) && !isComplete && (
+          <DynamicVoiceOnboarding 
             onComplete={handleOnboardingComplete}
-            selectedAvatar={selectedAvatar}
-            isNewAvatar={avatarChoice === 'new'}
+            avatarId={newAvatarData?.avatarId || selectedAvatar?.id || ''}
+            avatarName={newAvatarData?.name || selectedAvatar?.name || 'Your Avatar'}
             resumeSessionId={sessionId}
           />
         )}
