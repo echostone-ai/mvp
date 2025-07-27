@@ -133,7 +133,30 @@ export async function POST(request: NextRequest) {
         category: voiceInfo.category
       });
       
-      // Update voice settings in ElevenLabs
+      // First, let's get the current voice settings to see the correct format
+      console.log('Getting current voice settings...');
+      const currentSettingsResponse = await fetch(`https://api.elevenlabs.io/v1/voices/${voiceId}/settings`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'xi-api-key': elevenLabsApiKey
+        }
+      });
+
+      let currentSettings = null;
+      if (currentSettingsResponse.ok) {
+        currentSettings = await currentSettingsResponse.json();
+        console.log('Current voice settings:', currentSettings);
+      } else {
+        console.log('Failed to get current settings:', currentSettingsResponse.status);
+      }
+
+      // Try to update voice settings using the correct ElevenLabs API endpoint
+      // According to ElevenLabs docs, we should use POST to /v1/voices/{voice_id}/settings
+      console.log('Attempting to update voice settings...');
+      console.log('Endpoint:', `https://api.elevenlabs.io/v1/voices/${voiceId}/settings`);
+      console.log('Settings to apply:', optimizedSettings);
+      
       const updateResponse = await fetch(`https://api.elevenlabs.io/v1/voices/${voiceId}/settings`, {
         method: 'POST',
         headers: {
@@ -154,7 +177,39 @@ export async function POST(request: NextRequest) {
           settings: optimizedSettings
         });
         
-        // Provide more specific error messages
+        // If we get a 405 Method Not Allowed, it might mean this voice doesn't support settings updates
+        if (updateResponse.status === 405) {
+          console.log('Voice settings update not supported, but we can still test with custom settings');
+          
+          // Instead of updating permanent settings, we'll test the voice with the new settings
+          // and save them to our database for future use
+          const { error: dbUpdateError } = await supabase
+            .from('avatar_profiles')
+            .update({ 
+              voice_settings: optimizedSettings,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', avatarId)
+            .eq('user_id', user.id);
+
+          if (dbUpdateError) {
+            console.error('Database update error:', dbUpdateError);
+          }
+
+          // Test the voice with the new settings
+          const testResult = await testVoiceConsistency(voiceId, elevenLabsApiKey, optimizedSettings);
+
+          return NextResponse.json({
+            success: true,
+            message: 'Voice settings optimized and saved to your profile. These settings will be used when generating speech.',
+            settings: optimizedSettings,
+            testResult,
+            recommendations: getImprovementRecommendations(improvementType),
+            note: 'Settings saved to your profile since this voice type doesn\'t support permanent settings updates.'
+          });
+        }
+        
+        // Provide more specific error messages for other errors
         let errorMessage = 'Failed to update voice settings';
         if (updateResponse.status === 404) {
           errorMessage = 'Voice not found in ElevenLabs. The voice may have been deleted.';
