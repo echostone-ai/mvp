@@ -359,14 +359,14 @@
 }
 
 /* Full Width Background Container */
-.hub-container {
+.shared-avatar-container, .hub-container {
   width: 100%;
   min-height: 100vh;
   background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
   position: relative;
 }
 
-.hub-container::before {
+.shared-avatar-container::before, .hub-container::before {
   content: '';
   position: absolute;
   top: 0;
@@ -1414,8 +1414,8 @@
   color: #f87171;
 }
 
-/* Hub Elements */
-.hub-title {
+/* Shared Avatar Elements */
+.shared-avatar-title, .hub-title {
   color: #ffffff;
   font-size: 2rem;
   font-weight: 700;
@@ -1423,7 +1423,7 @@
   text-align: center;
 }
 
-.hub-description {
+.shared-avatar-description, .hub-description {
   color: #b8b8d9;
   font-size: 1.1rem;
   line-height: 1.6;
@@ -1437,7 +1437,7 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .hub-container {
+  .shared-avatar-container, .hub-container {
     padding: 1rem;
   }
   

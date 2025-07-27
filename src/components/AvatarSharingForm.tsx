@@ -20,8 +20,8 @@ export default function AvatarSharingForm({ avatarId, avatarName, ownerEmail }: 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  const [shareHistory, setShareHistory] = useState<any[]>([]);
-  const [lastCreatedShare, setLastCreatedShare] = useState<any>(null);
+  const [shareHistory, setShareHistory] = useState<Array<{ id: string; email: string; permissions: any; createdAt: string }>>([]);
+  const [lastCreatedShare, setLastCreatedShare] = useState<{ id: string; email: string; permissions: any; createdAt: string } | null>(null);
 
   // Load existing shares when component mounts
   React.useEffect(() => {

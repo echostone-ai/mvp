@@ -119,9 +119,6 @@ export default function AccountMenu() {
                 <Link href="/profile" className="account-menu-item" tabIndex={0} onClick={() => setOpen(false)}>
                   Profile
                 </Link>
-                <Link href="/hubs" className="account-menu-item" tabIndex={0} onClick={() => setOpen(false)}>
-                  Legacy Hubs
-                </Link>
               </>
             )}
             <Link href="/about" className="account-menu-item" tabIndex={0} onClick={() => setOpen(false)}>

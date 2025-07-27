@@ -73,9 +73,9 @@ export default function AvatarSharingPage() {
           &larr; Back to Profile
         </Link>
         
-        <div className="hub-header">
-          <h1 className="hub-title">Share Your Avatar</h1>
-          <p className="hub-description">
+        <div className="share-header">
+          <h1 className="share-title">Share Your Avatar</h1>
+          <p className="share-description">
             Share your digital avatar with friends and family. Each person will have their own private conversations and memories with your avatar.
           </p>
         </div>

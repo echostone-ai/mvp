@@ -4,7 +4,7 @@ export const ProfileContext = React.createContext<any>(null);
 
 export default function ProfileProvider({ children }: { children: React.ReactNode }) {
   // You can customize the profile data here or pull from props/api as needed
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<{ personal_snapshot?: { full_legal_name?: string } } | null>(null);
 
   // For now, provide just profile and setProfile (customize as needed)
   return (

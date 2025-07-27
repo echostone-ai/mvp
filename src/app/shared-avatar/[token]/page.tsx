@@ -113,7 +113,7 @@ export default function SharedAvatarPage() {
 
   if (loading) {
     return (
-      <div className="hub-container">
+      <div className="shared-avatar-container">
         <div className="loading-spinner"></div>
         <p className="loading-text">Loading shared avatar...</p>
       </div>
@@ -243,14 +243,14 @@ export default function SharedAvatarPage() {
   // Show welcome back message for returning visitors
   if (showWelcomeBack && isReturningVisitor) {
     return (
-      <div className="hub-container">
+      <div className="shared-avatar-container">
         <div className="card">
           <div className="text-center">
             <div className="avatar-preview-image" style={{ margin: '0 auto 1rem', width: '80px', height: '80px' }}>
               <div className="avatar-placeholder">{avatar.name.charAt(0)}</div>
             </div>
-            <h1 className="hub-title">Welcome back, {userName}! 👋</h1>
-            <p className="hub-description">
+            <h1 className="shared-avatar-title">Welcome back, {userName}! 👋</h1>
+            <p className="shared-avatar-description">
               Great to see you again! {avatar.name} remembers you and is excited to continue your conversation.
             </p>
             <div className="loading-spinner" style={{ margin: '2rem auto' }}></div>

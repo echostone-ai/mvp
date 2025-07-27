@@ -30,7 +30,7 @@ export default function AvatarSelector({
   showCreateOption = true,
   className = ""
 }: AvatarSelectorProps) {
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<{ id: string; email?: string } | null>(null)
   const [avatars, setAvatars] = useState<Avatar[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

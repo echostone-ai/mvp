@@ -6,9 +6,9 @@ import Link from 'next/link';
 export default function SharingHelpPage() {
   return (
     <div className="container">
-      <div className="hub-header">
-        <h1 className="hub-title">How to Share Your Avatar</h1>
-        <p className="hub-description">
+      <div className="share-header">
+        <h1 className="shared-avatar-title">How to Share Your Avatar</h1>
+        <p className="shared-avatar-description">
           Learn how to share your avatar with friends and family so they can have private conversations with your digital self.
         </p>
       </div>

@@ -193,7 +193,7 @@ export function getStoredVisitorInfo(shareToken: string) {
 /**
  * Get shares for a specific avatar
  */
-export async function getSharesForAvatar(avatarId: string, ownerEmail: string): Promise<any[]> {
+export async function getSharesForAvatar(avatarId: string, ownerEmail: string): Promise<Array<{ id: string; email: string; permissions: any; createdAt: string }>> {
   try {
     // In a real implementation, query database for shares
     // For now, return mock data
