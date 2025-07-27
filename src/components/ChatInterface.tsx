@@ -333,7 +333,7 @@ export default function ChatInterface({
               voiceId,
               accent,
               emotionalStyle: data.emotionalStyle || 'default',
-              settings: voiceSettings
+              settings: voiceSettings || undefined
             }),
           })
           if (!vr.ok) {
@@ -628,7 +628,7 @@ export default function ChatInterface({
         body: JSON.stringify({ 
           text: answer, 
           voiceId,
-          settings: voiceSettings
+          settings: voiceSettings || undefined
         }),
       })
       const blob = await vr.blob()

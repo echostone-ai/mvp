@@ -357,8 +357,7 @@ export async function getSharedAvatar(data: {
             description,
             voice_id,
             photo_url,
-            profile_data,
-            voice_settings
+            profile_data
           )
         `)
         .eq('share_token', shareToken)
@@ -386,6 +385,19 @@ export async function getSharedAvatar(data: {
 
       const avatar = shareRecord.avatar_profiles;
       
+      // Try to fetch voice settings separately (in case the column doesn't exist)
+      let voiceSettings = null;
+      try {
+        const { data: voiceSettingsData } = await supabase
+          .from('avatar_profiles')
+          .select('voice_settings')
+          .eq('id', avatar.id)
+          .single();
+        voiceSettings = voiceSettingsData?.voice_settings || null;
+      } catch (error) {
+        console.log('Voice settings not available (column may not exist):', error);
+      }
+      
       sharedAvatar = {
         shareToken,
         avatar: {
@@ -397,7 +409,7 @@ export async function getSharedAvatar(data: {
           accent: null, // Default to null since accent column doesn't exist
           photoUrl: avatar.photo_url,
           profileData: avatar.profile_data,
-          voiceSettings: avatar.voice_settings
+          voiceSettings: voiceSettings
         },
         ownerEmail: shareRecord.shared_with_email,
         permissions: shareRecord.permissions,
