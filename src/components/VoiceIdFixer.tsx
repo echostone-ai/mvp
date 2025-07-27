@@ -51,6 +51,43 @@ export default function VoiceIdFixer({ selectedAvatar }: VoiceIdFixerProps) {
     }
   };
 
+  const listAllVoices = async () => {
+    setIsFixing(true);
+    setResult(null);
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setResult('❌ Not authenticated');
+        return;
+      }
+
+      // Get all voices from ElevenLabs
+      const response = await fetch('/api/list-voices', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        const voiceList = data.voices.map((voice: any) => 
+          `${voice.name} (${voice.voice_id}) - ${voice.category}`
+        ).join('\n');
+        
+        setResult(`✅ Found ${data.voices.length} voices in your ElevenLabs account:\n\n${voiceList}`);
+      } else {
+        setResult(`❌ Failed to list voices: ${data.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      setResult(`❌ Error listing voices: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsFixing(false);
+    }
+  };
+
   const updateToCustomVoiceId = async () => {
     if (!selectedAvatar?.id || !newVoiceId.trim()) return;
     
@@ -103,7 +140,7 @@ export default function VoiceIdFixer({ selectedAvatar }: VoiceIdFixerProps) {
         <p><strong>Status:</strong> Voice ID is present in database</p>
       </div>
 
-      <div style={{ marginBottom: '1rem' }}>
+      <div style={{ marginBottom: '1rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
         <button
           onClick={testVoiceInElevenLabs}
           disabled={isFixing || !selectedAvatar.voice_id}
@@ -115,11 +152,27 @@ export default function VoiceIdFixer({ selectedAvatar }: VoiceIdFixerProps) {
             padding: '0.75rem 1.5rem',
             cursor: (isFixing || !selectedAvatar.voice_id) ? 'not-allowed' : 'pointer',
             fontSize: '1rem',
-            fontWeight: '600',
-            marginRight: '1rem'
+            fontWeight: '600'
           }}
         >
           {isFixing ? '🔄 Testing...' : '🔍 Test Voice in ElevenLabs'}
+        </button>
+        
+        <button
+          onClick={listAllVoices}
+          disabled={isFixing}
+          style={{
+            background: '#10b981',
+            color: 'white',
+            border: 'none',
+            borderRadius: '6px',
+            padding: '0.75rem 1.5rem',
+            cursor: isFixing ? 'not-allowed' : 'pointer',
+            fontSize: '1rem',
+            fontWeight: '600'
+          }}
+        >
+          {isFixing ? '🔄 Loading...' : '📋 List All Voices'}
         </button>
       </div>
 
@@ -165,7 +218,15 @@ export default function VoiceIdFixer({ selectedAvatar }: VoiceIdFixerProps) {
           color: '#ffffff',
           marginTop: '1rem'
         }}>
-          {result}
+          <pre style={{ 
+            whiteSpace: 'pre-wrap', 
+            wordWrap: 'break-word', 
+            margin: 0,
+            fontFamily: 'inherit',
+            fontSize: '0.9rem'
+          }}>
+            {result}
+          </pre>
         </div>
       )}
 

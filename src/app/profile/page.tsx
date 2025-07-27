@@ -213,6 +213,9 @@ function ProfilePageContent() {
   const handleAvatarSelect = async (avatar: Avatar) => {
     setSelectedAvatar(avatar)
     
+    // Set voiceId state to match the selected avatar's voice_id
+    setVoiceId(avatar.voice_id)
+    
     // Automatically enhance personality based on profile data
     await enhanceAvatarPersonalityFromProfile(avatar)
   }

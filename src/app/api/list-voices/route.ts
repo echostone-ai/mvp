@@ -3,9 +3,9 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 
 /**
- * API endpoint to test if a voice exists in ElevenLabs
+ * API endpoint to list all voices in ElevenLabs account
  */
-export async function POST(request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
     const supabase = createRouteHandlerClient({ cookies });
     
@@ -42,12 +42,6 @@ export async function POST(request: NextRequest) {
       }, { status: 401 });
     }
 
-    const { voiceId } = await request.json();
-
-    if (!voiceId) {
-      return NextResponse.json({ error: 'Voice ID is required' }, { status: 400 });
-    }
-
     // Get ElevenLabs API key
     const elevenLabsApiKey = process.env.ELEVENLABS_API_KEY || process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY;
     if (!elevenLabsApiKey) {
@@ -57,10 +51,10 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      console.log(`Testing voice existence for voice ID: ${voiceId}`);
+      console.log('Listing all voices in ElevenLabs account...');
       
-      // Check if the voice exists in ElevenLabs
-      const voiceResponse = await fetch(`https://api.elevenlabs.io/v1/voices/${voiceId}`, {
+      // Get all voices from ElevenLabs
+      const voicesResponse = await fetch('https://api.elevenlabs.io/v1/voices', {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
@@ -68,45 +62,31 @@ export async function POST(request: NextRequest) {
         }
       });
 
-      if (!voiceResponse.ok) {
-        const errorText = await voiceResponse.text();
-        console.error('Voice check failed:', {
-          status: voiceResponse.status,
-          statusText: voiceResponse.statusText,
-          error: errorText,
-          voiceId
+      if (!voicesResponse.ok) {
+        const errorText = await voicesResponse.text();
+        console.error('Voices list failed:', {
+          status: voicesResponse.status,
+          statusText: voicesResponse.statusText,
+          error: errorText
         });
         
-        let errorMessage = 'Voice not found';
-        if (voiceResponse.status === 404) {
-          errorMessage = 'Voice does not exist in ElevenLabs';
-        } else if (voiceResponse.status === 401) {
-          errorMessage = 'Invalid ElevenLabs API key';
-        } else if (voiceResponse.status === 403) {
-          errorMessage = 'Access denied to this voice';
-        }
-        
         return NextResponse.json({ 
-          error: errorMessage,
-          details: `HTTP ${voiceResponse.status}: ${errorText}`,
-          voiceId
-        }, { status: voiceResponse.status });
+          error: 'Failed to list voices',
+          details: `HTTP ${voicesResponse.status}: ${errorText}`
+        }, { status: voicesResponse.status });
       }
 
-      const voiceData = await voiceResponse.json();
-      console.log('Voice found:', {
-        name: voiceData.name,
-        voice_id: voiceData.voice_id,
-        category: voiceData.category
-      });
+      const voicesData = await voicesResponse.json();
+      console.log(`Found ${voicesData.voices?.length || 0} voices in account`);
 
       return NextResponse.json({
         success: true,
-        name: voiceData.name,
-        voice_id: voiceData.voice_id,
-        category: voiceData.category,
-        available_for_tiers: voiceData.available_for_tiers,
-        settings: voiceData.settings
+        voices: voicesData.voices?.map((voice: any) => ({
+          voice_id: voice.voice_id,
+          name: voice.name,
+          category: voice.category,
+          available_for_tiers: voice.available_for_tiers
+        })) || []
       });
 
     } catch (elevenLabsError) {
@@ -118,7 +98,7 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('Voice test error:', error);
+    console.error('List voices error:', error);
     return NextResponse.json({ 
       error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error'
