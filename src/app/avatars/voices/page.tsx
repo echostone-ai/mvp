@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import PageShell from '@/components/PageShell'
 import VoiceTraining from '@/components/VoiceTraining'
-import VoiceImprovementTool from '@/components/VoiceImprovementTool'
+import ImprovedVoiceManagement from '@/components/ImprovedVoiceManagement'
 import '@/styles/voice-training.css'
 import '@/styles/voice-management.css'
 
@@ -196,7 +196,7 @@ function AvatarVoicesContent() {
             <div className="voice-management-header">
               <h1 className="voice-management-title">Manage Avatar Voices</h1>
               <p className="voice-management-subtitle">
-                Each avatar can have its own unique voice. Train a new voice or clear an existing one.
+                Each avatar can have its own unique voice. Train a new voice or improve existing ones.
               </p>
             </div>
 
@@ -226,105 +226,21 @@ function AvatarVoicesContent() {
                 </Link>
               </div>
             ) : (
-              <div className="voice-management-table-container">
-                <table className="voice-management-table">
-                  <thead>
-                    <tr>
-                      <th>Avatar</th>
-                      <th>Voice Status</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {avatars.map((avatar) => (
-                      <tr key={avatar.id}>
-                        <td className="avatar-info-cell">
-                          <div className="avatar-info">
-                            <div className="avatar-photo">
-                              {avatar.photo_url ? (
-                                <img 
-                                  src={avatar.photo_url} 
-                                  alt={avatar.name}
-                                  onError={(e) => {
-                                    const target = e.target as HTMLImageElement
-                                    target.style.display = 'none'
-                                    target.nextElementSibling?.classList.remove('hidden')
-                                  }}
-                                />
-                              ) : (
-                                <div className="avatar-photo-fallback">
-                                  👤
-                                </div>
-                              )}
-                            </div>
-                            <div>
-                              <div className="avatar-name">{avatar.name}</div>
-                              {avatar.description && (
-                                <div className="avatar-description">{avatar.description}</div>
-                              )}
-                            </div>
-                          </div>
-                        </td>
-                        <td>
-                          {avatar.voice_id ? (
-                            <span className="voice-status voice-ready">
-                              Voice Ready
-                            </span>
-                          ) : (
-                            <span className="voice-status voice-missing">
-                              No Voice
-                            </span>
-                          )}
-                        </td>
-                        <td className="voice-actions-cell">
-                          <div className="voice-actions">
-                            <button
-                              onClick={() => handleTrainVoice(avatar)}
-                              className="voice-train-button"
-                            >
-                              {avatar.voice_id ? 'Retrain Voice' : 'Train Voice'}
-                            </button>
-                            <Link
-                              href={`/profile/chat?avatarId=${avatar.id}`}
-                              className="voice-chat-button"
-                            >
-                              Chat
-                            </Link>
-                            {avatar.voice_id && (
-                              <button
-                                onClick={() => clearVoice(avatar.id)}
-                                disabled={updating === avatar.id}
-                                className="voice-clear-button"
-                              >
-                                {updating === avatar.id ? 'Clearing...' : 'Clear Voice'}
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-            {/* Voice Improvement Tools for avatars with existing voices */}
-            {avatars.filter(avatar => avatar.voice_id).map((avatar) => (
-              <VoiceImprovementTool
-                key={`improvement-${avatar.id}`}
-                avatarId={avatar.id}
-                voiceId={avatar.voice_id!}
-                avatarName={avatar.name}
+              <ImprovedVoiceManagement
+                avatars={avatars}
+                onTrainVoice={handleTrainVoice}
+                onClearVoice={clearVoice}
+                updating={updating}
               />
-            ))}
+            )}
             
             <div className="voice-help-section">
-              <h2>How to Train an Avatar Voice</h2>
+              <h2>How to Use Voice Management</h2>
               <ol>
-                <li>Click the "Train Voice" button next to your avatar</li>
-                <li>Choose to record audio directly or upload audio files</li>
-                <li>Follow the prompts to complete the voice training process</li>
-                <li>Once trained, your avatar will use this voice when chatting</li>
+                <li>Select an avatar from the grid above</li>
+                <li>Use the "Manage" tab to train or clear voices</li>
+                <li>Use the "Improve" tab to fix voice quality issues</li>
+                <li>Test your voice improvements in chat</li>
               </ol>
             </div>
           </>

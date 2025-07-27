@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { supabase } from '@/lib/supabase';
 
 interface VoiceImprovementToolProps {
   avatarId: string;
@@ -45,10 +46,23 @@ export default function VoiceImprovementTool({ avatarId, voiceId, avatarName }: 
     setResult(null);
 
     try {
+      // Check if user is authenticated first
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setResult({
+          success: false,
+          message: 'Authentication required',
+          error: 'Please sign in and refresh the page before trying again.'
+        });
+        setIsImproving(false);
+        return;
+      }
+
       const response = await fetch('/api/improve-voice-consistency', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           avatarId,
@@ -71,7 +85,7 @@ export default function VoiceImprovementTool({ avatarId, voiceId, avatarName }: 
         setResult({
           success: false,
           message: 'Failed to improve voice',
-          error: data.error || 'Unknown error occurred'
+          error: data.error || `HTTP ${response.status}: ${data.details || 'Unknown error occurred'}`
         });
       }
     } catch (error) {

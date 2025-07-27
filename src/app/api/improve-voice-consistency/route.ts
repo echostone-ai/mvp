@@ -9,10 +9,38 @@ import { cookies } from 'next/headers';
 export async function POST(request: NextRequest) {
   try {
     const supabase = createRouteHandlerClient({ cookies });
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    
+    // Try to get session from cookies first
+    let session = null;
+    let user = null;
+    
+    try {
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      session = sessionData.session;
+      user = session?.user;
+    } catch (sessionErr) {
+      console.error('Session error:', sessionErr);
+    }
+    
+    // If no session from cookies, try Authorization header
+    if (!user) {
+      const authHeader = request.headers.get('Authorization');
+      if (authHeader?.startsWith('Bearer ')) {
+        const token = authHeader.substring(7);
+        try {
+          const { data: userData, error: userError } = await supabase.auth.getUser(token);
+          user = userData.user;
+        } catch (tokenErr) {
+          console.error('Token error:', tokenErr);
+        }
+      }
+    }
+    
+    if (!user) {
+      return NextResponse.json({ 
+        error: 'Authentication required. Please sign in and refresh the page.',
+        details: 'No valid session or token found'
+      }, { status: 401 });
     }
 
     const { avatarId, voiceId, improvementType = 'accent_consistency' } = await request.json();
