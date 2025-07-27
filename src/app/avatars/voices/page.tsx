@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import PageShell from '@/components/PageShell'
 import VoiceTraining from '@/components/VoiceTraining'
+import VoiceImprovementTool from '@/components/VoiceImprovementTool'
 import '@/styles/voice-training.css'
 import '@/styles/voice-management.css'
 
@@ -306,6 +307,16 @@ function AvatarVoicesContent() {
                 </table>
               </div>
             )}
+
+            {/* Voice Improvement Tools for avatars with existing voices */}
+            {avatars.filter(avatar => avatar.voice_id).map((avatar) => (
+              <VoiceImprovementTool
+                key={`improvement-${avatar.id}`}
+                avatarId={avatar.id}
+                voiceId={avatar.voice_id!}
+                avatarName={avatar.name}
+              />
+            ))}
             
             <div className="voice-help-section">
               <h2>How to Train an Avatar Voice</h2>

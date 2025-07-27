@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import ChatInterface from '@/components/ChatInterface'
 import PageShell from '@/components/PageShell'
+import VoiceImprovementTool from '@/components/VoiceImprovementTool'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 
@@ -240,6 +241,17 @@ export default function AvatarChatPage() {
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Voice Improvement Tool (if voice exists) */}
+        {avatarProfile.voice_id && (
+          <div className="max-w-5xl w-full mx-auto px-4 mb-8">
+            <VoiceImprovementTool
+              avatarId={avatarId}
+              voiceId={avatarProfile.voice_id}
+              avatarName={avatarProfile.name}
+            />
           </div>
         )}
         
