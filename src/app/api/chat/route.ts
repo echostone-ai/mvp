@@ -64,7 +64,16 @@ export async function POST(req: Request) {
     // Use provided profileData if available
     if (profileData) {
       profile = profileData;
-      console.log('[api/chat] Using provided profile data:', JSON.stringify(profile, null, 2));
+      console.log('[api/chat] Using provided profile data for:', profile.name);
+      console.log('[api/chat] Profile has personality:', !!profile.personality);
+      console.log('[api/chat] Profile has traits:', !!profile.personalityTraits);
+      console.log('[api/chat] Profile has factual info:', !!profile.factualInfo);
+      console.log('[api/chat] Personality length:', profile.personality?.length || 0);
+      
+      // Log a sample of the personality to verify it's complete
+      if (profile.personality) {
+        console.log('[api/chat] Personality preview:', profile.personality.substring(0, 100) + '...');
+      }
     } else {
       try {
         const raw = await fs.readFile(path.join(process.cwd(), 'public', 'jonathan_profile.json'),
