@@ -251,6 +251,7 @@ export default function SharedAvatarChatPage() {
                 visitorName={userName || undefined}
                 isSharedAvatar={true}
                 shareToken={shareToken}
+                voiceSettings={avatar.voiceSettings}
               />
             )}
           </div>

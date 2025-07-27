@@ -28,6 +28,7 @@ interface ChatInterfaceProps {
   visitorName?: string // Name of the visitor for shared avatars
   isSharedAvatar?: boolean // Whether this is a shared avatar session
   shareToken?: string // Share token for shared avatar sessions
+  voiceSettings?: any // Optimized voice settings for this avatar
 }
 
 export default function ChatInterface({
@@ -41,6 +42,7 @@ export default function ChatInterface({
   visitorName,
   isSharedAvatar = false,
   shareToken,
+  voiceSettings,
 }: ChatInterfaceProps) {
   const [question, setQuestion] = useState('')
   const [answer, setAnswer] = useState('')
@@ -322,6 +324,7 @@ export default function ChatInterface({
       if (data.answer) {
         try {
           console.log('[ChatInterface] Making voice API call with voiceId:', voiceId)
+          console.log('[ChatInterface] Using voice settings:', voiceSettings)
           const vr = await fetch('/api/voice', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -329,7 +332,8 @@ export default function ChatInterface({
               text: aiAnswer, 
               voiceId,
               accent,
-              emotionalStyle: data.emotionalStyle || 'default'
+              emotionalStyle: data.emotionalStyle || 'default',
+              settings: voiceSettings
             }),
           })
           if (!vr.ok) {
@@ -621,7 +625,11 @@ export default function ChatInterface({
       const vr = await fetch('/api/voice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: answer, voiceId }),
+        body: JSON.stringify({ 
+          text: answer, 
+          voiceId,
+          settings: voiceSettings
+        }),
       })
       const blob = await vr.blob()
       playAudioBlob(blob)

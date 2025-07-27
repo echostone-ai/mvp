@@ -357,7 +357,8 @@ export async function getSharedAvatar(data: {
             description,
             voice_id,
             photo_url,
-            profile_data
+            profile_data,
+            voice_settings
           )
         `)
         .eq('share_token', shareToken)
@@ -395,7 +396,8 @@ export async function getSharedAvatar(data: {
           voiceId: avatar.voice_id,
           accent: null, // Default to null since accent column doesn't exist
           photoUrl: avatar.photo_url,
-          profileData: avatar.profile_data
+          profileData: avatar.profile_data,
+          voiceSettings: avatar.voice_settings
         },
         ownerEmail: shareRecord.shared_with_email,
         permissions: shareRecord.permissions,

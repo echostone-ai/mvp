@@ -107,6 +107,7 @@ export async function POST(req: Request) {
       voiceIdProvided: !!voiceId,
       actualVoiceId: voiceId,
       settingsProvided: !!settings,
+      actualSettings: settings,
       emotionalContextProvided: !!emotionalContext
     })
     
