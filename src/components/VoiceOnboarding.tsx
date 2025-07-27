@@ -1,13 +1,25 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
+import { supabase } from '@/lib/supabase';
 import { onboardingQuestions, OnboardingResponse } from '@/lib/onboardingQuestions';
+
+interface Avatar {
+  id: string;
+  name: string;
+  description: string;
+  voice_id: string | null;
+  profile_data: any;
+  created_at: string;
+}
 
 interface VoiceOnboardingProps {
   onComplete: (data: any) => void;
+  selectedAvatar?: Avatar | null;
+  isNewAvatar?: boolean;
 }
 
-export default function VoiceOnboarding({ onComplete }: VoiceOnboardingProps) {
+export default function VoiceOnboarding({ onComplete, selectedAvatar, isNewAvatar }: VoiceOnboardingProps) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [isRecording, setIsRecording] = useState(false);
   const [responses, setResponses] = useState<OnboardingResponse[]>([]);
@@ -104,9 +116,43 @@ export default function VoiceOnboarding({ onComplete }: VoiceOnboardingProps) {
         headers: { 'Content-Type': 'application/json' },
       });
 
+      let avatarId = selectedAvatar?.id;
+
+      // If creating a new avatar, create it now
+      if (isNewAvatar) {
+        const { data: session } = await supabase.auth.getSession();
+        const user = session.session?.user;
+        
+        if (user) {
+          // Generate avatar name from responses
+          const avatarName = `My Avatar ${new Date().toLocaleDateString()}`;
+          
+          // Create new avatar
+          const { data: newAvatar, error } = await supabase
+            .from('avatar_profiles')
+            .insert([{
+              user_id: user.id,
+              name: avatarName,
+              description: 'Created through voice onboarding',
+              profile_data: {
+                onboarding_responses: allResponses,
+                created_via: 'voice_onboarding'
+              }
+            }])
+            .select()
+            .single();
+
+          if (error) throw error;
+          avatarId = newAvatar.id;
+        }
+      }
+
       // Create profile data
       const profileData = {
         responses: allResponses,
+        avatarId,
+        selectedAvatar,
+        isNewAvatar,
         completed_at: new Date().toISOString(),
       };
 
@@ -121,77 +167,77 @@ export default function VoiceOnboarding({ onComplete }: VoiceOnboardingProps) {
   const progress = ((currentQuestionIndex + (responses.length > currentQuestionIndex ? 1 : 0)) / onboardingQuestions.length) * 100;
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-8">
+    <div className="get-started-card">
       {/* Progress Bar */}
-      <div className="mb-8">
-        <div className="flex justify-between text-sm text-gray-600 mb-2">
+      <div className="progress-section">
+        <div className="progress-info">
           <span>Question {currentQuestionIndex + 1} of {onboardingQuestions.length}</span>
           <span>{Math.round(progress)}% Complete</span>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
+        <div className="progress-bar">
           <div 
-            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+            className="progress-fill"
             style={{ width: `${progress}%` }}
           />
         </div>
       </div>
 
       {/* Current Question */}
-      <div className="text-center mb-8">
-        <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+      <div className="question-section">
+        <h2 className="question-title">
           {currentQuestion}
         </h2>
-        <p className="text-gray-600">
+        <p className="question-description">
           Take 30-60 seconds to share your thoughts. Speak naturally and from the heart.
         </p>
       </div>
 
       {/* Recording Controls */}
-      <div className="text-center">
+      <div className="recording-controls">
         {!isRecording && !isProcessing && (
           <button
             onClick={startRecording}
-            className="bg-red-500 hover:bg-red-600 text-white px-8 py-4 rounded-full text-lg font-medium transition-colors flex items-center gap-3 mx-auto"
+            className="record-button"
           >
-            <div className="w-4 h-4 bg-white rounded-full"></div>
+            <div className="record-dot"></div>
             Start Recording
           </button>
         )}
 
         {isRecording && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-center gap-2">
-              <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-              <span className="text-red-500 font-medium">Recording...</span>
+          <>
+            <div className="recording-status">
+              <div className="recording-indicator"></div>
+              <span>Recording...</span>
             </div>
             <button
               onClick={stopRecording}
-              className="bg-gray-600 hover:bg-gray-700 text-white px-8 py-4 rounded-full text-lg font-medium transition-colors"
+              className="stop-button"
             >
               Stop Recording
             </button>
-          </div>
+          </>
         )}
 
         {isProcessing && (
-          <div className="flex items-center justify-center gap-3">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-            <span className="text-blue-600 font-medium">Processing your response...</span>
+          <div className="processing-status">
+            <div className="processing-spinner"></div>
+            <span>Processing your response...</span>
           </div>
         )}
       </div>
 
       {/* Previous Responses */}
       {responses.length > 0 && (
-        <div className="mt-8 pt-8 border-t border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Your Responses</h3>
-          <div className="space-y-3">
+        <div className="responses-section">
+          <h3 className="responses-title">Your Responses</h3>
+          <div className="responses-list">
             {responses.map((response, index) => (
-              <div key={index} className="bg-gray-50 rounded-lg p-4">
-                <p className="text-sm text-gray-600 mb-1">
+              <div key={index} className="response-item">
+                <p className="response-question">
                   Q{index + 1}: {response.question}
                 </p>
-                <p className="text-gray-900">
+                <p className="response-transcript">
                   {response.transcript || 'Processing...'}
                 </p>
               </div>

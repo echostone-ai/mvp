@@ -3,11 +3,21 @@
 import { useState } from 'react';
 import Link from 'next/link';
 
-interface VoiceOnboardingCompleteProps {
-  profileData: any;
+interface Avatar {
+  id: string;
+  name: string;
+  description: string;
+  voice_id: string | null;
+  profile_data: any;
+  created_at: string;
 }
 
-export default function VoiceOnboardingComplete({ profileData }: VoiceOnboardingCompleteProps) {
+interface VoiceOnboardingCompleteProps {
+  profileData: any;
+  selectedAvatar?: Avatar | null;
+}
+
+export default function VoiceOnboardingComplete({ profileData, selectedAvatar }: VoiceOnboardingCompleteProps) {
   const [isTrainingVoice, setIsTrainingVoice] = useState(false);
   const [voiceModelId, setVoiceModelId] = useState<string | null>(null);
 
@@ -75,130 +85,131 @@ export default function VoiceOnboardingComplete({ profileData }: VoiceOnboarding
   const insights = extractInsights();
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-8">
-      {/* Success Header */}
-      <div className="text-center mb-8">
-        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div className="get-started-card">
+      <div className="completion-container">
+        {/* Success Header */}
+        <div className="completion-icon">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">
+        <h2 className="completion-title">
           Welcome to EchoStone!
         </h2>
-        <p className="text-lg text-gray-600">
+        <p className="completion-subtitle">
           Your voice profile has been created successfully
+          {selectedAvatar && ` for ${selectedAvatar.name}`}
         </p>
-      </div>
 
-      {/* Profile Summary */}
-      <div className="bg-gray-50 rounded-lg p-6 mb-8">
-        <h3 className="text-xl font-semibold text-gray-900 mb-4">Your Profile Summary</h3>
-        
-        <div className="grid md:grid-cols-2 gap-6">
-          {insights.memories?.length > 0 && (
-            <div>
-              <h4 className="font-medium text-gray-900 mb-2">Cherished Memories</h4>
-              <p className="text-gray-600 text-sm line-clamp-3">
-                {insights.memories[0]}
+        {/* Profile Summary */}
+        <div className="profile-summary">
+          <h3 className="profile-summary-title">Your Profile Summary</h3>
+          
+          <div className="profile-summary-grid">
+            {insights.memories?.length > 0 && (
+              <div className="profile-summary-item">
+                <h4>Cherished Memories</h4>
+                <p>{insights.memories[0]}</p>
+              </div>
+            )}
+            
+            {insights.influences?.length > 0 && (
+              <div className="profile-summary-item">
+                <h4>Key Influences</h4>
+                <div className="profile-tags">
+                  {insights.influences.slice(0, 4).map((influence: string, index: number) => (
+                    <span key={index} className="profile-tag influence">
+                      {influence}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {insights.hobbies?.length > 0 && (
+              <div className="profile-summary-item">
+                <h4>Interests</h4>
+                <div className="profile-tags">
+                  {insights.hobbies.slice(0, 4).map((hobby: string, index: number) => (
+                    <span key={index} className="profile-tag hobby">
+                      {hobby}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            <div className="profile-summary-item">
+              <h4>Voice Tone</h4>
+              <div className="profile-tags">
+                <span className="profile-tag tone">
+                  {insights.tone}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Voice Training Section */}
+        <div className="voice-training-section">
+          <h3 className="voice-training-title">
+            Create Your Personal Voice
+          </h3>
+          <p className="voice-training-description">
+            Train an AI voice model based on your recordings to make conversations even more personal.
+          </p>
+
+          {!voiceModelId && !isTrainingVoice && (
+            <button
+              onClick={handleTrainVoice}
+              className="train-voice-button"
+            >
+              Train My Voice Model
+            </button>
+          )}
+
+          {isTrainingVoice && (
+            <div className="voice-training-status">
+              <div className="processing-spinner"></div>
+              <span>Training your voice model...</span>
+              <span style={{ fontSize: '0.9rem', opacity: 0.8 }}>(This may take a few minutes)</span>
+            </div>
+          )}
+
+          {voiceModelId && (
+            <div className="voice-training-success">
+              <div className="voice-training-success-icon">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                <span>Voice model trained successfully!</span>
+              </div>
+              <p className="voice-training-success-text">
+                Your personal voice is ready to use in conversations.
               </p>
             </div>
           )}
-          
-          {insights.influences?.length > 0 && (
-            <div>
-              <h4 className="font-medium text-gray-900 mb-2">Key Influences</h4>
-              <div className="flex flex-wrap gap-2">
-                {insights.influences.slice(0, 4).map((influence: string, index: number) => (
-                  <span key={index} className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
-                    {influence}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-          
-          {insights.hobbies?.length > 0 && (
-            <div>
-              <h4 className="font-medium text-gray-900 mb-2">Interests</h4>
-              <div className="flex flex-wrap gap-2">
-                {insights.hobbies.slice(0, 4).map((hobby: string, index: number) => (
-                  <span key={index} className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
-                    {hobby}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-          
-          <div>
-            <h4 className="font-medium text-gray-900 mb-2">Voice Tone</h4>
-            <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm capitalize">
-              {insights.tone}
-            </span>
-          </div>
         </div>
-      </div>
 
-      {/* Voice Training Section */}
-      <div className="border-t border-gray-200 pt-8">
-        <h3 className="text-xl font-semibold text-gray-900 mb-4">
-          Create Your Personal Voice
-        </h3>
-        <p className="text-gray-600 mb-6">
-          Train an AI voice model based on your recordings to make conversations even more personal.
-        </p>
-
-        {!voiceModelId && !isTrainingVoice && (
-          <button
-            onClick={handleTrainVoice}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
-          >
-            Train My Voice Model
-          </button>
-        )}
-
-        {isTrainingVoice && (
-          <div className="flex items-center gap-3">
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-            <span className="text-blue-600 font-medium">Training your voice model...</span>
-            <span className="text-gray-500 text-sm">(This may take a few minutes)</span>
+        {/* Next Steps */}
+        <div className="next-steps-section">
+          <h3 className="next-steps-title">
+            Ready to Start?
+          </h3>
+          <div className="next-steps-actions">
+            <Link
+              href={selectedAvatar ? `/chat?avatar=${selectedAvatar.id}` : "/chat"}
+              className="next-step-button primary"
+            >
+              Start Chatting with {selectedAvatar?.name || 'Echo'}
+            </Link>
+            <Link
+              href="/profile"
+              className="next-step-button secondary"
+            >
+              View My Profile
+            </Link>
           </div>
-        )}
-
-        {voiceModelId && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <span className="font-medium text-green-900">Voice model trained successfully!</span>
-            </div>
-            <p className="text-green-700 text-sm">
-              Your personal voice is ready to use in conversations.
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Next Steps */}
-      <div className="mt-8 pt-8 border-t border-gray-200">
-        <h3 className="text-xl font-semibold text-gray-900 mb-4">
-          Ready to Start?
-        </h3>
-        <div className="flex flex-col sm:flex-row gap-4">
-          <Link
-            href="/chat"
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium text-center transition-colors"
-          >
-            Start Chatting with Echo
-          </Link>
-          <Link
-            href="/profile"
-            className="bg-gray-100 hover:bg-gray-200 text-gray-900 px-6 py-3 rounded-lg font-medium text-center transition-colors"
-          >
-            View My Profile
-          </Link>
         </div>
       </div>
     </div>
