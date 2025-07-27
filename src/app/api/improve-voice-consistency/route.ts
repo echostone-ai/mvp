@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
+import { getVoiceSettingsForImprovement } from '@/lib/voiceSettings';
 
 /**
  * API endpoint to improve voice consistency by updating voice parameters
@@ -84,7 +85,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get optimized settings based on improvement type
-    const optimizedSettings = getOptimizedSettings(improvementType);
+    const optimizedSettings = getVoiceSettingsForImprovement(improvementType);
 
     // Update ElevenLabs voice settings
     const elevenLabsApiKey = process.env.ELEVENLABS_API_KEY || process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY;
@@ -181,19 +182,32 @@ export async function POST(request: NextRequest) {
         if (updateResponse.status === 405) {
           console.log('Voice settings update not supported, but we can still test with custom settings');
           
-          // Instead of updating permanent settings, we'll test the voice with the new settings
-          // and save them to our database for future use
-          const { error: dbUpdateError } = await supabase
+          // Save the optimized settings to the profile_data field which we know exists
+          const { data: currentAvatar, error: fetchError } = await supabase
             .from('avatar_profiles')
-            .update({ 
-              voice_settings: optimizedSettings,
-              updated_at: new Date().toISOString()
-            })
+            .select('profile_data')
             .eq('id', avatarId)
-            .eq('user_id', user.id);
+            .eq('user_id', user.id)
+            .single();
 
-          if (dbUpdateError) {
-            console.error('Database update error:', dbUpdateError);
+          if (!fetchError && currentAvatar) {
+            const updatedProfileData = {
+              ...currentAvatar.profile_data,
+              voice_settings: optimizedSettings
+            };
+
+            const { error: dbUpdateError } = await supabase
+              .from('avatar_profiles')
+              .update({ 
+                profile_data: updatedProfileData,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', avatarId)
+              .eq('user_id', user.id);
+
+            if (dbUpdateError) {
+              console.error('Database update error:', dbUpdateError);
+            }
           }
 
           // Test the voice with the new settings
@@ -272,44 +286,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-/**
- * Get optimized settings based on improvement type
- */
-function getOptimizedSettings(improvementType: string) {
-  switch (improvementType) {
-    case 'accent_consistency':
-      return {
-        stability: 0.90,           // High stability for consistent accent
-        similarity_boost: 0.88,    // Balanced for voice matching
-        style: 0.12,              // Low style for consistency
-        use_speaker_boost: true
-      };
-    
-    case 'voice_similarity':
-      return {
-        stability: 0.85,           // Moderate stability
-        similarity_boost: 0.92,    // High similarity boost
-        style: 0.15,              // Moderate style
-        use_speaker_boost: true
-      };
-    
-    case 'natural_expression':
-      return {
-        stability: 0.82,           // Lower stability for expression
-        similarity_boost: 0.90,    // High similarity
-        style: 0.20,              // Higher style for expression
-        use_speaker_boost: true
-      };
-    
-    default:
-      return {
-        stability: 0.90,
-        similarity_boost: 0.88,
-        style: 0.12,
-        use_speaker_boost: true
-      };
-  }
-}
+
 
 /**
  * Test voice consistency with sample phrases

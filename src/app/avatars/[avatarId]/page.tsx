@@ -322,7 +322,7 @@ export default function AvatarChatPage() {
           voiceId={avatarProfile.voice_id}
           userId={user?.id} // Current user's ID for memory operations
           avatarId={avatarId} // Avatar ID to identify which avatar they're talking to
-          voiceSettings={avatarProfile.voice_settings}
+          voiceSettings={avatarProfile.profile_data?.voice_settings}
         />
       </main>
     </PageShell>

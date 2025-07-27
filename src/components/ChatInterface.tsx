@@ -323,8 +323,7 @@ export default function ChatInterface({
 
       if (data.answer) {
         try {
-          console.log('[ChatInterface] Making voice API call with voiceId:', voiceId)
-          console.log('[ChatInterface] Using voice settings:', voiceSettings)
+          console.log('[ChatInterface] Generating voice with optimized settings')
           const vr = await fetch('/api/voice', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

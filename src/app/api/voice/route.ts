@@ -1,5 +1,6 @@
 // src/app/api/voice/route.ts
 import { NextResponse } from 'next/server'
+import { getOptimizedVoiceSettings } from '@/lib/voiceSettings'
 
 export const runtime = 'edge'
 
@@ -102,13 +103,10 @@ export async function POST(req: Request) {
   try {
     const { text, voiceId, settings, emotionalContext, accent } = await req.json()
     
-    console.log('Voice API request:', { 
+    console.log('Voice generation:', { 
       textLength: text?.length,
-      voiceIdProvided: !!voiceId,
-      actualVoiceId: voiceId,
-      settingsProvided: !!settings,
-      actualSettings: settings,
-      emotionalContextProvided: !!emotionalContext
+      voiceId: voiceId?.substring(0, 8) + '...',
+      hasOptimizedSettings: !!settings
     })
     
     if (!text) {
@@ -154,8 +152,8 @@ export async function POST(req: Request) {
     // Clean the text for better voice quality
     const cleanedText = cleanTextForVoice(text)
     
-    // Generate voice settings based on content and emotional context
-    const voiceSettings = settings || generateVoiceSettings(cleanedText, emotionalContext)
+    // Use provided settings or get optimized defaults for voice cloning
+    const voiceSettings = getOptimizedVoiceSettings(settings)
     
     // Call ElevenLabs API
     console.log('Calling ElevenLabs API...');

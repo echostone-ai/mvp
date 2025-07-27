@@ -88,42 +88,7 @@ export default function VoiceIdFixer({ selectedAvatar }: VoiceIdFixerProps) {
     }
   };
 
-  const checkVoiceSettingsColumn = async () => {
-    setIsFixing(true);
-    setResult(null);
-    
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        setResult('❌ Not authenticated');
-        return;
-      }
 
-      // Check if voice_settings column exists
-      const response = await fetch('/api/check-voice-settings-column', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-      });
-
-      const data = await response.json();
-      
-      if (response.ok) {
-        if (data.columnExists) {
-          setResult('✅ voice_settings column exists in the database');
-        } else {
-          setResult(`❌ voice_settings column does not exist\n\nTo fix this, run this SQL command in Supabase:\n${data.sqlCommand}`);
-        }
-      } else {
-        setResult(`❌ Failed to check column: ${data.error || 'Unknown error'}`);
-      }
-    } catch (error) {
-      setResult(`❌ Error checking column: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    } finally {
-      setIsFixing(false);
-    }
-  };
 
   const updateToCustomVoiceId = async () => {
     if (!selectedAvatar?.id || !newVoiceId.trim()) return;
@@ -210,23 +175,6 @@ export default function VoiceIdFixer({ selectedAvatar }: VoiceIdFixerProps) {
           }}
         >
           {isFixing ? '🔄 Loading...' : '📋 List All Voices'}
-        </button>
-        
-        <button
-          onClick={checkVoiceSettingsColumn}
-          disabled={isFixing}
-          style={{
-            background: '#f59e0b',
-            color: 'white',
-            border: 'none',
-            borderRadius: '6px',
-            padding: '0.75rem 1.5rem',
-            cursor: isFixing ? 'not-allowed' : 'pointer',
-            fontSize: '1rem',
-            fontWeight: '600'
-          }}
-        >
-          {isFixing ? '🔄 Checking...' : '🔧 Check DB Column'}
         </button>
       </div>
 

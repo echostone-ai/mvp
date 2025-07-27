@@ -385,18 +385,8 @@ export async function getSharedAvatar(data: {
 
       const avatar = shareRecord.avatar_profiles;
       
-      // Try to fetch voice settings separately (in case the column doesn't exist)
-      let voiceSettings = null;
-      try {
-        const { data: voiceSettingsData } = await supabase
-          .from('avatar_profiles')
-          .select('voice_settings')
-          .eq('id', avatar.id)
-          .single();
-        voiceSettings = voiceSettingsData?.voice_settings || null;
-      } catch (error) {
-        console.log('Voice settings not available (column may not exist):', error);
-      }
+      // Get voice settings from profile_data if available
+      const voiceSettings = avatar.profile_data?.voice_settings || null;
       
       sharedAvatar = {
         shareToken,

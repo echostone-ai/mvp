@@ -263,7 +263,7 @@ export default function ProfileChat() {
             voiceId={selectedAvatar.voice_id || voiceId}
             userId={user.id}
             avatarId={selectedAvatar.id}
-            voiceSettings={selectedAvatar.voice_settings}
+            voiceSettings={selectedAvatar.profile_data?.voice_settings}
           />
           {/* Debug info */}
           <div style={{ position: 'fixed', bottom: '10px', right: '10px', background: 'rgba(0,0,0,0.8)', color: 'white', padding: '10px', fontSize: '12px', borderRadius: '5px', maxWidth: '300px' }}>
