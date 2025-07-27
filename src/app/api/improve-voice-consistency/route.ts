@@ -61,8 +61,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Avatar not found or access denied' }, { status: 404 });
     }
 
+    console.log('Voice ID validation:', {
+      avatarVoiceId: avatar.voice_id,
+      providedVoiceId: voiceId,
+      avatarName: avatar.name,
+      match: avatar.voice_id === voiceId
+    });
+
     if (avatar.voice_id !== voiceId) {
-      return NextResponse.json({ error: 'Voice ID does not match avatar' }, { status: 400 });
+      return NextResponse.json({ 
+        error: 'Voice ID does not match avatar',
+        details: `Avatar has voice_id: ${avatar.voice_id}, but provided: ${voiceId}`,
+        avatarName: avatar.name,
+        avatarVoiceId: avatar.voice_id,
+        providedVoiceId: voiceId
+      }, { status: 400 });
     }
 
     // Get optimized settings based on improvement type

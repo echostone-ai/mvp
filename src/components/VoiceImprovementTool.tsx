@@ -23,6 +23,26 @@ export default function VoiceImprovementTool({ avatarId, voiceId, avatarName }: 
   const [result, setResult] = useState<ImprovementResult | null>(null);
   const [selectedImprovementType, setSelectedImprovementType] = useState('accent_consistency');
 
+  // Validate props
+  if (!avatarId || !voiceId || !avatarName) {
+    return (
+      <div style={{
+        background: 'rgba(239, 68, 68, 0.1)',
+        border: '1px solid rgba(239, 68, 68, 0.3)',
+        borderRadius: '8px',
+        padding: '1rem',
+        color: '#ef4444'
+      }}>
+        <p>⚠️ Invalid voice improvement configuration:</p>
+        <ul style={{ marginLeft: '1rem' }}>
+          {!avatarId && <li>Missing avatar ID</li>}
+          {!voiceId && <li>Missing voice ID</li>}
+          {!avatarName && <li>Missing avatar name</li>}
+        </ul>
+      </div>
+    );
+  }
+
   const improvementTypes = {
     accent_consistency: {
       title: 'Fix Accent Consistency',
@@ -57,6 +77,13 @@ export default function VoiceImprovementTool({ avatarId, voiceId, avatarName }: 
         setIsImproving(false);
         return;
       }
+
+      console.log('Sending voice improvement request:', {
+        avatarId,
+        voiceId,
+        improvementType: selectedImprovementType,
+        avatarName
+      });
 
       const response = await fetch('/api/improve-voice-consistency', {
         method: 'POST',

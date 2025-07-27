@@ -17,6 +17,7 @@ import PageShell from '@/components/PageShell'
 import VoicePreview from '@/components/VoicePreview'
 import VoicePreviewTesting from '@/components/VoicePreviewTesting'
 import VoiceImprovementTool from '@/components/VoiceImprovementTool'
+import VoiceDebugInfo from '@/components/VoiceDebugInfo'
 import AvatarSelector from '@/components/AvatarSelector'
 import AvatarSharingForm from '@/components/AvatarSharingForm'
 
@@ -705,6 +706,9 @@ function ProfilePageContent() {
                 </div>
               )}
 
+              {/* Voice Debug Information */}
+              <VoiceDebugInfo selectedAvatar={selectedAvatar} voiceId={voiceId} />
+
               {/* Voice Management Section (for existing voices) */}
               {(voiceId || selectedAvatar.voice_id) && (
                 <>
@@ -726,11 +730,23 @@ function ProfilePageContent() {
                     <p className="voice-section-description">
                       Fix accent consistency, improve voice similarity, or enhance natural expression.
                     </p>
-                    <VoiceImprovementTool
-                      avatarId={selectedAvatar.id}
-                      voiceId={voiceId || selectedAvatar.voice_id || ''}
-                      avatarName={selectedAvatar.name}
-                    />
+                    {selectedAvatar.voice_id ? (
+                      <VoiceImprovementTool
+                        avatarId={selectedAvatar.id}
+                        voiceId={selectedAvatar.voice_id}
+                        avatarName={selectedAvatar.name}
+                      />
+                    ) : (
+                      <div style={{
+                        background: 'rgba(239, 68, 68, 0.1)',
+                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                        borderRadius: '8px',
+                        padding: '1rem',
+                        color: '#ef4444'
+                      }}>
+                        <p>⚠️ No voice found for this avatar. Please train a voice first.</p>
+                      </div>
+                    )}
                   </div>
 
                   {/* Retrain Option */}
