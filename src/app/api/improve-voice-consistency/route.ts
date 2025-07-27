@@ -69,12 +69,18 @@ export async function POST(request: NextRequest) {
     const optimizedSettings = getOptimizedSettings(improvementType);
 
     // Update ElevenLabs voice settings
-    const elevenLabsApiKey = process.env.ELEVENLABS_API_KEY;
+    const elevenLabsApiKey = process.env.ELEVENLABS_API_KEY || process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY;
     if (!elevenLabsApiKey) {
-      return NextResponse.json({ error: 'ElevenLabs API key not configured' }, { status: 500 });
+      return NextResponse.json({ 
+        error: 'ElevenLabs API key not configured',
+        details: 'Please check your environment variables'
+      }, { status: 500 });
     }
 
     try {
+      console.log(`Updating voice settings for voice ID: ${voiceId}`);
+      console.log('Optimized settings:', optimizedSettings);
+      
       // Update voice settings in ElevenLabs
       const updateResponse = await fetch(`https://api.elevenlabs.io/v1/voices/${voiceId}/settings`, {
         method: 'POST',
@@ -88,12 +94,33 @@ export async function POST(request: NextRequest) {
 
       if (!updateResponse.ok) {
         const errorText = await updateResponse.text();
-        console.error('ElevenLabs settings update failed:', errorText);
+        console.error('ElevenLabs settings update failed:', {
+          status: updateResponse.status,
+          statusText: updateResponse.statusText,
+          error: errorText,
+          voiceId,
+          settings: optimizedSettings
+        });
+        
+        // Provide more specific error messages
+        let errorMessage = 'Failed to update voice settings';
+        if (updateResponse.status === 404) {
+          errorMessage = 'Voice not found in ElevenLabs. The voice may have been deleted.';
+        } else if (updateResponse.status === 401) {
+          errorMessage = 'Invalid ElevenLabs API key';
+        } else if (updateResponse.status === 422) {
+          errorMessage = 'Invalid voice settings provided';
+        }
+        
         return NextResponse.json({ 
-          error: 'Failed to update voice settings',
-          details: errorText 
+          error: errorMessage,
+          details: `HTTP ${updateResponse.status}: ${errorText}`,
+          voiceId,
+          settings: optimizedSettings
         }, { status: 500 });
       }
+
+      console.log('ElevenLabs settings updated successfully');
 
       // Update avatar profile with new settings
       const { error: updateError } = await supabase

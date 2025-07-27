@@ -1,8 +1,10 @@
 'use client'
 
 import Link from 'next/link'
+import '@/styles/voice-sections.css'
 import Image from 'next/image'
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { QUESTIONS } from '@/data/questions'
 import { supabase } from '@/lib/supabase'
 import VoiceRecorder from '@/components/VoiceRecorder'
@@ -14,6 +16,7 @@ import AccountMenu from '@/components/AccountMenu'
 import PageShell from '@/components/PageShell'
 import VoicePreview from '@/components/VoicePreview'
 import VoicePreviewTesting from '@/components/VoicePreviewTesting'
+import VoiceImprovementTool from '@/components/VoiceImprovementTool'
 import AvatarSelector from '@/components/AvatarSelector'
 import AvatarSharingForm from '@/components/AvatarSharingForm'
 
@@ -104,10 +107,18 @@ function generateCatchphrases(name: string): string[] {
 }
 
 export default function ProfilePage() {
+  const searchParams = useSearchParams()
   const [user, setUser] = useState<any>(null)
   const [loadingUser, setLoadingUser] = useState(true)
   const [selectedAvatar, setSelectedAvatar] = useState<Avatar | null>(null)
-  const [activeTab, setActiveTab] = useState<'identity' | 'voice' | 'stories' | 'personality' | 'memories' | 'voicetuning' | 'sharing'>('identity')
+  const [activeTab, setActiveTab] = useState<'identity' | 'voice' | 'stories' | 'personality' | 'memories' | 'voicetuning' | 'sharing'>(() => {
+    // Check URL parameter for initial tab
+    const tabParam = searchParams?.get('tab')
+    if (tabParam && ['identity', 'voice', 'stories', 'personality', 'memories', 'voicetuning', 'sharing'].includes(tabParam)) {
+      return tabParam as any
+    }
+    return 'identity'
+  })
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [newAvatar, setNewAvatar] = useState({
     name: '',
@@ -654,44 +665,96 @@ export default function ProfilePage() {
 
           {activeTab === 'voice' && (
             <div className="profile-tab-panel">
-              <VoiceTraining
-                avatarName={selectedAvatar.name}
-                avatarId={selectedAvatar.id}
-                onVoiceUploaded={async (voiceId) => {
-                  console.log('Voice uploaded with ID:', voiceId)
-                  setVoiceId(voiceId)
-                  // Update local state
-                  setSelectedAvatar(prev => prev ? { ...prev, voice_id: voiceId } : null)
+              {/* Voice Training Section */}
+              {!selectedAvatar.voice_id && (
+                <div className="voice-section">
+                  <h2 className="voice-section-title">🎤 Train {selectedAvatar.name}'s Voice</h2>
+                  <p className="voice-section-description">
+                    Create a unique voice for your avatar by recording audio samples or uploading files.
+                  </p>
+                  <VoiceTraining
+                    avatarName={selectedAvatar.name}
+                    avatarId={selectedAvatar.id}
+                    onVoiceUploaded={async (voiceId) => {
+                      console.log('Voice uploaded with ID:', voiceId)
+                      setVoiceId(voiceId)
+                      // Update local state
+                      setSelectedAvatar(prev => prev ? { ...prev, voice_id: voiceId } : null)
 
-                  // Refresh avatar data from database to ensure consistency
-                  if (user?.id) {
-                    try {
-                      const { data: refreshedAvatar, error } = await supabase
-                        .from('avatar_profiles')
-                        .select('*')
-                        .eq('id', selectedAvatar.id)
-                        .eq('user_id', user.id)
-                        .single()
+                      // Refresh avatar data from database to ensure consistency
+                      if (user?.id) {
+                        try {
+                          const { data: refreshedAvatar, error } = await supabase
+                            .from('avatar_profiles')
+                            .select('*')
+                            .eq('id', selectedAvatar.id)
+                            .eq('user_id', user.id)
+                            .single()
 
-                      if (!error && refreshedAvatar) {
-                        console.log('Refreshed avatar data:', refreshedAvatar)
-                        setSelectedAvatar(refreshedAvatar)
-                        setVoiceId(refreshedAvatar.voice_id)
+                          if (!error && refreshedAvatar) {
+                            console.log('Refreshed avatar data:', refreshedAvatar)
+                            setSelectedAvatar(refreshedAvatar)
+                            setVoiceId(refreshedAvatar.voice_id)
+                          }
+                        } catch (err) {
+                          console.error('Failed to refresh avatar data:', err)
+                        }
                       }
-                    } catch (err) {
-                      console.error('Failed to refresh avatar data:', err)
-                    }
-                  }
-                }}
-              />
-              {(voiceId || selectedAvatar.voice_id) && (
-                <div className="voice-preview-section">
-                  <h2 className="voice-preview-title">Test {selectedAvatar.name}'s Voice</h2>
-                  <VoicePreview
-                    voiceId={voiceId || selectedAvatar.voice_id || ''}
-                    userName={selectedAvatar.name}
+                    }}
                   />
                 </div>
+              )}
+
+              {/* Voice Management Section (for existing voices) */}
+              {(voiceId || selectedAvatar.voice_id) && (
+                <>
+                  {/* Voice Testing */}
+                  <div className="voice-section">
+                    <h2 className="voice-section-title">🔊 Test {selectedAvatar.name}'s Voice</h2>
+                    <p className="voice-section-description">
+                      Preview how your avatar sounds with different text and settings.
+                    </p>
+                    <VoicePreview
+                      voiceId={voiceId || selectedAvatar.voice_id || ''}
+                      userName={selectedAvatar.name}
+                    />
+                  </div>
+
+                  {/* Voice Improvement */}
+                  <div className="voice-section">
+                    <h2 className="voice-section-title">✨ Improve Voice Quality</h2>
+                    <p className="voice-section-description">
+                      Fix accent consistency, improve voice similarity, or enhance natural expression.
+                    </p>
+                    <VoiceImprovementTool
+                      avatarId={selectedAvatar.id}
+                      voiceId={voiceId || selectedAvatar.voice_id || ''}
+                      avatarName={selectedAvatar.name}
+                    />
+                  </div>
+
+                  {/* Retrain Option */}
+                  <div className="voice-section">
+                    <h2 className="voice-section-title">🔄 Retrain Voice</h2>
+                    <p className="voice-section-description">
+                      Not happy with the current voice? Train a new one to replace it.
+                    </p>
+                    <details className="retrain-details">
+                      <summary className="retrain-summary">Show Retraining Options</summary>
+                      <div className="retrain-content">
+                        <VoiceTraining
+                          avatarName={selectedAvatar.name}
+                          avatarId={selectedAvatar.id}
+                          onVoiceUploaded={async (voiceId) => {
+                            console.log('Voice retrained with ID:', voiceId)
+                            setVoiceId(voiceId)
+                            setSelectedAvatar(prev => prev ? { ...prev, voice_id: voiceId } : null)
+                          }}
+                        />
+                      </div>
+                    </details>
+                  </div>
+                </>
               )}
             </div>
           )}

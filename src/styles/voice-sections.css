@@ -1,0 +1,85 @@
+/* Voice Sections Styling for Profile Page */
+
+.voice-section {
+  background: rgba(30, 30, 60, 0.95);
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  border: 1px solid rgba(155, 124, 255, 0.2);
+}
+
+.voice-section-title {
+  color: #ffffff;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.voice-section-description {
+  color: #b8b8d9;
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+/* Retrain Details Styling */
+.retrain-details {
+  background: rgba(45, 37, 67, 0.5);
+  border-radius: 12px;
+  border: 1px solid rgba(155, 124, 255, 0.1);
+  overflow: hidden;
+}
+
+.retrain-summary {
+  background: rgba(155, 124, 255, 0.1);
+  color: #ffffff;
+  padding: 1rem 1.5rem;
+  cursor: pointer;
+  font-weight: 600;
+  border: none;
+  outline: none;
+  transition: all 0.2s ease;
+  list-style: none;
+}
+
+.retrain-summary:hover {
+  background: rgba(155, 124, 255, 0.2);
+}
+
+.retrain-summary::-webkit-details-marker {
+  display: none;
+}
+
+.retrain-summary::before {
+  content: '▶';
+  margin-right: 0.5rem;
+  transition: transform 0.2s ease;
+}
+
+.retrain-details[open] .retrain-summary::before {
+  transform: rotate(90deg);
+}
+
+.retrain-content {
+  padding: 1.5rem;
+  border-top: 1px solid rgba(155, 124, 255, 0.1);
+}
+
+/* Voice Section Responsive Design */
+@media (max-width: 768px) {
+  .voice-section {
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .voice-section-title {
+    font-size: 1.3rem;
+  }
+  
+  .voice-section-description {
+    font-size: 0.9rem;
+  }
+}

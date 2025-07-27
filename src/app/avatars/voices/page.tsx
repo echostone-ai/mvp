@@ -20,6 +20,28 @@ interface Avatar {
 }
 
 function AvatarVoicesContent() {
+  const router = useRouter()
+  
+  // Redirect to profile page with voice tab
+  useEffect(() => {
+    router.replace('/profile?tab=voice')
+  }, [router])
+
+  return (
+    <PageShell>
+      <main className="voice-management-container">
+        <div className="voice-management-header">
+          <h1 className="voice-management-title">Redirecting to Profile...</h1>
+          <p className="voice-management-subtitle">
+            Voice management has been moved to your profile page for a better experience.
+          </p>
+          <div className="loading-spinner"></div>
+        </div>
+      </main>
+    </PageShell>
+  )
+
+  // Old implementation removed - everything is now in profile
   const [user, setUser] = useState<any>(null)
   const [avatars, setAvatars] = useState<Avatar[]>([])
   const [loading, setLoading] = useState(true)
@@ -27,7 +49,6 @@ function AvatarVoicesContent() {
   const [updating, setUpdating] = useState<string | null>(null)
   const [selectedAvatar, setSelectedAvatar] = useState<Avatar | null>(null)
   const [showTraining, setShowTraining] = useState(false)
-  const router = useRouter()
   const searchParams = useSearchParams()
 
   useEffect(() => {
