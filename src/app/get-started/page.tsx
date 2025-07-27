@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import VoiceOnboarding from '@/components/VoiceOnboarding';
@@ -17,7 +17,7 @@ interface Avatar {
   created_at: string;
 }
 
-export default function GetStartedPage() {
+function GetStartedContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('session');
   
@@ -118,103 +118,118 @@ export default function GetStartedPage() {
   }
 
   return (
-    <PageShell>
-      <div className="get-started-container">
-        <div className="get-started-content">
-          <div className="get-started-header">
-            <h1 className="get-started-title">Get Started with EchoStone</h1>
-            <p className="get-started-subtitle">
-              Let's create your personalized voice experience in just a few minutes
-            </p>
-          </div>
+    <div className="get-started-container">
+      <div className="get-started-content">
+        <div className="get-started-header">
+          <h1 className="get-started-title">Get Started with EchoStone</h1>
+          <p className="get-started-subtitle">
+            Let's create your personalized voice experience in just a few minutes
+          </p>
+        </div>
 
-          {!avatarChoice && (
-            <div className="get-started-card">
-              <div className="avatar-selection-section">
-                <h2 className="avatar-selection-title">Choose Your Avatar</h2>
-                <p className="avatar-selection-description">
-                  Would you like to add voice training to an existing avatar or create a new one?
-                </p>
-                
-                <div className="avatar-options">
-                  {avatars.length > 0 && (
-                    <div 
-                      className="avatar-option"
-                      onClick={() => setAvatarChoice('existing')}
-                    >
-                      <div className="avatar-option-title">Use Existing Avatar</div>
-                      <div className="avatar-option-description">
-                        Add voice training to one of your {avatars.length} existing avatar{avatars.length !== 1 ? 's' : ''}
-                      </div>
-                    </div>
-                  )}
-                  
+        {!avatarChoice && (
+          <div className="get-started-card">
+            <div className="avatar-selection-section">
+              <h2 className="avatar-selection-title">Choose Your Avatar</h2>
+              <p className="avatar-selection-description">
+                Would you like to add voice training to an existing avatar or create a new one?
+              </p>
+              
+              <div className="avatar-options">
+                {avatars.length > 0 && (
                   <div 
                     className="avatar-option"
-                    onClick={() => setAvatarChoice('new')}
+                    onClick={() => setAvatarChoice('existing')}
                   >
-                    <div className="avatar-option-title">Create New Avatar</div>
+                    <div className="avatar-option-title">Use Existing Avatar</div>
                     <div className="avatar-option-description">
-                      Create a brand new avatar with personalized voice training
+                      Add voice training to one of your {avatars.length} existing avatar{avatars.length !== 1 ? 's' : ''}
                     </div>
+                  </div>
+                )}
+                
+                <div 
+                  className="avatar-option"
+                  onClick={() => setAvatarChoice('new')}
+                >
+                  <div className="avatar-option-title">Create New Avatar</div>
+                  <div className="avatar-option-description">
+                    Create a brand new avatar with personalized voice training
                   </div>
                 </div>
               </div>
             </div>
-          )}
+          </div>
+        )}
 
-          {avatarChoice === 'existing' && !selectedAvatar && (
-            <div className="get-started-card">
-              <div className="avatar-selection-section">
-                <h2 className="avatar-selection-title">Select an Avatar</h2>
-                <p className="avatar-selection-description">
-                  Choose which avatar you'd like to add voice training to:
-                </p>
-                
-                <div className="avatar-options">
-                  {avatars.map((avatar) => (
-                    <div 
-                      key={avatar.id}
-                      className="avatar-option"
-                      onClick={() => setSelectedAvatar(avatar)}
-                    >
-                      <div className="avatar-option-title">{avatar.name}</div>
-                      <div className="avatar-option-description">
-                        {avatar.description || 'No description'}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
-                <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-                  <button 
-                    className="next-step-button secondary"
-                    onClick={() => setAvatarChoice(null)}
+        {avatarChoice === 'existing' && !selectedAvatar && (
+          <div className="get-started-card">
+            <div className="avatar-selection-section">
+              <h2 className="avatar-selection-title">Select an Avatar</h2>
+              <p className="avatar-selection-description">
+                Choose which avatar you'd like to add voice training to:
+              </p>
+              
+              <div className="avatar-options">
+                {avatars.map((avatar) => (
+                  <div 
+                    key={avatar.id}
+                    className="avatar-option"
+                    onClick={() => setSelectedAvatar(avatar)}
                   >
-                    ← Back to Options
-                  </button>
-                </div>
+                    <div className="avatar-option-title">{avatar.name}</div>
+                    <div className="avatar-option-description">
+                      {avatar.description || 'No description'}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+                <button 
+                  className="next-step-button secondary"
+                  onClick={() => setAvatarChoice(null)}
+                >
+                  ← Back to Options
+                </button>
               </div>
             </div>
-          )}
+          </div>
+        )}
 
-          {(avatarChoice === 'new' || selectedAvatar || resumingSession) && !isComplete && (
-            <VoiceOnboarding 
-              onComplete={handleOnboardingComplete}
-              selectedAvatar={selectedAvatar}
-              isNewAvatar={avatarChoice === 'new'}
-              resumeSessionId={sessionId}
-            />
-          )}
+        {(avatarChoice === 'new' || selectedAvatar || resumingSession) && !isComplete && (
+          <VoiceOnboarding 
+            onComplete={handleOnboardingComplete}
+            selectedAvatar={selectedAvatar}
+            isNewAvatar={avatarChoice === 'new'}
+            resumeSessionId={sessionId}
+          />
+        )}
 
-          {isComplete && (
-            <VoiceOnboardingComplete 
-              profileData={profileData}
-              selectedAvatar={selectedAvatar}
-            />
-          )}
-        </div>
+        {isComplete && (
+          <VoiceOnboardingComplete 
+            profileData={profileData}
+            selectedAvatar={selectedAvatar}
+          />
+        )}
       </div>
+    </div>
+  );
+}
+
+export default function GetStartedPage() {
+  return (
+    <PageShell>
+      <Suspense fallback={
+        <div className="get-started-container">
+          <div className="processing-status">
+            <div className="processing-spinner"></div>
+            <span>Loading...</span>
+          </div>
+        </div>
+      }>
+        <GetStartedContent />
+      </Suspense>
     </PageShell>
   );
 }
