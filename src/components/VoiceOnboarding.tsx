@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { onboardingQuestions, OnboardingResponse } from '@/lib/onboardingQuestions';
 
@@ -17,16 +17,101 @@ interface VoiceOnboardingProps {
   onComplete: (data: any) => void;
   selectedAvatar?: Avatar | null;
   isNewAvatar?: boolean;
+  resumeSessionId?: string | null;
 }
 
-export default function VoiceOnboarding({ onComplete, selectedAvatar, isNewAvatar }: VoiceOnboardingProps) {
+interface OnboardingSession {
+  id: string;
+  avatar_id: string | null;
+  user_id: string;
+  current_question: number;
+  total_questions: number;
+  is_complete: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+interface SavedResponse {
+  session_id: string;
+  avatar_id: string | null;
+  question_index: number;
+  question: string;
+  transcript: string;
+  analysis: any;
+  audio_url: string | null;
+}
+
+export default function VoiceOnboarding({ onComplete, selectedAvatar, isNewAvatar, resumeSessionId }: VoiceOnboardingProps) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [isRecording, setIsRecording] = useState(false);
   const [responses, setResponses] = useState<OnboardingResponse[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [isLoadingSession, setIsLoadingSession] = useState(true);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+
+  // Load existing session or create new one
+  useEffect(() => {
+    async function initializeSession() {
+      try {
+        const { data: session } = await supabase.auth.getSession();
+        const user = session.session?.user;
+        
+        if (!user) {
+          setIsLoadingSession(false);
+          return;
+        }
+
+        // Check for existing session or resume specific session
+        let sessionUrl = resumeSessionId 
+          ? `/api/onboarding/get-session?sessionId=${resumeSessionId}`
+          : `/api/onboarding/get-session?avatarId=${selectedAvatar?.id || 'new'}`;
+          
+        const response = await fetch(sessionUrl);
+        const sessionData = await response.json();
+
+        if (sessionData.success && sessionData.session && !sessionData.isComplete) {
+          // Resume existing session
+          setSessionId(sessionData.session.id);
+          setCurrentQuestionIndex(sessionData.currentQuestion);
+          
+          // Convert saved responses to OnboardingResponse format
+          const convertedResponses: OnboardingResponse[] = sessionData.responses.map((r: SavedResponse) => ({
+            questionIndex: r.question_index,
+            question: r.question,
+            audioBlob: null, // We don't store the blob, just the transcript
+            transcript: r.transcript,
+            analysis: r.analysis
+          }));
+          
+          setResponses(convertedResponses);
+        } else {
+          // Create new session
+          const createResponse = await fetch('/api/onboarding/create-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              avatarId: selectedAvatar?.id || null,
+              userId: user.id
+            })
+          });
+
+          const createData = await createResponse.json();
+          if (createData.success) {
+            setSessionId(createData.sessionId);
+          }
+        }
+      } catch (error) {
+        console.error('Error initializing session:', error);
+      } finally {
+        setIsLoadingSession(false);
+      }
+    }
+
+    initializeSession();
+  }, [selectedAvatar]);
 
   const startRecording = useCallback(async () => {
     try {
@@ -89,14 +174,40 @@ export default function VoiceOnboarding({ onComplete, selectedAvatar, isNewAvata
         analysis: transcriptionData.analysis,
       };
 
+      // Save response to database immediately
+      if (sessionId) {
+        const saveResponse = await fetch('/api/onboarding/save-response', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId,
+            avatarId: selectedAvatar?.id || null,
+            questionIndex: currentQuestionIndex,
+            question: onboardingQuestions[currentQuestionIndex],
+            transcript: transcriptionData.text,
+            analysis: transcriptionData.analysis,
+            audioUrl: null // TODO: Upload audio to storage if needed
+          })
+        });
+
+        const saveData = await saveResponse.json();
+        if (!saveData.success) {
+          throw new Error('Failed to save response');
+        }
+
+        // Check if onboarding is complete
+        if (saveData.isComplete) {
+          await completeOnboarding([...responses, newResponse]);
+          return;
+        }
+      }
+
       const updatedResponses = [...responses, newResponse];
       setResponses(updatedResponses);
 
-      // Move to next question or complete
+      // Move to next question
       if (currentQuestionIndex < onboardingQuestions.length - 1) {
         setCurrentQuestionIndex(currentQuestionIndex + 1);
-      } else {
-        await completeOnboarding(updatedResponses);
       }
     } catch (error) {
       console.error('Error processing recording:', error);
@@ -164,7 +275,18 @@ export default function VoiceOnboarding({ onComplete, selectedAvatar, isNewAvata
   };
 
   const currentQuestion = onboardingQuestions[currentQuestionIndex];
-  const progress = ((currentQuestionIndex + (responses.length > currentQuestionIndex ? 1 : 0)) / onboardingQuestions.length) * 100;
+  const progress = ((responses.length) / onboardingQuestions.length) * 100;
+
+  if (isLoadingSession) {
+    return (
+      <div className="get-started-card">
+        <div className="processing-status">
+          <div className="processing-spinner"></div>
+          <span>Loading your progress...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="get-started-card">
@@ -195,13 +317,37 @@ export default function VoiceOnboarding({ onComplete, selectedAvatar, isNewAvata
       {/* Recording Controls */}
       <div className="recording-controls">
         {!isRecording && !isProcessing && (
-          <button
-            onClick={startRecording}
-            className="record-button"
-          >
-            <div className="record-dot"></div>
-            Start Recording
-          </button>
+          <>
+            <button
+              onClick={startRecording}
+              className="record-button"
+            >
+              <div className="record-dot"></div>
+              {responses.length > currentQuestionIndex ? 'Re-record Answer' : 'Start Recording'}
+            </button>
+            
+            {responses.length > 0 && (
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                <button
+                  onClick={() => window.location.href = '/profile'}
+                  className="next-step-button secondary"
+                  style={{ fontSize: '0.9rem', padding: '0.75rem 1.5rem' }}
+                >
+                  Save & Resume Later
+                </button>
+                
+                {currentQuestionIndex < onboardingQuestions.length - 1 && responses.length > currentQuestionIndex && (
+                  <button
+                    onClick={() => setCurrentQuestionIndex(currentQuestionIndex + 1)}
+                    className="next-step-button secondary"
+                    style={{ fontSize: '0.9rem', padding: '0.75rem 1.5rem' }}
+                  >
+                    Skip to Next Question →
+                  </button>
+                )}
+              </div>
+            )}
+          </>
         )}
 
         {isRecording && (
@@ -222,7 +368,7 @@ export default function VoiceOnboarding({ onComplete, selectedAvatar, isNewAvata
         {isProcessing && (
           <div className="processing-status">
             <div className="processing-spinner"></div>
-            <span>Processing your response...</span>
+            <span>Processing and saving your response...</span>
           </div>
         )}
       </div>
@@ -230,19 +376,43 @@ export default function VoiceOnboarding({ onComplete, selectedAvatar, isNewAvata
       {/* Previous Responses */}
       {responses.length > 0 && (
         <div className="responses-section">
-          <h3 className="responses-title">Your Responses</h3>
+          <h3 className="responses-title">Your Saved Responses</h3>
           <div className="responses-list">
             {responses.map((response, index) => (
               <div key={index} className="response-item">
-                <p className="response-question">
-                  Q{index + 1}: {response.question}
-                </p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                  <p className="response-question">
+                    Q{index + 1}: {response.question}
+                  </p>
+                  <span style={{ 
+                    fontSize: '0.75rem', 
+                    color: 'var(--success-color)', 
+                    background: 'rgba(34, 197, 94, 0.2)',
+                    padding: '0.25rem 0.5rem',
+                    borderRadius: '12px',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    ✓ Saved
+                  </span>
+                </div>
                 <p className="response-transcript">
                   {response.transcript || 'Processing...'}
                 </p>
               </div>
             ))}
           </div>
+          
+          {responses.length === onboardingQuestions.length && (
+            <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+              <button
+                onClick={() => completeOnboarding(responses)}
+                className="train-voice-button"
+                style={{ fontSize: '1.1rem' }}
+              >
+                Complete Onboarding & Continue →
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

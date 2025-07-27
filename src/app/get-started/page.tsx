@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import VoiceOnboarding from '@/components/VoiceOnboarding';
 import VoiceOnboardingComplete from '@/components/VoiceOnboardingComplete';
@@ -17,6 +18,9 @@ interface Avatar {
 }
 
 export default function GetStartedPage() {
+  const searchParams = useSearchParams();
+  const sessionId = searchParams.get('session');
+  
   const [isComplete, setIsComplete] = useState(false);
   const [profileData, setProfileData] = useState(null);
   const [user, setUser] = useState<any>(null);
@@ -24,6 +28,7 @@ export default function GetStartedPage() {
   const [selectedAvatar, setSelectedAvatar] = useState<Avatar | null>(null);
   const [avatarChoice, setAvatarChoice] = useState<'existing' | 'new' | null>(null);
   const [loading, setLoading] = useState(true);
+  const [resumingSession, setResumingSession] = useState(false);
 
   useEffect(() => {
     async function loadUserData() {
@@ -40,13 +45,35 @@ export default function GetStartedPage() {
           .order('created_at', { ascending: false });
         
         setAvatars(avatarData || []);
+
+        // If resuming a session, load session data
+        if (sessionId) {
+          setResumingSession(true);
+          try {
+            const response = await fetch(`/api/onboarding/get-session?sessionId=${sessionId}`);
+            const sessionData = await response.json();
+            
+            if (sessionData.success && sessionData.session) {
+              // Find the avatar for this session
+              const sessionAvatar = avatarData?.find(a => a.id === sessionData.session.avatar_id);
+              if (sessionAvatar) {
+                setSelectedAvatar(sessionAvatar);
+                setAvatarChoice('existing');
+              } else {
+                setAvatarChoice('new');
+              }
+            }
+          } catch (error) {
+            console.error('Error loading session:', error);
+          }
+        }
       }
       
       setLoading(false);
     }
 
     loadUserData();
-  }, []);
+  }, [sessionId]);
 
   const handleOnboardingComplete = (data: any) => {
     setProfileData(data);
@@ -171,11 +198,12 @@ export default function GetStartedPage() {
             </div>
           )}
 
-          {(avatarChoice === 'new' || selectedAvatar) && !isComplete && (
+          {(avatarChoice === 'new' || selectedAvatar || resumingSession) && !isComplete && (
             <VoiceOnboarding 
               onComplete={handleOnboardingComplete}
               selectedAvatar={selectedAvatar}
               isNewAvatar={avatarChoice === 'new'}
+              resumeSessionId={sessionId}
             />
           )}
 
