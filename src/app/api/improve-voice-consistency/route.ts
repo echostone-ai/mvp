@@ -65,7 +65,12 @@ export async function POST(request: NextRequest) {
       avatarVoiceId: avatar.voice_id,
       providedVoiceId: voiceId,
       avatarName: avatar.name,
-      match: avatar.voice_id === voiceId
+      avatarId: avatar.id,
+      match: avatar.voice_id === voiceId,
+      avatarVoiceIdType: typeof avatar.voice_id,
+      providedVoiceIdType: typeof voiceId,
+      avatarVoiceIdLength: avatar.voice_id?.length,
+      providedVoiceIdLength: voiceId?.length
     });
 
     if (avatar.voice_id !== voiceId) {

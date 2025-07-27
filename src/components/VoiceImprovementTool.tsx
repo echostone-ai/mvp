@@ -82,7 +82,10 @@ export default function VoiceImprovementTool({ avatarId, voiceId, avatarName }: 
         avatarId,
         voiceId,
         improvementType: selectedImprovementType,
-        avatarName
+        avatarName,
+        voiceIdType: typeof voiceId,
+        voiceIdLength: voiceId?.length,
+        voiceIdTrimmed: voiceId?.trim()
       });
 
       const response = await fetch('/api/improve-voice-consistency', {

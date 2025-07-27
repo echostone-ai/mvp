@@ -18,6 +18,7 @@ import VoicePreview from '@/components/VoicePreview'
 import VoicePreviewTesting from '@/components/VoicePreviewTesting'
 import VoiceImprovementTool from '@/components/VoiceImprovementTool'
 import VoiceDebugInfo from '@/components/VoiceDebugInfo'
+import VoiceIdFixer from '@/components/VoiceIdFixer'
 import AvatarSelector from '@/components/AvatarSelector'
 import AvatarSharingForm from '@/components/AvatarSharingForm'
 
@@ -708,6 +709,9 @@ function ProfilePageContent() {
 
               {/* Voice Debug Information */}
               <VoiceDebugInfo selectedAvatar={selectedAvatar} voiceId={voiceId} />
+
+              {/* Voice ID Fixer */}
+              <VoiceIdFixer selectedAvatar={selectedAvatar} />
 
               {/* Voice Management Section (for existing voices) */}
               {(voiceId || selectedAvatar.voice_id) && (
