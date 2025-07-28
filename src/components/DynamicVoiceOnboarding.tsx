@@ -33,9 +33,21 @@ export default function DynamicVoiceOnboarding({
   const [sessionId, setSessionId] = useState<string | null>(resumeSessionId);
   const [isLoadingSession, setIsLoadingSession] = useState(true);
   const [showQuestionTransition, setShowQuestionTransition] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+
+  // Validate required props
+  if (!avatarId || !avatarName) {
+    return (
+      <div className="dynamic-onboarding-container">
+        <div className="loading-state">
+          <p>Error: Missing avatar information. Please go back and try again.</p>
+        </div>
+      </div>
+    );
+  }
 
   // Initialize session
   useEffect(() => {
@@ -45,6 +57,13 @@ export default function DynamicVoiceOnboarding({
         const user = session.session?.user;
         
         if (!user) {
+          setError('Please sign in to continue with voice onboarding.');
+          setIsLoadingSession(false);
+          return;
+        }
+
+        if (!avatarId) {
+          setError('Avatar ID is missing. Please go back and select an avatar.');
           setIsLoadingSession(false);
           return;
         }
@@ -87,6 +106,7 @@ export default function DynamicVoiceOnboarding({
         }
       } catch (error) {
         console.error('Error initializing session:', error);
+        setError('Failed to initialize voice onboarding session. Please try again.');
       } finally {
         setIsLoadingSession(false);
       }
@@ -390,16 +410,67 @@ export default function DynamicVoiceOnboarding({
     );
   }
 
+  if (error) {
+    return (
+      <div className="dynamic-onboarding-container">
+        <div className="loading-state">
+          <p style={{ color: '#ef4444', textAlign: 'center' }}>{error}</p>
+          <button 
+            onClick={() => window.history.back()} 
+            style={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              padding: '0.75rem 1.5rem',
+              borderRadius: '50px',
+              cursor: 'pointer',
+              marginTop: '1rem'
+            }}
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const currentQuestion = dynamicOnboardingQuestions[currentQuestionIndex];
   const progress = (responses.length / dynamicOnboardingQuestions.length) * 100;
   const isLastQuestion = currentQuestionIndex === dynamicOnboardingQuestions.length - 1;
+
+  // Safety check - if current question is undefined, show error
+  if (!currentQuestion) {
+    return (
+      <div className="dynamic-onboarding-container">
+        <div className="loading-state">
+          <p style={{ color: '#ef4444', textAlign: 'center' }}>
+            Error: Invalid question index. Please refresh and try again.
+          </p>
+          <button 
+            onClick={() => window.location.reload()} 
+            style={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              padding: '0.75rem 1.5rem',
+              borderRadius: '50px',
+              cursor: 'pointer',
+              marginTop: '1rem'
+            }}
+          >
+            Refresh Page
+          </button>
+        </div>
+      </div>
+    );
+  }
   
   // Check if current question has already been answered
   const currentQuestionAnswered = responses.some(r => r.questionId === currentQuestion?.id);
   
   // If current question is answered but we're not at the end, move to next unanswered question
   useEffect(() => {
-    if (currentQuestionAnswered && !isLastQuestion && !showQuestionTransition) {
+    if (currentQuestionAnswered && !isLastQuestion && !showQuestionTransition && !isProcessing) {
       const nextUnansweredIndex = dynamicOnboardingQuestions.findIndex((q, index) => 
         index > currentQuestionIndex && !responses.some(r => r.questionId === q.id)
       );
@@ -407,12 +478,17 @@ export default function DynamicVoiceOnboarding({
       if (nextUnansweredIndex !== -1) {
         console.log('Moving to next unanswered question:', nextUnansweredIndex);
         setCurrentQuestionIndex(nextUnansweredIndex);
-      } else if (responses.length === dynamicOnboardingQuestions.length) {
-        // All questions answered
-        completeOnboarding(responses);
       }
     }
-  }, [currentQuestionAnswered, isLastQuestion, showQuestionTransition, responses, currentQuestionIndex]);
+  }, [currentQuestionAnswered, isLastQuestion, showQuestionTransition, responses, currentQuestionIndex, isProcessing]);
+
+  // Check if all questions are completed
+  useEffect(() => {
+    if (responses.length === dynamicOnboardingQuestions.length && !isProcessing && !showQuestionTransition) {
+      console.log('All questions completed, finishing onboarding...');
+      completeOnboarding(responses);
+    }
+  }, [responses.length, isProcessing, showQuestionTransition]);
 
   if (showQuestionTransition) {
     return (

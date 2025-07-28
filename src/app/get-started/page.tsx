@@ -3,7 +3,6 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import VoiceOnboarding from '@/components/VoiceOnboarding';
 import VoiceOnboardingComplete from '@/components/VoiceOnboardingComplete';
 import AvatarCreationFlow from '@/components/AvatarCreationFlow';
 import DynamicVoiceOnboarding from '@/components/DynamicVoiceOnboarding';
@@ -190,7 +189,10 @@ function GetStartedContent() {
                   <div 
                     key={avatar.id}
                     className="avatar-option"
-                    onClick={() => setSelectedAvatar(avatar)}
+                    onClick={() => {
+                      console.log('Selected avatar:', avatar);
+                      setSelectedAvatar(avatar);
+                    }}
                   >
                     <div className="avatar-option-title">{avatar.name}</div>
                     <div className="avatar-option-description">
@@ -220,12 +222,35 @@ function GetStartedContent() {
         )}
 
         {(showDynamicOnboarding || (selectedAvatar && avatarChoice === 'existing') || resumingSession) && !isComplete && (
-          <DynamicVoiceOnboarding 
-            onComplete={handleOnboardingComplete}
-            avatarId={newAvatarData?.avatarId || selectedAvatar?.id || ''}
-            avatarName={newAvatarData?.name || selectedAvatar?.name || 'Your Avatar'}
-            resumeSessionId={sessionId}
-          />
+          <>
+            {/* Only render if we have valid avatar data */}
+            {(newAvatarData?.avatarId || selectedAvatar?.id) ? (
+              <DynamicVoiceOnboarding 
+                onComplete={handleOnboardingComplete}
+                avatarId={newAvatarData?.avatarId || selectedAvatar?.id || ''}
+                avatarName={newAvatarData?.name || selectedAvatar?.name || 'Your Avatar'}
+                resumeSessionId={sessionId}
+              />
+            ) : (
+              <div className="get-started-card">
+                <div style={{ textAlign: 'center', padding: '2rem' }}>
+                  <p style={{ color: '#ef4444', marginBottom: '1rem' }}>
+                    Error: Avatar information is missing. Please try again.
+                  </p>
+                  <button 
+                    onClick={() => {
+                      setSelectedAvatar(null);
+                      setAvatarChoice(null);
+                      setShowDynamicOnboarding(false);
+                    }}
+                    className="next-step-button secondary"
+                  >
+                    ← Back to Avatar Selection
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         {isComplete && (
