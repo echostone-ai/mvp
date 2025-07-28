@@ -160,7 +160,12 @@ export default function SimpleVoiceOnboarding({
     try {
       const currentQuestion = dynamicOnboardingQuestions[currentQuestionIndex];
       
-      console.log('Processing question:', currentQuestionIndex, currentQuestion.title);
+      console.log('🔍 CRITICAL DEBUG:');
+      console.log('  - currentQuestionIndex:', currentQuestionIndex);
+      console.log('  - currentQuestion.id:', currentQuestion.id);
+      console.log('  - currentQuestion.title:', currentQuestion.title);
+      console.log('  - currentQuestion.category:', currentQuestion.category);
+      console.log('  - This response will be categorized as:', currentQuestion.category);
       
       // Transcribe the audio
       const formData = new FormData();
@@ -194,14 +199,7 @@ export default function SimpleVoiceOnboarding({
       
       console.log('Updated responses:', updatedResponses.length, 'of', dynamicOnboardingQuestions.length);
 
-      // Save to localStorage as backup
-      localStorage.setItem(`onboarding_${avatarId}`, JSON.stringify({
-        responses: updatedResponses,
-        currentQuestion: currentQuestionIndex,
-        avatarId,
-        avatarName,
-        lastSaved: new Date().toISOString()
-      }));
+      // Don't save to localStorage here - will be saved after question progression
 
       // Check if we're done
       if (updatedResponses.length >= dynamicOnboardingQuestions.length) {
@@ -221,10 +219,22 @@ export default function SimpleVoiceOnboarding({
         }
         
         if (nextQuestionIndex < dynamicOnboardingQuestions.length) {
-          // Move to next question with transition
+          console.log('🎯 Moving to next question:', nextQuestionIndex, dynamicOnboardingQuestions[nextQuestionIndex].id);
+          
+          // Update question index immediately, then show transition
+          setCurrentQuestionIndex(nextQuestionIndex);
+          
+          // Save to localStorage with the NEW question index
+          localStorage.setItem(`onboarding_${avatarId}`, JSON.stringify({
+            responses: updatedResponses,
+            currentQuestion: nextQuestionIndex,
+            avatarId,
+            avatarName,
+            lastSaved: new Date().toISOString()
+          }));
+          
           setShowTransition(true);
           setTimeout(() => {
-            setCurrentQuestionIndex(nextQuestionIndex);
             setShowTransition(false);
           }, 1500);
         } else {
