@@ -59,6 +59,7 @@ export default function WorkingVoiceOnboarding({ onComplete, avatarId, avatarNam
   }, [isRecording]);
 
   const handleRecordingComplete = async (audioBlob: Blob) => {
+    console.log('🎤 handleRecordingComplete called');
     setIsProcessing(true);
     
     try {
@@ -106,28 +107,44 @@ export default function WorkingVoiceOnboarding({ onComplete, avatarId, avatarNam
 
       // Add to responses
       const updatedResponses = [...responses, newResponse];
+      console.log('BEFORE setResponses - current responses:', responses.length);
+      console.log('BEFORE setResponses - updated responses:', updatedResponses.length);
+      
       setResponses(updatedResponses);
       
+      console.log('AFTER setResponses called');
       console.log('Added response. Total responses:', updatedResponses.length);
       console.log('Response IDs:', updatedResponses.map(r => r.questionId));
 
       // Move to next question
       const nextIndex = currentIndex + 1;
-      console.log('Current index:', currentIndex, 'Next index:', nextIndex, 'Total questions:', dynamicOnboardingQuestions.length);
+      console.log('🔄 PROGRESSION DEBUG:');
+      console.log('  Current index:', currentIndex);
+      console.log('  Next index:', nextIndex);
+      console.log('  Total questions:', dynamicOnboardingQuestions.length);
+      console.log('  Should progress?', nextIndex < dynamicOnboardingQuestions.length);
       
       if (nextIndex < dynamicOnboardingQuestions.length) {
-        console.log('Moving to question', nextIndex, dynamicOnboardingQuestions[nextIndex].id);
+        console.log('✅ Moving to question', nextIndex, dynamicOnboardingQuestions[nextIndex].id);
+        console.log('🔄 BEFORE setCurrentIndex - currentIndex is:', currentIndex);
         setCurrentIndex(nextIndex);
-        console.log('State updated to index:', nextIndex);
+        console.log('🔄 AFTER setCurrentIndex called with:', nextIndex);
+        
+        // Force a re-render check
+        setTimeout(() => {
+          console.log('🔄 DELAYED CHECK - currentIndex should now be:', nextIndex);
+        }, 100);
       } else {
-        console.log('All questions done, completing...');
+        console.log('🎯 All questions done, completing...');
         await completeOnboarding(updatedResponses);
       }
       
     } catch (error) {
-      console.error('Error:', error);
-      alert('Error processing response');
+      console.error('❌ CRITICAL ERROR in handleRecordingComplete:', error);
+      console.error('Error stack:', error.stack);
+      alert(`Error processing response: ${error.message}`);
     } finally {
+      console.log('🔄 Setting isProcessing to false');
       setIsProcessing(false);
     }
   };
@@ -270,6 +287,13 @@ export default function WorkingVoiceOnboarding({ onComplete, avatarId, avatarNam
 
   return (
     <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
+      {/* Debug info */}
+      <div style={{ background: '#ffe6e6', padding: '10px', marginBottom: '20px', fontSize: '12px' }}>
+        <strong>DEBUG:</strong> currentIndex = {currentIndex}, responses.length = {responses.length}
+        <br />
+        Current Question ID: {currentQuestion?.id}
+      </div>
+      
       <div style={{ marginBottom: '20px' }}>
         <div style={{ background: '#f0f0f0', height: '8px', borderRadius: '4px' }}>
           <div style={{ 
