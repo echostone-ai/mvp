@@ -248,19 +248,31 @@ export default function WorkingVoiceOnboarding({ onComplete, avatarId, avatarNam
         const user = session.session?.user;
 
         if (user) {
-          const { error } = await supabase
+          // Check if avatar exists first
+          const { data: existingAvatar } = await supabase
             .from('avatar_profiles')
-            .update({
-              profile_data: profileData,
-              updated_at: new Date().toISOString()
-            })
+            .select('id')
             .eq('id', avatarId)
-            .eq('user_id', user.id);
+            .eq('user_id', user.id)
+            .single();
 
-          if (error) {
-            console.error('Database update error:', error);
+          if (existingAvatar) {
+            const { error } = await supabase
+              .from('avatar_profiles')
+              .update({
+                profile_data: profileData,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', avatarId)
+              .eq('user_id', user.id);
+
+            if (error) {
+              console.error('Database update error:', error);
+            } else {
+              console.log('✅ Profile data saved to database');
+            }
           } else {
-            console.log('✅ Profile data saved to database');
+            console.warn('⚠️ Avatar not found in database, skipping save');
           }
         }
       } catch (dbError) {
