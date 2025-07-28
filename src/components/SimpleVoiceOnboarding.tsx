@@ -45,8 +45,14 @@ export default function SimpleVoiceOnboarding({
         
         if (parsed.responses && parsed.responses.length > 0) {
           setResponses(parsed.responses);
-          setCurrentQuestionIndex(parsed.currentQuestion || parsed.responses.length);
-          console.log('Resumed from question:', parsed.currentQuestion || parsed.responses.length);
+          const resumeIndex = parsed.currentQuestion !== undefined ? parsed.currentQuestion : parsed.responses.length;
+          setCurrentQuestionIndex(resumeIndex);
+          console.log('🔄 Resumed from localStorage:', {
+            savedCurrentQuestion: parsed.currentQuestion,
+            responseCount: parsed.responses.length,
+            resumingAtIndex: resumeIndex,
+            responseIds: parsed.responses.map((r: any) => r.questionId)
+          });
         }
       }
     } catch (error) {
@@ -149,7 +155,12 @@ export default function SimpleVoiceOnboarding({
     try {
       const currentQuestion = dynamicOnboardingQuestions[currentQuestionIndex];
       
-      console.log('Processing question:', currentQuestionIndex, currentQuestion.title);
+      console.log('🎯 Processing question:', currentQuestionIndex, currentQuestion.title);
+      console.log('🏷️ Question details:', {
+        id: currentQuestion.id,
+        category: currentQuestion.category,
+        question: currentQuestion.question
+      });
       
       // Transcribe the audio
       const formData = new FormData();
@@ -225,6 +236,17 @@ export default function SimpleVoiceOnboarding({
         
         if (nextQuestionIndex < dynamicOnboardingQuestions.length) {
           console.log('✅ Moving to next unanswered question:', nextQuestionIndex, dynamicOnboardingQuestions[nextQuestionIndex].id);
+          
+          // Update localStorage with new question index
+          const progressData = {
+            responses: updatedResponses,
+            currentQuestion: nextQuestionIndex,
+            avatarId,
+            avatarName,
+            lastSaved: new Date().toISOString()
+          };
+          localStorage.setItem(`onboarding_${avatarId}`, JSON.stringify(progressData));
+          
           // Move to next question with transition
           setShowTransition(true);
           setTimeout(() => {
