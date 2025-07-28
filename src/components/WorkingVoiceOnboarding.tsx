@@ -80,16 +80,22 @@ export default function WorkingVoiceOnboarding({ onComplete, avatarId, avatarNam
       const formData = new FormData();
       formData.append('audioBlob', audioBlob);
       
+      console.log('Sending audio for transcription...');
       const transcribeResponse = await fetch('/api/onboarding/transcribe', {
         method: 'POST',
         body: formData,
       });
 
+      console.log('Transcription response status:', transcribeResponse.status);
+      
       if (!transcribeResponse.ok) {
-        throw new Error('Transcription failed');
+        const errorText = await transcribeResponse.text();
+        console.error('Transcription failed:', errorText);
+        throw new Error(`Transcription failed: ${errorText}`);
       }
 
       const transcriptionData = await transcribeResponse.json();
+      console.log('Transcription result:', transcriptionData.text);
       
       // Create response
       const newResponse: SimpleResponse = {
@@ -107,9 +113,12 @@ export default function WorkingVoiceOnboarding({ onComplete, avatarId, avatarNam
 
       // Move to next question
       const nextIndex = currentIndex + 1;
+      console.log('Current index:', currentIndex, 'Next index:', nextIndex, 'Total questions:', dynamicOnboardingQuestions.length);
+      
       if (nextIndex < dynamicOnboardingQuestions.length) {
-        console.log('Moving to question', nextIndex);
+        console.log('Moving to question', nextIndex, dynamicOnboardingQuestions[nextIndex].id);
         setCurrentIndex(nextIndex);
+        console.log('State updated to index:', nextIndex);
       } else {
         console.log('All questions done, completing...');
         await completeOnboarding(updatedResponses);
@@ -321,6 +330,46 @@ export default function WorkingVoiceOnboarding({ onComplete, avatarId, avatarNam
         {isProcessing && (
           <div style={{ color: '#007bff' }}>
             Processing your response...
+          </div>
+        )}
+
+        {responses.length > 0 && !isProcessing && (
+          <div style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
+            <button
+              onClick={() => completeOnboarding(responses)}
+              style={{
+                background: '#28a745',
+                color: 'white',
+                border: 'none',
+                borderRadius: '25px',
+                padding: '10px 20px',
+                fontSize: '14px',
+                cursor: 'pointer'
+              }}
+            >
+              💾 Save Progress ({responses.length} responses)
+            </button>
+            
+            <button
+              onClick={() => {
+                const nextIndex = currentIndex + 1;
+                if (nextIndex < dynamicOnboardingQuestions.length) {
+                  console.log('Manual skip to question', nextIndex);
+                  setCurrentIndex(nextIndex);
+                }
+              }}
+              style={{
+                background: '#ffc107',
+                color: 'black',
+                border: 'none',
+                borderRadius: '25px',
+                padding: '10px 20px',
+                fontSize: '14px',
+                cursor: 'pointer'
+              }}
+            >
+              ⏭️ Skip Question (Debug)
+            </button>
           </div>
         )}
       </div>
