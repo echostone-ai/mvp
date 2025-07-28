@@ -4,6 +4,12 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { ConversationService, ChatMessage as ConversationMessage } from '@/lib/conversationService'
 import { MemorySavedAnimation } from './MemorySavedAnimation';
+import { 
+  createStreamingAudioManager, 
+  splitIntoSentences, 
+  streamChatResponse,
+  StreamingAudioManager 
+} from '@/lib/streamingUtils';
 
 function getFirstName(profileData: any): string {
   if (profileData?.personal_snapshot?.full_legal_name)
@@ -59,7 +65,10 @@ export default function ChatInterface({
   const [micPermission, setMicPermission] = useState<'granted' | 'denied' | 'prompt' | 'unknown'>('unknown')
   const [lastMemory, setLastMemory] = useState<string | null>(null);
   const [showMemoryAnim, setShowMemoryAnim] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [streamingText, setStreamingText] = useState('');
   const userMsgRef = useRef<HTMLDivElement>(null);
+  const streamingAudioRef = useRef<StreamingAudioManager | null>(null);
 
   const recognitionRef = useRef<any>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
@@ -72,6 +81,15 @@ export default function ChatInterface({
     console.log('[ChatInterface] Voice ID:', voiceId)
     console.log('[ChatInterface] Avatar ID:', avatarId)
   }, [profileData, voiceId, avatarId])
+
+  // Cleanup streaming audio on unmount
+  useEffect(() => {
+    return () => {
+      if (streamingAudioRef.current) {
+        streamingAudioRef.current.stop();
+      }
+    };
+  }, []);
 
   // Load conversation when component mounts
   useEffect(() => {
@@ -237,11 +255,13 @@ export default function ChatInterface({
       .join('\n\n')
   }
 
-  // Ask question logic
+  // Ask question logic with streaming support
   const askQuestion = async (text: string) => {
     if (!text.trim()) return
     setLoading(true)
     setAnswer('')
+    setStreamingText('')
+    setIsStreaming(true)
 
     const userMessage: ChatMessage = { role: 'user', content: text }
     const newHistory: ChatMessage[] = [...messages, userMessage]
@@ -254,32 +274,68 @@ export default function ChatInterface({
     if (onAsk) {
       onAsk(text)
       setLoading(false)
+      setIsStreaming(false)
       return
     }
 
     try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          question: text, // Send the user's current message
-          history: newHistory, // Send the full conversation history
-          profileData,
+      // Initialize streaming audio manager
+      if (voiceId) {
+        streamingAudioRef.current = createStreamingAudioManager(
           voiceId,
-          userId, // Pass userId for memory operations
-          avatarId, // Pass avatarId for memory isolation
-          visitorName, // Pass visitor's name for personalized responses
-          isSharedAvatar, // Indicate if this is a shared avatar session
-          shareToken, // Pass share token for shared avatar sessions
-          partnerProfile: profileData, // Pass the current user's profile as partnerProfile
-        }),
-      })
+          voiceSettings,
+          accent
+        );
+      }
 
-      const data = await res.json()
-      const aiAnswer = data.answer || '😕 No answer.'
-      setAnswer(aiAnswer)
+      let fullResponse = '';
+      let currentSentence = '';
+      let sentenceBuffer = '';
 
-      const assistantMessage: ChatMessage = { role: 'assistant', content: aiAnswer }
+      // Stream the response
+      for await (const char of streamChatResponse(text, newHistory, profileData, {
+        userId,
+        avatarId,
+        visitorName,
+        isSharedAvatar,
+        shareToken,
+        voiceId
+      })) {
+        fullResponse += char;
+        currentSentence += char;
+        setStreamingText(fullResponse);
+
+        // Check if we have a complete sentence
+        if (char.match(/[.!?]/)) {
+          sentenceBuffer += currentSentence;
+          
+          // Look ahead to see if this is really the end of a sentence
+          // (avoid splitting on abbreviations like "Mr." or "Dr.")
+          const nextChars = fullResponse.slice(fullResponse.length - currentSentence.length + 1, fullResponse.length + 3);
+          const isRealSentenceEnd = !nextChars.match(/^[a-z]/);
+          
+          if (isRealSentenceEnd && sentenceBuffer.trim().length > 10) {
+            // Send complete sentence to voice synthesis
+            if (streamingAudioRef.current) {
+              streamingAudioRef.current.addSentence(sentenceBuffer.trim());
+            }
+            sentenceBuffer = '';
+          }
+          currentSentence = '';
+        }
+      }
+
+      // Handle any remaining text
+      if (sentenceBuffer.trim()) {
+        if (streamingAudioRef.current) {
+          streamingAudioRef.current.addSentence(sentenceBuffer.trim());
+        }
+      }
+
+      setAnswer(fullResponse);
+      setIsStreaming(false);
+
+      const assistantMessage: ChatMessage = { role: 'assistant', content: fullResponse }
       const safeHistory: ChatMessage[] = [
         ...newHistory,
         assistantMessage,
@@ -289,83 +345,91 @@ export default function ChatInterface({
       // Save assistant message
       await saveMessage(assistantMessage)
 
-      // If the API returned updated memories, show animation for the newest one
-      console.log('💭 Checking for memories in response:', data.memories?.length || 0);
-      if (data.memories && data.memories.length > 0) {
-        console.log('💭 First memory object:', data.memories[0]);
-        const newest = data.memories[0].fragmentText || data.memories[0].fragment_text || data.memories[0].content || '';
-        console.log('💭 Memory animation check:', { newest: newest.substring(0, 50), lastMemory: lastMemory?.substring(0, 50), hasNewMemory: newest !== lastMemory });
-        if (newest && newest !== lastMemory) {
-          console.log('💭 Triggering memory animation for:', newest.substring(0, 50) + '...');
-          setLastMemory(newest);
-          setShowMemoryAnim(true);
-          setTimeout(() => setShowMemoryAnim(false), 1400);
-        }
-      } else {
-        console.log('💭 No memories in API response');
-      }
-
-      // If the API returned updated memories, update local state (if a memory panel is present)
-      if (data.memories) {
-        // Optionally: setMemories(data.memories)
-        // (Uncomment and wire up if you want to show live memory updates)
-      }
-
-      // Show memory processing status
-      console.log('💭 Memory processing: User message processed for memories');
-      console.log('💭 Memory system status:', {
-        userId,
-        avatarId,
-        isSharedAvatar,
-        shareToken,
-        hasMemories: data.memories && data.memories.length > 0
-      });
-
-      if (data.answer) {
-        try {
-          console.log('[ChatInterface] Generating voice with optimized settings')
-          const vr = await fetch('/api/voice', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-              text: aiAnswer, 
-              voiceId,
-              accent,
-              emotionalStyle: data.emotionalStyle || 'default',
-              settings: voiceSettings || undefined
-            }),
-          })
-          if (!vr.ok) {
-            const errText = await vr.text()
-            setVoiceError(
-              vr.status === 401 && errText.includes('quota_exceeded')
-                ? 'Voice service quota exceeded. Please upgrade your plan.'
-                : 'Voice service error. Falling back to browser TTS.'
-            )
-            if ('speechSynthesis' in window) {
-              const utter = new SpeechSynthesisUtterance(aiAnswer)
-              window.speechSynthesis.speak(utter)
+      // Memory processing happens in the streaming API, but we can still check for UI updates
+      try {
+        const memoryResponse = await fetch(`/api/memories?userId=${userId}&avatarId=${avatarId}`);
+        if (memoryResponse.ok) {
+          const memoryData = await memoryResponse.json();
+          if (memoryData.memories && memoryData.memories.length > 0) {
+            const newest = memoryData.memories[0].fragmentText || memoryData.memories[0].fragment_text || memoryData.memories[0].content || '';
+            if (newest && newest !== lastMemory) {
+              console.log('💭 Triggering memory animation for:', newest.substring(0, 50) + '...');
+              setLastMemory(newest);
+              setShowMemoryAnim(true);
+              setTimeout(() => setShowMemoryAnim(false), 1400);
             }
-            return
-          }
-          setVoiceError(null)
-          const blob = await vr.blob()
-          if (blob.size > 0) {
-            // Auto-play the audio immediately
-            playAudioBlob(blob)
-          }
-        } catch {
-          setVoiceError('Voice fetch failed; using browser TTS instead.')
-          if ('speechSynthesis' in window) {
-            const utter = new SpeechSynthesisUtterance(aiAnswer)
-            window.speechSynthesis.speak(utter)
           }
         }
+      } catch (memoryError) {
+        console.warn('Failed to fetch updated memories:', memoryError);
       }
+
     } catch (err: any) {
-      setAnswer('Error: ' + (err.message || err))
+      console.error('Streaming chat error:', err);
+      setAnswer('Error: ' + (err.message || err));
+      setIsStreaming(false);
+      
+      // Fallback to non-streaming mode
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            question: text,
+            history: newHistory,
+            profileData,
+            voiceId,
+            userId,
+            avatarId,
+            visitorName,
+            isSharedAvatar,
+            shareToken,
+            stream: false // Explicitly disable streaming for fallback
+          }),
+        });
+
+        const data = await res.json();
+        const aiAnswer = data.answer || '😕 No answer.';
+        setAnswer(aiAnswer);
+
+        const assistantMessage: ChatMessage = { role: 'assistant', content: aiAnswer };
+        const safeHistory: ChatMessage[] = [
+          ...newHistory,
+          assistantMessage,
+        ].filter((m): m is ChatMessage => m.role === 'user' || m.role === 'assistant');
+        setMessages(safeHistory);
+
+        await saveMessage(assistantMessage);
+
+        // Play voice for fallback response
+        if (aiAnswer && voiceId) {
+          try {
+            const vr = await fetch('/api/voice', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                text: aiAnswer, 
+                voiceId,
+                accent,
+                settings: voiceSettings || undefined
+              }),
+            });
+            if (vr.ok) {
+              const blob = await vr.blob();
+              if (blob.size > 0) {
+                playAudioBlob(blob);
+              }
+            }
+          } catch (voiceError) {
+            console.warn('Voice synthesis failed:', voiceError);
+          }
+        }
+      } catch (fallbackError) {
+        console.error('Fallback request also failed:', fallbackError);
+      }
     } finally {
-      setLoading(false)
+      setLoading(false);
+      setIsStreaming(false);
     }
   }
 
@@ -795,6 +859,57 @@ export default function ChatInterface({
             </button>
           </div>
           
+          {/* Show streaming response if active */}
+          {isStreaming && streamingText && (
+            <div className="message-pair" style={{ marginBottom: '32px', position: 'relative' }}>
+              <div className="assistant-answer" style={{
+                background: 'rgba(30, 23, 57, 0.8)',
+                borderRadius: '16px',
+                padding: '20px',
+                borderLeft: '4px solid #6a41f1',
+                opacity: 0.9
+              }}>
+                <h3 style={{ margin: '0 0 12px 0', color: '#9b7cff', fontSize: '18px', fontWeight: '600' }}>
+                  {getFirstName(profileData)} says:
+                  <span style={{ 
+                    marginLeft: '8px', 
+                    fontSize: '14px', 
+                    opacity: 0.7,
+                    fontWeight: 'normal'
+                  }}>
+                    (streaming...)
+                  </span>
+                </h3>
+                <p style={{ margin: '0 0 16px 0', fontSize: '16px', color: '#e2e2f6', lineHeight: '1.6' }}>
+                  {streamingText}
+                  <span className="streaming-cursor" style={{
+                    display: 'inline-block',
+                    width: '2px',
+                    height: '20px',
+                    backgroundColor: '#9b7cff',
+                    marginLeft: '2px',
+                    animation: 'blink 1s infinite'
+                  }}>|</span>
+                </p>
+                <div style={{ 
+                  fontSize: '12px', 
+                  color: '#9b7cff', 
+                  opacity: 0.7,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}>
+                  <div className="streaming-indicator">
+                    <div className="streaming-dot"></div>
+                    <div className="streaming-dot"></div>
+                    <div className="streaming-dot"></div>
+                  </div>
+                  Speaking as text arrives...
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Display messages in reverse order (newest first) */}
           {messages.slice(-6).reverse().map((msg, idx) => {
             const originalIdx = messages.length - 1 - idx // Calculate original index for play button
@@ -836,7 +951,7 @@ export default function ChatInterface({
                     <p style={{ margin: '0 0 16px 0', fontSize: '16px', color: '#e2e2f6', lineHeight: '1.6' }}>
                       {msg.content}
                     </p>
-                    {idx === 0 && !playing && ( // Show play button only for the most recent message
+                    {idx === 0 && !playing && !isStreaming && ( // Show play button only for the most recent message when not streaming
                       <button onClick={handleReplay} className="play-btn">
                         🔊 Play Again
                       </button>

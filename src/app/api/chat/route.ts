@@ -10,6 +10,17 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY || ''
 });
 
+// Helper function to create a streaming response
+function createStreamingResponse(stream: ReadableStream) {
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+    },
+  });
+}
+
 export async function POST(req: Request) {
   try {
     // 1) Parse incoming payload
@@ -22,7 +33,8 @@ export async function POST(req: Request) {
       isSharedAvatar,
       shareToken,
       userId,
-      avatarId
+      avatarId,
+      stream = false // Add streaming support
     } = await req.json()
 
     // Support both the old and new API formats
@@ -240,66 +252,126 @@ export async function POST(req: Request) {
 
     // 6) Query OpenAI
     console.log('[api/chat] Calling OpenAI API...');
-    const resp = await openai.chat.completions.create({
-      model: 'gpt-4o-2024-08-06',
-      messages: messages as any,
-      temperature: 0.7
-    })
-    const answer = resp.choices?.[0]?.message?.content ?? ''
-    console.log('[api/chat] Received response from OpenAI');
-
-    // 7) Extract and store memories from user message (wait for completion to include in response)
-    if (userId) {
-      console.log(`[api/chat] Processing memories for user ${userId}, avatar ${avatarId}`);
-      try {
-        const storedMemories = await MemoryService.processAndStoreMemories(
-        userQuestion, 
-        userId, 
-        {
-          timestamp: new Date().toISOString(),
-          messageContext: userQuestion,
-          emotionalTone: 'neutral',
-          visitorName: visitorName // Include visitor name for personalized memories
-        },
-        undefined, // extractionThreshold
-          avatarId || 'default' // avatarId as separate parameter
-        );
-        
-        if (storedMemories.length > 0) {
-          console.log(`[api/chat] ✅ Stored ${storedMemories.length} memories for user ${userId}, avatar ${avatarId}`);
-          storedMemories.forEach((memory, index) => {
-            console.log(`[api/chat]   ${index + 1}. ${memory.fragmentText.substring(0, 100)}...`);
-          });
-          
-          // Update latestMemories to include the newly created memories
-          latestMemories = await MemoryService.getLatestMemories(userId, avatarId, 10);
-          console.log(`[api/chat] Updated latest memories count: ${latestMemories.length}`);
-          if (latestMemories.length > 0) {
-            console.log(`[api/chat] Latest memory for animation: ${latestMemories[0].fragmentText?.substring(0, 50)}...`);
-          }
-        } else {
-          console.log(`[api/chat] ℹ️ No memories extracted from message for user ${userId}`);
-        }
-      } catch (memoryError) {
-        console.error('[api/chat] ❌ Memory storage failed:', memoryError.message || memoryError);
-        console.error('[api/chat] Memory error details:', {
-          userId,
-          avatarId,
-          messageLength: userQuestion.length,
-          hasOpenAIKey: !!openai.apiKey
-        });
-      }
-    }
-
-    // 8) Respond with properly formatted memories
-    const formattedMemories = latestMemories.map(memory => ({
-      ...memory,
-      fragmentText: memory.fragmentText || memory.fragment_text,
-      content: memory.fragmentText || memory.fragment_text
-    }));
     
-    console.log('[api/chat] Returning', formattedMemories.length, 'formatted memories');
-    return NextResponse.json({ answer, memories: formattedMemories })
+    if (stream) {
+      // Handle streaming response
+      const streamResponse = await openai.chat.completions.create({
+        model: 'gpt-4o-2024-08-06',
+        messages: messages as any,
+        temperature: 0.7,
+        stream: true
+      });
+
+      let fullAnswer = '';
+      
+      const readableStream = new ReadableStream({
+        async start(controller) {
+          try {
+            for await (const chunk of streamResponse) {
+              const content = chunk.choices[0]?.delta?.content || '';
+              if (content) {
+                fullAnswer += content;
+                controller.enqueue(new TextEncoder().encode(content));
+              }
+            }
+            
+            // After streaming is complete, process memories
+            if (userId && fullAnswer) {
+              try {
+                console.log(`[api/chat] Processing memories for user ${userId}, avatar ${avatarId}`);
+                const storedMemories = await MemoryService.processAndStoreMemories(
+                  userQuestion, 
+                  userId, 
+                  {
+                    timestamp: new Date().toISOString(),
+                    messageContext: userQuestion,
+                    emotionalTone: 'neutral',
+                    visitorName: visitorName
+                  },
+                  undefined,
+                  avatarId || 'default'
+                );
+                
+                if (storedMemories.length > 0) {
+                  console.log(`[api/chat] ✅ Stored ${storedMemories.length} memories for user ${userId}, avatar ${avatarId}`);
+                }
+              } catch (memoryError) {
+                console.error('[api/chat] ❌ Memory storage failed:', memoryError);
+              }
+            }
+            
+            controller.close();
+          } catch (error) {
+            console.error('[api/chat] Streaming error:', error);
+            controller.error(error);
+          }
+        }
+      });
+
+      return createStreamingResponse(readableStream);
+    } else {
+      // Handle non-streaming response (existing logic)
+      const resp = await openai.chat.completions.create({
+        model: 'gpt-4o-2024-08-06',
+        messages: messages as any,
+        temperature: 0.7
+      })
+      const answer = resp.choices?.[0]?.message?.content ?? ''
+      console.log('[api/chat] Received response from OpenAI');
+
+      // 7) Extract and store memories from user message (wait for completion to include in response)
+      if (userId) {
+        console.log(`[api/chat] Processing memories for user ${userId}, avatar ${avatarId}`);
+        try {
+          const storedMemories = await MemoryService.processAndStoreMemories(
+          userQuestion, 
+          userId, 
+          {
+            timestamp: new Date().toISOString(),
+            messageContext: userQuestion,
+            emotionalTone: 'neutral',
+            visitorName: visitorName // Include visitor name for personalized memories
+          },
+          undefined, // extractionThreshold
+            avatarId || 'default' // avatarId as separate parameter
+          );
+          
+          if (storedMemories.length > 0) {
+            console.log(`[api/chat] ✅ Stored ${storedMemories.length} memories for user ${userId}, avatar ${avatarId}`);
+            storedMemories.forEach((memory, index) => {
+              console.log(`[api/chat]   ${index + 1}. ${memory.fragmentText.substring(0, 100)}...`);
+            });
+            
+            // Update latestMemories to include the newly created memories
+            latestMemories = await MemoryService.getLatestMemories(userId, avatarId, 10);
+            console.log(`[api/chat] Updated latest memories count: ${latestMemories.length}`);
+            if (latestMemories.length > 0) {
+              console.log(`[api/chat] Latest memory for animation: ${latestMemories[0].fragmentText?.substring(0, 50)}...`);
+            }
+          } else {
+            console.log(`[api/chat] ℹ️ No memories extracted from message for user ${userId}`);
+          }
+        } catch (memoryError) {
+          console.error('[api/chat] ❌ Memory storage failed:', memoryError.message || memoryError);
+          console.error('[api/chat] Memory error details:', {
+            userId,
+            avatarId,
+            messageLength: userQuestion.length,
+            hasOpenAIKey: !!openai.apiKey
+          });
+        }
+      }
+
+      // 8) Respond with properly formatted memories
+      const formattedMemories = latestMemories.map(memory => ({
+        ...memory,
+        fragmentText: memory.fragmentText || memory.fragment_text,
+        content: memory.fragmentText || memory.fragment_text
+      }));
+      
+      console.log('[api/chat] Returning', formattedMemories.length, 'formatted memories');
+      return NextResponse.json({ answer, memories: formattedMemories })
+    }
   } catch (err: any) {
     console.error('[api/chat] Error:', err)
 

@@ -494,13 +494,11 @@ export default function ConversationalOnboardingPage() {
                 </div>
               )}
 
-              {/* Quick actions */}
-              {conversation.length > 0 && !isRecording && !isProcessing && !isAITalking && (
+              {/* Clear chat option */}
+              {conversation.length > 2 && !isRecording && !isProcessing && !isAITalking && (
                 <div style={{ 
-                  display: 'flex', 
-                  gap: '10px', 
-                  justifyContent: 'center',
-                  marginTop: '20px'
+                  textAlign: 'center',
+                  marginTop: '15px'
                 }}>
                   <button
                     onClick={() => {
@@ -511,13 +509,22 @@ export default function ConversationalOnboardingPage() {
                       }
                     }}
                     style={{
-                      background: 'rgba(231, 76, 60, 0.2)',
-                      color: 'white',
-                      border: '1px solid rgba(231, 76, 60, 0.4)',
-                      borderRadius: '25px',
-                      padding: '8px 16px',
+                      background: 'transparent',
+                      color: 'rgba(239, 68, 68, 0.8)',
+                      border: '1px solid rgba(239, 68, 68, 0.3)',
+                      borderRadius: '8px',
+                      padding: '6px 12px',
                       fontSize: '12px',
-                      cursor: 'pointer'
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.background = 'rgba(239, 68, 68, 0.1)';
+                      e.target.style.color = 'rgba(239, 68, 68, 1)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.background = 'transparent';
+                      e.target.style.color = 'rgba(239, 68, 68, 0.8)';
                     }}
                   >
                     🗑️ Clear Chat
@@ -525,58 +532,7 @@ export default function ConversationalOnboardingPage() {
                 </div>
               )}
 
-              {/* Always visible save/create buttons for testing */}
-              {conversation.length > 0 && (
-                <div style={{ 
-                  textAlign: 'center', 
-                  marginTop: '20px',
-                  padding: '15px',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  borderRadius: '10px',
-                  border: '1px solid rgba(255, 255, 255, 0.1)'
-                }}>
-                  <div style={{ fontSize: '12px', marginBottom: '10px', opacity: 0.8 }}>
-                    Quick Actions
-                  </div>
-                  <button
-                    onClick={saveProgress}
-                    style={{
-                      background: 'linear-gradient(135deg, #27ae60, #229954)',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '25px',
-                      padding: '8px 16px',
-                      fontSize: '12px',
-                      fontWeight: '500',
-                      cursor: 'pointer',
-                      marginRight: '10px'
-                    }}
-                  >
-                    💾 Save
-                  </button>
-                  
-                  {conversation.length >= 2 && (
-                    <button
-                      onClick={createAvatarFromConversation}
-                      disabled={isCreatingAvatar}
-                      style={{
-                        background: isCreatingAvatar 
-                          ? 'rgba(243, 156, 18, 0.5)' 
-                          : 'linear-gradient(135deg, #f39c12, #e67e22)',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '25px',
-                        padding: '8px 16px',
-                        fontSize: '12px',
-                        fontWeight: '500',
-                        cursor: isCreatingAvatar ? 'not-allowed' : 'pointer'
-                      }}
-                    >
-                      {isCreatingAvatar ? '⏳ Creating...' : '✨ Create Avatar'}
-                    </button>
-                  )}
-                </div>
-              )}
+
             </div>
 
             {/* Single Action Section */}

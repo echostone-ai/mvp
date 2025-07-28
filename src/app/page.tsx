@@ -91,36 +91,122 @@ export default function HomePage() {
     if (!text.trim()) return
     setLoading(true)
     setAnswer('')
-    const res = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        prompt: text, 
-        profileData: jonathanProfile,
-        userId: 'jonathan_demo', // Demo user ID for homepage
-        partnerProfile: null // No specific partner context for homepage demo
-      })
-    })
-    const data = await res.json()
-    setAnswer(data.answer || '😕 No answer.')
-    setLoading(false)
 
-    // voice playback
-    if (data.answer) {
-      try {
-        const vr = await fetch('/api/voice', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            text: data.answer,
-            voiceId: process.env.NEXT_PUBLIC_ELEVENLABS_VOICE_ID || 'CO6pxVrMZfyL61ZIglyr'
-          })
+    try {
+      // Try streaming first
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          prompt: text, 
+          profileData: jonathanProfile,
+          userId: 'jonathan_demo', // Demo user ID for homepage
+          partnerProfile: null, // No specific partner context for homepage demo
+          stream: true
         })
-        const blob = await vr.blob()
-        playAudioBlob(blob)
-      } catch {
-        setPlaying(false)
+      })
+
+      if (res.ok && res.body) {
+        const reader = res.body.getReader()
+        const decoder = new TextDecoder()
+        let fullResponse = ''
+        let currentSentence = ''
+
+        try {
+          while (true) {
+            const { done, value } = await reader.read()
+            if (done) break
+
+            const chunk = decoder.decode(value, { stream: true })
+            fullResponse += chunk
+            currentSentence += chunk
+            setAnswer(fullResponse)
+
+            // Check for sentence completion and synthesize voice
+            if (chunk.match(/[.!?]/)) {
+              const sentences = currentSentence.split(/[.!?]/)
+              if (sentences.length > 1) {
+                const completeSentence = sentences[0] + chunk.match(/[.!?]/)?.[0]
+                if (completeSentence.trim().length > 10) {
+                  // Synthesize voice for complete sentence
+                  try {
+                    const vr = await fetch('/api/voice-stream', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ 
+                        sentence: completeSentence.trim(),
+                        voiceId: process.env.NEXT_PUBLIC_ELEVENLABS_VOICE_ID || 'CO6pxVrMZfyL61ZIglyr'
+                      })
+                    })
+                    if (vr.ok) {
+                      const blob = await vr.blob()
+                      if (blob.size > 0) {
+                        playAudioBlob(blob)
+                      }
+                    }
+                  } catch (voiceError) {
+                    console.warn('Voice synthesis failed for sentence:', completeSentence)
+                  }
+                }
+                currentSentence = sentences.slice(1).join('')
+              }
+            }
+          }
+
+          // Handle any remaining sentence
+          if (currentSentence.trim()) {
+            try {
+              const vr = await fetch('/api/voice-stream', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                  sentence: currentSentence.trim(),
+                  voiceId: process.env.NEXT_PUBLIC_ELEVENLABS_VOICE_ID || 'CO6pxVrMZfyL61ZIglyr'
+                })
+              })
+              if (vr.ok) {
+                const blob = await vr.blob()
+                if (blob.size > 0) {
+                  playAudioBlob(blob)
+                }
+              }
+            } catch (voiceError) {
+              console.warn('Voice synthesis failed for final sentence:', currentSentence)
+            }
+          }
+
+        } finally {
+          reader.releaseLock()
+        }
+      } else {
+        // Fallback to non-streaming
+        const data = await res.json()
+        const answer = data.answer || '😕 No answer.'
+        setAnswer(answer)
+
+        // voice playback for fallback
+        if (answer) {
+          try {
+            const vr = await fetch('/api/voice', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                text: answer,
+                voiceId: process.env.NEXT_PUBLIC_ELEVENLABS_VOICE_ID || 'CO6pxVrMZfyL61ZIglyr'
+              })
+            })
+            const blob = await vr.blob()
+            playAudioBlob(blob)
+          } catch {
+            setPlaying(false)
+          }
+        }
       }
+    } catch (error) {
+      console.error('Chat error:', error)
+      setAnswer('Sorry, there was an error processing your request.')
+    } finally {
+      setLoading(false)
     }
   }
 
