@@ -47,12 +47,7 @@ export default function SimpleVoiceOnboarding({
           setResponses(parsed.responses);
           const resumeIndex = parsed.currentQuestion !== undefined ? parsed.currentQuestion : parsed.responses.length;
           setCurrentQuestionIndex(resumeIndex);
-          console.log('🔄 Resumed from localStorage:', {
-            savedCurrentQuestion: parsed.currentQuestion,
-            responseCount: parsed.responses.length,
-            resumingAtIndex: resumeIndex,
-            responseIds: parsed.responses.map((r: any) => r.questionId)
-          });
+          console.log('Resumed from question:', resumeIndex, 'with', parsed.responses.length, 'responses');
         }
       }
     } catch (error) {
@@ -155,12 +150,7 @@ export default function SimpleVoiceOnboarding({
     try {
       const currentQuestion = dynamicOnboardingQuestions[currentQuestionIndex];
       
-      console.log('🎯 Processing question:', currentQuestionIndex, currentQuestion.title);
-      console.log('🏷️ Question details:', {
-        id: currentQuestion.id,
-        category: currentQuestion.category,
-        question: currentQuestion.question
-      });
+      console.log('Processing question:', currentQuestionIndex, currentQuestion.title);
       
       // Transcribe the audio
       const formData = new FormData();
@@ -187,19 +177,12 @@ export default function SimpleVoiceOnboarding({
         timestamp: new Date().toISOString()
       };
 
-      console.log('💾 Saving response for question:', currentQuestion.id, 'category:', currentQuestion.category);
-      console.log('📋 Current question details:', {
-        index: currentQuestionIndex,
-        id: currentQuestion.id,
-        title: currentQuestion.title,
-        category: currentQuestion.category
-      });
+      console.log('Saving response for question:', currentQuestion.id, 'category:', currentQuestion.category);
 
       const updatedResponses = [...responses, newResponse];
       setResponses(updatedResponses);
       
-      console.log('📊 Updated responses:', updatedResponses.length, 'of', dynamicOnboardingQuestions.length);
-      console.log('📝 All response IDs so far:', updatedResponses.map(r => r.questionId));
+      console.log('Updated responses:', updatedResponses.length, 'of', dynamicOnboardingQuestions.length);
 
       // Save to localStorage as backup
       localStorage.setItem(`onboarding_${avatarId}`, JSON.stringify({
@@ -210,9 +193,6 @@ export default function SimpleVoiceOnboarding({
         lastSaved: new Date().toISOString()
       }));
 
-      // Note: Removed auto-save to prevent race conditions
-      // Profile data will be saved when user clicks "Save and Continue Later" or completes onboarding
-
       // Check if we're done
       if (updatedResponses.length >= dynamicOnboardingQuestions.length) {
         console.log('All questions completed, finishing onboarding...');
@@ -221,13 +201,9 @@ export default function SimpleVoiceOnboarding({
       } else {
         // Find next unanswered question
         let nextQuestionIndex = currentQuestionIndex + 1;
-        console.log('🔍 Looking for next question after index:', currentQuestionIndex);
-        
         while (nextQuestionIndex < dynamicOnboardingQuestions.length) {
           const nextQuestion = dynamicOnboardingQuestions[nextQuestionIndex];
           const alreadyAnswered = updatedResponses.some(r => r.questionId === nextQuestion.id);
-          console.log(`📋 Question ${nextQuestionIndex} (${nextQuestion.id}): ${alreadyAnswered ? 'ANSWERED' : 'NOT ANSWERED'}`);
-          
           if (!alreadyAnswered) {
             break;
           }
@@ -235,18 +211,6 @@ export default function SimpleVoiceOnboarding({
         }
         
         if (nextQuestionIndex < dynamicOnboardingQuestions.length) {
-          console.log('✅ Moving to next unanswered question:', nextQuestionIndex, dynamicOnboardingQuestions[nextQuestionIndex].id);
-          
-          // Update localStorage with new question index
-          const progressData = {
-            responses: updatedResponses,
-            currentQuestion: nextQuestionIndex,
-            avatarId,
-            avatarName,
-            lastSaved: new Date().toISOString()
-          };
-          localStorage.setItem(`onboarding_${avatarId}`, JSON.stringify(progressData));
-          
           // Move to next question with transition
           setShowTransition(true);
           setTimeout(() => {
@@ -255,7 +219,6 @@ export default function SimpleVoiceOnboarding({
           }, 1500);
         } else {
           // All questions answered
-          console.log('🎯 All questions answered, completing...');
           await completeOnboarding(updatedResponses);
         }
       }
@@ -285,16 +248,12 @@ export default function SimpleVoiceOnboarding({
       const user = session.session?.user;
       
       if (user && responses.length > 0) {
-        console.log('💾 Saving progress with', responses.length, 'responses');
-        console.log('📋 Response IDs being saved:', responses.map(r => r.questionId));
-        
         // Build partial profile data from current responses
         const partialProfileData = buildProfileFromResponses(responses, avatarName);
         
         // Train voice model with current responses
         let voiceModelId = null;
         try {
-          console.log('🎤 Training voice model with', responses.length, 'responses...');
           const voiceResponse = await fetch('/api/onboarding/train-voice', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -310,7 +269,6 @@ export default function SimpleVoiceOnboarding({
           if (voiceResponse.ok) {
             const voiceData = await voiceResponse.json();
             voiceModelId = voiceData.voice_model_id;
-            console.log('✅ Voice model trained:', voiceModelId);
           }
         } catch (voiceError) {
           console.error('Voice training failed:', voiceError);
@@ -439,8 +397,6 @@ export default function SimpleVoiceOnboarding({
 
   // Helper function to build comprehensive profile data from responses
   const buildProfileFromResponses = (responses: QuestionResponse[], name: string) => {
-    console.log('🔍 Building profile from', responses.length, 'responses:', responses.map(r => r.questionId));
-    console.log('📚 Available questions:', dynamicOnboardingQuestions.map(q => ({ id: q.id, category: q.category })));
     
     const profileData: any = {
       name,
@@ -460,55 +416,43 @@ export default function SimpleVoiceOnboarding({
 
     let personalityParts = [`I am ${name}`];
 
-    responses.forEach((response, index) => {
-      console.log(`📝 Processing response ${index + 1}:`, response.questionId, response.transcript?.substring(0, 50) + '...');
+    responses.forEach((response) => {
       const questionData = dynamicOnboardingQuestions.find(q => q.id === response.questionId);
       if (!questionData) {
-        console.warn('⚠️ Question data not found for:', response.questionId);
+        console.warn('Question data not found for:', response.questionId);
         return;
       }
-
-      console.log('🏷️ Categorizing response as:', questionData.category);
       
       // Add the raw response as factual info
       profileData.factualInfo.push(response.transcript);
 
       // Categorize based on question type
-      console.log(`🎯 Categorizing "${response.transcript?.substring(0, 30)}..." as "${questionData.category}"`);
-      
       switch (questionData.category) {
         case 'memories':
           profileData.memories.push(response.transcript);
           personalityParts.push('I have cherished memories that shape who I am');
-          console.log('✅ Added to memories, total:', profileData.memories.length);
           break;
         case 'influences':
           profileData.influences.push(response.transcript);
           personalityParts.push('I\'ve been shaped by important people in my life');
-          console.log('✅ Added to influences, total:', profileData.influences.length);
           break;
         case 'passions':
           profileData.passions.push(response.transcript);
           personalityParts.push('I have things I\'m passionate about that bring me joy');
-          console.log('✅ Added to passions, total:', profileData.passions.length);
           break;
         case 'places':
           profileData.places.push(response.transcript);
           personalityParts.push('There are places that hold special meaning for me');
-          console.log('✅ Added to places, total:', profileData.places.length);
           break;
         case 'philosophy':
           profileData.philosophy.push(response.transcript);
           personalityParts.push('I have beliefs and principles that guide my life');
-          console.log('✅ Added to philosophy, total:', profileData.philosophy.length);
           break;
         case 'creativity':
           profileData.creativity.push(response.transcript);
           personalityParts.push('I express myself creatively in my own unique way');
-          console.log('✅ Added to creativity, total:', profileData.creativity.length);
           break;
         default:
-          console.warn('⚠️ Unknown category:', questionData.category);
           profileData.memories.push(response.transcript); // Fallback to memories
           break;
       }
@@ -541,14 +485,7 @@ export default function SimpleVoiceOnboarding({
   // Check if current question is already answered
   const currentQuestionAnswered = responses.some(r => r.questionId === currentQuestion?.id);
   
-  // Debug: Log current state
-  console.log('🔍 Current state:', {
-    questionIndex: currentQuestionIndex,
-    questionId: currentQuestion?.id,
-    totalResponses: responses.length,
-    alreadyAnswered: currentQuestionAnswered,
-    responseIds: responses.map(r => r.questionId)
-  });
+
 
   // Show loading while initializing
   if (!isInitialized) {
@@ -694,29 +631,7 @@ export default function SimpleVoiceOnboarding({
               </p>
               
               {responses.length > 0 && (
-                <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-                  <button
-                    onClick={() => {
-                      // Reset onboarding for testing
-                      setResponses([]);
-                      setCurrentQuestionIndex(0);
-                      localStorage.removeItem(`onboarding_${avatarId}`);
-                      console.log('🔄 Reset onboarding');
-                    }}
-                    style={{
-                      background: 'rgba(255, 193, 7, 0.2)',
-                      color: 'white',
-                      border: '1px solid rgba(255, 193, 7, 0.4)',
-                      padding: '0.75rem 1.5rem',
-                      borderRadius: '50px',
-                      cursor: 'pointer',
-                      fontSize: '0.9rem',
-                      fontWeight: '500'
-                    }}
-                  >
-                    🔄 Reset (Debug)
-                  </button>
-                  
+                <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem', justifyContent: 'center' }}>
                   <button
                     onClick={saveProgress}
                     style={{

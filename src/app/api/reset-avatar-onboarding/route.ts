@@ -14,6 +14,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Avatar name required' }, { status: 400 });
     }
 
+    console.log('🔄 Resetting avatar:', avatarName);
+    
     // Get the avatar
     const { data: avatar, error: fetchError } = await supabase
       .from('avatar_profiles')
@@ -22,8 +24,11 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (fetchError) {
+      console.error('❌ Failed to find avatar:', fetchError);
       return NextResponse.json({ error: fetchError.message }, { status: 500 });
     }
+
+    console.log('✅ Found avatar:', avatar.id, 'current voice_id:', avatar.voice_id);
 
     // Reset the avatar's profile data and voice
     const resetProfileData = {
@@ -43,6 +48,7 @@ export async function POST(request: NextRequest) {
     };
 
     // Update the avatar
+    console.log('🔄 Updating avatar with reset data...');
     const { error: updateError } = await supabase
       .from('avatar_profiles')
       .update({
@@ -53,8 +59,11 @@ export async function POST(request: NextRequest) {
       .eq('id', avatar.id);
 
     if (updateError) {
+      console.error('❌ Failed to update avatar:', updateError);
       return NextResponse.json({ error: updateError.message }, { status: 500 });
     }
+
+    console.log('✅ Successfully reset avatar');
 
     return NextResponse.json({
       success: true,
