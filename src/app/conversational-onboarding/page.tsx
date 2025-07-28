@@ -431,6 +431,19 @@ export default function ConversationalOnboardingPage() {
               )}
             </div>
 
+            {/* Debug info */}
+            <div style={{ 
+              textAlign: 'center', 
+              marginBottom: '20px',
+              padding: '10px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '8px',
+              fontSize: '12px',
+              opacity: 0.7
+            }}>
+              Debug: {conversation.length} messages | Buttons show when ≥2 messages
+            </div>
+
             {/* Recording Controls */}
             <div style={{ textAlign: 'center' }}>
               {!isRecording && !isProcessing && !isAITalking && (
@@ -522,10 +535,63 @@ export default function ConversationalOnboardingPage() {
                   </button>
                 </div>
               )}
+
+              {/* Always visible save/create buttons for testing */}
+              {conversation.length > 0 && (
+                <div style={{ 
+                  textAlign: 'center', 
+                  marginTop: '20px',
+                  padding: '15px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  borderRadius: '10px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)'
+                }}>
+                  <div style={{ fontSize: '12px', marginBottom: '10px', opacity: 0.8 }}>
+                    Quick Actions
+                  </div>
+                  <button
+                    onClick={saveProgress}
+                    style={{
+                      background: 'linear-gradient(135deg, #27ae60, #229954)',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '25px',
+                      padding: '8px 16px',
+                      fontSize: '12px',
+                      fontWeight: '500',
+                      cursor: 'pointer',
+                      marginRight: '10px'
+                    }}
+                  >
+                    💾 Save
+                  </button>
+                  
+                  {conversation.length >= 2 && (
+                    <button
+                      onClick={createAvatarFromConversation}
+                      disabled={isCreatingAvatar}
+                      style={{
+                        background: isCreatingAvatar 
+                          ? 'rgba(243, 156, 18, 0.5)' 
+                          : 'linear-gradient(135deg, #f39c12, #e67e22)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '25px',
+                        padding: '8px 16px',
+                        fontSize: '12px',
+                        fontWeight: '500',
+                        cursor: isCreatingAvatar ? 'not-allowed' : 'pointer'
+                      }}
+                    >
+                      {isCreatingAvatar ? '⏳ Creating...' : '✨ Create Avatar'}
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Action Buttons */}
-            {conversation.length > 2 && (
+            {conversation.length >= 2 && (
               <div style={{ textAlign: 'center', marginTop: '30px' }}>
                 <div style={{ marginBottom: '20px' }}>
                   <button
@@ -600,9 +666,9 @@ export default function ConversationalOnboardingPage() {
                 borderRadius: '10px'
               }}>
                 <div style={{ fontSize: '14px', opacity: 0.8 }}>
-                  💬 {Math.floor(conversation.length / 2)} exchanges • 🎤 {audioSamples.length} voice samples
+                  💬 {conversation.length} total messages • 🎤 {audioSamples.length} voice samples
                 </div>
-                {conversation.length >= 4 && (
+                {conversation.length >= 2 && (
                   <div style={{ fontSize: '12px', color: '#4ade80', marginTop: '5px' }}>
                     ✅ Ready to create avatar!
                   </div>
