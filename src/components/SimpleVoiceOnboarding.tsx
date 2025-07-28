@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { dynamicOnboardingQuestions } from '@/lib/onboardingQuestions';
 
@@ -29,9 +29,30 @@ export default function SimpleVoiceOnboarding({
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showTransition, setShowTransition] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+
+  // Initialize component and check for saved progress
+  useEffect(() => {
+    try {
+      const savedData = localStorage.getItem(`onboarding_${avatarId}`);
+      if (savedData) {
+        const parsed = JSON.parse(savedData);
+        console.log('Found saved progress:', parsed);
+        
+        if (parsed.responses && parsed.responses.length > 0) {
+          setResponses(parsed.responses);
+          setCurrentQuestionIndex(parsed.currentQuestion || parsed.responses.length);
+          console.log('Resumed from question:', parsed.currentQuestion || parsed.responses.length);
+        }
+      }
+    } catch (error) {
+      console.warn('Error loading saved progress:', error);
+    }
+    setIsInitialized(true);
+  }, [avatarId]);
 
   // Validate required props
   if (!avatarId || !avatarName) {
@@ -98,6 +119,8 @@ export default function SimpleVoiceOnboarding({
     try {
       const currentQuestion = dynamicOnboardingQuestions[currentQuestionIndex];
       
+      console.log('Processing question:', currentQuestionIndex, currentQuestion.title);
+      
       // Transcribe the audio
       const formData = new FormData();
       formData.append('audioBlob', audioBlob);
@@ -112,6 +135,7 @@ export default function SimpleVoiceOnboarding({
       }
 
       const transcriptionData = await response.json();
+      console.log('Transcription result:', transcriptionData);
       
       const newResponse: QuestionResponse = {
         questionId: currentQuestion.id,
@@ -124,12 +148,25 @@ export default function SimpleVoiceOnboarding({
 
       const updatedResponses = [...responses, newResponse];
       setResponses(updatedResponses);
+      
+      console.log('Updated responses:', updatedResponses.length, 'of', dynamicOnboardingQuestions.length);
+
+      // Save to localStorage as backup
+      localStorage.setItem(`onboarding_${avatarId}`, JSON.stringify({
+        responses: updatedResponses,
+        currentQuestion: currentQuestionIndex + 1,
+        avatarId,
+        avatarName,
+        lastSaved: new Date().toISOString()
+      }));
 
       // Check if we're done
       if (currentQuestionIndex >= dynamicOnboardingQuestions.length - 1) {
+        console.log('All questions completed, finishing onboarding...');
         // Complete onboarding
         await completeOnboarding(updatedResponses);
       } else {
+        console.log('Moving to next question:', currentQuestionIndex + 1);
         // Move to next question with transition
         setShowTransition(true);
         setTimeout(() => {
@@ -145,10 +182,60 @@ export default function SimpleVoiceOnboarding({
     }
   };
 
+  const saveProgress = async () => {
+    try {
+      // Save current progress to localStorage
+      const progressData = {
+        responses,
+        currentQuestion: currentQuestionIndex,
+        avatarId,
+        avatarName,
+        lastSaved: new Date().toISOString()
+      };
+      
+      localStorage.setItem(`onboarding_${avatarId}`, JSON.stringify(progressData));
+      
+      // Also try to save to database if available
+      const { data: session } = await supabase.auth.getSession();
+      const user = session.session?.user;
+      
+      if (user && responses.length > 0) {
+        // Build partial profile data from current responses
+        const partialProfileData = buildProfileFromResponses(responses, avatarName);
+        
+        try {
+          await supabase
+            .from('avatar_profiles')
+            .update({
+              profile_data: partialProfileData,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', avatarId)
+            .eq('user_id', user.id);
+          
+          console.log('Progress saved to database');
+        } catch (updateError) {
+          console.warn('Failed to save to database:', updateError);
+        }
+      }
+      
+      alert('Progress saved! You can continue later from your profile page.');
+      
+      // Redirect to profile
+      window.location.href = '/profile';
+    } catch (error) {
+      console.error('Error saving progress:', error);
+      alert('Error saving progress. Please try again.');
+    }
+  };
+
   const completeOnboarding = async (allResponses: QuestionResponse[]) => {
     try {
+      console.log('Completing onboarding with', allResponses.length, 'responses');
+      
       // Build comprehensive profile data from responses
       const profileData = buildProfileFromResponses(allResponses, avatarName);
+      console.log('Built profile data:', profileData);
       
       // Update the avatar with the new profile data
       const { data: session } = await supabase.auth.getSession();
@@ -156,7 +243,7 @@ export default function SimpleVoiceOnboarding({
       
       if (user) {
         try {
-          await supabase
+          const { error: updateError } = await supabase
             .from('avatar_profiles')
             .update({
               profile_data: profileData,
@@ -164,20 +251,70 @@ export default function SimpleVoiceOnboarding({
             })
             .eq('id', avatarId)
             .eq('user_id', user.id);
+            
+          if (updateError) {
+            console.error('Database update error:', updateError);
+          } else {
+            console.log('Successfully updated avatar profile in database');
+          }
         } catch (updateError) {
           console.warn('Failed to update avatar profile:', updateError);
-          // Continue without database update
         }
       }
+
+      // Try to train voice model
+      let voiceModelId = null;
+      try {
+        console.log('Training voice model...');
+        const voiceResponse = await fetch('/api/onboarding/train-voice', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            profileData: {
+              responses: allResponses,
+              avatarId,
+              avatarName
+            }
+          }),
+        });
+
+        if (voiceResponse.ok) {
+          const voiceData = await voiceResponse.json();
+          voiceModelId = voiceData.voice_model_id;
+          console.log('Voice model trained:', voiceModelId);
+          
+          // Update avatar with voice ID
+          if (voiceModelId && user) {
+            try {
+              await supabase
+                .from('avatar_profiles')
+                .update({ voice_id: voiceModelId })
+                .eq('id', avatarId)
+                .eq('user_id', user.id);
+              console.log('Voice ID saved to avatar');
+            } catch (voiceUpdateError) {
+              console.warn('Failed to save voice ID:', voiceUpdateError);
+            }
+          }
+        }
+      } catch (voiceError) {
+        console.error('Voice training failed:', voiceError);
+        // Continue without voice - don't fail the entire onboarding
+      }
+
+      // Clear localStorage since we're done
+      localStorage.removeItem(`onboarding_${avatarId}`);
 
       const completionData = {
         responses: allResponses,
         avatarId,
         avatarName,
         profileData,
+        voiceModelId,
         completed_at: new Date().toISOString(),
       };
 
+      console.log('Onboarding completed successfully');
       onComplete(completionData);
     } catch (error) {
       console.error('Error completing onboarding:', error);
@@ -259,6 +396,18 @@ export default function SimpleVoiceOnboarding({
 
   const currentQuestion = dynamicOnboardingQuestions[currentQuestionIndex];
   const progress = (responses.length / dynamicOnboardingQuestions.length) * 100;
+
+  // Show loading while initializing
+  if (!isInitialized) {
+    return (
+      <div className="dynamic-onboarding-container">
+        <div className="loading-state">
+          <div className="loading-pulse"></div>
+          <p>Loading your voice journey...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Safety check
   if (!currentQuestion) {
@@ -371,6 +520,50 @@ export default function SimpleVoiceOnboarding({
               <p className="recording-hint">
                 Take 30-90 seconds to share your thoughts. Speak from the heart.
               </p>
+              
+              {responses.length > 0 && (
+                <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                  <button
+                    onClick={saveProgress}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      color: 'white',
+                      border: '1px solid rgba(255, 255, 255, 0.3)',
+                      padding: '0.75rem 1.5rem',
+                      borderRadius: '50px',
+                      cursor: 'pointer',
+                      fontSize: '0.9rem',
+                      fontWeight: '500'
+                    }}
+                  >
+                    💾 Save & Continue Later
+                  </button>
+                  
+                  {currentQuestionIndex < dynamicOnboardingQuestions.length - 1 && (
+                    <button
+                      onClick={() => {
+                        setShowTransition(true);
+                        setTimeout(() => {
+                          setCurrentQuestionIndex(currentQuestionIndex + 1);
+                          setShowTransition(false);
+                        }, 500);
+                      }}
+                      style={{
+                        background: 'rgba(147, 71, 255, 0.2)',
+                        color: 'white',
+                        border: '1px solid rgba(147, 71, 255, 0.4)',
+                        padding: '0.75rem 1.5rem',
+                        borderRadius: '50px',
+                        cursor: 'pointer',
+                        fontSize: '0.9rem',
+                        fontWeight: '500'
+                      }}
+                    >
+                      ⏭️ Skip Question
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
@@ -435,6 +628,31 @@ export default function SimpleVoiceOnboarding({
                 </div>
               );
             })}
+          </div>
+          
+          {responses.length === dynamicOnboardingQuestions.length && (
+            <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+              <button
+                onClick={() => completeOnboarding(responses)}
+                style={{
+                  background: 'linear-gradient(135deg, #22c55e, #16a34a)',
+                  color: 'white',
+                  border: 'none',
+                  padding: '1rem 2rem',
+                  borderRadius: '50px',
+                  fontSize: '1.1rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  margin: '0 auto'
+                }}
+              >
+                🎉 Complete {avatarName}'s Voice Profile
+              </button>
+            </div>
+          )}
           </div>
         </div>
       )}
