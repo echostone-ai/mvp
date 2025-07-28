@@ -653,7 +653,6 @@ export default function SimpleVoiceOnboarding({
               </button>
             </div>
           )}
-          </div>
         </div>
       )}
     </div>
