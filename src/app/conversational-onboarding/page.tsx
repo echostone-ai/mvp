@@ -220,8 +220,8 @@ export default function ConversationalOnboardingPage() {
 
   // Create avatar from conversation
   const createAvatarFromConversation = async () => {
-    if (conversation.length < 4) {
-      alert('Please have a longer conversation before creating your avatar (at least 2 exchanges)');
+    if (conversation.length < 2) {
+      alert('Please have at least one exchange (AI question + your response) before creating your avatar');
       return;
     }
 
@@ -431,18 +431,7 @@ export default function ConversationalOnboardingPage() {
               )}
             </div>
 
-            {/* Debug info */}
-            <div style={{ 
-              textAlign: 'center', 
-              marginBottom: '20px',
-              padding: '10px',
-              background: 'rgba(255, 255, 255, 0.1)',
-              borderRadius: '8px',
-              fontSize: '12px',
-              opacity: 0.7
-            }}>
-              Debug: {conversation.length} messages | Buttons show when ≥2 messages
-            </div>
+
 
             {/* Recording Controls */}
             <div style={{ textAlign: 'center' }}>
@@ -590,89 +579,125 @@ export default function ConversationalOnboardingPage() {
               )}
             </div>
 
-            {/* Action Buttons */}
-            {conversation.length >= 2 && (
+            {/* Single Action Section */}
+            {conversation.length > 0 && (
               <div style={{ textAlign: 'center', marginTop: '30px' }}>
-                <div style={{ marginBottom: '20px' }}>
-                  <button
-                    onClick={createAvatarFromConversation}
-                    disabled={isCreatingAvatar}
-                    style={{
-                      background: isCreatingAvatar 
-                        ? 'rgba(243, 156, 18, 0.5)' 
-                        : 'linear-gradient(135deg, #f39c12, #e67e22)',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '50px',
-                      padding: '15px 30px',
-                      fontSize: '16px',
-                      fontWeight: '600',
-                      cursor: isCreatingAvatar ? 'not-allowed' : 'pointer',
-                      marginRight: '15px'
-                    }}
-                  >
-                    {isCreatingAvatar ? '⏳ Creating Avatar...' : '✨ Create Avatar'}
-                  </button>
+                {/* Progress indicator */}
+                <div style={{ 
+                  marginBottom: '25px',
+                  padding: '20px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: '15px',
+                  backdropFilter: 'blur(10px)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)'
+                }}>
+                  <div style={{ fontSize: '16px', fontWeight: '500', marginBottom: '10px' }}>
+                    💬 {conversation.length} messages • 🎤 {audioSamples.length} voice samples
+                  </div>
+                  {conversation.length >= 2 && (
+                    <div style={{ fontSize: '14px', color: '#4ade80' }}>
+                      ✅ Ready to create your avatar!
+                    </div>
+                  )}
+                </div>
+
+                {/* Main action buttons */}
+                <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '20px' }}>
+                  {conversation.length >= 2 && (
+                    <button
+                      onClick={createAvatarFromConversation}
+                      disabled={isCreatingAvatar}
+                      style={{
+                        background: isCreatingAvatar 
+                          ? 'rgba(99, 102, 241, 0.5)' 
+                          : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '12px',
+                        padding: '16px 32px',
+                        fontSize: '16px',
+                        fontWeight: '600',
+                        cursor: isCreatingAvatar ? 'not-allowed' : 'pointer',
+                        boxShadow: '0 4px 20px rgba(99, 102, 241, 0.4)',
+                        transition: 'all 0.3s ease',
+                        minWidth: '180px',
+                        transform: 'translateY(0)',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isCreatingAvatar) {
+                          e.target.style.transform = 'translateY(-2px)';
+                          e.target.style.boxShadow = '0 6px 25px rgba(99, 102, 241, 0.5)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isCreatingAvatar) {
+                          e.target.style.transform = 'translateY(0)';
+                          e.target.style.boxShadow = '0 4px 20px rgba(99, 102, 241, 0.4)';
+                        }
+                      }}
+                    >
+                      {isCreatingAvatar ? '⏳ Creating Avatar...' : '✨ Create Avatar'}
+                    </button>
+                  )}
                   
                   <button
                     onClick={saveProgress}
                     style={{
-                      background: 'linear-gradient(135deg, #27ae60, #229954)',
+                      background: 'rgba(255, 255, 255, 0.15)',
                       color: 'white',
-                      border: 'none',
-                      borderRadius: '50px',
-                      padding: '15px 30px',
+                      border: '2px solid rgba(255, 255, 255, 0.3)',
+                      borderRadius: '12px',
+                      padding: '16px 32px',
                       fontSize: '16px',
                       fontWeight: '600',
                       cursor: 'pointer',
-                      marginRight: '15px'
+                      backdropFilter: 'blur(10px)',
+                      transition: 'all 0.3s ease',
+                      minWidth: '160px',
+                      transform: 'translateY(0)',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.background = 'rgba(255, 255, 255, 0.25)';
+                      e.target.style.transform = 'translateY(-2px)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.background = 'rgba(255, 255, 255, 0.15)';
+                      e.target.style.transform = 'translateY(0)';
                     }}
                   >
                     💾 Save Progress
                   </button>
                 </div>
-                
-                <div>
-                  <button
-                    onClick={() => {
-                      if (confirm('Are you sure you want to exit? Your progress will be saved.')) {
-                        saveProgress();
-                        router.push('/get-started');
-                      }
-                    }}
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.2)',
-                      color: 'white',
-                      border: '1px solid rgba(255, 255, 255, 0.3)',
-                      borderRadius: '50px',
-                      padding: '12px 25px',
-                      fontSize: '14px',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    ← Exit & Save
-                  </button>
-                </div>
-              </div>
-            )}
 
-            {/* Progress indicator */}
-            {conversation.length > 0 && (
-              <div style={{ 
-                textAlign: 'center', 
-                marginTop: '20px',
-                padding: '15px',
-                background: 'rgba(255, 255, 255, 0.1)',
-                borderRadius: '10px'
-              }}>
-                <div style={{ fontSize: '14px', opacity: 0.8 }}>
-                  💬 {conversation.length} total messages • 🎤 {audioSamples.length} voice samples
-                </div>
-                {conversation.length >= 2 && (
-                  <div style={{ fontSize: '12px', color: '#4ade80', marginTop: '5px' }}>
-                    ✅ Ready to create avatar!
-                  </div>
-                )}
+                {/* Secondary action */}
+                <button
+                  onClick={() => {
+                    if (confirm('Are you sure you want to exit? Your progress will be saved.')) {
+                      saveProgress();
+                      router.push('/get-started');
+                    }
+                  }}
+                  style={{
+                    background: 'transparent',
+                    color: 'rgba(255, 255, 255, 0.7)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '8px',
+                    padding: '12px 24px',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = 'rgba(255, 255, 255, 0.1)';
+                    e.target.style.color = 'white';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = 'transparent';
+                    e.target.style.color = 'rgba(255, 255, 255, 0.7)';
+                  }}
+                >
+                  ← Exit & Save
+                </button>
               </div>
             )}
           </div>
