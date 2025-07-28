@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import VoiceOnboardingComplete from '@/components/VoiceOnboardingComplete';
 import AvatarCreationFlow from '@/components/AvatarCreationFlow';
-import DynamicVoiceOnboarding from '@/components/DynamicVoiceOnboarding';
+import SimpleVoiceOnboarding from '@/components/SimpleVoiceOnboarding';
 import PageShell from '@/components/PageShell';
 import '@/styles/get-started.css';
 
@@ -225,11 +225,10 @@ function GetStartedContent() {
           <>
             {/* Only render if we have valid avatar data */}
             {(newAvatarData?.avatarId || selectedAvatar?.id) ? (
-              <DynamicVoiceOnboarding 
+              <SimpleVoiceOnboarding 
                 onComplete={handleOnboardingComplete}
                 avatarId={newAvatarData?.avatarId || selectedAvatar?.id || ''}
                 avatarName={newAvatarData?.name || selectedAvatar?.name || 'Your Avatar'}
-                resumeSessionId={sessionId}
               />
             ) : (
               <div className="get-started-card">
