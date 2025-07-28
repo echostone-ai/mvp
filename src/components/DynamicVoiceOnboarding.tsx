@@ -51,10 +51,14 @@ export default function DynamicVoiceOnboarding({
 
   // Initialize session
   useEffect(() => {
+    let isMounted = true;
+    
     async function initializeSession() {
       try {
         const { data: session } = await supabase.auth.getSession();
         const user = session.session?.user;
+        
+        if (!isMounted) return;
         
         if (!user) {
           setError('Please sign in to continue with voice onboarding.');
@@ -90,29 +94,51 @@ export default function DynamicVoiceOnboarding({
           }
         } else {
           // Create new session
-          const createResponse = await fetch('/api/onboarding/create-session', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              avatarId,
-              userId: user.id
-            })
-          });
+          try {
+            const createResponse = await fetch('/api/onboarding/create-session', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                avatarId,
+                userId: user.id
+              })
+            });
 
-          const createData = await createResponse.json();
-          if (createData.success) {
-            setSessionId(createData.sessionId);
+            if (createResponse.ok) {
+              const createData = await createResponse.json();
+              if (createData.success) {
+                setSessionId(createData.sessionId);
+              }
+            } else {
+              // If database tables don't exist, create a local session ID
+              console.warn('Database session creation failed, using local session');
+              const localSessionId = `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+              setSessionId(localSessionId);
+            }
+          } catch (createError) {
+            console.error('Session creation failed:', createError);
+            // Fallback to local session
+            const localSessionId = `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            setSessionId(localSessionId);
           }
         }
       } catch (error) {
         console.error('Error initializing session:', error);
-        setError('Failed to initialize voice onboarding session. Please try again.');
+        if (isMounted) {
+          setError('Failed to initialize voice onboarding session. Please try again.');
+        }
       } finally {
-        setIsLoadingSession(false);
+        if (isMounted) {
+          setIsLoadingSession(false);
+        }
       }
     }
 
     initializeSession();
+
+    return () => {
+      isMounted = false;
+    };
   }, [avatarId, resumeSessionId]);
 
   const startRecording = useCallback(async () => {
@@ -179,33 +205,38 @@ export default function DynamicVoiceOnboarding({
         timestamp: new Date().toISOString()
       };
 
-      // Save response to database
-      if (sessionId) {
-        const saveResponse = await fetch('/api/onboarding/save-response', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            sessionId,
-            avatarId,
-            questionIndex: currentQuestionIndex,
-            question: currentQuestion.question,
-            transcript: transcriptionData.text,
-            analysis: transcriptionData.analysis,
-            audioUrl: null
-          })
-        });
+      // Save response to database (if available)
+      if (sessionId && !sessionId.startsWith('local_')) {
+        try {
+          const saveResponse = await fetch('/api/onboarding/save-response', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              sessionId,
+              avatarId,
+              questionIndex: currentQuestionIndex,
+              question: currentQuestion.question,
+              transcript: transcriptionData.text,
+              analysis: transcriptionData.analysis,
+              audioUrl: null
+            })
+          });
 
-        const saveData = await saveResponse.json();
-        if (!saveData.success) {
-          throw new Error('Failed to save response');
-        }
-
-        console.log('Save response result:', saveData);
-        
-        if (saveData.isComplete) {
-          console.log('Onboarding marked as complete, finishing...');
-          await completeOnboarding([...responses, newResponse]);
-          return;
+          if (saveResponse.ok) {
+            const saveData = await saveResponse.json();
+            console.log('Save response result:', saveData);
+            
+            if (saveData.isComplete) {
+              console.log('Onboarding marked as complete, finishing...');
+              await completeOnboarding([...responses, newResponse]);
+              return;
+            }
+          } else {
+            console.warn('Failed to save response to database, continuing with local storage');
+          }
+        } catch (saveError) {
+          console.error('Error saving response:', saveError);
+          // Continue without database save
         }
       }
 
@@ -470,24 +501,38 @@ export default function DynamicVoiceOnboarding({
   
   // If current question is answered but we're not at the end, move to next unanswered question
   useEffect(() => {
+    let isMounted = true;
+    
     if (currentQuestionAnswered && !isLastQuestion && !showQuestionTransition && !isProcessing) {
       const nextUnansweredIndex = dynamicOnboardingQuestions.findIndex((q, index) => 
         index > currentQuestionIndex && !responses.some(r => r.questionId === q.id)
       );
       
-      if (nextUnansweredIndex !== -1) {
+      if (nextUnansweredIndex !== -1 && isMounted) {
         console.log('Moving to next unanswered question:', nextUnansweredIndex);
         setCurrentQuestionIndex(nextUnansweredIndex);
       }
     }
+
+    return () => {
+      isMounted = false;
+    };
   }, [currentQuestionAnswered, isLastQuestion, showQuestionTransition, responses, currentQuestionIndex, isProcessing]);
 
   // Check if all questions are completed
   useEffect(() => {
+    let isMounted = true;
+    
     if (responses.length === dynamicOnboardingQuestions.length && !isProcessing && !showQuestionTransition) {
       console.log('All questions completed, finishing onboarding...');
-      completeOnboarding(responses);
+      if (isMounted) {
+        completeOnboarding(responses);
+      }
     }
+
+    return () => {
+      isMounted = false;
+    };
   }, [responses.length, isProcessing, showQuestionTransition]);
 
   if (showQuestionTransition) {
