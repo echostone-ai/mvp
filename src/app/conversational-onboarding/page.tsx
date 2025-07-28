@@ -19,6 +19,8 @@ export default function ConversationalOnboardingPage() {
   const [isAITalking, setIsAITalking] = useState(false);
   const [avatarName, setAvatarName] = useState('');
   const [hasStarted, setHasStarted] = useState(false);
+  const [audioSamples, setAudioSamples] = useState<string[]>([]);
+  const [isCreatingAvatar, setIsCreatingAvatar] = useState(false);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -171,6 +173,16 @@ export default function ConversationalOnboardingPage() {
       const transcriptionData = await transcribeResponse.json();
       const userText = transcriptionData.text;
       
+      // Convert audio to base64 for storage
+      const audioBase64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(audioBlob);
+      });
+      
+      // Store audio sample
+      setAudioSamples(prev => [...prev, audioBase64]);
+      
       // Add user turn to conversation
       const userTurn: ConversationTurn = {
         id: Date.now().toString(),
@@ -205,6 +217,86 @@ export default function ConversationalOnboardingPage() {
       setIsProcessing(false);
     }
   };
+
+  // Create avatar from conversation
+  const createAvatarFromConversation = async () => {
+    if (conversation.length < 4) {
+      alert('Please have a longer conversation before creating your avatar (at least 2 exchanges)');
+      return;
+    }
+
+    setIsCreatingAvatar(true);
+    
+    try {
+      console.log('🎭 Creating avatar from conversation...');
+      console.log('💬 Conversation length:', conversation.length);
+      console.log('🎤 Audio samples:', audioSamples.length);
+      
+      const response = await fetch('/api/create-avatar-from-conversation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          avatarName,
+          conversation,
+          audioSamples
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create avatar');
+      }
+
+      const data = await response.json();
+      console.log('✅ Avatar created:', data.avatar);
+      
+      // Show success message
+      alert(`🎉 Avatar "${avatarName}" created successfully! ${data.avatar.voice_id ? 'Voice training completed.' : 'Voice training in progress.'}`);
+      
+      // Redirect to profile or avatar page
+      router.push('/profile');
+      
+    } catch (error) {
+      console.error('Avatar creation failed:', error);
+      alert(`Failed to create avatar: ${error.message}`);
+    } finally {
+      setIsCreatingAvatar(false);
+    }
+  };
+
+  // Save conversation progress
+  const saveProgress = () => {
+    const progressData = {
+      avatarName,
+      conversation,
+      audioSamples,
+      timestamp: new Date().toISOString()
+    };
+    
+    localStorage.setItem('conversational_onboarding_progress', JSON.stringify(progressData));
+    alert('💾 Progress saved! You can continue this conversation later.');
+  };
+
+  // Load saved progress
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('conversational_onboarding_progress');
+      if (saved) {
+        const progressData = JSON.parse(saved);
+        if (progressData.avatarName && progressData.conversation) {
+          const shouldResume = confirm('Found a saved conversation. Would you like to continue where you left off?');
+          if (shouldResume) {
+            setAvatarName(progressData.avatarName);
+            setConversation(progressData.conversation || []);
+            setAudioSamples(progressData.audioSamples || []);
+            setHasStarted(true);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load saved progress:', error);
+    }
+  }, []);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -381,49 +473,140 @@ export default function ConversationalOnboardingPage() {
               )}
 
               {isProcessing && (
-                <div style={{ fontSize: '18px', padding: '20px' }}>
-                  Processing your response...
+                <div style={{ 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  alignItems: 'center', 
+                  gap: '15px',
+                  padding: '20px'
+                }}>
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    border: '4px solid rgba(255, 255, 255, 0.3)',
+                    borderTop: '4px solid white',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite'
+                  }}></div>
+                  <div style={{ fontSize: '16px' }}>Processing your response...</div>
+                </div>
+              )}
+
+              {/* Quick actions */}
+              {conversation.length > 0 && !isRecording && !isProcessing && !isAITalking && (
+                <div style={{ 
+                  display: 'flex', 
+                  gap: '10px', 
+                  justifyContent: 'center',
+                  marginTop: '20px'
+                }}>
+                  <button
+                    onClick={() => {
+                      if (confirm('Clear the entire conversation? This cannot be undone.')) {
+                        setConversation([]);
+                        setAudioSamples([]);
+                        localStorage.removeItem('conversational_onboarding_progress');
+                      }
+                    }}
+                    style={{
+                      background: 'rgba(231, 76, 60, 0.2)',
+                      color: 'white',
+                      border: '1px solid rgba(231, 76, 60, 0.4)',
+                      borderRadius: '25px',
+                      padding: '8px 16px',
+                      fontSize: '12px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    🗑️ Clear Chat
+                  </button>
                 </div>
               )}
             </div>
 
             {/* Action Buttons */}
-            {conversation.length > 6 && (
+            {conversation.length > 2 && (
               <div style={{ textAlign: 'center', marginTop: '30px' }}>
-                <button
-                  onClick={() => {
-                    // TODO: Process conversation and create avatar
-                    alert('Avatar creation from conversation - coming soon!');
-                  }}
-                  style={{
-                    background: 'linear-gradient(135deg, #f39c12, #e67e22)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '50px',
-                    padding: '15px 30px',
-                    fontSize: '16px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    marginRight: '15px'
-                  }}
-                >
-                  ✨ Create Avatar from Conversation
-                </button>
+                <div style={{ marginBottom: '20px' }}>
+                  <button
+                    onClick={createAvatarFromConversation}
+                    disabled={isCreatingAvatar}
+                    style={{
+                      background: isCreatingAvatar 
+                        ? 'rgba(243, 156, 18, 0.5)' 
+                        : 'linear-gradient(135deg, #f39c12, #e67e22)',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '50px',
+                      padding: '15px 30px',
+                      fontSize: '16px',
+                      fontWeight: '600',
+                      cursor: isCreatingAvatar ? 'not-allowed' : 'pointer',
+                      marginRight: '15px'
+                    }}
+                  >
+                    {isCreatingAvatar ? '⏳ Creating Avatar...' : '✨ Create Avatar'}
+                  </button>
+                  
+                  <button
+                    onClick={saveProgress}
+                    style={{
+                      background: 'linear-gradient(135deg, #27ae60, #229954)',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '50px',
+                      padding: '15px 30px',
+                      fontSize: '16px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      marginRight: '15px'
+                    }}
+                  >
+                    💾 Save Progress
+                  </button>
+                </div>
                 
-                <button
-                  onClick={() => router.push('/get-started')}
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.2)',
-                    color: 'white',
-                    border: '1px solid rgba(255, 255, 255, 0.3)',
-                    borderRadius: '50px',
-                    padding: '15px 30px',
-                    fontSize: '16px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  ← Back to Standard Onboarding
-                </button>
+                <div>
+                  <button
+                    onClick={() => {
+                      if (confirm('Are you sure you want to exit? Your progress will be saved.')) {
+                        saveProgress();
+                        router.push('/get-started');
+                      }
+                    }}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.2)',
+                      color: 'white',
+                      border: '1px solid rgba(255, 255, 255, 0.3)',
+                      borderRadius: '50px',
+                      padding: '12px 25px',
+                      fontSize: '14px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    ← Exit & Save
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Progress indicator */}
+            {conversation.length > 0 && (
+              <div style={{ 
+                textAlign: 'center', 
+                marginTop: '20px',
+                padding: '15px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: '10px'
+              }}>
+                <div style={{ fontSize: '14px', opacity: 0.8 }}>
+                  💬 {Math.floor(conversation.length / 2)} exchanges • 🎤 {audioSamples.length} voice samples
+                </div>
+                {conversation.length >= 4 && (
+                  <div style={{ fontSize: '12px', color: '#4ade80', marginTop: '5px' }}>
+                    ✅ Ready to create avatar!
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -432,6 +615,14 @@ export default function ConversationalOnboardingPage() {
 
       {/* Hidden audio element for AI speech */}
       <audio ref={audioRef} style={{ display: 'none' }} />
+      
+      {/* CSS Animations */}
+      <style jsx>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }
