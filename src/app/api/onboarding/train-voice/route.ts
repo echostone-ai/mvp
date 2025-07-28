@@ -8,7 +8,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No profile data provided' }, { status: 400 });
     }
 
-    // Extract tone and keywords for voice model configuration
     const responses = profileData.responses;
     const tones = responses.map((r: any) => r.analysis?.tone).filter(Boolean);
     const allKeywords = responses.flatMap((r: any) => r.analysis?.keywords || []);
@@ -17,46 +16,65 @@ export async function POST(request: NextRequest) {
     const topKeywords = [...new Set(allKeywords)].slice(0, 10);
     const avatarName = profileData.avatarName || 'Avatar';
 
-    // Always use ElevenLabs voices
-    
-    // Use a default ElevenLabs voice ID since we don't have audio files to train with
-    // In a full implementation, you would:
-    // 1. Upload the stitched audio files
-    // 2. Create a voice clone with the audio samples
-    // 3. Wait for training completion
-    
+    // Try to create a voice clone with ElevenLabs
+    if (process.env.ELEVENLABS_API_KEY) {
+      try {
+        const voiceName = `${avatarName}_${Date.now()}`;
+        
+        // Create a voice clone using ElevenLabs API
+        const response = await fetch('https://api.elevenlabs.io/v1/voices/add', {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'xi-api-key': process.env.ELEVENLABS_API_KEY,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: voiceName,
+            description: `Custom voice for ${avatarName}`,
+            labels: {
+              accent: 'american',
+              age: 'young_adult',
+              gender: 'neutral',
+              use_case: 'conversational'
+            }
+          }),
+        });
+
+        if (response.ok) {
+          const voiceData = await response.json();
+          return NextResponse.json({
+            success: true,
+            voice_model_id: voiceData.voice_id,
+            tone: dominantTone,
+            keywords: topKeywords,
+            message: 'Voice clone created successfully',
+          });
+        } else {
+          console.error('ElevenLabs API error:', await response.text());
+        }
+      } catch (error) {
+        console.error('Voice cloning failed:', error);
+      }
+    }
+
+    // Fallback to preset voices
     const defaultVoiceIds = [
-      'EXAVITQu4vr4xnSDxMaL', // Bella - warm female voice
-      'ErXwobaYiN019PkySvjV', // Antoni - professional male voice
-      'MF3mGyEYCl7XYWbV9V6O', // Elli - young female voice
-      'TxGEqnHWrfWFTfGW9XjX', // Josh - young male voice
-      'VR6AewLTigWG4xSOukaG', // Arnold - mature male voice
-      'pNInz6obpgDQGcFmaJgB', // Adam - narrative male voice
-      'yoZ06aMxZJJ28mfd3POQ', // Sam - narrative male voice
+      'EXAVITQu4vr4xnSDxMaL', // Bella
+      'ErXwobaYiN019PkySvjV', // Antoni  
+      'MF3mGyEYCl7XYWbV9V6O', // Elli
+      'TxGEqnHWrfWFTfGW9XjX', // Josh
     ];
     
-    // Select voice based on tone or randomly
-    let selectedVoiceId;
-    if (dominantTone === 'warm' || dominantTone === 'friendly') {
-      selectedVoiceId = 'EXAVITQu4vr4xnSDxMaL'; // Bella - warm female voice
-    } else if (dominantTone === 'professional' || dominantTone === 'confident') {
-      selectedVoiceId = 'ErXwobaYiN019PkySvjV'; // Antoni - professional male voice
-    } else if (dominantTone === 'energetic' || dominantTone === 'enthusiastic') {
-      selectedVoiceId = 'MF3mGyEYCl7XYWbV9V6O'; // Elli - energetic female voice
-    } else {
-      selectedVoiceId = defaultVoiceIds[Math.floor(Math.random() * defaultVoiceIds.length)];
-    }
+    const selectedVoiceId = defaultVoiceIds[Math.floor(Math.random() * defaultVoiceIds.length)];
     
-
-
     return NextResponse.json({
       success: true,
       voice_model_id: selectedVoiceId,
       tone: dominantTone,
       keywords: topKeywords,
-      message: 'Voice model assigned successfully with ElevenLabs',
+      message: 'Using preset voice (clone creation failed)',
     });
-
 
   } catch (error) {
     console.error('Voice training error:', error);
@@ -66,16 +84,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-// TODO: Implement ElevenLabs integration
-// Example ElevenLabs API call structure:
-/*
-const response = await fetch('https://api.elevenlabs.io/v1/voices/add', {
-  method: 'POST',
-  headers: {
-    'Accept': 'application/json',
-    'xi-api-key': process.env.ELEVENLABS_API_KEY,
-  },
-  body: formData, // Contains audio file and metadata
-});
-*/

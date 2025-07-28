@@ -45,9 +45,19 @@ export default function SimpleVoiceOnboarding({
         
         if (parsed.responses && parsed.responses.length > 0) {
           setResponses(parsed.responses);
-          const resumeIndex = parsed.currentQuestion !== undefined ? parsed.currentQuestion : parsed.responses.length;
-          setCurrentQuestionIndex(resumeIndex);
-          console.log('Resumed from question:', resumeIndex, 'with', parsed.responses.length, 'responses');
+          // Find the next unanswered question
+          let nextIndex = 0;
+          for (let i = 0; i < dynamicOnboardingQuestions.length; i++) {
+            const questionId = dynamicOnboardingQuestions[i].id;
+            const isAnswered = parsed.responses.some((r: any) => r.questionId === questionId);
+            if (!isAnswered) {
+              nextIndex = i;
+              break;
+            }
+            nextIndex = i + 1; // If all answered, go to next
+          }
+          setCurrentQuestionIndex(nextIndex);
+          console.log('Resumed at question:', nextIndex, 'with', parsed.responses.length, 'responses');
         }
       }
     } catch (error) {
@@ -187,7 +197,7 @@ export default function SimpleVoiceOnboarding({
       // Save to localStorage as backup
       localStorage.setItem(`onboarding_${avatarId}`, JSON.stringify({
         responses: updatedResponses,
-        currentQuestion: currentQuestionIndex + 1,
+        currentQuestion: currentQuestionIndex,
         avatarId,
         avatarName,
         lastSaved: new Date().toISOString()
