@@ -192,45 +192,88 @@ export default function WorkingVoiceOnboarding({ onComplete, avatarId, avatarNam
         creativity: []
       };
 
-      // Categorize responses and build personality
+      // Enhanced profile data extraction
       const personalityParts = [`I am ${avatarName}`];
+      const extractedTraits = [];
+      const keyFacts = [];
       
       allResponses.forEach(response => {
         const question = dynamicOnboardingQuestions.find(q => q.id === response.questionId);
         if (question) {
           console.log(`Categorizing "${response.transcript.substring(0, 30)}..." as ${question.category}`);
           
-          profileData.factualInfo.push(response.transcript);
-          
+          // Add to appropriate category
           switch (question.category) {
             case 'memories':
               profileData.memories.push(response.transcript);
               personalityParts.push('I have cherished memories that shape who I am');
+              // Extract key elements from memories
+              if (response.transcript.includes('grew up') || response.transcript.includes('childhood')) {
+                keyFacts.push('Has meaningful childhood experiences');
+              }
               break;
             case 'influences':
               profileData.influences.push(response.transcript);
               personalityParts.push('I\'ve been shaped by important people in my life');
+              // Extract relationship insights
+              if (response.transcript.toLowerCase().includes('brother') || response.transcript.toLowerCase().includes('sister')) {
+                extractedTraits.push('Values family relationships');
+              }
+              if (response.transcript.toLowerCase().includes('music')) {
+                extractedTraits.push('Influenced by music');
+              }
               break;
             case 'passions':
               profileData.passions.push(response.transcript);
               personalityParts.push('I have things I\'m passionate about that bring me joy');
+              // Extract specific interests
+              const interests = ['art', 'painting', 'music', 'writing', 'history', 'travel', 'nature', 'cooking'];
+              interests.forEach(interest => {
+                if (response.transcript.toLowerCase().includes(interest)) {
+                  extractedTraits.push(`Passionate about ${interest}`);
+                }
+              });
               break;
             case 'places':
               profileData.places.push(response.transcript);
               personalityParts.push('There are places that hold special meaning for me');
+              // Extract travel/location insights
+              if (response.transcript.toLowerCase().includes('travel') || response.transcript.toLowerCase().includes('country')) {
+                extractedTraits.push('Enjoys traveling and exploring');
+              }
               break;
             case 'philosophy':
               profileData.philosophy.push(response.transcript);
               personalityParts.push('I have beliefs and principles that guide my life');
+              // Extract values
+              const values = ['kind', 'generous', 'hard work', 'good to others', 'help'];
+              values.forEach(value => {
+                if (response.transcript.toLowerCase().includes(value)) {
+                  extractedTraits.push(`Values ${value}`);
+                }
+              });
               break;
             case 'creativity':
               profileData.creativity.push(response.transcript);
               personalityParts.push('I express myself creatively in my own unique way');
+              // Extract creative pursuits
+              const creative = ['paint', 'write', 'cook', 'music', 'art', 'poetry'];
+              creative.forEach(pursuit => {
+                if (response.transcript.toLowerCase().includes(pursuit)) {
+                  extractedTraits.push(`Creative in ${pursuit}`);
+                }
+              });
               break;
           }
+          
+          // Add to factual info (keep this for compatibility)
+          profileData.factualInfo.push(response.transcript);
         }
       });
 
+      // Build enhanced personality traits
+      profileData.personalityTraits = [...new Set(extractedTraits)]; // Remove duplicates
+      
       // Build comprehensive personality description
       profileData.personality = personalityParts.join('. ') + '. I speak authentically from my experiences and share my genuine thoughts and feelings.';
 
@@ -321,48 +364,113 @@ export default function WorkingVoiceOnboarding({ onComplete, avatarId, avatarNam
   const progress = ((actualIndex + 1) / dynamicOnboardingQuestions.length) * 100;
 
   return (
-    <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
-      {/* Debug info */}
-      <div style={{ background: '#ffe6e6', padding: '10px', marginBottom: '20px', fontSize: '12px' }}>
-        <strong>DEBUG:</strong> State: {currentIndex}, Ref: {actualIndex}, Responses: {responsesRef.current.length}
-        <br />
-        Current Question ID: {currentQuestion?.id}
-      </div>
-      
-      <div style={{ marginBottom: '20px' }}>
-        <div style={{ background: '#f0f0f0', height: '8px', borderRadius: '4px' }}>
+    <div style={{ 
+      padding: '40px 20px', 
+      maxWidth: '800px', 
+      margin: '0 auto',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      minHeight: '100vh',
+      color: 'white'
+    }}>
+      {/* Progress indicator */}
+      <div style={{ marginBottom: '40px' }}>
+        <div style={{ 
+          background: 'rgba(255, 255, 255, 0.2)', 
+          height: '6px', 
+          borderRadius: '3px',
+          overflow: 'hidden'
+        }}>
           <div style={{ 
-            background: '#007bff', 
+            background: 'linear-gradient(90deg, #4facfe 0%, #00f2fe 100%)', 
             height: '100%', 
             width: `${progress}%`, 
-            borderRadius: '4px',
-            transition: 'width 0.3s'
+            borderRadius: '3px',
+            transition: 'width 0.5s ease'
           }} />
         </div>
-        <p style={{ textAlign: 'center', margin: '10px 0' }}>
+        <p style={{ 
+          textAlign: 'center', 
+          margin: '15px 0 0 0',
+          fontSize: '14px',
+          opacity: 0.9
+        }}>
           Question {actualIndex + 1} of {dynamicOnboardingQuestions.length}
         </p>
       </div>
 
-      <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-        <h2>{currentQuestion.title}</h2>
-        <p style={{ color: '#666', marginBottom: '10px' }}>{currentQuestion.subtitle}</p>
-        <p style={{ fontSize: '18px', marginBottom: '20px' }}>{currentQuestion.question}</p>
-        <p style={{ color: '#888', fontStyle: 'italic' }}>{currentQuestion.prompt}</p>
+      <div style={{ 
+        textAlign: 'center', 
+        marginBottom: '50px',
+        background: 'rgba(255, 255, 255, 0.1)',
+        borderRadius: '20px',
+        padding: '40px 30px',
+        backdropFilter: 'blur(10px)',
+        border: '1px solid rgba(255, 255, 255, 0.2)'
+      }}>
+        <div style={{ 
+          fontSize: '48px', 
+          marginBottom: '20px',
+          filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))'
+        }}>
+          {currentQuestion.icon}
+        </div>
+        <h2 style={{ 
+          fontSize: '28px', 
+          marginBottom: '15px',
+          fontWeight: '600',
+          textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+        }}>
+          {currentQuestion.title}
+        </h2>
+        <p style={{ 
+          color: 'rgba(255, 255, 255, 0.8)', 
+          marginBottom: '20px',
+          fontSize: '16px'
+        }}>
+          {currentQuestion.subtitle}
+        </p>
+        <p style={{ 
+          fontSize: '20px', 
+          marginBottom: '25px',
+          lineHeight: '1.5',
+          fontWeight: '400'
+        }}>
+          {currentQuestion.question}
+        </p>
+        <p style={{ 
+          color: 'rgba(255, 255, 255, 0.7)', 
+          fontStyle: 'italic',
+          fontSize: '16px',
+          lineHeight: '1.4'
+        }}>
+          {currentQuestion.prompt}
+        </p>
       </div>
 
-      <div style={{ textAlign: 'center' }}>
+      <div style={{ textAlign: 'center', marginBottom: '40px' }}>
         {!isRecording && !isProcessing && (
           <button
             onClick={startRecording}
             style={{
-              background: '#dc3545',
+              background: 'linear-gradient(135deg, #ff6b6b, #ee5a24)',
               color: 'white',
               border: 'none',
-              borderRadius: '50px',
-              padding: '15px 30px',
-              fontSize: '16px',
-              cursor: 'pointer'
+              borderRadius: '60px',
+              padding: '20px 40px',
+              fontSize: '18px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              boxShadow: '0 8px 25px rgba(238, 90, 36, 0.4)',
+              transition: 'all 0.3s ease',
+              transform: 'translateY(0)',
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.transform = 'translateY(-2px)';
+              e.target.style.boxShadow = '0 12px 35px rgba(238, 90, 36, 0.5)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = '0 8px 25px rgba(238, 90, 36, 0.4)';
             }}
           >
             🎤 Start Recording
@@ -370,25 +478,62 @@ export default function WorkingVoiceOnboarding({ onComplete, avatarId, avatarNam
         )}
 
         {isRecording && (
-          <button
-            onClick={stopRecording}
-            style={{
-              background: '#28a745',
-              color: 'white',
-              border: 'none',
-              borderRadius: '50px',
-              padding: '15px 30px',
-              fontSize: '16px',
-              cursor: 'pointer'
-            }}
-          >
-            ⏹️ Stop Recording
-          </button>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
+            <div style={{
+              width: '80px',
+              height: '80px',
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #ff6b6b, #ee5a24)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              animation: 'pulse 1.5s infinite',
+              boxShadow: '0 0 30px rgba(238, 90, 36, 0.6)'
+            }}>
+              <div style={{ fontSize: '32px' }}>🎤</div>
+            </div>
+            <button
+              onClick={stopRecording}
+              style={{
+                background: 'linear-gradient(135deg, #00b894, #00a085)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '60px',
+                padding: '15px 35px',
+                fontSize: '16px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                boxShadow: '0 8px 25px rgba(0, 184, 148, 0.4)',
+                transition: 'all 0.3s ease'
+              }}
+            >
+              ⏹️ Stop Recording
+            </button>
+          </div>
         )}
 
         {isProcessing && (
-          <div style={{ color: '#007bff' }}>
-            Processing your response...
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center', 
+            gap: '15px' 
+          }}>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              border: '4px solid rgba(255, 255, 255, 0.3)',
+              borderTop: '4px solid white',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite'
+            }}></div>
+            <div style={{ 
+              color: 'rgba(255, 255, 255, 0.9)',
+              fontSize: '16px',
+              fontWeight: '500'
+            }}>
+              Processing your response...
+            </div>
           </div>
         )}
 
@@ -433,14 +578,67 @@ export default function WorkingVoiceOnboarding({ onComplete, avatarId, avatarNam
         )}
       </div>
 
-      <div style={{ marginTop: '30px', textAlign: 'center', color: '#666' }}>
-        <p>Responses so far: {responsesRef.current.length}</p>
-        {responsesRef.current.map((r, i) => (
-          <div key={i} style={{ margin: '5px 0', fontSize: '12px' }}>
-            {i + 1}. {r.questionId}: {r.transcript.substring(0, 50)}...
+      {responsesRef.current.length > 0 && (
+        <div style={{ 
+          marginTop: '40px',
+          background: 'rgba(255, 255, 255, 0.1)',
+          borderRadius: '15px',
+          padding: '25px',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255, 255, 255, 0.2)'
+        }}>
+          <h3 style={{ 
+            textAlign: 'center', 
+            marginBottom: '20px',
+            fontSize: '18px',
+            fontWeight: '600',
+            color: 'rgba(255, 255, 255, 0.9)'
+          }}>
+            Your Journey So Far ({responsesRef.current.length} responses)
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {responsesRef.current.map((r, i) => {
+              const question = dynamicOnboardingQuestions.find(q => q.id === r.questionId);
+              return (
+                <div key={i} style={{ 
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: '10px',
+                  padding: '15px',
+                  border: '1px solid rgba(255, 255, 255, 0.2)'
+                }}>
+                  <div style={{ 
+                    fontSize: '14px', 
+                    fontWeight: '600',
+                    marginBottom: '8px',
+                    color: 'rgba(255, 255, 255, 0.8)'
+                  }}>
+                    {question?.icon} {question?.title}
+                  </div>
+                  <div style={{ 
+                    fontSize: '13px',
+                    lineHeight: '1.4',
+                    color: 'rgba(255, 255, 255, 0.9)'
+                  }}>
+                    {r.transcript.length > 100 ? r.transcript.substring(0, 100) + '...' : r.transcript}
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        ))}
-      </div>
+        </div>
+      )}
+
+      <style jsx>{`
+        @keyframes pulse {
+          0% { transform: scale(1); }
+          50% { transform: scale(1.1); }
+          100% { transform: scale(1); }
+        }
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }

@@ -32,37 +32,37 @@ export async function POST(request: NextRequest) {
         if (audioFiles.length === 0) {
           console.warn('⚠️ No audio data found in responses');
         } else {
-          console.log('🎵 Found', audioFiles.length, 'audio files, stitching...');
+          console.log('🎵 Found', audioFiles.length, 'audio files, creating voice clone...');
           
-          // Stitch audio files together
-          const stitchResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/onboarding/stitch`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ audioFiles }),
-          });
-          
-          if (stitchResponse.ok) {
-            const stitchData = await stitchResponse.json();
-            console.log('✅ Audio stitched successfully');
+          try {
+            // For ElevenLabs voice cloning, we need at least 1 minute of audio
+            // Let's use the longest audio sample or combine multiple samples
             
-            // Convert base64 to blob for upload
-            const base64Data = stitchData.stitchedAudio.split(',')[1];
+            // Convert first audio file to proper format for ElevenLabs
+            const firstAudioBase64 = audioFiles[0];
+            const base64Data = firstAudioBase64.split(',')[1];
             const audioBuffer = Buffer.from(base64Data, 'base64');
             
             // Create FormData for ElevenLabs upload
             const formData = new FormData();
             formData.append('name', voiceName);
-            formData.append('description', `Custom voice for ${avatarName} created from onboarding`);
-            formData.append('labels', JSON.stringify({
-              accent: 'american',
-              age: 'young_adult',
-              gender: 'neutral',
-              use_case: 'conversational'
-            }));
+            formData.append('description', `Custom voice for ${avatarName} - Generated from onboarding responses`);
             
-            // Add the stitched audio file
+            // Add the audio file as a sample
             const audioBlob = new Blob([audioBuffer], { type: 'audio/wav' });
-            formData.append('files', audioBlob, `${voiceName}.wav`);
+            formData.append('files', audioBlob, `${voiceName}_sample.wav`);
+            
+            // If we have multiple audio files, add them as additional samples
+            if (audioFiles.length > 1) {
+              for (let i = 1; i < Math.min(audioFiles.length, 3); i++) {
+                const additionalBase64 = audioFiles[i].split(',')[1];
+                const additionalBuffer = Buffer.from(additionalBase64, 'base64');
+                const additionalBlob = new Blob([additionalBuffer], { type: 'audio/wav' });
+                formData.append('files', additionalBlob, `${voiceName}_sample_${i + 1}.wav`);
+              }
+            }
+            
+            console.log('📤 Uploading', Math.min(audioFiles.length, 3), 'audio samples to ElevenLabs...');
             
             // Create voice clone with ElevenLabs
             const voiceResponse = await fetch('https://api.elevenlabs.io/v1/voices/add', {
@@ -83,15 +83,16 @@ export async function POST(request: NextRequest) {
                 voice_model_id: voiceData.voice_id,
                 tone: dominantTone,
                 keywords: topKeywords,
-                message: 'Voice clone created successfully with stitched audio',
-                audioFilesUsed: audioFiles.length,
+                message: 'Voice clone created successfully with audio samples',
+                audioFilesUsed: Math.min(audioFiles.length, 3),
               });
             } else {
               const errorText = await voiceResponse.text();
               console.error('❌ ElevenLabs voice creation failed:', errorText);
+              console.log('Response status:', voiceResponse.status);
             }
-          } else {
-            console.error('❌ Audio stitching failed');
+          } catch (voiceError) {
+            console.error('❌ Voice cloning error:', voiceError);
           }
         }
       } catch (error) {
