@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import VoiceOnboardingComplete from '@/components/VoiceOnboardingComplete';
 import AvatarCreationFlow from '@/components/AvatarCreationFlow';
-import SimpleVoiceOnboarding from '@/components/SimpleVoiceOnboarding';
+import WorkingVoiceOnboarding from '@/components/WorkingVoiceOnboarding';
 import PageShell from '@/components/PageShell';
 import '@/styles/get-started.css';
 
@@ -225,7 +225,7 @@ function GetStartedContent() {
           <>
             {/* Only render if we have valid avatar data */}
             {(newAvatarData?.avatarId || selectedAvatar?.id) ? (
-              <SimpleVoiceOnboarding 
+              <WorkingVoiceOnboarding 
                 onComplete={handleOnboardingComplete}
                 avatarId={newAvatarData?.avatarId || selectedAvatar?.id || ''}
                 avatarName={newAvatarData?.name || selectedAvatar?.name || 'Your Avatar'}
