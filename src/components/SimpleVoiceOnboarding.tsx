@@ -177,6 +177,12 @@ export default function SimpleVoiceOnboarding({
       };
 
       console.log('💾 Saving response for question:', currentQuestion.id, 'category:', currentQuestion.category);
+      console.log('📋 Current question details:', {
+        index: currentQuestionIndex,
+        id: currentQuestion.id,
+        title: currentQuestion.title,
+        category: currentQuestion.category
+      });
 
       const updatedResponses = [...responses, newResponse];
       setResponses(updatedResponses);
@@ -204,9 +210,13 @@ export default function SimpleVoiceOnboarding({
       } else {
         // Find next unanswered question
         let nextQuestionIndex = currentQuestionIndex + 1;
+        console.log('🔍 Looking for next question after index:', currentQuestionIndex);
+        
         while (nextQuestionIndex < dynamicOnboardingQuestions.length) {
           const nextQuestion = dynamicOnboardingQuestions[nextQuestionIndex];
           const alreadyAnswered = updatedResponses.some(r => r.questionId === nextQuestion.id);
+          console.log(`📋 Question ${nextQuestionIndex} (${nextQuestion.id}): ${alreadyAnswered ? 'ANSWERED' : 'NOT ANSWERED'}`);
+          
           if (!alreadyAnswered) {
             break;
           }
@@ -214,7 +224,7 @@ export default function SimpleVoiceOnboarding({
         }
         
         if (nextQuestionIndex < dynamicOnboardingQuestions.length) {
-          console.log('Moving to next unanswered question:', nextQuestionIndex);
+          console.log('✅ Moving to next unanswered question:', nextQuestionIndex, dynamicOnboardingQuestions[nextQuestionIndex].id);
           // Move to next question with transition
           setShowTransition(true);
           setTimeout(() => {
@@ -223,7 +233,7 @@ export default function SimpleVoiceOnboarding({
           }, 1500);
         } else {
           // All questions answered
-          console.log('All questions answered, completing...');
+          console.log('🎯 All questions answered, completing...');
           await completeOnboarding(updatedResponses);
         }
       }
@@ -253,6 +263,9 @@ export default function SimpleVoiceOnboarding({
       const user = session.session?.user;
       
       if (user && responses.length > 0) {
+        console.log('💾 Saving progress with', responses.length, 'responses');
+        console.log('📋 Response IDs being saved:', responses.map(r => r.questionId));
+        
         // Build partial profile data from current responses
         const partialProfileData = buildProfileFromResponses(responses, avatarName);
         
@@ -505,6 +518,15 @@ export default function SimpleVoiceOnboarding({
   
   // Check if current question is already answered
   const currentQuestionAnswered = responses.some(r => r.questionId === currentQuestion?.id);
+  
+  // Debug: Log current state
+  console.log('🔍 Current state:', {
+    questionIndex: currentQuestionIndex,
+    questionId: currentQuestion?.id,
+    totalResponses: responses.length,
+    alreadyAnswered: currentQuestionAnswered,
+    responseIds: responses.map(r => r.questionId)
+  });
 
   // Show loading while initializing
   if (!isInitialized) {
@@ -650,7 +672,29 @@ export default function SimpleVoiceOnboarding({
               </p>
               
               {responses.length > 0 && (
-                <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                  <button
+                    onClick={() => {
+                      // Reset onboarding for testing
+                      setResponses([]);
+                      setCurrentQuestionIndex(0);
+                      localStorage.removeItem(`onboarding_${avatarId}`);
+                      console.log('🔄 Reset onboarding');
+                    }}
+                    style={{
+                      background: 'rgba(255, 193, 7, 0.2)',
+                      color: 'white',
+                      border: '1px solid rgba(255, 193, 7, 0.4)',
+                      padding: '0.75rem 1.5rem',
+                      borderRadius: '50px',
+                      cursor: 'pointer',
+                      fontSize: '0.9rem',
+                      fontWeight: '500'
+                    }}
+                  >
+                    🔄 Reset (Debug)
+                  </button>
+                  
                   <button
                     onClick={saveProgress}
                     style={{

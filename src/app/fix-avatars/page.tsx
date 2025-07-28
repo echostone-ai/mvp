@@ -16,10 +16,29 @@ export default function FixAvatarsPage() {
       });
       
       const data = await response.json();
-      setResults(prev => [...prev, { avatarName, ...data }]);
+      setResults(prev => [...prev, { action: 'fix-voice', avatarName, ...data }]);
     } catch (error) {
       console.error('Error fixing avatar:', error);
-      setResults(prev => [...prev, { avatarName, error: error.message }]);
+      setResults(prev => [...prev, { action: 'fix-voice', avatarName, error: error.message }]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetAvatar = async (avatarName: string) => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/reset-avatar-onboarding', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ avatarName })
+      });
+      
+      const data = await response.json();
+      setResults(prev => [...prev, { action: 'reset', avatarName, ...data }]);
+    } catch (error) {
+      console.error('Error resetting avatar:', error);
+      setResults(prev => [...prev, { action: 'reset', avatarName, error: error.message }]);
     } finally {
       setLoading(false);
     }
@@ -71,6 +90,38 @@ export default function FixAvatarsPage() {
           }}
         >
           Fix Thursday
+        </button>
+        
+        <button 
+          onClick={() => fixAvatar('Friday')}
+          disabled={loading}
+          style={{ 
+            padding: '10px 20px',
+            background: '#6f42c1',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px'
+          }}
+        >
+          Fix Friday
+        </button>
+      </div>
+
+      <div style={{ marginBottom: '20px' }}>
+        <h3>Reset Onboarding (Clear all data)</h3>
+        <button 
+          onClick={() => resetAvatar('Friday')}
+          disabled={loading}
+          style={{ 
+            padding: '10px 20px',
+            marginRight: '10px',
+            background: '#ffc107',
+            color: 'black',
+            border: 'none',
+            borderRadius: '4px'
+          }}
+        >
+          Reset Friday
         </button>
       </div>
 
