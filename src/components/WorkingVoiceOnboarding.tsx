@@ -16,20 +16,38 @@ interface Props {
 }
 
 export default function WorkingVoiceOnboarding({ onComplete, avatarId, avatarName }: Props) {
-  console.log('🔄 WorkingVoiceOnboarding component mounting/re-rendering with:', { avatarId, avatarName });
+  console.log('🔄 WorkingVoiceOnboarding rendering with:', { avatarId, avatarName });
   
+  // Use refs to persist data across re-renders
+  const currentIndexRef = useRef(0);
+  const responsesRef = useRef<SimpleResponse[]>([]);
+  
+  // State for UI updates
   const [currentIndex, setCurrentIndex] = useState(0);
   const [responses, setResponses] = useState<SimpleResponse[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   
+  // Sync refs with state
+  const updateCurrentIndex = (newIndex: number) => {
+    console.log('📍 Updating index from', currentIndexRef.current, 'to', newIndex);
+    currentIndexRef.current = newIndex;
+    setCurrentIndex(newIndex);
+  };
+  
+  const updateResponses = (newResponses: SimpleResponse[]) => {
+    console.log('📝 Updating responses from', responsesRef.current.length, 'to', newResponses.length);
+    responsesRef.current = newResponses;
+    setResponses(newResponses);
+  };
+  
   // Debug when component mounts
   useEffect(() => {
-    console.log('🎯 WorkingVoiceOnboarding MOUNTED with avatarId:', avatarId);
+    console.log('🎯 WorkingVoiceOnboarding MOUNTED');
     return () => {
       console.log('💀 WorkingVoiceOnboarding UNMOUNTING');
     };
-  }, [avatarId]);
+  }, []);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -73,10 +91,11 @@ export default function WorkingVoiceOnboarding({ onComplete, avatarId, avatarNam
     setIsProcessing(true);
     
     try {
-      const currentQuestion = dynamicOnboardingQuestions[currentIndex];
+      const actualCurrentIndex = currentIndexRef.current;
+      const currentQuestion = dynamicOnboardingQuestions[actualCurrentIndex];
       
       console.log('=== SIMPLE DEBUG ===');
-      console.log('Current Index:', currentIndex);
+      console.log('State Index:', currentIndex, 'Ref Index:', actualCurrentIndex);
       console.log('Question ID:', currentQuestion.id);
       console.log('Question Category:', currentQuestion.category);
       
@@ -115,35 +134,28 @@ export default function WorkingVoiceOnboarding({ onComplete, avatarId, avatarNam
         audioBase64
       };
 
-      // Add to responses
-      const updatedResponses = [...responses, newResponse];
-      console.log('BEFORE setResponses - current responses:', responses.length);
-      console.log('BEFORE setResponses - updated responses:', updatedResponses.length);
+      // Add to responses using ref
+      const updatedResponses = [...responsesRef.current, newResponse];
+      console.log('BEFORE update - ref responses:', responsesRef.current.length);
+      console.log('BEFORE update - state responses:', responses.length);
+      console.log('AFTER update - updated responses:', updatedResponses.length);
       
-      setResponses(updatedResponses);
+      updateResponses(updatedResponses);
       
-      console.log('AFTER setResponses called');
       console.log('Added response. Total responses:', updatedResponses.length);
       console.log('Response IDs:', updatedResponses.map(r => r.questionId));
 
-      // Move to next question
-      const nextIndex = currentIndex + 1;
+      // Move to next question using ref
+      const nextIndex = actualCurrentIndex + 1;
       console.log('🔄 PROGRESSION DEBUG:');
-      console.log('  Current index:', currentIndex);
+      console.log('  Ref index:', actualCurrentIndex);
+      console.log('  State index:', currentIndex);
       console.log('  Next index:', nextIndex);
       console.log('  Total questions:', dynamicOnboardingQuestions.length);
-      console.log('  Should progress?', nextIndex < dynamicOnboardingQuestions.length);
       
       if (nextIndex < dynamicOnboardingQuestions.length) {
         console.log('✅ Moving to question', nextIndex, dynamicOnboardingQuestions[nextIndex].id);
-        console.log('🔄 BEFORE setCurrentIndex - currentIndex is:', currentIndex);
-        setCurrentIndex(nextIndex);
-        console.log('🔄 AFTER setCurrentIndex called with:', nextIndex);
-        
-        // Force a re-render check
-        setTimeout(() => {
-          console.log('🔄 DELAYED CHECK - currentIndex should now be:', nextIndex);
-        }, 100);
+        updateCurrentIndex(nextIndex);
       } else {
         console.log('🎯 All questions done, completing...');
         await completeOnboarding(updatedResponses);
@@ -292,14 +304,15 @@ export default function WorkingVoiceOnboarding({ onComplete, avatarId, avatarNam
     }
   };
 
-  const currentQuestion = dynamicOnboardingQuestions[currentIndex];
-  const progress = ((currentIndex + 1) / dynamicOnboardingQuestions.length) * 100;
+  const actualIndex = currentIndexRef.current;
+  const currentQuestion = dynamicOnboardingQuestions[actualIndex];
+  const progress = ((actualIndex + 1) / dynamicOnboardingQuestions.length) * 100;
 
   return (
     <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
       {/* Debug info */}
       <div style={{ background: '#ffe6e6', padding: '10px', marginBottom: '20px', fontSize: '12px' }}>
-        <strong>DEBUG:</strong> currentIndex = {currentIndex}, responses.length = {responses.length}
+        <strong>DEBUG:</strong> State: {currentIndex}, Ref: {actualIndex}, Responses: {responsesRef.current.length}
         <br />
         Current Question ID: {currentQuestion?.id}
       </div>
@@ -315,7 +328,7 @@ export default function WorkingVoiceOnboarding({ onComplete, avatarId, avatarNam
           }} />
         </div>
         <p style={{ textAlign: 'center', margin: '10px 0' }}>
-          Question {currentIndex + 1} of {dynamicOnboardingQuestions.length}
+          Question {actualIndex + 1} of {dynamicOnboardingQuestions.length}
         </p>
       </div>
 
@@ -409,8 +422,8 @@ export default function WorkingVoiceOnboarding({ onComplete, avatarId, avatarNam
       </div>
 
       <div style={{ marginTop: '30px', textAlign: 'center', color: '#666' }}>
-        <p>Responses so far: {responses.length}</p>
-        {responses.map((r, i) => (
+        <p>Responses so far: {responsesRef.current.length}</p>
+        {responsesRef.current.map((r, i) => (
           <div key={i} style={{ margin: '5px 0', fontSize: '12px' }}>
             {i + 1}. {r.questionId}: {r.transcript.substring(0, 50)}...
           </div>
