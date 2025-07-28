@@ -146,6 +146,8 @@ export default function SimpleVoiceOnboarding({
         timestamp: new Date().toISOString()
       };
 
+      console.log('💾 Saving response for question:', currentQuestion.id, 'category:', currentQuestion.category);
+
       const updatedResponses = [...responses, newResponse];
       setResponses(updatedResponses);
       
@@ -160,6 +162,28 @@ export default function SimpleVoiceOnboarding({
         avatarName,
         lastSaved: new Date().toISOString()
       }));
+
+      // Auto-save to database after each response
+      const { data: session } = await supabase.auth.getSession();
+      const user = session.session?.user;
+      
+      if (user) {
+        try {
+          const partialProfileData = buildProfileFromResponses(updatedResponses, avatarName);
+          await supabase
+            .from('avatar_profiles')
+            .update({
+              profile_data: partialProfileData,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', avatarId)
+            .eq('user_id', user.id);
+          
+          console.log('✅ Auto-saved progress to database');
+        } catch (autoSaveError) {
+          console.warn('⚠️ Auto-save failed:', autoSaveError);
+        }
+      }
 
       // Check if we're done
       if (updatedResponses.length >= dynamicOnboardingQuestions.length) {
@@ -221,11 +245,37 @@ export default function SimpleVoiceOnboarding({
         // Build partial profile data from current responses
         const partialProfileData = buildProfileFromResponses(responses, avatarName);
         
+        // Train voice model with current responses
+        let voiceModelId = null;
+        try {
+          console.log('🎤 Training voice model with', responses.length, 'responses...');
+          const voiceResponse = await fetch('/api/onboarding/train-voice', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              profileData: {
+                responses: responses,
+                avatarId,
+                avatarName
+              }
+            }),
+          });
+
+          if (voiceResponse.ok) {
+            const voiceData = await voiceResponse.json();
+            voiceModelId = voiceData.voice_model_id;
+            console.log('✅ Voice model trained:', voiceModelId);
+          }
+        } catch (voiceError) {
+          console.error('Voice training failed:', voiceError);
+        }
+        
         try {
           await supabase
             .from('avatar_profiles')
             .update({
               profile_data: partialProfileData,
+              voice_id: voiceModelId || undefined,
               updated_at: new Date().toISOString()
             })
             .eq('id', avatarId)
@@ -344,6 +394,7 @@ export default function SimpleVoiceOnboarding({
   // Helper function to build comprehensive profile data from responses
   const buildProfileFromResponses = (responses: QuestionResponse[], name: string) => {
     console.log('🔍 Building profile from', responses.length, 'responses:', responses.map(r => r.questionId));
+    console.log('📚 Available questions:', dynamicOnboardingQuestions.map(q => ({ id: q.id, category: q.category })));
     
     const profileData: any = {
       name,
