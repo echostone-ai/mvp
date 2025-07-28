@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
         avatar_id: avatarId,
         user_id: userId,
         current_question: 0,
-        total_questions: 4,
+        total_questions: 6,
         is_complete: false,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()

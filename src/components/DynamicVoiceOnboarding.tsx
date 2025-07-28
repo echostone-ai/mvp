@@ -180,7 +180,10 @@ export default function DynamicVoiceOnboarding({
           throw new Error('Failed to save response');
         }
 
+        console.log('Save response result:', saveData);
+        
         if (saveData.isComplete) {
+          console.log('Onboarding marked as complete, finishing...');
           await completeOnboarding([...responses, newResponse]);
           return;
         }
@@ -188,12 +191,17 @@ export default function DynamicVoiceOnboarding({
 
       const updatedResponses = [...responses, newResponse];
       setResponses(updatedResponses);
+      
+      console.log('Current question index:', currentQuestionIndex);
+      console.log('Total questions:', dynamicOnboardingQuestions.length);
+      console.log('Updated responses count:', updatedResponses.length);
 
       // Show transition animation and move to next question
-      if (currentQuestionIndex < dynamicOnboardingQuestions.length - 1) {
+      const nextQuestionIndex = currentQuestionIndex + 1;
+      if (nextQuestionIndex < dynamicOnboardingQuestions.length) {
         setShowQuestionTransition(true);
         setTimeout(() => {
-          setCurrentQuestionIndex(currentQuestionIndex + 1);
+          setCurrentQuestionIndex(nextQuestionIndex);
           setShowQuestionTransition(false);
         }, 1500);
       } else {
@@ -209,18 +217,166 @@ export default function DynamicVoiceOnboarding({
 
   const completeOnboarding = async (allResponses: QuestionResponse[]) => {
     try {
-      const profileData = {
+      // First, stitch audio files together
+      const audioBlobs = allResponses.map(r => r.audioBlob).filter(Boolean);
+      let stitchedAudioUrl = null;
+      
+      if (audioBlobs.length > 0) {
+        const stitchResponse = await fetch('/api/onboarding/stitch', {
+          method: 'POST',
+          body: JSON.stringify({ audioBlobs: audioBlobs.map((_, i) => i) }),
+          headers: { 'Content-Type': 'application/json' },
+        });
+        
+        if (stitchResponse.ok) {
+          const stitchData = await stitchResponse.json();
+          stitchedAudioUrl = stitchData.stitchedAudioUrl;
+        }
+      }
+
+      // Build comprehensive profile data from responses
+      const profileData = buildProfileFromResponses(allResponses, avatarName);
+      
+      // Update the avatar with the new profile data
+      const { data: session } = await supabase.auth.getSession();
+      const user = session.session?.user;
+      
+      if (user) {
+        const { error: updateError } = await supabase
+          .from('avatar_profiles')
+          .update({
+            profile_data: profileData,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', avatarId)
+          .eq('user_id', user.id);
+
+        if (updateError) {
+          console.error('Error updating avatar profile:', updateError);
+        }
+      }
+
+      // Train voice model if we have audio
+      let voiceModelId = null;
+      if (stitchedAudioUrl || audioBlobs.length > 0) {
+        try {
+          const voiceResponse = await fetch('/api/onboarding/train-voice', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              profileData: {
+                responses: allResponses,
+                avatarId,
+                avatarName
+              }
+            }),
+          });
+
+          if (voiceResponse.ok) {
+            const voiceData = await voiceResponse.json();
+            voiceModelId = voiceData.voice_model_id;
+            
+            // Update avatar with voice ID
+            if (voiceModelId && user) {
+              await supabase
+                .from('avatar_profiles')
+                .update({ voice_id: voiceModelId })
+                .eq('id', avatarId)
+                .eq('user_id', user.id);
+            }
+          }
+        } catch (voiceError) {
+          console.error('Voice training failed:', voiceError);
+          // Continue without voice - don't fail the entire onboarding
+        }
+      }
+
+      const completionData = {
         responses: allResponses,
         avatarId,
         avatarName,
+        profileData,
+        voiceModelId,
         completed_at: new Date().toISOString(),
       };
 
-      onComplete(profileData);
+      onComplete(completionData);
     } catch (error) {
       console.error('Error completing onboarding:', error);
       alert('Error completing setup. Please try again.');
     }
+  };
+
+  // Helper function to build comprehensive profile data from responses
+  const buildProfileFromResponses = (responses: QuestionResponse[], name: string) => {
+    const profileData: any = {
+      name,
+      personality: `I am ${name}, `,
+      personalityTraits: [],
+      factualInfo: [`My name is ${name}`],
+      languageStyle: { description: 'Natural and conversational, authentic to my own unique voice' },
+      humorStyle: { description: 'Friendly with occasional wit, adapting to the conversation naturally' },
+      catchphrases: [],
+      memories: [],
+      influences: [],
+      passions: [],
+      places: [],
+      philosophy: [],
+      creativity: []
+    };
+
+    let personalityParts = [`I am ${name}`];
+
+    responses.forEach((response) => {
+      const questionData = dynamicOnboardingQuestions.find(q => q.id === response.questionId);
+      if (!questionData) return;
+
+      // Add the raw response as factual info
+      profileData.factualInfo.push(response.transcript);
+
+      // Categorize based on question type
+      switch (questionData.category) {
+        case 'memories':
+          profileData.memories.push(response.transcript);
+          personalityParts.push('I have cherished memories that shape who I am');
+          break;
+        case 'influences':
+          profileData.influences.push(response.transcript);
+          personalityParts.push('I\'ve been shaped by important people in my life');
+          break;
+        case 'passions':
+          profileData.passions.push(response.transcript);
+          personalityParts.push('I have things I\'m passionate about that bring me joy');
+          break;
+        case 'places':
+          profileData.places.push(response.transcript);
+          personalityParts.push('There are places that hold special meaning for me');
+          break;
+        case 'philosophy':
+          profileData.philosophy.push(response.transcript);
+          personalityParts.push('I have beliefs and principles that guide my life');
+          break;
+        case 'creativity':
+          profileData.creativity.push(response.transcript);
+          personalityParts.push('I express myself creatively in my own unique way');
+          break;
+      }
+
+      // Extract insights from analysis if available
+      if (response.analysis) {
+        if (response.analysis.keywords) {
+          profileData.personalityTraits.push(...response.analysis.keywords.map((k: string) => `I relate to ${k}`));
+        }
+        if (response.analysis.insights) {
+          profileData.personalityTraits.push(...response.analysis.insights);
+        }
+      }
+    });
+
+    // Build comprehensive personality description
+    profileData.personality = personalityParts.join('. ') + '. I speak authentically from my experiences and share my genuine thoughts and feelings.';
+
+    return profileData;
   };
 
   if (isLoadingSession) {
@@ -237,6 +393,26 @@ export default function DynamicVoiceOnboarding({
   const currentQuestion = dynamicOnboardingQuestions[currentQuestionIndex];
   const progress = (responses.length / dynamicOnboardingQuestions.length) * 100;
   const isLastQuestion = currentQuestionIndex === dynamicOnboardingQuestions.length - 1;
+  
+  // Check if current question has already been answered
+  const currentQuestionAnswered = responses.some(r => r.questionId === currentQuestion?.id);
+  
+  // If current question is answered but we're not at the end, move to next unanswered question
+  useEffect(() => {
+    if (currentQuestionAnswered && !isLastQuestion && !showQuestionTransition) {
+      const nextUnansweredIndex = dynamicOnboardingQuestions.findIndex((q, index) => 
+        index > currentQuestionIndex && !responses.some(r => r.questionId === q.id)
+      );
+      
+      if (nextUnansweredIndex !== -1) {
+        console.log('Moving to next unanswered question:', nextUnansweredIndex);
+        setCurrentQuestionIndex(nextUnansweredIndex);
+      } else if (responses.length === dynamicOnboardingQuestions.length) {
+        // All questions answered
+        completeOnboarding(responses);
+      }
+    }
+  }, [currentQuestionAnswered, isLastQuestion, showQuestionTransition, responses, currentQuestionIndex]);
 
   if (showQuestionTransition) {
     return (

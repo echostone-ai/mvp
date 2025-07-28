@@ -49,8 +49,8 @@ export async function POST(request: NextRequest) {
         id: sessionId,
         avatar_id: avatarId,
         current_question: questionIndex + 1,
-        total_questions: 4, // Based on onboardingQuestions length
-        is_complete: questionIndex >= 3,
+        total_questions: 6, // Updated for dynamic onboarding questions
+        is_complete: questionIndex >= 5, // 0-based index, so 5 means 6 questions completed
         updated_at: new Date().toISOString()
       }, {
         onConflict: 'id'
