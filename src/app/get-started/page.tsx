@@ -226,6 +226,7 @@ function GetStartedContent() {
             {/* Only render if we have valid avatar data */}
             {(newAvatarData?.avatarId || selectedAvatar?.id) ? (
               <WorkingVoiceOnboarding 
+                key={newAvatarData?.avatarId || selectedAvatar?.id} // Add stable key
                 onComplete={handleOnboardingComplete}
                 avatarId={newAvatarData?.avatarId || selectedAvatar?.id || ''}
                 avatarName={newAvatarData?.name || selectedAvatar?.name || 'Your Avatar'}

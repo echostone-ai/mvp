@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { dynamicOnboardingQuestions } from '@/lib/onboardingQuestions';
 
 interface SimpleResponse {
@@ -16,10 +16,20 @@ interface Props {
 }
 
 export default function WorkingVoiceOnboarding({ onComplete, avatarId, avatarName }: Props) {
+  console.log('🔄 WorkingVoiceOnboarding component mounting/re-rendering with:', { avatarId, avatarName });
+  
   const [currentIndex, setCurrentIndex] = useState(0);
   const [responses, setResponses] = useState<SimpleResponse[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  
+  // Debug when component mounts
+  useEffect(() => {
+    console.log('🎯 WorkingVoiceOnboarding MOUNTED with avatarId:', avatarId);
+    return () => {
+      console.log('💀 WorkingVoiceOnboarding UNMOUNTING');
+    };
+  }, [avatarId]);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
