@@ -58,6 +58,20 @@ export default function FixAvatarsPage() {
         >
           Fix Wednesday
         </button>
+        
+        <button 
+          onClick={() => fixAvatar('Thursday')}
+          disabled={loading}
+          style={{ 
+            padding: '10px 20px',
+            background: '#dc3545',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px'
+          }}
+        >
+          Fix Thursday
+        </button>
       </div>
 
       {results.length > 0 && (

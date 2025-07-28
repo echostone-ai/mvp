@@ -33,6 +33,7 @@ export default function SimpleVoiceOnboarding({
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const streamRef = useRef<MediaStream | null>(null);
 
   // Initialize component and check for saved progress
   useEffect(() => {
@@ -81,7 +82,14 @@ export default function SimpleVoiceOnboarding({
 
   const startRecording = useCallback(async () => {
     try {
+      // Clean up any existing stream first
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
@@ -95,11 +103,20 @@ export default function SimpleVoiceOnboarding({
       mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
         await handleRecordingComplete(audioBlob);
-        stream.getTracks().forEach(track => track.stop());
+        
+        // Clean up stream
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach(track => {
+            track.stop();
+            console.log('🎤 Microphone track stopped after recording');
+          });
+          streamRef.current = null;
+        }
       };
 
       mediaRecorder.start();
       setIsRecording(true);
+      console.log('🎤 Recording started');
     } catch (error) {
       console.error('Error starting recording:', error);
       alert('Could not access microphone. Please check permissions.');
@@ -110,8 +127,21 @@ export default function SimpleVoiceOnboarding({
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
+      console.log('🎤 Recording stopped');
     }
   }, [isRecording]);
+
+  // Cleanup on component unmount
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => {
+          track.stop();
+          console.log('🎤 Cleanup: Microphone track stopped on unmount');
+        });
+      }
+    };
+  }, []);
 
   const handleRecordingComplete = async (audioBlob: Blob) => {
     setIsProcessing(true);
@@ -163,27 +193,8 @@ export default function SimpleVoiceOnboarding({
         lastSaved: new Date().toISOString()
       }));
 
-      // Auto-save to database after each response
-      const { data: session } = await supabase.auth.getSession();
-      const user = session.session?.user;
-      
-      if (user) {
-        try {
-          const partialProfileData = buildProfileFromResponses(updatedResponses, avatarName);
-          await supabase
-            .from('avatar_profiles')
-            .update({
-              profile_data: partialProfileData,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', avatarId)
-            .eq('user_id', user.id);
-          
-          console.log('✅ Auto-saved progress to database');
-        } catch (autoSaveError) {
-          console.warn('⚠️ Auto-save failed:', autoSaveError);
-        }
-      }
+      // Note: Removed auto-save to prevent race conditions
+      // Profile data will be saved when user clicks "Save and Continue Later" or completes onboarding
 
       // Check if we're done
       if (updatedResponses.length >= dynamicOnboardingQuestions.length) {
@@ -428,30 +439,42 @@ export default function SimpleVoiceOnboarding({
       profileData.factualInfo.push(response.transcript);
 
       // Categorize based on question type
+      console.log(`🎯 Categorizing "${response.transcript?.substring(0, 30)}..." as "${questionData.category}"`);
+      
       switch (questionData.category) {
         case 'memories':
           profileData.memories.push(response.transcript);
           personalityParts.push('I have cherished memories that shape who I am');
+          console.log('✅ Added to memories, total:', profileData.memories.length);
           break;
         case 'influences':
           profileData.influences.push(response.transcript);
           personalityParts.push('I\'ve been shaped by important people in my life');
+          console.log('✅ Added to influences, total:', profileData.influences.length);
           break;
         case 'passions':
           profileData.passions.push(response.transcript);
           personalityParts.push('I have things I\'m passionate about that bring me joy');
+          console.log('✅ Added to passions, total:', profileData.passions.length);
           break;
         case 'places':
           profileData.places.push(response.transcript);
           personalityParts.push('There are places that hold special meaning for me');
+          console.log('✅ Added to places, total:', profileData.places.length);
           break;
         case 'philosophy':
           profileData.philosophy.push(response.transcript);
           personalityParts.push('I have beliefs and principles that guide my life');
+          console.log('✅ Added to philosophy, total:', profileData.philosophy.length);
           break;
         case 'creativity':
           profileData.creativity.push(response.transcript);
           personalityParts.push('I express myself creatively in my own unique way');
+          console.log('✅ Added to creativity, total:', profileData.creativity.length);
+          break;
+        default:
+          console.warn('⚠️ Unknown category:', questionData.category);
+          profileData.memories.push(response.transcript); // Fallback to memories
           break;
       }
 

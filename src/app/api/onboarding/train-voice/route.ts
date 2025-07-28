@@ -2,9 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('🎤 Voice training API called');
     const { profileData } = await request.json();
 
+    console.log('📊 Received profile data:', {
+      hasResponses: !!profileData?.responses,
+      responseCount: profileData?.responses?.length || 0,
+      avatarName: profileData?.avatarName,
+      avatarId: profileData?.avatarId
+    });
+
     if (!profileData?.responses) {
+      console.error('❌ No profile data provided');
       return NextResponse.json({ error: 'No profile data provided' }, { status: 400 });
     }
 
@@ -17,9 +26,9 @@ export async function POST(request: NextRequest) {
     const topKeywords = [...new Set(allKeywords)].slice(0, 10);
     const avatarName = profileData.avatarName || 'Avatar';
 
-    console.log('Training voice for:', avatarName);
-    console.log('Voice tone:', dominantTone);
-    console.log('Keywords:', topKeywords);
+    console.log('🎯 Training voice for:', avatarName);
+    console.log('🎵 Voice tone:', dominantTone);
+    console.log('🏷️ Keywords:', topKeywords);
 
     // Always use ElevenLabs voices - no need to check API key for voice selection
     console.log('🎤 Selecting ElevenLabs voice for:', avatarName);
