@@ -161,18 +161,35 @@ export default function SimpleVoiceOnboarding({
       }));
 
       // Check if we're done
-      if (currentQuestionIndex >= dynamicOnboardingQuestions.length - 1) {
+      if (updatedResponses.length >= dynamicOnboardingQuestions.length) {
         console.log('All questions completed, finishing onboarding...');
         // Complete onboarding
         await completeOnboarding(updatedResponses);
       } else {
-        console.log('Moving to next question:', currentQuestionIndex + 1);
-        // Move to next question with transition
-        setShowTransition(true);
-        setTimeout(() => {
-          setCurrentQuestionIndex(currentQuestionIndex + 1);
-          setShowTransition(false);
-        }, 1500);
+        // Find next unanswered question
+        let nextQuestionIndex = currentQuestionIndex + 1;
+        while (nextQuestionIndex < dynamicOnboardingQuestions.length) {
+          const nextQuestion = dynamicOnboardingQuestions[nextQuestionIndex];
+          const alreadyAnswered = updatedResponses.some(r => r.questionId === nextQuestion.id);
+          if (!alreadyAnswered) {
+            break;
+          }
+          nextQuestionIndex++;
+        }
+        
+        if (nextQuestionIndex < dynamicOnboardingQuestions.length) {
+          console.log('Moving to next unanswered question:', nextQuestionIndex);
+          // Move to next question with transition
+          setShowTransition(true);
+          setTimeout(() => {
+            setCurrentQuestionIndex(nextQuestionIndex);
+            setShowTransition(false);
+          }, 1500);
+        } else {
+          // All questions answered
+          console.log('All questions answered, completing...');
+          await completeOnboarding(updatedResponses);
+        }
       }
     } catch (error) {
       console.error('Error processing recording:', error);
@@ -380,7 +397,12 @@ export default function SimpleVoiceOnboarding({
       // Extract insights from analysis if available
       if (response.analysis) {
         if (response.analysis.keywords) {
-          profileData.personalityTraits.push(...response.analysis.keywords.map((k: string) => `I relate to ${k}`));
+          // Create more natural personality traits from keywords
+          response.analysis.keywords.forEach((keyword: string) => {
+            if (keyword.length > 2) { // Skip very short keywords
+              profileData.personalityTraits.push(`I have experience with ${keyword}`);
+            }
+          });
         }
         if (response.analysis.insights) {
           profileData.personalityTraits.push(...response.analysis.insights);
@@ -396,6 +418,9 @@ export default function SimpleVoiceOnboarding({
 
   const currentQuestion = dynamicOnboardingQuestions[currentQuestionIndex];
   const progress = (responses.length / dynamicOnboardingQuestions.length) * 100;
+  
+  // Check if current question is already answered
+  const currentQuestionAnswered = responses.some(r => r.questionId === currentQuestion?.id);
 
   // Show loading while initializing
   if (!isInitialized) {
@@ -499,10 +524,29 @@ export default function SimpleVoiceOnboarding({
         <div className="question-content">
           <div className="question-icon">{currentQuestion.icon}</div>
           <div className="question-text">
-            <h2 className="question-title">{currentQuestion.title}</h2>
+            <h2 className="question-title">
+              {currentQuestion.title}
+              {currentQuestionAnswered && (
+                <span style={{ 
+                  marginLeft: '1rem', 
+                  fontSize: '1rem', 
+                  color: '#22c55e',
+                  background: 'rgba(34, 197, 94, 0.2)',
+                  padding: '0.25rem 0.75rem',
+                  borderRadius: '12px'
+                }}>
+                  ✓ Answered
+                </span>
+              )}
+            </h2>
             <p className="question-subtitle">{currentQuestion.subtitle}</p>
             <div className="question-main">{currentQuestion.question}</div>
-            <p className="question-prompt">{currentQuestion.prompt}</p>
+            <p className="question-prompt">
+              {currentQuestionAnswered 
+                ? "You've already answered this question. You can record a new response to replace it, or skip to the next question."
+                : currentQuestion.prompt
+              }
+            </p>
           </div>
         </div>
 
@@ -539,14 +583,32 @@ export default function SimpleVoiceOnboarding({
                     💾 Save & Continue Later
                   </button>
                   
-                  {currentQuestionIndex < dynamicOnboardingQuestions.length - 1 && (
+                  {responses.length < dynamicOnboardingQuestions.length && (
                     <button
                       onClick={() => {
-                        setShowTransition(true);
-                        setTimeout(() => {
-                          setCurrentQuestionIndex(currentQuestionIndex + 1);
-                          setShowTransition(false);
-                        }, 500);
+                        // Find next unanswered question
+                        let nextQuestionIndex = currentQuestionIndex + 1;
+                        while (nextQuestionIndex < dynamicOnboardingQuestions.length) {
+                          const nextQuestion = dynamicOnboardingQuestions[nextQuestionIndex];
+                          const alreadyAnswered = responses.some(r => r.questionId === nextQuestion.id);
+                          if (!alreadyAnswered) {
+                            break;
+                          }
+                          nextQuestionIndex++;
+                        }
+                        
+                        if (nextQuestionIndex < dynamicOnboardingQuestions.length) {
+                          setShowTransition(true);
+                          setTimeout(() => {
+                            setCurrentQuestionIndex(nextQuestionIndex);
+                            setShowTransition(false);
+                          }, 500);
+                        } else {
+                          // All questions answered or skipped
+                          if (responses.length > 0) {
+                            completeOnboarding(responses);
+                          }
+                        }
                       }}
                       style={{
                         background: 'rgba(147, 71, 255, 0.2)',
@@ -559,7 +621,7 @@ export default function SimpleVoiceOnboarding({
                         fontWeight: '500'
                       }}
                     >
-                      ⏭️ Skip Question
+                      ⏭️ Skip to Next Question
                     </button>
                   )}
                 </div>
