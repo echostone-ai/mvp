@@ -139,6 +139,36 @@ function GetStartedContent() {
           <p className="get-started-subtitle">
             Let's create your personalized voice experience in just a few minutes
           </p>
+          
+          {/* New Conversational Option */}
+          <div style={{ 
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            borderRadius: '15px',
+            padding: '20px',
+            margin: '20px 0',
+            textAlign: 'center',
+            color: 'white'
+          }}>
+            <h3 style={{ margin: '0 0 10px 0' }}>🎭 Try Our New Conversational Experience!</h3>
+            <p style={{ margin: '0 0 15px 0', opacity: 0.9 }}>
+              Have a natural conversation with AI that asks dynamic follow-up questions
+            </p>
+            <button
+              onClick={() => window.location.href = '/conversational-onboarding'}
+              style={{
+                background: 'rgba(255, 255, 255, 0.2)',
+                color: 'white',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                borderRadius: '25px',
+                padding: '10px 20px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '500'
+              }}
+            >
+              🚀 Try Conversational Onboarding
+            </button>
+          </div>
         </div>
 
         {!avatarChoice && (
