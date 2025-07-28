@@ -2,38 +2,49 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const { audioBlobs } = await request.json();
+    const { audioFiles } = await request.json();
 
-    // For now, we'll return a placeholder response
-    // In a full implementation, you would:
-    // 1. Receive the actual audio blobs
-    // 2. Use FFmpeg or Web Audio API to stitch them together
-    // 3. Normalize volume and trim silence
-    // 4. Return the combined audio file
+    if (!audioFiles || audioFiles.length === 0) {
+      return NextResponse.json({ error: 'No audio files provided' }, { status: 400 });
+    }
 
-    console.log('Stitching audio files:', audioBlobs.length);
+    console.log('🎵 Stitching', audioFiles.length, 'audio files');
 
-    // Placeholder implementation
-    const stitchedAudioUrl = '/api/placeholder-stitched-audio.mp3';
+    // Convert base64 audio files to buffers
+    const audioBuffers = audioFiles.map((base64Audio: string) => {
+      // Remove data URL prefix (data:audio/wav;base64,)
+      const base64Data = base64Audio.split(',')[1];
+      return Buffer.from(base64Data, 'base64');
+    });
+
+    // Simple concatenation approach (not ideal but functional)
+    // In a production system, you'd use FFmpeg or Web Audio API for proper stitching
+    const totalLength = audioBuffers.reduce((sum, buffer) => sum + buffer.length, 0);
+    const stitchedBuffer = Buffer.alloc(totalLength);
+    
+    let offset = 0;
+    audioBuffers.forEach(buffer => {
+      buffer.copy(stitchedBuffer, offset);
+      offset += buffer.length;
+    });
+
+    // Convert back to base64 for response
+    const stitchedBase64 = `data:audio/wav;base64,${stitchedBuffer.toString('base64')}`;
+
+    console.log('✅ Audio stitching completed, total size:', stitchedBuffer.length, 'bytes');
 
     return NextResponse.json({
       success: true,
-      stitchedAudioUrl,
+      stitchedAudio: stitchedBase64,
+      originalCount: audioFiles.length,
+      totalSize: stitchedBuffer.length,
       message: 'Audio files stitched successfully',
     });
   } catch (error) {
-    console.error('Audio stitching error:', error);
+    console.error('❌ Audio stitching error:', error);
     return NextResponse.json(
       { error: 'Failed to stitch audio files' },
       { status: 500 }
     );
   }
 }
-
-// TODO: Implement actual audio stitching
-// This would involve:
-// 1. Converting blobs to audio buffers
-// 2. Using FFmpeg or similar to combine files
-// 3. Applying audio processing (normalization, fade effects)
-// 4. Saving the result to storage
-// 5. Returning the URL to the stitched file

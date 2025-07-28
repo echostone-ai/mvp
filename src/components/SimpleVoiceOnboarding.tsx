@@ -14,6 +14,7 @@ interface QuestionResponse {
   questionId: string;
   question: string;
   audioBlob: Blob | null;
+  audioBase64?: string; // Base64 encoded audio for API calls
   transcript: string;
   analysis: any;
   timestamp: string;
@@ -35,35 +36,17 @@ export default function SimpleVoiceOnboarding({
   const audioChunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
 
-  // Initialize component and check for saved progress
+  // Initialize component - start fresh
   useEffect(() => {
-    try {
-      const savedData = localStorage.getItem(`onboarding_${avatarId}`);
-      if (savedData) {
-        const parsed = JSON.parse(savedData);
-        console.log('Found saved progress:', parsed);
-        
-        if (parsed.responses && parsed.responses.length > 0) {
-          setResponses(parsed.responses);
-          // Find the next unanswered question
-          let nextIndex = 0;
-          for (let i = 0; i < dynamicOnboardingQuestions.length; i++) {
-            const questionId = dynamicOnboardingQuestions[i].id;
-            const isAnswered = parsed.responses.some((r: any) => r.questionId === questionId);
-            if (!isAnswered) {
-              nextIndex = i;
-              break;
-            }
-            nextIndex = i + 1; // If all answered, go to next
-          }
-          setCurrentQuestionIndex(nextIndex);
-          console.log('Resumed at question:', nextIndex, 'with', parsed.responses.length, 'responses');
-        }
-      }
-    } catch (error) {
-      console.warn('Error loading saved progress:', error);
-    }
+    // Clear any existing localStorage for this avatar
+    localStorage.removeItem(`onboarding_${avatarId}`);
+    
+    // Start at question 0 with no responses
+    setCurrentQuestionIndex(0);
+    setResponses([]);
     setIsInitialized(true);
+    
+    console.log('🔄 Starting fresh onboarding at question 0');
   }, [avatarId]);
 
   // Validate required props
@@ -183,10 +166,22 @@ export default function SimpleVoiceOnboarding({
       const transcriptionData = await response.json();
       console.log('Transcription result:', transcriptionData);
       
+      // Convert audioBlob to base64 for storage
+      const audioBase64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const result = reader.result as string;
+          console.log('🎵 Audio converted to base64, size:', result.length, 'chars');
+          resolve(result);
+        };
+        reader.readAsDataURL(audioBlob);
+      });
+
       const newResponse: QuestionResponse = {
         questionId: currentQuestion.id,
         question: currentQuestion.question,
         audioBlob,
+        audioBase64, // Store base64 version for API calls
         transcript: transcriptionData.text,
         analysis: transcriptionData.analysis,
         timestamp: new Date().toISOString()
@@ -224,14 +219,7 @@ export default function SimpleVoiceOnboarding({
           // Update question index immediately, then show transition
           setCurrentQuestionIndex(nextQuestionIndex);
           
-          // Save to localStorage with the NEW question index
-          localStorage.setItem(`onboarding_${avatarId}`, JSON.stringify({
-            responses: updatedResponses,
-            currentQuestion: nextQuestionIndex,
-            avatarId,
-            avatarName,
-            lastSaved: new Date().toISOString()
-          }));
+          // Note: localStorage disabled for debugging
           
           setShowTransition(true);
           setTimeout(() => {
@@ -261,7 +249,7 @@ export default function SimpleVoiceOnboarding({
         lastSaved: new Date().toISOString()
       };
       
-      localStorage.setItem(`onboarding_${avatarId}`, JSON.stringify(progressData));
+      // localStorage disabled for debugging
       
       // Also try to save to database if available
       const { data: session } = await supabase.auth.getSession();
@@ -274,12 +262,22 @@ export default function SimpleVoiceOnboarding({
         // Train voice model with current responses
         let voiceModelId = null;
         try {
+          // Prepare responses for API call (remove Blob objects, keep base64)
+          const apiResponses = responses.map(response => ({
+            questionId: response.questionId,
+            question: response.question,
+            transcript: response.transcript,
+            analysis: response.analysis,
+            timestamp: response.timestamp,
+            audioBase64: response.audioBase64 // Include base64 audio
+          }));
+          
           const voiceResponse = await fetch('/api/onboarding/train-voice', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
               profileData: {
-                responses: responses,
+                responses: apiResponses,
                 avatarId,
                 avatarName
               }
@@ -289,6 +287,7 @@ export default function SimpleVoiceOnboarding({
           if (voiceResponse.ok) {
             const voiceData = await voiceResponse.json();
             voiceModelId = voiceData.voice_model_id;
+            console.log('Voice trained during save:', voiceModelId);
           }
         } catch (voiceError) {
           console.error('Voice training failed:', voiceError);
@@ -358,13 +357,24 @@ export default function SimpleVoiceOnboarding({
       // Try to train voice model
       let voiceModelId = null;
       try {
-        console.log('Training voice model...');
+        console.log('Training voice model with', allResponses.length, 'responses...');
+        
+        // Prepare responses for API call (remove Blob objects, keep base64)
+        const apiResponses = allResponses.map(response => ({
+          questionId: response.questionId,
+          question: response.question,
+          transcript: response.transcript,
+          analysis: response.analysis,
+          timestamp: response.timestamp,
+          audioBase64: response.audioBase64 // Include base64 audio
+        }));
+        
         const voiceResponse = await fetch('/api/onboarding/train-voice', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
             profileData: {
-              responses: allResponses,
+              responses: apiResponses,
               avatarId,
               avatarName
             }

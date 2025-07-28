@@ -21,41 +21,84 @@ export async function POST(request: NextRequest) {
       try {
         const voiceName = `${avatarName}_${Date.now()}`;
         
-        // Create a voice clone using ElevenLabs API
-        const response = await fetch('https://api.elevenlabs.io/v1/voices/add', {
-          method: 'POST',
-          headers: {
-            'Accept': 'application/json',
-            'xi-api-key': process.env.ELEVENLABS_API_KEY,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            name: voiceName,
-            description: `Custom voice for ${avatarName}`,
-            labels: {
+        console.log('🎤 Creating voice clone for:', avatarName);
+        console.log('📝 Processing', responses.length, 'audio responses');
+        
+        // Extract base64 audio from responses
+        const audioFiles = responses
+          .filter((r: any) => r.audioBase64)
+          .map((r: any) => r.audioBase64);
+        
+        if (audioFiles.length === 0) {
+          console.warn('⚠️ No audio data found in responses');
+        } else {
+          console.log('🎵 Found', audioFiles.length, 'audio files, stitching...');
+          
+          // Stitch audio files together
+          const stitchResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/onboarding/stitch`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ audioFiles }),
+          });
+          
+          if (stitchResponse.ok) {
+            const stitchData = await stitchResponse.json();
+            console.log('✅ Audio stitched successfully');
+            
+            // Convert base64 to blob for upload
+            const base64Data = stitchData.stitchedAudio.split(',')[1];
+            const audioBuffer = Buffer.from(base64Data, 'base64');
+            
+            // Create FormData for ElevenLabs upload
+            const formData = new FormData();
+            formData.append('name', voiceName);
+            formData.append('description', `Custom voice for ${avatarName} created from onboarding`);
+            formData.append('labels', JSON.stringify({
               accent: 'american',
               age: 'young_adult',
               gender: 'neutral',
               use_case: 'conversational'
+            }));
+            
+            // Add the stitched audio file
+            const audioBlob = new Blob([audioBuffer], { type: 'audio/wav' });
+            formData.append('files', audioBlob, `${voiceName}.wav`);
+            
+            // Create voice clone with ElevenLabs
+            const voiceResponse = await fetch('https://api.elevenlabs.io/v1/voices/add', {
+              method: 'POST',
+              headers: {
+                'Accept': 'application/json',
+                'xi-api-key': process.env.ELEVENLABS_API_KEY,
+              },
+              body: formData,
+            });
+            
+            if (voiceResponse.ok) {
+              const voiceData = await voiceResponse.json();
+              console.log('🎉 Voice clone created successfully:', voiceData.voice_id);
+              
+              return NextResponse.json({
+                success: true,
+                voice_model_id: voiceData.voice_id,
+                tone: dominantTone,
+                keywords: topKeywords,
+                message: 'Voice clone created successfully with stitched audio',
+                audioFilesUsed: audioFiles.length,
+              });
+            } else {
+              const errorText = await voiceResponse.text();
+              console.error('❌ ElevenLabs voice creation failed:', errorText);
             }
-          }),
-        });
-
-        if (response.ok) {
-          const voiceData = await response.json();
-          return NextResponse.json({
-            success: true,
-            voice_model_id: voiceData.voice_id,
-            tone: dominantTone,
-            keywords: topKeywords,
-            message: 'Voice clone created successfully',
-          });
-        } else {
-          console.error('ElevenLabs API error:', await response.text());
+          } else {
+            console.error('❌ Audio stitching failed');
+          }
         }
       } catch (error) {
-        console.error('Voice cloning failed:', error);
+        console.error('❌ Voice cloning failed:', error);
       }
+    } else {
+      console.warn('⚠️ ELEVENLABS_API_KEY not found');
     }
 
     // Fallback to preset voices
