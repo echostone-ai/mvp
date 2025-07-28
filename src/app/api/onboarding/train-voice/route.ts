@@ -21,58 +21,48 @@ export async function POST(request: NextRequest) {
     console.log('Voice tone:', dominantTone);
     console.log('Keywords:', topKeywords);
 
-    // Check if ElevenLabs API key is available
-    if (process.env.ELEVENLABS_API_KEY) {
-      try {
-        console.log('ElevenLabs API available - training voice for:', avatarName);
-        
-        // Create a voice clone using ElevenLabs API
-        const voiceResponse = await fetch('https://api.elevenlabs.io/v1/voices/add', {
-          method: 'POST',
-          headers: {
-            'Accept': 'application/json',
-            'xi-api-key': process.env.ELEVENLABS_API_KEY,
-          },
-          body: JSON.stringify({
-            name: `${avatarName}_voice_${Date.now()}`,
-            description: `Voice model for ${avatarName} - ${dominantTone} tone`,
-            labels: topKeywords.join(', ')
-          })
-        });
-
-        if (voiceResponse.ok) {
-          const voiceData = await voiceResponse.json();
-          console.log('ElevenLabs voice created:', voiceData.voice_id);
-          
-          return NextResponse.json({
-            success: true,
-            voice_model_id: voiceData.voice_id,
-            tone: dominantTone,
-            keywords: topKeywords,
-            message: 'Voice model trained successfully with ElevenLabs',
-          });
-        } else {
-          console.warn('ElevenLabs API call failed:', await voiceResponse.text());
-        }
-      } catch (elevenLabsError) {
-        console.error('ElevenLabs training failed:', elevenLabsError);
-        // Fall through to mock implementation
-      }
+    // Always use ElevenLabs voices - no need to check API key for voice selection
+    console.log('🎤 Selecting ElevenLabs voice for:', avatarName);
+    
+    // Use a default ElevenLabs voice ID since we don't have audio files to train with
+    // In a full implementation, you would:
+    // 1. Upload the stitched audio files
+    // 2. Create a voice clone with the audio samples
+    // 3. Wait for training completion
+    
+    const defaultVoiceIds = [
+      'EXAVITQu4vr4xnSDxMaL', // Bella - warm female voice
+      'ErXwobaYiN019PkySvjV', // Antoni - professional male voice
+      'MF3mGyEYCl7XYWbV9V6O', // Elli - young female voice
+      'TxGEqnHWrfWFTfGW9XjX', // Josh - young male voice
+      'VR6AewLTigWG4xSOukaG', // Arnold - mature male voice
+      'pNInz6obpgDQGcFmaJgB', // Adam - narrative male voice
+      'yoZ06aMxZJJ28mfd3POQ', // Sam - narrative male voice
+    ];
+    
+    // Select voice based on tone or randomly
+    let selectedVoiceId;
+    if (dominantTone === 'warm' || dominantTone === 'friendly') {
+      selectedVoiceId = 'EXAVITQu4vr4xnSDxMaL'; // Bella - warm female voice
+    } else if (dominantTone === 'professional' || dominantTone === 'confident') {
+      selectedVoiceId = 'ErXwobaYiN019PkySvjV'; // Antoni - professional male voice
+    } else if (dominantTone === 'energetic' || dominantTone === 'enthusiastic') {
+      selectedVoiceId = 'MF3mGyEYCl7XYWbV9V6O'; // Elli - energetic female voice
+    } else {
+      selectedVoiceId = defaultVoiceIds[Math.floor(Math.random() * defaultVoiceIds.length)];
     }
-
-    // Mock implementation for development
-    const mockVoiceModelId = `voice_${profileData.avatarId}_${Date.now()}`;
-
-    // Simulate training delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    console.log('✅ Selected ElevenLabs voice ID:', selectedVoiceId, 'for tone:', dominantTone);
 
     return NextResponse.json({
       success: true,
-      voice_model_id: mockVoiceModelId,
+      voice_model_id: selectedVoiceId,
       tone: dominantTone,
       keywords: topKeywords,
-      message: 'Voice model trained successfully (mock)',
+      message: 'Voice model assigned successfully with ElevenLabs',
     });
+
+
   } catch (error) {
     console.error('Voice training error:', error);
     return NextResponse.json(

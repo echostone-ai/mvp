@@ -149,7 +149,8 @@ export default function SimpleVoiceOnboarding({
       const updatedResponses = [...responses, newResponse];
       setResponses(updatedResponses);
       
-      console.log('Updated responses:', updatedResponses.length, 'of', dynamicOnboardingQuestions.length);
+      console.log('📊 Updated responses:', updatedResponses.length, 'of', dynamicOnboardingQuestions.length);
+      console.log('📝 All response IDs so far:', updatedResponses.map(r => r.questionId));
 
       // Save to localStorage as backup
       localStorage.setItem(`onboarding_${avatarId}`, JSON.stringify({
@@ -248,11 +249,12 @@ export default function SimpleVoiceOnboarding({
 
   const completeOnboarding = async (allResponses: QuestionResponse[]) => {
     try {
-      console.log('Completing onboarding with', allResponses.length, 'responses');
+      console.log('🎯 Completing onboarding with', allResponses.length, 'responses');
+      console.log('📋 All responses:', allResponses.map(r => ({ id: r.questionId, transcript: r.transcript?.substring(0, 30) + '...' })));
       
       // Build comprehensive profile data from responses
       const profileData = buildProfileFromResponses(allResponses, avatarName);
-      console.log('Built profile data:', profileData);
+      console.log('✅ Built profile data:', profileData);
       
       // Update the avatar with the new profile data
       const { data: session } = await supabase.auth.getSession();
@@ -341,6 +343,8 @@ export default function SimpleVoiceOnboarding({
 
   // Helper function to build comprehensive profile data from responses
   const buildProfileFromResponses = (responses: QuestionResponse[], name: string) => {
+    console.log('🔍 Building profile from', responses.length, 'responses:', responses.map(r => r.questionId));
+    
     const profileData: any = {
       name,
       personality: `I am ${name}, `,
@@ -359,10 +363,16 @@ export default function SimpleVoiceOnboarding({
 
     let personalityParts = [`I am ${name}`];
 
-    responses.forEach((response) => {
+    responses.forEach((response, index) => {
+      console.log(`📝 Processing response ${index + 1}:`, response.questionId, response.transcript?.substring(0, 50) + '...');
       const questionData = dynamicOnboardingQuestions.find(q => q.id === response.questionId);
-      if (!questionData) return;
+      if (!questionData) {
+        console.warn('⚠️ Question data not found for:', response.questionId);
+        return;
+      }
 
+      console.log('🏷️ Categorizing response as:', questionData.category);
+      
       // Add the raw response as factual info
       profileData.factualInfo.push(response.transcript);
 
