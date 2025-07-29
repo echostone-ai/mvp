@@ -153,7 +153,22 @@ export default function HomePage() {
             fullResponse += chunk
             setAnswer(fullResponse)
 
-            // No real-time detection - just collect the response
+            // Simple real-time sentence detection
+            for (const char of chunk) {
+              if (char.match(/[.!?]/) && fullResponse.length > 20) {
+                const parts = fullResponse.split(/[.!?]/);
+                if (parts.length >= 2) {
+                  const completeSentence = parts[parts.length - 2].trim();
+                  if (completeSentence.length > 10 && 
+                      !completeSentence.match(/\b(Mr|Mrs|Ms|Dr|Prof|Sr|Jr)\b/) &&
+                      streamingAudioRef.current) {
+                    
+                    console.log('[Homepage] Streaming sentence:', completeSentence.substring(0, 50) + '...');
+                    streamingAudioRef.current.addSentence(completeSentence + char);
+                  }
+                }
+              }
+            }
           }
 
           // Process all sentences from the complete response

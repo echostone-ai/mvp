@@ -345,7 +345,22 @@ export default function ChatInterface({
         fullResponse += char;
         setStreamingText(fullResponse);
 
-        // No real-time detection - just collect the response
+        // Simple real-time sentence detection
+        if (char.match(/[.!?]/) && fullResponse.length > 20) {
+          // Look for complete sentences by splitting and checking if we have at least 2 parts
+          const parts = fullResponse.split(/[.!?]/);
+          if (parts.length >= 2) {
+            // Get the second-to-last part (the complete sentence)
+            const completeSentence = parts[parts.length - 2].trim();
+            if (completeSentence.length > 10 && 
+                !completeSentence.match(/\b(Mr|Mrs|Ms|Dr|Prof|Sr|Jr)\b/) &&
+                streamingAudioRef.current) {
+              
+              console.log('[ChatInterface] Streaming sentence:', completeSentence.substring(0, 50) + '...');
+              streamingAudioRef.current.addSentence(completeSentence + char);
+            }
+          }
+        }
       }
 
       // Process all sentences from the complete response
