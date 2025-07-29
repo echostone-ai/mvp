@@ -169,6 +169,7 @@ export default function HomePage() {
               
               if (isRealSentenceEnd && !endsWithAbbreviation && sentenceBuffer.trim().length > 10) {
                 // Send complete sentence to streaming audio manager (handles queuing internally)
+                console.log('[Homepage] Sending sentence to audio:', sentenceBuffer.trim().substring(0, 50) + '...');
                 if (streamingAudioRef.current) {
                   streamingAudioRef.current.addSentence(sentenceBuffer.trim());
                 }
@@ -180,6 +181,7 @@ export default function HomePage() {
 
           // Handle any remaining text
           if (sentenceBuffer.trim()) {
+            console.log('[Homepage] Sending final sentence to audio:', sentenceBuffer.trim().substring(0, 50) + '...');
             if (streamingAudioRef.current) {
               streamingAudioRef.current.addSentence(sentenceBuffer.trim());
             }

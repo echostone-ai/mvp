@@ -360,6 +360,7 @@ export default function ChatInterface({
           
           if (isRealSentenceEnd && !endsWithAbbreviation && sentenceBuffer.trim().length > 10) {
             // Send complete sentence to voice synthesis (AudioQueue will handle throttling)
+            console.log('[ChatInterface] Sending sentence to audio:', sentenceBuffer.trim().substring(0, 50) + '...');
             if (streamingAudioRef.current) {
               streamingAudioRef.current.addSentence(sentenceBuffer.trim());
             }
@@ -371,6 +372,7 @@ export default function ChatInterface({
 
       // Handle any remaining text
       if (sentenceBuffer.trim()) {
+        console.log('[ChatInterface] Sending final sentence to audio:', sentenceBuffer.trim().substring(0, 50) + '...');
         if (streamingAudioRef.current) {
           streamingAudioRef.current.addSentence(sentenceBuffer.trim());
         }

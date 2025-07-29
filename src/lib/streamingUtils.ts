@@ -35,6 +35,8 @@ export class AudioQueue {
     }
     
     this.queue.push(audioBuffer);
+    console.log(`[AudioQueue] Added audio to queue. Queue length: ${this.queue.length}, isPlaying: ${this.isPlaying}`);
+    
     if (!this.isPlaying) {
       this.playNext();
     }
@@ -42,6 +44,7 @@ export class AudioQueue {
 
   private async playNext() {
     if (this.isDestroyed || this.queue.length === 0) {
+      console.log(`[AudioQueue] playNext stopping - destroyed: ${this.isDestroyed}, queue length: ${this.queue.length}`);
       this.isPlaying = false;
       return;
     }
@@ -52,6 +55,7 @@ export class AudioQueue {
     const minInterval = 200; // Reduced from 500ms to 200ms for better flow
     
     if (timeSinceLastPlay < minInterval) {
+      console.log(`[AudioQueue] Waiting ${minInterval - timeSinceLastPlay}ms before next audio`);
       // Wait for the remaining time, then try again
       setTimeout(() => {
         if (!this.isDestroyed) {
@@ -64,6 +68,7 @@ export class AudioQueue {
     this.isPlaying = true;
     this.lastPlayTime = now;
     const audioBuffer = this.queue.shift()!;
+    console.log(`[AudioQueue] Playing audio. Remaining in queue: ${this.queue.length}`);
     
     try {
       // Create blob URL for the audio
@@ -74,29 +79,33 @@ export class AudioQueue {
       const audio = new Audio(audioUrl);
       this.currentAudio = audio;
       
-      // Set up cleanup
-      const cleanup = () => {
-        URL.revokeObjectURL(audioUrl);
-        if (this.currentAudio === audio) {
-          this.currentAudio = null;
-        }
-        if (!this.isDestroyed) {
-          this.playNext(); // Play next in queue
-        }
-      };
-      
-      audio.onended = cleanup;
-      audio.onerror = (error) => {
-        console.error('Audio playback error:', error);
-        cleanup();
-      };
-      
-      // Use global audio manager to prevent overlaps - with immediate stop
-      await globalAudioManager.stopAll();
-      await new Promise(resolve => setTimeout(resolve, 50)); // Small delay to ensure stop completes
-      
+      // Play audio directly for streaming sentences (don't use global manager to avoid stopping previous sentences)
       if (!this.isDestroyed) {
-        await globalAudioManager.playAudio(audio);
+        await new Promise<void>((resolve, reject) => {
+          const cleanup = () => {
+            console.log(`[AudioQueue] Audio ended, cleaning up. Queue length: ${this.queue.length}`);
+            URL.revokeObjectURL(audioUrl);
+            if (this.currentAudio === audio) {
+              this.currentAudio = null;
+            }
+            if (!this.isDestroyed) {
+              this.playNext(); // Play next in queue
+            }
+          };
+          
+          audio.onended = () => {
+            cleanup();
+            resolve();
+          };
+          
+          audio.onerror = (error) => {
+            console.error('[AudioQueue] Audio playback error:', error);
+            cleanup();
+            reject(error);
+          };
+          
+          audio.play().catch(reject);
+        });
       }
     } catch (error) {
       console.error('Failed to play audio:', error);
@@ -117,7 +126,6 @@ export class AudioQueue {
       this.currentAudio = null;
     }
     
-    globalAudioManager.stopAll(); // Use global manager to stop all audio
     this.isPlaying = false;
   }
 
@@ -133,7 +141,7 @@ export function createStreamingAudioManager(
 ): StreamingAudioManager {
   const audioQueue = new AudioQueue();
 
-  return {
+  const manager: StreamingAudioManager = {
     async addSentence(sentence: string) {
       try {
         const response = await fetch('/api/voice-stream', {
@@ -162,16 +170,31 @@ export function createStreamingAudioManager(
 
     stop() {
       audioQueue.stop();
+      activeStreamingManagers.delete(manager);
     },
 
     isPlaying() {
       return audioQueue.getIsPlaying();
     }
   };
+
+  // Register this manager
+  activeStreamingManagers.add(manager);
+  
+  return manager;
 }
+
+// Keep track of active streaming audio managers
+const activeStreamingManagers = new Set<StreamingAudioManager>();
 
 // Global function to stop all audio playback
 export async function stopAllAudio() {
+  // Stop all streaming audio managers
+  activeStreamingManagers.forEach(manager => {
+    manager.stop();
+  });
+  
+  // Stop all other audio
   await globalAudioManager.stopAll();
 }
 
