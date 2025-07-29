@@ -133,8 +133,33 @@ export default function HomePage() {
         const decoder = new TextDecoder()
         let fullResponse = ''
         let currentSentence = ''
-        let lastSentenceTime = 0
-        const MIN_SENTENCE_INTERVAL = 500 // Minimum 500ms between sentences
+        let pendingSentences: string[] = []
+
+        const processPendingSentences = async () => {
+          while (pendingSentences.length > 0) {
+            const sentence = pendingSentences.shift()!;
+            try {
+              const vr = await fetch('/api/voice-stream', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                  sentence: sentence.trim(),
+                  voiceId: process.env.NEXT_PUBLIC_ELEVENLABS_VOICE_ID || 'CO6pxVrMZfyL61ZIglyr'
+                })
+              })
+              if (vr.ok) {
+                const blob = await vr.blob()
+                if (blob.size > 0) {
+                  await playAudioBlob(blob)
+                }
+              }
+            } catch (voiceError) {
+              console.warn('Voice synthesis failed for sentence:', sentence)
+            }
+            // Small delay between sentences
+            await new Promise(resolve => setTimeout(resolve, 200));
+          }
+        };
 
         try {
           while (true) {
@@ -152,29 +177,12 @@ export default function HomePage() {
               if (sentences.length > 1) {
                 const completeSentence = sentences[0] + chunk.match(/[.!?]/)?.[0]
                 if (completeSentence.trim().length > 10) {
-                  // Throttle sentence sending to prevent audio overlap
-                  const now = Date.now();
-                  if (now - lastSentenceTime >= MIN_SENTENCE_INTERVAL) {
-                    // Synthesize voice for complete sentence
-                    try {
-                      const vr = await fetch('/api/voice-stream', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                          sentence: completeSentence.trim(),
-                          voiceId: process.env.NEXT_PUBLIC_ELEVENLABS_VOICE_ID || 'CO6pxVrMZfyL61ZIglyr'
-                        })
-                      })
-                      if (vr.ok) {
-                        const blob = await vr.blob()
-                        if (blob.size > 0) {
-                          await playAudioBlob(blob)
-                          lastSentenceTime = now;
-                        }
-                      }
-                    } catch (voiceError) {
-                      console.warn('Voice synthesis failed for sentence:', completeSentence)
-                    }
+                  // Queue sentence for processing instead of dropping it
+                  pendingSentences.push(completeSentence.trim());
+                  
+                  // Start processing if not already running
+                  if (pendingSentences.length === 1) {
+                    processPendingSentences();
                   }
                 }
                 currentSentence = sentences.slice(1).join('')
@@ -184,23 +192,10 @@ export default function HomePage() {
 
           // Handle any remaining sentence
           if (currentSentence.trim()) {
-            try {
-              const vr = await fetch('/api/voice-stream', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                  sentence: currentSentence.trim(),
-                  voiceId: process.env.NEXT_PUBLIC_ELEVENLABS_VOICE_ID || 'CO6pxVrMZfyL61ZIglyr'
-                })
-              })
-              if (vr.ok) {
-                const blob = await vr.blob()
-                if (blob.size > 0) {
-                  playAudioBlob(blob)
-                }
-              }
-            } catch (voiceError) {
-              console.warn('Voice synthesis failed for final sentence:', currentSentence)
+            pendingSentences.push(currentSentence.trim());
+            // Process any remaining sentences
+            if (pendingSentences.length > 0) {
+              processPendingSentences();
             }
           }
 

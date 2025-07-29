@@ -332,7 +332,6 @@ export default function ChatInterface({
       let fullResponse = '';
       let currentSentence = '';
       let sentenceBuffer = '';
-      let lastSentenceTime = 0;
 
       // Stream the response
       for await (const char of streamChatResponse(text, newHistory, profileData, {
@@ -360,15 +359,9 @@ export default function ChatInterface({
           const endsWithAbbreviation = sentenceBuffer.trim().match(/\b(Mr|Mrs|Ms|Dr|Prof|Sr|Jr|Inc|Ltd|Corp|Co|etc|vs|i\.e|e\.g)\.$$/i);
           
           if (isRealSentenceEnd && !endsWithAbbreviation && sentenceBuffer.trim().length > 10) {
-            // Throttle sentence sending to prevent audio overlap
-            const now = Date.now();
-            if (!lastSentenceTime) lastSentenceTime = 0;
-            if (now - lastSentenceTime >= 500) { // Minimum 500ms between sentences
-              // Send complete sentence to voice synthesis
-              if (streamingAudioRef.current) {
-                streamingAudioRef.current.addSentence(sentenceBuffer.trim());
-                lastSentenceTime = now;
-              }
+            // Send complete sentence to voice synthesis (AudioQueue will handle throttling)
+            if (streamingAudioRef.current) {
+              streamingAudioRef.current.addSentence(sentenceBuffer.trim());
             }
             sentenceBuffer = '';
           }

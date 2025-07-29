@@ -14,6 +14,7 @@ export class AudioQueue {
   private audioContext: AudioContext | null = null;
   private gainNode: GainNode | null = null;
   private isDestroyed = false;
+  private lastPlayTime = 0;
 
   constructor() {
     // Initialize Web Audio API for better control
@@ -45,7 +46,23 @@ export class AudioQueue {
       return;
     }
 
+    // Add small delay between sentences to prevent overlap, but don't drop them
+    const now = Date.now();
+    const timeSinceLastPlay = now - this.lastPlayTime;
+    const minInterval = 200; // Reduced from 500ms to 200ms for better flow
+    
+    if (timeSinceLastPlay < minInterval) {
+      // Wait for the remaining time, then try again
+      setTimeout(() => {
+        if (!this.isDestroyed) {
+          this.playNext();
+        }
+      }, minInterval - timeSinceLastPlay);
+      return;
+    }
+
     this.isPlaying = true;
+    this.lastPlayTime = now;
     const audioBuffer = this.queue.shift()!;
     
     try {
@@ -75,7 +92,7 @@ export class AudioQueue {
       };
       
       // Use global audio manager to prevent overlaps - with immediate stop
-      globalAudioManager.stopAll();
+      await globalAudioManager.stopAll();
       await new Promise(resolve => setTimeout(resolve, 50)); // Small delay to ensure stop completes
       
       if (!this.isDestroyed) {
