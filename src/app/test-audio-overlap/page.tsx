@@ -92,9 +92,9 @@ export default function TestAudioOverlap() {
     }, 2000);
   };
 
-  const stopAllAudioTest = () => {
+  const stopAllAudioTest = async () => {
     addTestResult('Stopping all audio...');
-    stopAllAudio();
+    await stopAllAudio();
     if (streamingAudioRef.current) {
       streamingAudioRef.current.stop();
     }

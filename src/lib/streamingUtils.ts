@@ -153,14 +153,9 @@ export function createStreamingAudioManager(
   };
 }
 
-// Enhanced global function to stop all audio playback with better coordination
+// Global function to stop all audio playback
 export async function stopAllAudio() {
   await globalAudioManager.stopAll();
-}
-
-// Global function to stop all audio playback
-export function stopAllAudio() {
-  globalAudioManager.stopAll();
 }
 
 export function splitIntoSentences(text: string): string[] {
