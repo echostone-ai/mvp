@@ -136,15 +136,20 @@ export default function HomePage() {
       })
 
       if (res.ok && res.body) {
-        // Initialize streaming audio manager with explicit voice ID and consistency settings
+        // Initialize streaming audio manager with explicit voice ID and maximum consistency settings
         const voiceId = 'CO6pxVrMZfyL61ZIglyr'; // Hardcode the specific voice ID for consistency
         const consistencySettings = {
-          stability: 0.98,           // Maximum stability
-          similarity_boost: 0.82,    // Moderate similarity to avoid artifacts
-          style: 0.02,              // Minimal style variation
+          stability: 0.99,           // Maximum stability for consistent voice
+          similarity_boost: 0.75,    // Lower similarity to reduce artifacts
+          style: 0.01,              // Minimal style variation
           use_speaker_boost: true
         };
-        streamingAudioRef.current = createStreamingAudioManager(voiceId, consistencySettings);
+        streamingAudioRef.current = createStreamingAudioManager(
+          voiceId, 
+          consistencySettings,
+          undefined,
+          { conversationId: 'homepage-demo' } // Consistent conversation ID
+        );
 
         const reader = res.body.getReader()
         const decoder = new TextDecoder()

@@ -363,25 +363,21 @@ export default function ChatInterface({
         fullResponse += char;
         setStreamingText(fullResponse);
 
-        // Check for new phrases every 15 characters for faster response
-        if (fullResponse.length % 15 === 0 && fullResponse.length > 10) {
-          const phrases = splitIntoPhrases(fullResponse);
+        // Check for new sentences every 30 characters for better voice consistency
+        if (fullResponse.length % 30 === 0 && fullResponse.length > 20) {
+          const sentences = splitIntoSentences(fullResponse);
           
-          // Process any new phrases since last check
-          if (phrases.length > lastPhraseCount && streamingAudioRef.current) {
-            // Process all complete phrases (excluding the last potentially incomplete one)
-            const endIndex = phrases.length > 1 ? phrases.length - 1 : phrases.length;
+          // Process any new complete sentences since last check
+          if (sentences.length > lastPhraseCount && streamingAudioRef.current) {
+            // Process all complete sentences (excluding the last potentially incomplete one)
+            const endIndex = sentences.length > 1 ? sentences.length - 1 : sentences.length;
             for (let i = lastPhraseCount; i < endIndex; i++) {
-              const phrase = phrases[i].trim();
-              if (phrase && !phrase.match(/\b(Mr|Mrs|Ms|Dr|Prof|Sr|Jr)\.$/) && phrase.length > 5) {
-                console.log('[ChatInterface] New phrase detected:', phrase.substring(0, 50) + '...');
+              const sentence = sentences[i].trim();
+              if (sentence && !sentence.match(/\b(Mr|Mrs|Ms|Dr|Prof|Sr|Jr)\.$/) && sentence.length > 8) {
+                console.log('[ChatInterface] New sentence detected:', sentence.substring(0, 50) + '...');
                 
-                // Use addPhrase for smaller chunks, addSentence for complete sentences
-                if (phrase.match(/[.!?]$/)) {
-                  streamingAudioRef.current.addSentence(phrase);
-                } else {
-                  streamingAudioRef.current.addPhrase(phrase);
-                }
+                // Always use addSentence for better consistency
+                streamingAudioRef.current.addSentence(sentence);
                 hasStartedSpeaking = true;
               }
             }
@@ -390,21 +386,17 @@ export default function ChatInterface({
         }
       }
 
-      // Process any remaining phrases from the complete response
+      // Process any remaining sentences from the complete response
       if (fullResponse.trim() && streamingAudioRef.current) {
-        const phrases = splitIntoPhrases(fullResponse);
-        console.log(`[ChatInterface] Processing ${phrases.length} phrases from complete response`);
+        const sentences = splitIntoSentences(fullResponse);
+        console.log(`[ChatInterface] Processing ${sentences.length} sentences from complete response`);
         
-        // Process any phrases we might have missed
-        for (let i = lastPhraseCount; i < phrases.length; i++) {
-          const phrase = phrases[i].trim();
-          if (phrase && phrase.length > 3) {
-            console.log('[ChatInterface] Final phrase:', phrase.substring(0, 50) + '...');
-            if (phrase.match(/[.!?]$/)) {
-              streamingAudioRef.current.addSentence(phrase);
-            } else {
-              streamingAudioRef.current.addPhrase(phrase);
-            }
+        // Process any sentences we might have missed
+        for (let i = lastPhraseCount; i < sentences.length; i++) {
+          const sentence = sentences[i].trim();
+          if (sentence && sentence.length > 5) {
+            console.log('[ChatInterface] Final sentence:', sentence.substring(0, 50) + '...');
+            streamingAudioRef.current.addSentence(sentence);
           }
         }
       }

@@ -62,11 +62,12 @@ function normalizeTextForConsistency(text: string, previousContext?: string): st
 
 /**
  * Generate a consistent seed for voice generation based on conversation context
+ * This ensures all segments of a conversation use the same voice characteristics
  */
 function generateConsistentSeed(conversationId?: string, voiceId?: string): number {
   if (!conversationId || !voiceId) {
     // Use a fixed seed for consistency when no context available
-    return 42;
+    return 12345; // Fixed seed for maximum consistency
   }
   
   // Create a simple hash from conversation and voice ID
@@ -78,8 +79,9 @@ function generateConsistentSeed(conversationId?: string, voiceId?: string): numb
     hash = hash & hash; // Convert to 32-bit integer
   }
   
-  // Ensure positive number within reasonable range
-  return Math.abs(hash) % 1000000;
+  // Ensure positive number within reasonable range and make it more stable
+  const seed = Math.abs(hash) % 10000; // Smaller range for more consistency
+  return seed;
 }
 
 // Create a simple audio buffer for fallback
@@ -150,12 +152,22 @@ export async function POST(req: Request) {
     // Generate a consistent seed based on conversation context
     const seed = generateConsistentSeed(conversationId, finalVoiceId)
     
-    // Call ElevenLabs API with consistency optimizations
+    // Call ElevenLabs API with maximum consistency optimizations
     const requestBody: any = {
       text: cleanedText,
       model_id: 'eleven_turbo_v2_5', // Use latest model for better consistency
-      voice_settings: voiceSettings,
+      voice_settings: {
+        ...voiceSettings,
+        // Override with maximum consistency settings
+        stability: 0.99,
+        similarity_boost: 0.75,
+        style: 0.01,
+        use_speaker_boost: true
+      },
       seed: seed, // Consistent seed for similar voice characteristics
+      // Add optimization flags for consistency
+      optimize_streaming_latency: 1,
+      output_format: 'mp3_44100_128'
     };
     
     // Add previous context for better continuity (if supported)

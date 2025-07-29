@@ -148,13 +148,23 @@ export class AudioQueue {
   }
 
   private async synthesizeWithContext(text: string): Promise<ArrayBuffer> {
+    // Add a small delay to batch similar requests and reduce voice variation
+    await new Promise(resolve => setTimeout(resolve, 50));
+    
     const response = await fetch('/api/voice-stream', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         sentence: text,
         voiceId: this.voiceId,
-        settings: this.voiceSettings,
+        settings: {
+          ...this.voiceSettings,
+          // Force maximum consistency settings
+          stability: 0.99,
+          similarity_boost: 0.75,
+          style: 0.01,
+          use_speaker_boost: true
+        },
         accent: this.accent,
         conversationId: this.conversationId,
         previousContext: this.previousContext

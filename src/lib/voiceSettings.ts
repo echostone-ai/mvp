@@ -28,9 +28,9 @@ export function getOptimizedVoiceSettings(customSettings?: any) {
  */
 export function getStreamingConsistencySettings() {
   return {
-    stability: 0.98,           // Maximum stability
-    similarity_boost: 0.82,    // Moderate similarity to avoid artifacts
-    style: 0.02,              // Minimal style variation
+    stability: 0.99,           // Maximum stability for consistent voice
+    similarity_boost: 0.75,    // Lower similarity to reduce artifacts that cause voice variation
+    style: 0.01,              // Minimal style variation for consistency
     use_speaker_boost: true
   };
 }
