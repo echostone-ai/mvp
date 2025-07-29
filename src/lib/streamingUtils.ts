@@ -1,4 +1,5 @@
 // src/lib/streamingUtils.ts
+import { globalAudioManager } from './globalAudioManager';
 
 export interface StreamingAudioManager {
   addSentence: (sentence: string) => Promise<void>;
@@ -12,6 +13,7 @@ export class AudioQueue {
   private currentAudio: HTMLAudioElement | null = null;
   private audioContext: AudioContext | null = null;
   private gainNode: GainNode | null = null;
+  private isDestroyed = false;
 
   constructor() {
     // Initialize Web Audio API for better control
@@ -23,6 +25,14 @@ export class AudioQueue {
   }
 
   async addAudio(audioBuffer: ArrayBuffer) {
+    if (this.isDestroyed) return;
+    
+    // Limit queue size to prevent memory issues and reduce overlap
+    if (this.queue.length > 5) {
+      console.warn('Audio queue getting too long, dropping oldest audio');
+      this.queue.shift();
+    }
+    
     this.queue.push(audioBuffer);
     if (!this.isPlaying) {
       this.playNext();
@@ -30,7 +40,7 @@ export class AudioQueue {
   }
 
   private async playNext() {
-    if (this.queue.length === 0) {
+    if (this.isDestroyed || this.queue.length === 0) {
       this.isPlaying = false;
       return;
     }
@@ -43,41 +53,59 @@ export class AudioQueue {
       const blob = new Blob([audioBuffer], { type: 'audio/mpeg' });
       const audioUrl = URL.createObjectURL(blob);
       
-      // Create and play audio element
+      // Create audio element
       const audio = new Audio(audioUrl);
       this.currentAudio = audio;
       
-      audio.onended = () => {
+      // Set up cleanup
+      const cleanup = () => {
         URL.revokeObjectURL(audioUrl);
-        this.currentAudio = null;
-        this.playNext(); // Play next in queue
+        if (this.currentAudio === audio) {
+          this.currentAudio = null;
+        }
+        if (!this.isDestroyed) {
+          this.playNext(); // Play next in queue
+        }
       };
       
+      audio.onended = cleanup;
       audio.onerror = (error) => {
         console.error('Audio playback error:', error);
-        URL.revokeObjectURL(audioUrl);
-        this.currentAudio = null;
-        this.playNext(); // Continue with next audio
+        cleanup();
       };
       
-      await audio.play();
+      // Use global audio manager to prevent overlaps - with immediate stop
+      globalAudioManager.stopAll();
+      await new Promise(resolve => setTimeout(resolve, 50)); // Small delay to ensure stop completes
+      
+      if (!this.isDestroyed) {
+        await globalAudioManager.playAudio(audio);
+      }
     } catch (error) {
       console.error('Failed to play audio:', error);
-      this.playNext(); // Continue with next audio
+      if (!this.isDestroyed) {
+        this.playNext(); // Continue with next audio
+      }
     }
   }
 
   stop() {
+    this.isDestroyed = true;
     this.queue.length = 0; // Clear queue
+    
+    // Stop current audio immediately
     if (this.currentAudio) {
       this.currentAudio.pause();
+      this.currentAudio.currentTime = 0;
       this.currentAudio = null;
     }
+    
+    globalAudioManager.stopAll(); // Use global manager to stop all audio
     this.isPlaying = false;
   }
 
   getIsPlaying() {
-    return this.isPlaying;
+    return !this.isDestroyed && (this.isPlaying || globalAudioManager.getIsPlaying());
   }
 }
 
@@ -123,6 +151,16 @@ export function createStreamingAudioManager(
       return audioQueue.getIsPlaying();
     }
   };
+}
+
+// Enhanced global function to stop all audio playback with better coordination
+export async function stopAllAudio() {
+  await globalAudioManager.stopAll();
+}
+
+// Global function to stop all audio playback
+export function stopAllAudio() {
+  globalAudioManager.stopAll();
 }
 
 export function splitIntoSentences(text: string): string[] {

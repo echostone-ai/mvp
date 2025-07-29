@@ -8,8 +8,10 @@ import {
   createStreamingAudioManager, 
   splitIntoSentences, 
   streamChatResponse,
-  StreamingAudioManager 
+  StreamingAudioManager,
+  stopAllAudio
 } from '@/lib/streamingUtils';
+import { globalAudioManager } from '@/lib/globalAudioManager';
 
 function getFirstName(profileData: any): string {
   if (profileData?.personal_snapshot?.full_legal_name)
@@ -67,6 +69,7 @@ export default function ChatInterface({
   const [showMemoryAnim, setShowMemoryAnim] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingText, setStreamingText] = useState('');
+  const [audioInterrupted, setAudioInterrupted] = useState(false);
   const userMsgRef = useRef<HTMLDivElement>(null);
   const streamingAudioRef = useRef<StreamingAudioManager | null>(null);
 
@@ -85,8 +88,12 @@ export default function ChatInterface({
   // Cleanup streaming audio on unmount
   useEffect(() => {
     return () => {
+      globalAudioManager.stopAll();
       if (streamingAudioRef.current) {
         streamingAudioRef.current.stop();
+      }
+      if (audioUrlRef.current) {
+        URL.revokeObjectURL(audioUrlRef.current);
       }
     };
   }, []);
@@ -229,18 +236,33 @@ export default function ChatInterface({
   }, [])
 
   // Play audio blob helper
-  const playAudioBlob = (blob: Blob) => {
+  const playAudioBlob = async (blob: Blob) => {
+    // Stop streaming audio if it's playing
+    if (streamingAudioRef.current) {
+      streamingAudioRef.current.stop();
+    }
+    
+    // Wait for all audio to stop before playing new audio
+    await globalAudioManager.stopAll();
+    
     if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current)
     const url = URL.createObjectURL(blob)
     audioUrlRef.current = url
     const audio = new Audio(url)
+    
     setPlaying(true)
-    audio.onended = () => {
-      setPlaying(false)
-      URL.revokeObjectURL(url)
-      audioUrlRef.current = null
+    
+    try {
+      // Use global audio manager to prevent overlaps
+      await globalAudioManager.playAudio(audio);
+      setPlaying(false);
+    } catch (error) {
+      console.error('Audio playback failed:', error);
+      setPlaying(false);
+    } finally {
+      URL.revokeObjectURL(url);
+      audioUrlRef.current = null;
     }
-    audio.play().catch(() => setPlaying(false))
   }
 
   // Compose profile context string for prompt
@@ -258,6 +280,25 @@ export default function ChatInterface({
   // Ask question logic with streaming support
   const askQuestion = async (text: string) => {
     if (!text.trim()) return
+    
+    // Stop all existing audio first to prevent overlaps - with proper coordination
+    const wasPlaying = globalAudioManager.getIsPlaying() || (streamingAudioRef.current?.isPlaying());
+    
+    // Stop streaming audio first
+    if (streamingAudioRef.current) {
+      streamingAudioRef.current.stop();
+    }
+    
+    // Then stop all other audio and wait for it to complete
+    await globalAudioManager.stopAll();
+    
+    if (wasPlaying) {
+      setAudioInterrupted(true);
+      setTimeout(() => setAudioInterrupted(false), 2000);
+    }
+    
+    setPlaying(false);
+    
     setLoading(true)
     setAnswer('')
     setStreamingText('')
@@ -291,6 +332,7 @@ export default function ChatInterface({
       let fullResponse = '';
       let currentSentence = '';
       let sentenceBuffer = '';
+      let lastSentenceTime = 0;
 
       // Stream the response
       for await (const char of streamChatResponse(text, newHistory, profileData, {
@@ -314,10 +356,19 @@ export default function ChatInterface({
           const nextChars = fullResponse.slice(fullResponse.length - currentSentence.length + 1, fullResponse.length + 3);
           const isRealSentenceEnd = !nextChars.match(/^[a-z]/);
           
-          if (isRealSentenceEnd && sentenceBuffer.trim().length > 10) {
-            // Send complete sentence to voice synthesis
-            if (streamingAudioRef.current) {
-              streamingAudioRef.current.addSentence(sentenceBuffer.trim());
+          // Also check for common abbreviations to avoid false sentence breaks
+          const endsWithAbbreviation = sentenceBuffer.trim().match(/\b(Mr|Mrs|Ms|Dr|Prof|Sr|Jr|Inc|Ltd|Corp|Co|etc|vs|i\.e|e\.g)\.$$/i);
+          
+          if (isRealSentenceEnd && !endsWithAbbreviation && sentenceBuffer.trim().length > 10) {
+            // Throttle sentence sending to prevent audio overlap
+            const now = Date.now();
+            if (!lastSentenceTime) lastSentenceTime = 0;
+            if (now - lastSentenceTime >= 500) { // Minimum 500ms between sentences
+              // Send complete sentence to voice synthesis
+              if (streamingAudioRef.current) {
+                streamingAudioRef.current.addSentence(sentenceBuffer.trim());
+                lastSentenceTime = now;
+              }
             }
             sentenceBuffer = '';
           }
@@ -683,6 +734,15 @@ export default function ChatInterface({
 
   const handleReplay = async () => {
     if (!answer) return
+    
+    // Stop any streaming audio first
+    if (streamingAudioRef.current) {
+      streamingAudioRef.current.stop();
+    }
+    
+    // Wait for all audio to stop
+    await globalAudioManager.stopAll();
+    
     setPlaying(true)
     try {
       const vr = await fetch('/api/voice', {
@@ -695,7 +755,7 @@ export default function ChatInterface({
         }),
       })
       const blob = await vr.blob()
-      playAudioBlob(blob)
+      await playAudioBlob(blob)
     } catch {
       setPlaying(false)
     }
@@ -964,7 +1024,7 @@ export default function ChatInterface({
         </div>
       )}
 
-      {playing && (
+      {(playing || (streamingAudioRef.current?.isPlaying())) && (
         <div className="soundbars">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="soundbar" />
@@ -975,6 +1035,12 @@ export default function ChatInterface({
       {voiceError && (
         <div className="text-red-400 text-sm mt-2">
           {voiceError}
+        </div>
+      )}
+
+      {audioInterrupted && (
+        <div className="text-yellow-400 text-sm mt-2 opacity-75">
+          🔇 Previous audio stopped to prevent overlap
         </div>
       )}
     </main>
