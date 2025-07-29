@@ -5,6 +5,8 @@ import ProfileProvider from '@/components/ProfileContext'
 import AccountMenu from '@/components/AccountMenu'
 import Image from 'next/image'
 import { useState, useRef, useEffect } from 'react'
+import { globalAudioManager } from '@/lib/globalAudioManager'
+import { stopAllAudio } from '@/lib/streamingUtils'
 
 export default function HomePage() {
   const [question, setQuestion] = useState('')
@@ -24,17 +26,37 @@ export default function HomePage() {
     ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition)
 
   useEffect(() => {
-    if (audioRef.current) {
-      const audioFiles = ['/howdy.mp3', '/hey.mp3', '/hello.mp3']
-      const randomIndex = Math.floor(Math.random() * audioFiles.length)
-      audioRef.current.src = audioFiles[randomIndex]
-      audioRef.current.play().catch(() => {
-        // Handle play error silently
-      })
-    }
+    const playInitialAudio = async () => {
+      if (audioRef.current) {
+        const audioFiles = ['/howdy.mp3', '/hey.mp3', '/hello.mp3']
+        const randomIndex = Math.floor(Math.random() * audioFiles.length)
+        audioRef.current.src = audioFiles[randomIndex]
+        
+        try {
+          // Use global audio manager for initial audio too
+          await globalAudioManager.playAudio(audioRef.current);
+        } catch (error) {
+          // Handle play error silently
+          console.log('Initial audio play failed:', error);
+        }
+      }
+    };
+    
+    playInitialAudio();
+    
+    // Cleanup function to stop all audio when component unmounts
+    return () => {
+      stopAllAudio();
+      if (audioUrlRef.current) {
+        URL.revokeObjectURL(audioUrlRef.current);
+      }
+    };
   }, [])
 
-  const playAudioBlob = (blob: Blob) => {
+  const playAudioBlob = async (blob: Blob) => {
+    // Stop any existing audio first to prevent overlaps
+    await stopAllAudio();
+    
     if (audioUrlRef.current) {
       URL.revokeObjectURL(audioUrlRef.current)
       audioUrlRef.current = null
@@ -68,27 +90,27 @@ export default function HomePage() {
     }
     
     setPlaying(true)
-    audio.onended = () => {
-      setPlaying(false)
-      URL.revokeObjectURL(url)
-      audioUrlRef.current = null
-    }
     
-    audio.onerror = () => {
-      setPlaying(false)
-      console.log('Audio playback error')
+    try {
+      // Use global audio manager to prevent overlaps
+      await globalAudioManager.playAudio(audio);
+      setPlaying(false);
+    } catch (error) {
+      console.log('Audio play failed:', error);
+      setPlaying(false);
+    } finally {
+      URL.revokeObjectURL(url);
+      audioUrlRef.current = null;
     }
-    
-    setTimeout(() => {
-      audio.play().catch((error) => {
-        console.log('Audio play failed:', error)
-        setPlaying(false)
-      })
-    }, 0)
   }
 
   const askQuestion = async (text: string) => {
     if (!text.trim()) return
+    
+    // Stop all existing audio first to prevent overlaps
+    await stopAllAudio();
+    setPlaying(false);
+    
     setLoading(true)
     setAnswer('')
 
@@ -111,6 +133,8 @@ export default function HomePage() {
         const decoder = new TextDecoder()
         let fullResponse = ''
         let currentSentence = ''
+        let lastSentenceTime = 0
+        const MIN_SENTENCE_INTERVAL = 500 // Minimum 500ms between sentences
 
         try {
           while (true) {
@@ -128,24 +152,29 @@ export default function HomePage() {
               if (sentences.length > 1) {
                 const completeSentence = sentences[0] + chunk.match(/[.!?]/)?.[0]
                 if (completeSentence.trim().length > 10) {
-                  // Synthesize voice for complete sentence
-                  try {
-                    const vr = await fetch('/api/voice-stream', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ 
-                        sentence: completeSentence.trim(),
-                        voiceId: process.env.NEXT_PUBLIC_ELEVENLABS_VOICE_ID || 'CO6pxVrMZfyL61ZIglyr'
+                  // Throttle sentence sending to prevent audio overlap
+                  const now = Date.now();
+                  if (now - lastSentenceTime >= MIN_SENTENCE_INTERVAL) {
+                    // Synthesize voice for complete sentence
+                    try {
+                      const vr = await fetch('/api/voice-stream', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                          sentence: completeSentence.trim(),
+                          voiceId: process.env.NEXT_PUBLIC_ELEVENLABS_VOICE_ID || 'CO6pxVrMZfyL61ZIglyr'
+                        })
                       })
-                    })
-                    if (vr.ok) {
-                      const blob = await vr.blob()
-                      if (blob.size > 0) {
-                        playAudioBlob(blob)
+                      if (vr.ok) {
+                        const blob = await vr.blob()
+                        if (blob.size > 0) {
+                          await playAudioBlob(blob)
+                          lastSentenceTime = now;
+                        }
                       }
+                    } catch (voiceError) {
+                      console.warn('Voice synthesis failed for sentence:', completeSentence)
                     }
-                  } catch (voiceError) {
-                    console.warn('Voice synthesis failed for sentence:', completeSentence)
                   }
                 }
                 currentSentence = sentences.slice(1).join('')
@@ -300,6 +329,10 @@ export default function HomePage() {
 
   const handleReplay = async () => {
     if (!answer) return
+    
+    // Stop any existing audio first
+    await stopAllAudio();
+    
     setPlaying(true)
     try {
       const vr = await fetch('/api/voice', {
@@ -311,7 +344,7 @@ export default function HomePage() {
         })
       })
       const blob = await vr.blob()
-      playAudioBlob(blob)
+      await playAudioBlob(blob)
     } catch {
       setPlaying(false)
     }
