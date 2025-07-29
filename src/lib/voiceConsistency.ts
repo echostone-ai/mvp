@@ -18,9 +18,9 @@ export interface VoiceConsistencySettings {
  */
 export function getMaxConsistencySettings(): VoiceConsistencySettings {
   return {
-    stability: 0.99,           // Maximum stability for consistent voice
-    similarity_boost: 0.75,    // Lower similarity to reduce artifacts that cause voice variation
-    style: 0.01,              // Minimal style variation for consistency
+    stability: 0.85,           // High stability but not maximum to preserve natural speech
+    similarity_boost: 0.80,    // Balanced similarity to maintain voice character without artifacts
+    style: 0.15,              // Moderate style variation for more natural speech
     use_speaker_boost: true
   };
 }
@@ -46,26 +46,26 @@ export function generateConversationSeed(conversationId: string, voiceId: string
 
 /**
  * Clean and normalize text for consistent voice generation
- * This removes elements that can cause voice variation
+ * This removes elements that can cause voice variation while preserving natural speech
  */
 export function normalizeTextForVoice(text: string): string {
   return text
-    // Remove fake laughs and artificial expressions
-    .replace(/\b(haha|lol|lmao|rofl)\b/gi, '')
+    // Remove only the most problematic fake laughs (keep natural ones)
+    .replace(/\b(lol|lmao|rofl)\b/gi, '')
     .replace(/\*[^*]*\*/g, '') // Remove *actions*
     .replace(/\([^)]*\)/g, '') // Remove (parenthetical comments)
     
-    // Normalize punctuation for consistent prosody
-    .replace(/\.{3,}/g, '...') // Standardize ellipses
-    .replace(/!{2,}/g, '!') // Single exclamation
-    .replace(/\?{2,}/g, '?') // Single question mark
+    // More conservative punctuation normalization
+    .replace(/\.{4,}/g, '...') // Only standardize excessive ellipses (4+ dots)
+    .replace(/!{3,}/g, '!!') // Allow up to 2 exclamations
+    .replace(/\?{3,}/g, '??') // Allow up to 2 question marks
     
     // Normalize quotation marks
     .replace(/[""]/g, '"')
     .replace(/['']/g, "'")
     
-    // Clean up spacing
-    .replace(/\s+/g, ' ')
+    // Clean up excessive spacing but preserve natural pauses
+    .replace(/\s{3,}/g, '  ') // Replace 3+ spaces with 2 spaces
     .trim();
 }
 
@@ -77,15 +77,21 @@ export function splitTextForConsistentVoice(text: string): string[] {
   // First, normalize the text
   const normalized = normalizeTextForVoice(text);
   
-  // Split on sentence boundaries, but keep segments reasonably long
+  // Split on sentence boundaries, but be more careful about incomplete sentences
   const sentences = normalized.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 0);
   
   const segments: string[] = [];
   let currentSegment = '';
   
   for (const sentence of sentences) {
+    // Don't split if the sentence is incomplete (doesn't end with proper punctuation)
+    const isCompleteSentence = /[.!?]$/.test(sentence.trim());
+    
     // If adding this sentence would make the segment too long, start a new one
-    if (currentSegment.length > 0 && (currentSegment + ' ' + sentence).length > 150) {
+    // But only if the current sentence is complete
+    if (currentSegment.length > 0 && 
+        (currentSegment + ' ' + sentence).length > 200 && // Increased from 150 to 200
+        isCompleteSentence) {
       segments.push(currentSegment.trim());
       currentSegment = sentence;
     } else {
@@ -93,12 +99,12 @@ export function splitTextForConsistentVoice(text: string): string[] {
     }
   }
   
-  // Add the last segment if it exists
-  if (currentSegment.trim()) {
+  // Add the last segment if it exists and is substantial
+  if (currentSegment.trim() && currentSegment.trim().length > 10) {
     segments.push(currentSegment.trim());
   }
   
-  return segments.filter(segment => segment.length > 5); // Filter out very short segments
+  return segments.filter(segment => segment.length > 8); // Increased minimum length from 5 to 8
 }
 
 /**

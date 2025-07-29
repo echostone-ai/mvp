@@ -161,8 +161,8 @@ export default function HomePage() {
             fullResponse += chunk
             setAnswer(fullResponse)
 
-            // Check for new complete segments every 50 characters (better consistency)
-            if (fullResponse.length % 50 === 0 && fullResponse.length > 30) {
+            // Check for new complete segments every 100 characters (less frequent to avoid word cutting)
+            if (fullResponse.length % 100 === 0 && fullResponse.length > 50) {
               const segments = splitTextForConsistentVoice(fullResponse);
 
               // Process any new segments since last check
@@ -171,7 +171,11 @@ export default function HomePage() {
                 const endIndex = segments.length > 1 ? segments.length - 1 : segments.length;
                 for (let i = lastSentenceCount; i < endIndex; i++) {
                   const segment = segments[i].trim();
-                  if (segment && !segment.match(/\b(Mr|Mrs|Ms|Dr|Prof|Sr|Jr)\.$/) && segment.length > 12) {
+                  // More conservative filtering to avoid cutting off words
+                  if (segment && 
+                      !segment.match(/\b(Mr|Mrs|Ms|Dr|Prof|Sr|Jr)\.$/) && 
+                      segment.length > 15 && // Increased minimum length
+                      /[.!?]$/.test(segment)) { // Only complete sentences
                     console.log('[Homepage] New segment detected:', segment.substring(0, 50) + '...');
                     streamingAudioRef.current.addSentence(segment);
                   }
@@ -188,7 +192,10 @@ export default function HomePage() {
 
             for (let i = lastSentenceCount; i < segments.length; i++) {
               const segment = segments[i].trim();
-              if (segment && segment.length > 8) {
+              // More conservative filtering for final processing
+              if (segment && 
+                  segment.length > 12 && // Increased minimum length
+                  /[.!?]$/.test(segment)) { // Only complete sentences
                 console.log('[Homepage] Sending segment to audio:', segment.substring(0, 50) + '...');
                 streamingAudioRef.current.addSentence(segment);
               }
@@ -214,9 +221,9 @@ export default function HomePage() {
                 text: answer,
                 voiceId: 'CO6pxVrMZfyL61ZIglyr', // Hardcode the specific voice ID for consistency
                 settings: {
-                  stability: 0.98,           // Maximum stability
-                  similarity_boost: 0.82,    // Moderate similarity to avoid artifacts
-                  style: 0.02,              // Minimal style variation
+                  stability: 0.85,           // High stability but not maximum
+                  similarity_boost: 0.80,    // Balanced similarity
+                  style: 0.15,              // Moderate style variation for natural speech
                   use_speaker_boost: true
                 }
               })

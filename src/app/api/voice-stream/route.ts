@@ -14,8 +14,7 @@ export const runtime = 'edge'
  */
 function cleanTextForVoice(text: string): string {
   return text
-    // Remove fake laughs
-    .replace(/\bhaha\b/gi, '')
+    // Remove only the most problematic fake laughs (keep natural ones)
     .replace(/\blol\b/gi, '')
     .replace(/\blmao\b/gi, '')
     .replace(/\brofl\b/gi, '')
@@ -24,12 +23,12 @@ function cleanTextForVoice(text: string): string {
     .replace(/\*chuckles\*/gi, '')
     .replace(/\*giggles\*/gi, '')
     .replace(/\*nervous laughter\*/gi, '')
-    // Remove excessive punctuation that sounds weird
-    .replace(/\.{3,}/g, '..') // Limit ellipses to 2 dots max
-    .replace(/!{2,}/g, '!') // Limit exclamations to 1
-    .replace(/\?{2,}/g, '?') // Limit questions to 1
-    // Clean up extra spaces
-    .replace(/\s+/g, ' ')
+    // More conservative punctuation cleaning
+    .replace(/\.{4,}/g, '...') // Only limit excessive ellipses (4+ dots)
+    .replace(/!{3,}/g, '!!') // Allow up to 2 exclamations
+    .replace(/\?{3,}/g, '??') // Allow up to 2 question marks
+    // Clean up excessive spaces but preserve natural pauses
+    .replace(/\s{3,}/g, '  ') // Replace 3+ spaces with 2 spaces
     .trim()
 }
 
@@ -157,16 +156,16 @@ export async function POST(req: Request) {
     // Generate a consistent seed based on conversation context
     const seed = generateConversationSeed(conversationId || 'default', finalVoiceId)
     
-    // Call ElevenLabs API with maximum consistency optimizations
+    // Call ElevenLabs API with balanced consistency optimizations
     const requestBody: any = {
       text: cleanedText,
       model_id: 'eleven_multilingual_v2', // Use most accurate model for voice cloning
       voice_settings: {
         ...voiceSettings,
-        // Override with maximum consistency settings
-        stability: 0.99,
-        similarity_boost: 0.75,
-        style: 0.01,
+        // Use balanced settings for natural speech
+        stability: 0.85,
+        similarity_boost: 0.80,
+        style: 0.15,
         use_speaker_boost: true
       },
       seed: seed, // Consistent seed for similar voice characteristics

@@ -348,7 +348,8 @@ body {
   font-size: 18px;
   line-height: 1.7;
   border-left: 4px solid var(--color-primary);
-  word-break: break-word;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
   text-align: left;
 }
 
@@ -6217,7 +6218,7 @@ s Section Styles */
   padding: var(--spacing-2xl);
   text-align: center;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .main-title {
@@ -9179,7 +9180,9 @@ vatar Header Chat Button */
   color: var(--color-text-primary);
   margin-bottom: var(--spacing-md);
   text-shadow: 0 4px 20px rgba(106, 0, 255, 0.3);
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .main-subtitle {
