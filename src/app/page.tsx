@@ -32,7 +32,7 @@ export default function HomePage() {
         const audioFiles = ['/howdy.mp3', '/hey.mp3', '/hello.mp3']
         const randomIndex = Math.floor(Math.random() * audioFiles.length)
         audioRef.current.src = audioFiles[randomIndex]
-        
+
         try {
           // Use global audio manager for initial audio too
           await globalAudioManager.playAudio(audioRef.current);
@@ -42,9 +42,9 @@ export default function HomePage() {
         }
       }
     };
-    
+
     playInitialAudio();
-    
+
     // Cleanup function to stop all audio when component unmounts
     return () => {
       stopAllAudio();
@@ -60,7 +60,7 @@ export default function HomePage() {
   const playAudioBlob = async (blob: Blob) => {
     // Stop any existing audio first to prevent overlaps
     await stopAllAudio();
-    
+
     if (audioUrlRef.current) {
       URL.revokeObjectURL(audioUrlRef.current)
       audioUrlRef.current = null
@@ -68,17 +68,17 @@ export default function HomePage() {
     const url = URL.createObjectURL(blob)
     audioUrlRef.current = url
     const audio = new Audio(url)
-    
+
     // Enhanced mobile volume control
     audio.volume = 1.0 // Set to maximum volume
     audio.preload = 'auto'
-    
+
     // Mobile-specific audio optimizations
     if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
       // Force audio context for mobile
       audio.setAttribute('playsinline', 'true')
       audio.setAttribute('webkit-playsinline', 'true')
-      
+
       // Try to unlock audio context on mobile
       const unlockAudio = () => {
         audio.play().then(() => {
@@ -86,15 +86,15 @@ export default function HomePage() {
           audio.currentTime = 0
           document.removeEventListener('touchstart', unlockAudio)
           document.removeEventListener('click', unlockAudio)
-        }).catch(() => {})
+        }).catch(() => { })
       }
-      
+
       document.addEventListener('touchstart', unlockAudio, { once: true })
       document.addEventListener('click', unlockAudio, { once: true })
     }
-    
+
     setPlaying(true)
-    
+
     try {
       // Use global audio manager to prevent overlaps
       await globalAudioManager.playAudio(audio);
@@ -110,14 +110,14 @@ export default function HomePage() {
 
   const askQuestion = async (text: string) => {
     if (!text.trim()) return
-    
+
     // Stop all existing audio first to prevent overlaps
     await stopAllAudio();
     if (streamingAudioRef.current) {
       streamingAudioRef.current.stop();
     }
     setPlaying(false);
-    
+
     setLoading(true)
     setAnswer('')
 
@@ -126,8 +126,8 @@ export default function HomePage() {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          prompt: text, 
+        body: JSON.stringify({
+          prompt: text,
           profileData: jonathanProfile,
           userId: 'jonathan_demo', // Demo user ID for homepage
           partnerProfile: null, // No specific partner context for homepage demo
@@ -136,9 +136,15 @@ export default function HomePage() {
       })
 
       if (res.ok && res.body) {
-        // Initialize streaming audio manager
-        const voiceId = process.env.NEXT_PUBLIC_ELEVENLABS_VOICE_ID || 'CO6pxVrMZfyL61ZIglyr';
-        streamingAudioRef.current = createStreamingAudioManager(voiceId);
+        // Initialize streaming audio manager with explicit voice ID and consistency settings
+        const voiceId = 'CO6pxVrMZfyL61ZIglyr'; // Hardcode the specific voice ID for consistency
+        const consistencySettings = {
+          stability: 0.98,           // Maximum stability
+          similarity_boost: 0.82,    // Moderate similarity to avoid artifacts
+          style: 0.02,              // Minimal style variation
+          use_speaker_boost: true
+        };
+        streamingAudioRef.current = createStreamingAudioManager(voiceId, consistencySettings);
 
         const reader = res.body.getReader()
         const decoder = new TextDecoder()
@@ -157,7 +163,7 @@ export default function HomePage() {
             // Check for new complete sentences every 30 characters (faster detection)
             if (fullResponse.length % 30 === 0 && fullResponse.length > 20) {
               const sentences = fullResponse.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 8);
-              
+
               // Process any new sentences since last check
               if (sentences.length > lastSentenceCount && streamingAudioRef.current) {
                 // Process all complete sentences (including first one, excluding last incomplete)
@@ -178,7 +184,7 @@ export default function HomePage() {
           if (fullResponse.trim() && streamingAudioRef.current) {
             const sentences = fullResponse.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 5);
             console.log(`[Homepage] Processing ${sentences.length} sentences from complete response`);
-            
+
             for (const sentence of sentences) {
               console.log('[Homepage] Sending sentence to audio:', sentence.substring(0, 50) + '...');
               streamingAudioRef.current.addSentence(sentence.trim());
@@ -200,9 +206,15 @@ export default function HomePage() {
             const vr = await fetch('/api/voice', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ 
+              body: JSON.stringify({
                 text: answer,
-                voiceId: process.env.NEXT_PUBLIC_ELEVENLABS_VOICE_ID || 'CO6pxVrMZfyL61ZIglyr'
+                voiceId: 'CO6pxVrMZfyL61ZIglyr', // Hardcode the specific voice ID for consistency
+                settings: {
+                  stability: 0.98,           // Maximum stability
+                  similarity_boost: 0.82,    // Moderate similarity to avoid artifacts
+                  style: 0.02,              // Minimal style variation
+                  use_speaker_boost: true
+                }
               })
             })
             const blob = await vr.blob()
@@ -310,18 +322,24 @@ export default function HomePage() {
 
   const handleReplay = async () => {
     if (!answer) return
-    
+
     // Stop any existing audio first
     await stopAllAudio();
-    
+
     setPlaying(true)
     try {
       const vr = await fetch('/api/voice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           text: answer,
-          voiceId: process.env.NEXT_PUBLIC_ELEVENLABS_VOICE_ID || 'CO6pxVrMZfyL61ZIglyr'
+          voiceId: 'CO6pxVrMZfyL61ZIglyr', // Hardcode the specific voice ID for consistency
+          settings: {
+            stability: 0.98,           // Maximum stability
+            similarity_boost: 0.82,    // Moderate similarity to avoid artifacts
+            style: 0.02,              // Minimal style variation
+            use_speaker_boost: true
+          }
         })
       })
       const blob = await vr.blob()
