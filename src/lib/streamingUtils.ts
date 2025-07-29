@@ -156,14 +156,12 @@ export class AudioQueue {
     // Add batching delay to reduce voice variation
     await createVoiceBatchingDelay();
     
-    // Normalize text for consistency
-    const normalizedText = normalizeTextForVoice(text);
-    
+    // Don't normalize text here - let the API handle it to avoid double processing
     const response = await fetch('/api/voice-stream', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-          sentence: normalizedText,
+          sentence: text, // Send original text, let API normalize
           voiceId: this.voiceId,
           settings: getUnifiedVoiceSettings('streaming'), // Use unified streaming settings
           accent: this.accent,
@@ -219,8 +217,8 @@ export class AudioQueue {
       const audioUrl = URL.createObjectURL(blob);
       const audio = new Audio(audioUrl);
       
-      // Speed up the audio for better flow
-      audio.playbackRate = 1.15;
+      // Play at natural speed for better voice quality
+      audio.playbackRate = 1.0;
       audio.volume = 1.0;
       
       this.currentAudio = audio;

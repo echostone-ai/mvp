@@ -55,27 +55,27 @@ export function normalizeTextForVoice(text: string): string {
     .replace(/\*[^*]*\*/g, '') // Remove *actions*
     .replace(/\([^)]*\)/g, '') // Remove (parenthetical comments)
     
-    // Only standardize the most problematic contractions (keep others for personality)
-    .replace(/\b(gonna|gotta|wanna)\b/gi, (match) => {
-      switch (match.toLowerCase()) {
-        case 'gonna': return 'going to';
-        case 'gotta': return 'got to';
-        case 'wanna': return 'want to';
-        default: return match;
-      }
-    })
+    // Don't standardize contractions - preserve natural speech patterns
+    // .replace(/\b(gonna|gotta|wanna)\b/gi, (match) => {
+    //   switch (match.toLowerCase()) {
+    //     case 'gonna': return 'going to';
+    //     case 'gotta': return 'got to';
+    //     case 'wanna': return 'want to';
+    //     default: return match;
+    //   }
+    // })
     
-    // Very conservative punctuation normalization
-    .replace(/\.{5,}/g, '....') // Only standardize very excessive ellipses (5+ dots)
-    .replace(/!{4,}/g, '!!!') // Allow up to 3 exclamations
-    .replace(/\?{4,}/g, '???') // Allow up to 3 question marks
+    // Minimal punctuation normalization
+    .replace(/\.{6,}/g, '.....') // Only standardize very excessive ellipses (6+ dots)
+    .replace(/!{5,}/g, '!!!!') // Allow up to 4 exclamations
+    .replace(/\?{5,}/g, '????') // Allow up to 4 question marks
     
     // Normalize quotation marks
     .replace(/[""]/g, '"')
     .replace(/['']/g, "'")
     
-    // Clean up excessive spacing but preserve natural pauses
-    .replace(/\s{4,}/g, '   ') // Replace 4+ spaces with 3 spaces
+    // Minimal spacing cleanup
+    .replace(/\s{5,}/g, '    ') // Replace 5+ spaces with 4 spaces
     .trim();
 }
 

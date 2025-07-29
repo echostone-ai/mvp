@@ -253,8 +253,8 @@ export default function ChatInterface({
     audioUrlRef.current = url
     const audio = new Audio(url)
     
-    // Speed up the audio for better flow
-    audio.playbackRate = 1.15;
+    // Play at natural speed for better voice quality
+    audio.playbackRate = 1.0;
     audio.volume = 1.0;
     
     setPlaying(true)

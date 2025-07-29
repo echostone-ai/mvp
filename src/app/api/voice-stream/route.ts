@@ -5,60 +5,7 @@ import { normalizeTextForVoice } from '@/lib/voiceConsistency'
 
 export const runtime = 'edge'
 
-/**
- * Clean text of fake laughs and artificial expressions that sound bad in TTS
- */
-function cleanTextForVoice(text: string): string {
-  return text
-    // Remove only the most problematic fake laughs (keep natural ones)
-    .replace(/\blol\b/gi, '')
-    .replace(/\blmao\b/gi, '')
-    .replace(/\brofl\b/gi, '')
-    // Remove artificial expressions
-    .replace(/\*laughs\*/gi, '')
-    .replace(/\*chuckles\*/gi, '')
-    .replace(/\*giggles\*/gi, '')
-    .replace(/\*nervous laughter\*/gi, '')
-    // More conservative punctuation cleaning
-    .replace(/\.{4,}/g, '...') // Only limit excessive ellipses (4+ dots)
-    .replace(/!{3,}/g, '!!') // Allow up to 2 exclamations
-    .replace(/\?{3,}/g, '??') // Allow up to 2 question marks
-    // Clean up excessive spaces but preserve natural pauses
-    .replace(/\s{3,}/g, '  ') // Replace 3+ spaces with 2 spaces
-    .trim()
-}
-
-/**
- * Normalize text for consistent voice generation across sentences
- */
-function normalizeTextForConsistency(text: string, previousContext?: string): string {
-  let normalized = cleanTextForVoice(text);
-  
-  // Normalize punctuation for consistent prosody
-  normalized = normalized
-    // Standardize ellipses
-    .replace(/\.{2,}/g, '...')
-    // Ensure consistent spacing after punctuation
-    .replace(/([.!?])\s+/g, '$1 ')
-    // Normalize quotation marks
-    .replace(/[""]/g, '"')
-    .replace(/['']/g, "'")
-    // Remove multiple spaces
-    .replace(/\s+/g, ' ')
-    .trim();
-  
-  // Add context-aware normalization
-  if (previousContext) {
-    // If previous context ended with certain punctuation, adjust current text tone
-    const lastChar = previousContext.trim().slice(-1);
-    if (lastChar === '.' && !normalized.match(/^[A-Z]/)) {
-      // Capitalize first letter if previous sentence ended with period
-      normalized = normalized.charAt(0).toUpperCase() + normalized.slice(1);
-    }
-  }
-  
-  return normalized;
-}
+// Removed duplicate text normalization functions - using imported normalizeTextForVoice instead
 
 /**
  * Generate a consistent seed for voice generation based on conversation context
@@ -143,7 +90,7 @@ export async function POST(req: Request) {
       });
     }
     
-    // Clean and normalize the text for consistent voice generation
+    // Clean and normalize the text minimally for consistent voice generation
     const cleanedText = normalizeTextForVoice(sentence);
     
     // Use unified voice settings - determine context based on voice ID

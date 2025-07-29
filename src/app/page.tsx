@@ -71,9 +71,9 @@ export default function HomePage() {
     audioUrlRef.current = url
     const audio = new Audio(url)
 
-    // Enhanced mobile volume control and speed
+    // Enhanced mobile volume control and natural speed
     audio.volume = 1.0 // Set to maximum volume
-    audio.playbackRate = 1.15 // Speed up the audio slightly for better flow
+    audio.playbackRate = 1.0 // Play at natural speed for better voice quality
     audio.preload = 'auto'
 
     // Mobile-specific audio optimizations
