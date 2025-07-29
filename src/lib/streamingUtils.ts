@@ -22,15 +22,18 @@ export class AudioQueue {
   private sentenceHashes = new Set<string>(); // Track sentence hashes for better duplicate detection
   private isFetchingNext = false; // Track if we're prefetching next audio
   private audioCache = new Map<string, ArrayBuffer>(); // Cache for prefetched audio
+  private conversationId?: string; // For consistent voice generation
+  private previousContext = ''; // Track previous text for context
   private interjectionPhrases = [
     "Alright...", "Let's see...", "Hmm...", "Okay...", "Well...", 
     "So...", "Right...", "Now...", "Actually..."
   ];
 
-  constructor(voiceId: string, voiceSettings?: any, accent?: string) {
+  constructor(voiceId: string, voiceSettings?: any, accent?: string, conversationId?: string) {
     this.voiceId = voiceId;
     this.voiceSettings = voiceSettings;
     this.accent = accent;
+    this.conversationId = conversationId;
   }
 
   async addSentence(sentence: string) {
@@ -121,27 +124,18 @@ export class AudioQueue {
         this.audioCache.delete(cacheKey); // Remove from cache after use
         console.log(`[AudioQueue] Using cached audio for: "${text.substring(0, 30)}..."`);
       } else {
-        // Synthesize audio
-        const response = await fetch('/api/voice-stream', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            sentence: text,
-            voiceId: this.voiceId,
-            settings: this.voiceSettings,
-            accent: this.accent
-          }),
-        });
-
-        if (response.ok) {
-          audioBuffer = await response.arrayBuffer();
-        } else {
-          throw new Error(`Voice synthesis failed: ${response.status}`);
-        }
+        // Synthesize audio with context for consistency
+        audioBuffer = await this.synthesizeWithContext(text);
       }
 
       if (audioBuffer.byteLength > 0) {
         await this.playAudioBuffer(audioBuffer);
+        // Update context for next synthesis
+        this.previousContext += ' ' + text;
+        // Keep context manageable (last 200 characters)
+        if (this.previousContext.length > 200) {
+          this.previousContext = this.previousContext.substring(this.previousContext.length - 200);
+        }
       }
     } catch (error) {
       console.error('Failed to process text:', text, error);
@@ -151,6 +145,27 @@ export class AudioQueue {
     if (!this.isDestroyed) {
       this.playNext();
     }
+  }
+
+  private async synthesizeWithContext(text: string): Promise<ArrayBuffer> {
+    const response = await fetch('/api/voice-stream', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sentence: text,
+        voiceId: this.voiceId,
+        settings: this.voiceSettings,
+        accent: this.accent,
+        conversationId: this.conversationId,
+        previousContext: this.previousContext
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Voice synthesis failed: ${response.status}`);
+    }
+
+    return await response.arrayBuffer();
   }
 
   private async prefetchNextAudio() {
@@ -171,23 +186,10 @@ export class AudioQueue {
     try {
       console.log(`[AudioQueue] Prefetching audio for: "${nextText.substring(0, 30)}..."`);
       
-      const response = await fetch('/api/voice-stream', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sentence: nextText,
-          voiceId: this.voiceId,
-          settings: this.voiceSettings,
-          accent: this.accent
-        }),
-      });
-
-      if (response.ok) {
-        const audioBuffer = await response.arrayBuffer();
-        if (audioBuffer.byteLength > 0) {
-          this.audioCache.set(cacheKey, audioBuffer);
-          console.log(`[AudioQueue] Cached audio for: "${nextText.substring(0, 30)}..."`);
-        }
+      const audioBuffer = await this.synthesizeWithContext(nextText);
+      if (audioBuffer.byteLength > 0) {
+        this.audioCache.set(cacheKey, audioBuffer);
+        console.log(`[AudioQueue] Cached audio for: "${nextText.substring(0, 30)}..."`);
       }
     } catch (error) {
       console.error('Failed to prefetch audio:', error);
@@ -231,6 +233,7 @@ export class AudioQueue {
     this.sentenceHashes.clear();
     this.audioCache.clear(); // Clear prefetched audio cache
     this.isFetchingNext = false;
+    this.previousContext = ''; // Reset context
     
     if (this.currentAudio) {
       this.currentAudio.pause();
@@ -253,9 +256,10 @@ export function createStreamingAudioManager(
   options: {
     useWebAudio?: boolean;
     enableCrossfade?: boolean;
+    conversationId?: string;
   } = {}
 ): StreamingAudioManager {
-  const audioQueue = new AudioQueue(voiceId, voiceSettings, accent);
+  const audioQueue = new AudioQueue(voiceId, voiceSettings, accent, options.conversationId);
 
   const manager: StreamingAudioManager = {
     async addSentence(sentence: string) {

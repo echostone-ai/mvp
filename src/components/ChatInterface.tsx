@@ -321,12 +321,15 @@ export default function ChatInterface({
     }
 
     try {
-      // Initialize streaming audio manager
+      // Initialize streaming audio manager with conversation context for consistency
       if (voiceId) {
         streamingAudioRef.current = createStreamingAudioManager(
           voiceId,
           voiceSettings,
-          accent
+          accent,
+          {
+            conversationId: conversationId || `${userId}-${avatarId}` // Use conversation ID for consistent voice
+          }
         );
         
         // Add immediate interjection to fill dead air (300-600ms delay)

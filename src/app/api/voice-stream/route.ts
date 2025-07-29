@@ -1,6 +1,6 @@
 // src/app/api/voice-stream/route.ts
 import { NextResponse } from 'next/server'
-import { getOptimizedVoiceSettings } from '@/lib/voiceSettings'
+import { getOptimizedVoiceSettings, getStreamingConsistencySettings } from '@/lib/voiceSettings'
 
 export const runtime = 'edge'
 
@@ -28,6 +28,60 @@ function cleanTextForVoice(text: string): string {
     .trim()
 }
 
+/**
+ * Normalize text for consistent voice generation across sentences
+ */
+function normalizeTextForConsistency(text: string, previousContext?: string): string {
+  let normalized = cleanTextForVoice(text);
+  
+  // Normalize punctuation for consistent prosody
+  normalized = normalized
+    // Standardize ellipses
+    .replace(/\.{2,}/g, '...')
+    // Ensure consistent spacing after punctuation
+    .replace(/([.!?])\s+/g, '$1 ')
+    // Normalize quotation marks
+    .replace(/[""]/g, '"')
+    .replace(/['']/g, "'")
+    // Remove multiple spaces
+    .replace(/\s+/g, ' ')
+    .trim();
+  
+  // Add context-aware normalization
+  if (previousContext) {
+    // If previous context ended with certain punctuation, adjust current text tone
+    const lastChar = previousContext.trim().slice(-1);
+    if (lastChar === '.' && !normalized.match(/^[A-Z]/)) {
+      // Capitalize first letter if previous sentence ended with period
+      normalized = normalized.charAt(0).toUpperCase() + normalized.slice(1);
+    }
+  }
+  
+  return normalized;
+}
+
+/**
+ * Generate a consistent seed for voice generation based on conversation context
+ */
+function generateConsistentSeed(conversationId?: string, voiceId?: string): number {
+  if (!conversationId || !voiceId) {
+    // Use a fixed seed for consistency when no context available
+    return 42;
+  }
+  
+  // Create a simple hash from conversation and voice ID
+  let hash = 0;
+  const str = `${conversationId}-${voiceId}`;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  
+  // Ensure positive number within reasonable range
+  return Math.abs(hash) % 1000000;
+}
+
 // Create a simple audio buffer for fallback
 function createFallbackAudioBuffer(): ArrayBuffer {
   // This creates a minimal valid MP3 file that's essentially silent
@@ -42,12 +96,13 @@ function createFallbackAudioBuffer(): ArrayBuffer {
 
 export async function POST(req: Request) {
   try {
-    const { sentence, voiceId, settings, emotionalContext, accent } = await req.json()
+    const { sentence, voiceId, settings, emotionalContext, accent, conversationId, previousContext } = await req.json()
     
     console.log('Voice stream generation:', { 
       sentenceLength: sentence?.length,
       voiceId: voiceId?.substring(0, 8) + '...',
-      hasOptimizedSettings: !!settings
+      hasOptimizedSettings: !!settings,
+      hasContext: !!previousContext
     })
     
     if (!sentence) {
@@ -79,18 +134,28 @@ export async function POST(req: Request) {
       });
     }
     
-    // Clean the text for better voice quality
-    const cleanedText = cleanTextForVoice(sentence)
+    // Clean and normalize the text for consistent voice generation
+    const cleanedText = normalizeTextForConsistency(sentence, previousContext)
     
-    // Use provided settings or get optimized defaults for voice cloning
-    const voiceSettings = getOptimizedVoiceSettings(settings)
+    // Use streaming-optimized settings for maximum consistency
+    const voiceSettings = settings || getStreamingConsistencySettings()
     
-    // Call ElevenLabs API
+    // Generate a consistent seed based on conversation context
+    const seed = generateConsistentSeed(conversationId, finalVoiceId)
+    
+    // Call ElevenLabs API with consistency optimizations
     const requestBody: any = {
       text: cleanedText,
-      model_id: 'eleven_turbo_v2',
+      model_id: 'eleven_turbo_v2_5', // Use latest model for better consistency
       voice_settings: voiceSettings,
+      seed: seed, // Consistent seed for similar voice characteristics
     };
+    
+    // Add previous context for better continuity (if supported)
+    if (previousContext && previousContext.length > 0) {
+      requestBody.previous_text = previousContext.substring(-100); // Last 100 chars for context
+    }
+    
     if (accent) {
       requestBody.accent = accent;
     }
