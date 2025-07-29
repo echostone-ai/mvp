@@ -8,34 +8,25 @@ export interface StreamingAudioManager {
 }
 
 export class AudioQueue {
-  private queue: ArrayBuffer[] = [];
+  private queue: string[] = []; // Store sentences instead of audio buffers
   private isPlaying = false;
   private currentAudio: HTMLAudioElement | null = null;
-  private audioContext: AudioContext | null = null;
-  private gainNode: GainNode | null = null;
   private isDestroyed = false;
-  private lastPlayTime = 0;
+  private voiceId: string;
+  private voiceSettings?: any;
+  private accent?: string;
 
-  constructor() {
-    // Initialize Web Audio API for better control
-    if (typeof window !== 'undefined' && window.AudioContext) {
-      this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      this.gainNode = this.audioContext.createGain();
-      this.gainNode.connect(this.audioContext.destination);
-    }
+  constructor(voiceId: string, voiceSettings?: any, accent?: string) {
+    this.voiceId = voiceId;
+    this.voiceSettings = voiceSettings;
+    this.accent = accent;
   }
 
-  async addAudio(audioBuffer: ArrayBuffer) {
+  async addSentence(sentence: string) {
     if (this.isDestroyed) return;
     
-    // Limit queue size to prevent memory issues and reduce overlap
-    if (this.queue.length > 5) {
-      console.warn('Audio queue getting too long, dropping oldest audio');
-      this.queue.shift();
-    }
-    
-    this.queue.push(audioBuffer);
-    console.log(`[AudioQueue] Added audio to queue. Queue length: ${this.queue.length}, isPlaying: ${this.isPlaying}`);
+    this.queue.push(sentence);
+    console.log(`[AudioQueue] Added sentence to queue: "${sentence.substring(0, 30)}..." Queue length: ${this.queue.length}`);
     
     if (!this.isPlaying) {
       this.playNext();
@@ -49,70 +40,67 @@ export class AudioQueue {
       return;
     }
 
-    // Add small delay between sentences to prevent overlap, but don't drop them
-    const now = Date.now();
-    const timeSinceLastPlay = now - this.lastPlayTime;
-    const minInterval = 200; // Reduced from 500ms to 200ms for better flow
-    
-    if (timeSinceLastPlay < minInterval) {
-      console.log(`[AudioQueue] Waiting ${minInterval - timeSinceLastPlay}ms before next audio`);
-      // Wait for the remaining time, then try again
-      setTimeout(() => {
-        if (!this.isDestroyed) {
-          this.playNext();
-        }
-      }, minInterval - timeSinceLastPlay);
-      return;
-    }
-
     this.isPlaying = true;
-    this.lastPlayTime = now;
-    const audioBuffer = this.queue.shift()!;
-    console.log(`[AudioQueue] Playing audio. Remaining in queue: ${this.queue.length}`);
+    const sentence = this.queue.shift()!;
+    console.log(`[AudioQueue] Processing sentence: "${sentence.substring(0, 30)}..." Remaining: ${this.queue.length}`);
     
     try {
-      // Create blob URL for the audio
-      const blob = new Blob([audioBuffer], { type: 'audio/mpeg' });
-      const audioUrl = URL.createObjectURL(blob);
-      
-      // Create audio element
-      const audio = new Audio(audioUrl);
-      this.currentAudio = audio;
-      
-      // Play audio directly for streaming sentences (don't use global manager to avoid stopping previous sentences)
-      if (!this.isDestroyed) {
-        await new Promise<void>((resolve, reject) => {
-          const cleanup = () => {
-            console.log(`[AudioQueue] Audio ended, cleaning up. Queue length: ${this.queue.length}`);
-            URL.revokeObjectURL(audioUrl);
-            if (this.currentAudio === audio) {
-              this.currentAudio = null;
-            }
-            if (!this.isDestroyed) {
-              this.playNext(); // Play next in queue
-            }
-          };
-          
-          audio.onended = () => {
-            cleanup();
-            resolve();
-          };
-          
-          audio.onerror = (error) => {
-            console.error('[AudioQueue] Audio playback error:', error);
-            cleanup();
-            reject(error);
-          };
-          
-          audio.play().catch(reject);
-        });
+      // Synthesize audio for this sentence
+      const response = await fetch('/api/voice-stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sentence: sentence.trim(),
+          voiceId: this.voiceId,
+          settings: this.voiceSettings,
+          accent: this.accent
+        }),
+      });
+
+      if (response.ok) {
+        const audioBuffer = await response.arrayBuffer();
+        if (audioBuffer.byteLength > 0) {
+          // Play the audio immediately
+          await this.playAudioBuffer(audioBuffer);
+        }
+      } else {
+        console.warn('Voice synthesis failed for sentence:', sentence);
       }
     } catch (error) {
-      console.error('Failed to play audio:', error);
-      if (!this.isDestroyed) {
-        this.playNext(); // Continue with next audio
-      }
+      console.error('Failed to synthesize sentence:', sentence, error);
     }
+    
+    // Small delay between sentences, then continue
+    setTimeout(() => {
+      if (!this.isDestroyed) {
+        this.playNext();
+      }
+    }, 300);
+  }
+
+  private async playAudioBuffer(audioBuffer: ArrayBuffer): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const blob = new Blob([audioBuffer], { type: 'audio/mpeg' });
+      const audioUrl = URL.createObjectURL(blob);
+      const audio = new Audio(audioUrl);
+      
+      this.currentAudio = audio;
+      
+      audio.onended = () => {
+        URL.revokeObjectURL(audioUrl);
+        this.currentAudio = null;
+        resolve();
+      };
+      
+      audio.onerror = (error) => {
+        console.error('[AudioQueue] Audio playback error:', error);
+        URL.revokeObjectURL(audioUrl);
+        this.currentAudio = null;
+        reject(error);
+      };
+      
+      audio.play().catch(reject);
+    });
   }
 
   stop() {
@@ -130,7 +118,7 @@ export class AudioQueue {
   }
 
   getIsPlaying() {
-    return !this.isDestroyed && (this.isPlaying || globalAudioManager.getIsPlaying());
+    return !this.isDestroyed && this.isPlaying;
   }
 }
 
@@ -139,41 +127,11 @@ export function createStreamingAudioManager(
   voiceSettings?: any,
   accent?: string
 ): StreamingAudioManager {
-  const audioQueue = new AudioQueue();
-  let processingQueue: Promise<void> = Promise.resolve();
+  const audioQueue = new AudioQueue(voiceId, voiceSettings, accent);
 
   const manager: StreamingAudioManager = {
     async addSentence(sentence: string) {
-      // Chain the processing to ensure sentences are processed in order
-      processingQueue = processingQueue.then(async () => {
-        try {
-          console.log('[StreamingAudioManager] Processing sentence:', sentence.substring(0, 50) + '...');
-          const response = await fetch('/api/voice-stream', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              sentence: sentence.trim(),
-              voiceId,
-              settings: voiceSettings,
-              accent
-            }),
-          });
-
-          if (response.ok) {
-            const audioBuffer = await response.arrayBuffer();
-            if (audioBuffer.byteLength > 0) {
-              console.log('[StreamingAudioManager] Adding audio to queue for:', sentence.substring(0, 30) + '...');
-              await audioQueue.addAudio(audioBuffer);
-            }
-          } else {
-            console.warn('Voice synthesis failed for sentence:', sentence);
-          }
-        } catch (error) {
-          console.error('Failed to synthesize sentence:', sentence, error);
-        }
-      });
-      
-      return processingQueue;
+      await audioQueue.addSentence(sentence);
     },
 
     stop() {

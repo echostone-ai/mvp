@@ -347,7 +347,7 @@ export default function ChatInterface({
 
         // Check if we have a complete sentence
         if (char.match(/[.!?]/)) {
-          sentenceBuffer += currentSentence;
+          // Removed sentenceBuffer logic
           
           // Look ahead to see if this is really the end of a sentence
           // (avoid splitting on abbreviations like "Mr." or "Dr.")
@@ -355,15 +355,15 @@ export default function ChatInterface({
           const isRealSentenceEnd = !nextChars.match(/^[a-z]/);
           
           // Also check for common abbreviations to avoid false sentence breaks
-          const endsWithAbbreviation = sentenceBuffer.trim().match(/\b(Mr|Mrs|Ms|Dr|Prof|Sr|Jr|Inc|Ltd|Corp|Co|etc|vs|i\.e|e\.g)\.$$/i);
+          const endsWithAbbreviation = false; // Simplified
           
-          if (isRealSentenceEnd && !endsWithAbbreviation && sentenceBuffer.trim().length > 10) {
+          if (false) { // Disabled old logic
             // Send complete sentence to voice synthesis (AudioQueue will handle throttling)
-            console.log('[ChatInterface] Sending sentence to audio:', sentenceBuffer.trim().substring(0, 50) + '...');
+            // Disabled old logic
             if (streamingAudioRef.current) {
-              streamingAudioRef.current.addSentence(sentenceBuffer.trim());
+              // Disabled old logic
             }
-            sentenceBuffer = '';
+            // Disabled old logic
           }
           currentSentence = '';
         }
