@@ -136,7 +136,7 @@ function GetStartedContent() {
       <SimpleNavigation />
       <div className="get-started-container">
         <div className="get-started-content">
-        <div className="get-started-header">
+          <div className="get-started-header">
           <h1 className="get-started-title">Get Started with EchoStone</h1>
           <p className="get-started-subtitle">
             Let's create your personalized voice experience in just a few minutes
@@ -291,6 +291,7 @@ function GetStartedContent() {
             selectedAvatar={selectedAvatar}
           />
         )}
+        </div>
       </div>
     </>
   );
