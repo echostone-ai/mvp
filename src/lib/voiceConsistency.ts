@@ -50,14 +50,12 @@ export function generateConversationSeed(conversationId: string, voiceId: string
  */
 export function normalizeTextForVoice(text: string): string {
   return text
-    // Remove all fake expressions that might trigger accent variations
-    .replace(/\b(haha|lol|lmao|rofl|hehe)\b/gi, '')
+    // Remove only the most problematic fake expressions
+    .replace(/\b(lol|lmao|rofl)\b/gi, '')
     .replace(/\*[^*]*\*/g, '') // Remove *actions*
     .replace(/\([^)]*\)/g, '') // Remove (parenthetical comments)
     
-    // Standardize common words that might have accent variations
-    .replace(/\b(yeah|ya|yep|yup)\b/gi, 'yes')
-    .replace(/\b(nah|nope)\b/gi, 'no')
+    // Only standardize the most problematic contractions
     .replace(/\b(gonna|gotta|wanna)\b/gi, (match) => {
       switch (match.toLowerCase()) {
         case 'gonna': return 'going to';
@@ -67,17 +65,17 @@ export function normalizeTextForVoice(text: string): string {
       }
     })
     
-    // Standardize punctuation to reduce accent triggers
-    .replace(/\.{3,}/g, '...') // Standardize ellipses
-    .replace(/!{2,}/g, '!') // Single exclamation
-    .replace(/\?{2,}/g, '?') // Single question mark
+    // Conservative punctuation normalization
+    .replace(/\.{4,}/g, '...') // Only standardize excessive ellipses (4+ dots)
+    .replace(/!{3,}/g, '!!') // Allow up to 2 exclamations
+    .replace(/\?{3,}/g, '??') // Allow up to 2 question marks
     
     // Normalize quotation marks
     .replace(/[""]/g, '"')
     .replace(/['']/g, "'")
     
-    // Standardize spacing
-    .replace(/\s+/g, ' ')
+    // Clean up excessive spacing but preserve natural pauses
+    .replace(/\s{3,}/g, '  ') // Replace 3+ spaces with 2 spaces
     .trim();
 }
 
