@@ -31,14 +31,14 @@ export const DEFAULT_VOICE_SETTINGS: UnifiedVoiceSettings = {
 
 /**
  * High consistency settings for when maximum voice consistency is needed
- * Optimized for homepage demo with natural speed
+ * Optimized for homepage demo with natural speed - closer to ElevenLabs defaults
  */
 export const HIGH_CONSISTENCY_SETTINGS: UnifiedVoiceSettings = {
-  stability: 0.80,              // High stability for consistent voice
-  similarity_boost: 0.90,       // Very high similarity for voice character
-  style: 0.20,                 // Moderate style for natural expression
-  use_speaker_boost: true,
-  model_id: 'eleven_multilingual_v2',
+  stability: 0.50,              // Default ElevenLabs stability
+  similarity_boost: 0.75,       // Default ElevenLabs similarity
+  style: 0.00,                 // No style variation (default)
+  use_speaker_boost: false,     // Disable speaker boost to match ElevenLabs defaults
+  model_id: 'eleven_turbo_v2',  // Standard model for better accent consistency
   optimize_streaming_latency: 1,
   output_format: 'mp3_44100_128'
 };
@@ -111,7 +111,8 @@ export function createUnifiedVoiceRequest(
   const finalSettings = mergeVoiceSettings(baseSettings, customSettings);
   
   // Generate a consistent seed for the conversation
-  const seed = conversationId ? generateConversationSeed(conversationId, voiceId) : undefined;
+  // For homepage, don't use a seed to match ElevenLabs defaults
+  const seed = context === 'homepage' ? undefined : (conversationId ? generateConversationSeed(conversationId, voiceId) : undefined);
   
   return {
     text,

@@ -55,17 +55,17 @@ export function normalizeTextForVoice(text: string): string {
     .replace(/\*[^*]*\*/g, '') // Remove *actions*
     .replace(/\([^)]*\)/g, '') // Remove (parenthetical comments)
     
-    // More conservative punctuation normalization
-    .replace(/\.{4,}/g, '...') // Only standardize excessive ellipses (4+ dots)
-    .replace(/!{3,}/g, '!!') // Allow up to 2 exclamations
-    .replace(/\?{3,}/g, '??') // Allow up to 2 question marks
+    // Minimal punctuation normalization to preserve natural speech
+    .replace(/\.{5,}/g, '....') // Only standardize very excessive ellipses (5+ dots)
+    .replace(/!{4,}/g, '!!!') // Allow up to 3 exclamations
+    .replace(/\?{4,}/g, '???') // Allow up to 3 question marks
     
     // Normalize quotation marks
     .replace(/[""]/g, '"')
     .replace(/['']/g, "'")
     
     // Clean up excessive spacing but preserve natural pauses
-    .replace(/\s{3,}/g, '  ') // Replace 3+ spaces with 2 spaces
+    .replace(/\s{4,}/g, '   ') // Replace 4+ spaces with 3 spaces
     .trim();
 }
 
