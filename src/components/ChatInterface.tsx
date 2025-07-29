@@ -345,27 +345,22 @@ export default function ChatInterface({
         fullResponse += char;
         setStreamingText(fullResponse);
 
-        // Check if we have a complete sentence
-        if (char.match(/[.!?]/)) {
-          // Removed sentenceBuffer logic
-          
-          // Look ahead to see if this is really the end of a sentence
-          // (avoid splitting on abbreviations like "Mr." or "Dr.")
-          const nextChars = fullResponse.slice(fullResponse.length - currentSentence.length + 1, fullResponse.length + 3);
-          const isRealSentenceEnd = !nextChars.match(/^[a-z]/);
-          
-          // Also check for common abbreviations to avoid false sentence breaks
-          const endsWithAbbreviation = false; // Simplified
-          
-          if (false) { // Disabled old logic
-            // Send complete sentence to voice synthesis (AudioQueue will handle throttling)
-            // Disabled old logic
-            if (streamingAudioRef.current) {
-              // Disabled old logic
+        // Real-time sentence detection for faster audio
+        if (char.match(/[.!?]/) && fullResponse.length > 15) {
+          // Get the last sentence by splitting and taking the second-to-last part
+          const sentences = fullResponse.split(/(?<=[.!?])\s*/);
+          if (sentences.length >= 2) {
+            const lastCompleteSentence = sentences[sentences.length - 2].trim();
+            
+            // Only process if it's a substantial sentence and not an abbreviation
+            if (lastCompleteSentence.length > 10 && 
+                !lastCompleteSentence.match(/\b(Mr|Mrs|Ms|Dr|Prof|Sr|Jr|Inc|Ltd|Corp|Co|etc|vs|i\.e|e\.g)\.$/) &&
+                streamingAudioRef.current) {
+              
+              console.log('[ChatInterface] Real-time sentence:', lastCompleteSentence.substring(0, 50) + '...');
+              streamingAudioRef.current.addSentence(lastCompleteSentence);
             }
-            // Disabled old logic
           }
-          currentSentence = '';
         }
       }
 

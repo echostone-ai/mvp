@@ -152,6 +152,24 @@ export default function HomePage() {
             const chunk = decoder.decode(value, { stream: true })
             fullResponse += chunk
             setAnswer(fullResponse)
+
+            // Real-time sentence detection for faster audio
+            for (const char of chunk) {
+              if (char.match(/[.!?]/) && fullResponse.length > 15) {
+                const sentences = fullResponse.split(/(?<=[.!?])\s*/);
+                if (sentences.length >= 2) {
+                  const lastCompleteSentence = sentences[sentences.length - 2].trim();
+                  
+                  if (lastCompleteSentence.length > 10 && 
+                      !lastCompleteSentence.match(/\b(Mr|Mrs|Ms|Dr|Prof|Sr|Jr|Inc|Ltd|Corp|Co|etc|vs|i\.e|e\.g)\.$/) &&
+                      streamingAudioRef.current) {
+                    
+                    console.log('[Homepage] Real-time sentence:', lastCompleteSentence.substring(0, 50) + '...');
+                    streamingAudioRef.current.addSentence(lastCompleteSentence);
+                  }
+                }
+              }
+            }
           }
 
           // Process all sentences from the complete response
