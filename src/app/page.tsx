@@ -6,7 +6,7 @@ import AccountMenu from '@/components/AccountMenu'
 import Image from 'next/image'
 import { useState, useRef, useEffect } from 'react'
 import { globalAudioManager } from '@/lib/globalAudioManager'
-import { stopAllAudio } from '@/lib/streamingUtils'
+import { stopAllAudio, createStreamingAudioManager } from '@/lib/streamingUtils'
 
 export default function HomePage() {
   const [question, setQuestion] = useState('')
@@ -20,6 +20,7 @@ export default function HomePage() {
   const timeoutRef = useRef<any>(null)
   const audioUrlRef = useRef<string | null>(null)
   const audioRef = useRef<HTMLAudioElement>(null)
+  const streamingAudioRef = useRef<any>(null)
 
   // Check if Web Speech API is available
   const hasSpeechRecognition = typeof window !== 'undefined' &&
@@ -47,6 +48,9 @@ export default function HomePage() {
     // Cleanup function to stop all audio when component unmounts
     return () => {
       stopAllAudio();
+      if (streamingAudioRef.current) {
+        streamingAudioRef.current.stop();
+      }
       if (audioUrlRef.current) {
         URL.revokeObjectURL(audioUrlRef.current);
       }
@@ -109,6 +113,9 @@ export default function HomePage() {
     
     // Stop all existing audio first to prevent overlaps
     await stopAllAudio();
+    if (streamingAudioRef.current) {
+      streamingAudioRef.current.stop();
+    }
     setPlaying(false);
     
     setLoading(true)
@@ -129,37 +136,15 @@ export default function HomePage() {
       })
 
       if (res.ok && res.body) {
+        // Initialize streaming audio manager
+        const voiceId = process.env.NEXT_PUBLIC_ELEVENLABS_VOICE_ID || 'CO6pxVrMZfyL61ZIglyr';
+        streamingAudioRef.current = createStreamingAudioManager(voiceId);
+
         const reader = res.body.getReader()
         const decoder = new TextDecoder()
         let fullResponse = ''
         let currentSentence = ''
-        let pendingSentences: string[] = []
-
-        const processPendingSentences = async () => {
-          while (pendingSentences.length > 0) {
-            const sentence = pendingSentences.shift()!;
-            try {
-              const vr = await fetch('/api/voice-stream', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                  sentence: sentence.trim(),
-                  voiceId: process.env.NEXT_PUBLIC_ELEVENLABS_VOICE_ID || 'CO6pxVrMZfyL61ZIglyr'
-                })
-              })
-              if (vr.ok) {
-                const blob = await vr.blob()
-                if (blob.size > 0) {
-                  await playAudioBlob(blob)
-                }
-              }
-            } catch (voiceError) {
-              console.warn('Voice synthesis failed for sentence:', sentence)
-            }
-            // Small delay between sentences
-            await new Promise(resolve => setTimeout(resolve, 200));
-          }
-        };
+        let sentenceBuffer = ''
 
         try {
           while (true) {
@@ -173,29 +158,30 @@ export default function HomePage() {
 
             // Check for sentence completion and synthesize voice
             if (chunk.match(/[.!?]/)) {
-              const sentences = currentSentence.split(/[.!?]/)
-              if (sentences.length > 1) {
-                const completeSentence = sentences[0] + chunk.match(/[.!?]/)?.[0]
-                if (completeSentence.trim().length > 10) {
-                  // Queue sentence for processing instead of dropping it
-                  pendingSentences.push(completeSentence.trim());
-                  
-                  // Start processing if not already running
-                  if (pendingSentences.length === 1) {
-                    processPendingSentences();
-                  }
+              sentenceBuffer += currentSentence;
+              
+              // Look ahead to see if this is really the end of a sentence
+              const nextChars = fullResponse.slice(fullResponse.length - currentSentence.length + 1, fullResponse.length + 3);
+              const isRealSentenceEnd = !nextChars.match(/^[a-z]/);
+              
+              // Also check for common abbreviations to avoid false sentence breaks
+              const endsWithAbbreviation = sentenceBuffer.trim().match(/\b(Mr|Mrs|Ms|Dr|Prof|Sr|Jr|Inc|Ltd|Corp|Co|etc|vs|i\.e|e\.g)\.$/i);
+              
+              if (isRealSentenceEnd && !endsWithAbbreviation && sentenceBuffer.trim().length > 10) {
+                // Send complete sentence to streaming audio manager (handles queuing internally)
+                if (streamingAudioRef.current) {
+                  streamingAudioRef.current.addSentence(sentenceBuffer.trim());
                 }
-                currentSentence = sentences.slice(1).join('')
+                sentenceBuffer = '';
               }
+              currentSentence = '';
             }
           }
 
-          // Handle any remaining sentence
-          if (currentSentence.trim()) {
-            pendingSentences.push(currentSentence.trim());
-            // Process any remaining sentences
-            if (pendingSentences.length > 0) {
-              processPendingSentences();
+          // Handle any remaining text
+          if (sentenceBuffer.trim()) {
+            if (streamingAudioRef.current) {
+              streamingAudioRef.current.addSentence(sentenceBuffer.trim());
             }
           }
 
