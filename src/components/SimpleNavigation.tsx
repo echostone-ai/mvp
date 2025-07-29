@@ -37,6 +37,12 @@ export default function SimpleNavigation() {
           <span className="nav-brand">EchoStone</span>
         </Link>
 
+        <div className="nav-links">
+          <Link href="/about" className="nav-link">
+            About
+          </Link>
+        </div>
+
         <div className="nav-actions">
           {user ? (
             <div className="nav-user-menu">
