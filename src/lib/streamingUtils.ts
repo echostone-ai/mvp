@@ -8,14 +8,14 @@ export interface StreamingAudioManager {
 }
 
 export class AudioQueue {
-  private audioQueue: ArrayBuffer[] = []; // Store pre-synthesized audio buffers
-  private synthesisQueue: Array<{sentence: string, promise: Promise<ArrayBuffer | null>}> = [];
+  private queue: string[] = [];
   private isPlaying = false;
   private currentAudio: HTMLAudioElement | null = null;
   private isDestroyed = false;
   private voiceId: string;
   private voiceSettings?: any;
   private accent?: string;
+  private processedSentences = new Set<string>(); // Track processed sentences
 
   constructor(voiceId: string, voiceSettings?: any, accent?: string) {
     this.voiceId = voiceId;
@@ -26,23 +26,40 @@ export class AudioQueue {
   async addSentence(sentence: string) {
     if (this.isDestroyed) return;
     
-    console.log(`[AudioQueue] Starting synthesis for: "${sentence.substring(0, 30)}..."`);
+    const trimmedSentence = sentence.trim();
     
-    // Start synthesis immediately (parallel processing)
-    const synthesisPromise = this.synthesizeSentence(sentence);
-    this.synthesisQueue.push({ sentence, promise: synthesisPromise });
+    // Avoid duplicate sentences
+    if (this.processedSentences.has(trimmedSentence)) {
+      console.log(`[AudioQueue] Skipping duplicate sentence: "${trimmedSentence.substring(0, 30)}..."`);
+      return;
+    }
     
-    // Process the synthesis queue
-    this.processSynthesisQueue();
+    this.processedSentences.add(trimmedSentence);
+    this.queue.push(trimmedSentence);
+    console.log(`[AudioQueue] Added sentence: "${trimmedSentence.substring(0, 30)}..." Queue: ${this.queue.length}`);
+    
+    if (!this.isPlaying) {
+      this.playNext();
+    }
   }
 
-  private async synthesizeSentence(sentence: string): Promise<ArrayBuffer | null> {
+  private async playNext() {
+    if (this.isDestroyed || this.queue.length === 0) {
+      this.isPlaying = false;
+      return;
+    }
+
+    this.isPlaying = true;
+    const sentence = this.queue.shift()!;
+    console.log(`[AudioQueue] Processing: "${sentence.substring(0, 30)}..." Remaining: ${this.queue.length}`);
+    
     try {
+      // Synthesize and play immediately
       const response = await fetch('/api/voice-stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          sentence: sentence.trim(),
+          sentence,
           voiceId: this.voiceId,
           settings: this.voiceSettings,
           accent: this.accent
@@ -52,64 +69,17 @@ export class AudioQueue {
       if (response.ok) {
         const audioBuffer = await response.arrayBuffer();
         if (audioBuffer.byteLength > 0) {
-          console.log(`[AudioQueue] Synthesis complete for: "${sentence.substring(0, 30)}..."`);
-          return audioBuffer;
+          await this.playAudioBuffer(audioBuffer);
         }
-      } else {
-        console.warn('Voice synthesis failed for sentence:', sentence);
       }
     } catch (error) {
-      console.error('Failed to synthesize sentence:', sentence, error);
-    }
-    return null;
-  }
-
-  private async processSynthesisQueue() {
-    // Process synthesis results in order
-    while (this.synthesisQueue.length > 0 && !this.isDestroyed) {
-      const { sentence, promise } = this.synthesisQueue[0];
-      
-      try {
-        const audioBuffer = await promise;
-        if (audioBuffer) {
-          this.audioQueue.push(audioBuffer);
-          console.log(`[AudioQueue] Added audio to playback queue. Queue length: ${this.audioQueue.length}`);
-        }
-      } catch (error) {
-        console.error('Synthesis failed for sentence:', sentence, error);
-      }
-      
-      this.synthesisQueue.shift(); // Remove processed item
-      
-      // Start playback if not already playing
-      if (!this.isPlaying) {
-        this.playNext();
-      }
-    }
-  }
-
-  private async playNext() {
-    if (this.isDestroyed || this.audioQueue.length === 0) {
-      this.isPlaying = false;
-      return;
-    }
-
-    this.isPlaying = true;
-    const audioBuffer = this.audioQueue.shift()!;
-    console.log(`[AudioQueue] Playing audio. Remaining in queue: ${this.audioQueue.length}`);
-    
-    try {
-      await this.playAudioBuffer(audioBuffer);
-    } catch (error) {
-      console.error('Audio playback failed:', error);
+      console.error('Failed to process sentence:', sentence, error);
     }
     
-    // Minimal delay for natural flow, then continue immediately
-    setTimeout(() => {
-      if (!this.isDestroyed) {
-        this.playNext();
-      }
-    }, 100); // Reduced from 300ms to 100ms for faster flow
+    // Continue immediately to next sentence
+    if (!this.isDestroyed) {
+      this.playNext();
+    }
   }
 
   private async playAudioBuffer(audioBuffer: ArrayBuffer): Promise<void> {
@@ -127,7 +97,6 @@ export class AudioQueue {
       };
       
       audio.onerror = (error) => {
-        console.error('[AudioQueue] Audio playback error:', error);
         URL.revokeObjectURL(audioUrl);
         this.currentAudio = null;
         reject(error);
@@ -139,8 +108,8 @@ export class AudioQueue {
 
   stop() {
     this.isDestroyed = true;
-    this.audioQueue.length = 0;
-    this.synthesisQueue.length = 0;
+    this.queue.length = 0;
+    this.processedSentences.clear();
     
     if (this.currentAudio) {
       this.currentAudio.pause();
