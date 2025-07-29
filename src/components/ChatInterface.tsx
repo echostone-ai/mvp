@@ -332,6 +332,7 @@ export default function ChatInterface({
 
 
       let fullResponse = '';
+      let lastSentenceCount = 0;
 
       // Stream the response
       for await (const char of streamChatResponse(text, newHistory, profileData, {
@@ -345,20 +346,20 @@ export default function ChatInterface({
         fullResponse += char;
         setStreamingText(fullResponse);
 
-        // Simple real-time sentence detection
-        if (char.match(/[.!?]/) && fullResponse.length > 20) {
-          // Look for complete sentences by splitting and checking if we have at least 2 parts
-          const parts = fullResponse.split(/[.!?]/);
-          if (parts.length >= 2) {
-            // Get the second-to-last part (the complete sentence)
-            const completeSentence = parts[parts.length - 2].trim();
-            if (completeSentence.length > 10 && 
-                !completeSentence.match(/\b(Mr|Mrs|Ms|Dr|Prof|Sr|Jr)\b/) &&
-                streamingAudioRef.current) {
-              
-              console.log('[ChatInterface] Streaming sentence:', completeSentence.substring(0, 50) + '...');
-              streamingAudioRef.current.addSentence(completeSentence + char);
+        // Check for new complete sentences every 100 characters
+        if (fullResponse.length % 100 === 0 && fullResponse.length > 50) {
+          const sentences = fullResponse.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 10);
+          
+          // Process any new sentences since last check
+          if (sentences.length > lastSentenceCount && streamingAudioRef.current) {
+            for (let i = lastSentenceCount; i < sentences.length - 1; i++) { // -1 to avoid incomplete last sentence
+              const sentence = sentences[i].trim();
+              if (sentence && !sentence.match(/\b(Mr|Mrs|Ms|Dr|Prof|Sr|Jr)\.$/) && sentence.length > 10) {
+                console.log('[ChatInterface] New sentence detected:', sentence.substring(0, 50) + '...');
+                streamingAudioRef.current.addSentence(sentence);
+              }
             }
+            lastSentenceCount = sentences.length - 1; // Update count, keeping last incomplete sentence
           }
         }
       }
