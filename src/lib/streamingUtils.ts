@@ -16,6 +16,7 @@ export class AudioQueue {
   private voiceSettings?: any;
   private accent?: string;
   private processedSentences = new Set<string>(); // Track processed sentences
+  private sentenceHashes = new Set<string>(); // Track sentence hashes for better duplicate detection
 
   constructor(voiceId: string, voiceSettings?: any, accent?: string) {
     this.voiceId = voiceId;
@@ -28,12 +29,16 @@ export class AudioQueue {
     
     const trimmedSentence = sentence.trim();
     
-    // Avoid duplicate sentences
-    if (this.processedSentences.has(trimmedSentence)) {
+    // Create a simple hash to detect duplicates more reliably
+    const sentenceHash = trimmedSentence.toLowerCase().replace(/[^\w]/g, '');
+    
+    // Avoid duplicate sentences using hash
+    if (this.sentenceHashes.has(sentenceHash)) {
       console.log(`[AudioQueue] Skipping duplicate sentence: "${trimmedSentence.substring(0, 30)}..."`);
       return;
     }
     
+    this.sentenceHashes.add(sentenceHash);
     this.processedSentences.add(trimmedSentence);
     this.queue.push(trimmedSentence);
     console.log(`[AudioQueue] Added sentence: "${trimmedSentence.substring(0, 30)}..." Queue: ${this.queue.length}`);
@@ -110,6 +115,7 @@ export class AudioQueue {
     this.isDestroyed = true;
     this.queue.length = 0;
     this.processedSentences.clear();
+    this.sentenceHashes.clear();
     
     if (this.currentAudio) {
       this.currentAudio.pause();

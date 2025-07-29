@@ -154,20 +154,22 @@ export default function HomePage() {
             fullResponse += chunk
             setAnswer(fullResponse)
 
-            // Check for new complete sentences every 100 characters
-            if (fullResponse.length % 100 === 0 && fullResponse.length > 50) {
-              const sentences = fullResponse.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 10);
+            // Check for new complete sentences every 30 characters (faster detection)
+            if (fullResponse.length % 30 === 0 && fullResponse.length > 20) {
+              const sentences = fullResponse.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 8);
               
               // Process any new sentences since last check
               if (sentences.length > lastSentenceCount && streamingAudioRef.current) {
-                for (let i = lastSentenceCount; i < sentences.length - 1; i++) { // -1 to avoid incomplete last sentence
+                // Process all complete sentences (including first one, excluding last incomplete)
+                const endIndex = sentences.length > 1 ? sentences.length - 1 : sentences.length;
+                for (let i = lastSentenceCount; i < endIndex; i++) {
                   const sentence = sentences[i].trim();
-                  if (sentence && !sentence.match(/\b(Mr|Mrs|Ms|Dr|Prof|Sr|Jr)\.$/) && sentence.length > 10) {
+                  if (sentence && !sentence.match(/\b(Mr|Mrs|Ms|Dr|Prof|Sr|Jr)\.$/) && sentence.length > 8) {
                     console.log('[Homepage] New sentence detected:', sentence.substring(0, 50) + '...');
                     streamingAudioRef.current.addSentence(sentence);
                   }
                 }
-                lastSentenceCount = sentences.length - 1; // Update count, keeping last incomplete sentence
+                lastSentenceCount = endIndex;
               }
             }
           }
