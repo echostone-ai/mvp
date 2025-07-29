@@ -81,7 +81,7 @@ export async function POST(req: Request) {
     console.log('ElevenLabs API key available:', !!apiKey)
     
     // Clean the text for better voice quality using unified normalization
-    const cleanedText = normalizeTextForVoice(text)
+    const cleanedText = normalizeTextForVoice(text);
     
     // Use unified voice settings for consistent voice generation
     // Determine context based on voice ID - homepage uses specific voice ID

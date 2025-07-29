@@ -21,10 +21,10 @@ export interface UnifiedVoiceSettings {
  */
 export const DEFAULT_VOICE_SETTINGS: UnifiedVoiceSettings = {
   stability: 0.75,              // Balanced stability for natural speech
-  similarity_boost: 0.85,       // High similarity for voice character
-  style: 0.25,                 // Moderate style for natural expression
-  use_speaker_boost: true,
-  model_id: 'eleven_multilingual_v2',
+  similarity_boost: 0.50,       // Lower similarity to reduce accent artifacts
+  style: 0.00,                 // No style variation to prevent accent changes
+  use_speaker_boost: false,     // Disable speaker boost to reduce accent variations
+  model_id: 'eleven_monolingual_v1',  // English-only model for better accent consistency
   optimize_streaming_latency: 1,
   output_format: 'mp3_44100_128'
 };
@@ -34,11 +34,11 @@ export const DEFAULT_VOICE_SETTINGS: UnifiedVoiceSettings = {
  * Optimized for homepage demo with natural speed - closer to ElevenLabs defaults
  */
 export const HIGH_CONSISTENCY_SETTINGS: UnifiedVoiceSettings = {
-  stability: 0.50,              // Default ElevenLabs stability
-  similarity_boost: 0.75,       // Default ElevenLabs similarity
+  stability: 0.75,              // Higher stability to reduce accent variations
+  similarity_boost: 0.50,       // Lower similarity to reduce accent artifacts
   style: 0.00,                 // No style variation (default)
   use_speaker_boost: false,     // Disable speaker boost to match ElevenLabs defaults
-  model_id: 'eleven_turbo_v2',  // Standard model for better accent consistency
+  model_id: 'eleven_monolingual_v1',  // English-only model for better accent consistency
   optimize_streaming_latency: 1,
   output_format: 'mp3_44100_128'
 };
@@ -48,11 +48,11 @@ export const HIGH_CONSISTENCY_SETTINGS: UnifiedVoiceSettings = {
  * Best for most use cases
  */
 export const NATURAL_SPEECH_SETTINGS: UnifiedVoiceSettings = {
-  stability: 0.70,              // Lower stability for natural variation
-  similarity_boost: 0.88,       // High similarity for voice character
-  style: 0.30,                 // Higher style for natural expression
-  use_speaker_boost: true,
-  model_id: 'eleven_multilingual_v2',
+  stability: 0.75,              // Higher stability to reduce accent variations
+  similarity_boost: 0.50,       // Lower similarity to reduce accent artifacts
+  style: 0.00,                 // No style variation to prevent accent changes
+  use_speaker_boost: false,     // Disable speaker boost to reduce accent variations
+  model_id: 'eleven_monolingual_v1',  // English-only model for better accent consistency
   optimize_streaming_latency: 1,
   output_format: 'mp3_44100_128'
 };
@@ -90,10 +90,10 @@ export function mergeVoiceSettings(
   return {
     ...baseSettings,
     ...customSettings,
-    // Ensure critical settings stay within safe bounds
-    stability: Math.max(0.5, Math.min(0.95, customSettings.stability ?? baseSettings.stability)),
-    similarity_boost: Math.max(0.7, Math.min(0.95, customSettings.similarity_boost ?? baseSettings.similarity_boost)),
-    style: Math.max(0.05, Math.min(0.5, customSettings.style ?? baseSettings.style))
+    // For homepage, use exact settings without bounds checking to match ElevenLabs defaults
+    stability: customSettings.stability ?? baseSettings.stability,
+    similarity_boost: customSettings.similarity_boost ?? baseSettings.similarity_boost,
+    style: customSettings.style ?? baseSettings.style
   };
 }
 

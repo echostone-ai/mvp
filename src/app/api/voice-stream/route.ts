@@ -144,7 +144,7 @@ export async function POST(req: Request) {
     }
     
     // Clean and normalize the text for consistent voice generation
-    const cleanedText = normalizeTextForVoice(sentence)
+    const cleanedText = normalizeTextForVoice(sentence);
     
     // Use unified voice settings - determine context based on voice ID
     const context = finalVoiceId === 'CO6pxVrMZfyL61ZIglyr' ? 'homepage' : 'streaming';
