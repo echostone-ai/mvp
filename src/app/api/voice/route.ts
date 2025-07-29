@@ -123,6 +123,13 @@ export async function POST(req: Request) {
       final: finalVoiceId
     });
     
+    console.log('API Key check:', {
+      has_public_key: !!process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY,
+      has_private_key: !!process.env.ELEVENLABS_API_KEY,
+      public_key_length: process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY?.length || 0,
+      private_key_length: process.env.ELEVENLABS_API_KEY?.length || 0
+    });
+    
     if (!finalVoiceId) {
       console.warn('No voice ID provided, using fallback audio');
       return new NextResponse(createFallbackAudioBuffer(), {

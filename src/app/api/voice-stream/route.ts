@@ -105,6 +105,13 @@ export async function POST(req: Request) {
       hasContext: !!previousContext
     })
     
+    console.log('Voice stream API Key check:', {
+      has_public_key: !!process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY,
+      has_private_key: !!process.env.ELEVENLABS_API_KEY,
+      public_key_length: process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY?.length || 0,
+      private_key_length: process.env.ELEVENLABS_API_KEY?.length || 0
+    })
+    
     if (!sentence) {
       return NextResponse.json({ error: 'Sentence is required' }, { status: 400 })
     }
