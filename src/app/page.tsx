@@ -7,7 +7,8 @@ import Image from 'next/image'
 import { useState, useRef, useEffect } from 'react'
 import { globalAudioManager } from '@/lib/globalAudioManager'
 import { stopAllAudio, createStreamingAudioManager } from '@/lib/streamingUtils'
-import { splitTextForConsistentVoice, getMaxConsistencySettings } from '@/lib/voiceConsistency'
+import { splitTextForConsistentVoice } from '@/lib/voiceConsistency'
+import { getUnifiedVoiceSettings } from '@/lib/unifiedVoiceConfig'
 
 export default function HomePage() {
   const [question, setQuestion] = useState('')
@@ -70,8 +71,9 @@ export default function HomePage() {
     audioUrlRef.current = url
     const audio = new Audio(url)
 
-    // Enhanced mobile volume control
+    // Enhanced mobile volume control and speed
     audio.volume = 1.0 // Set to maximum volume
+    audio.playbackRate = 1.15 // Speed up the audio slightly for better flow
     audio.preload = 'auto'
 
     // Mobile-specific audio optimizations
@@ -137,12 +139,12 @@ export default function HomePage() {
       })
 
       if (res.ok && res.body) {
-        // Initialize streaming audio manager with explicit voice ID and maximum consistency settings
+        // Initialize streaming audio manager with unified voice settings for homepage
         const voiceId = 'CO6pxVrMZfyL61ZIglyr'; // Hardcode the specific voice ID for consistency
-        const consistencySettings = getMaxConsistencySettings();
+        const homepageSettings = getUnifiedVoiceSettings('homepage');
         streamingAudioRef.current = createStreamingAudioManager(
           voiceId, 
-          consistencySettings,
+          homepageSettings,
           undefined,
           { conversationId: 'homepage-demo' } // Consistent conversation ID
         );
@@ -345,7 +347,7 @@ export default function HomePage() {
         body: JSON.stringify({
           text: answer,
           voiceId: 'CO6pxVrMZfyL61ZIglyr', // Hardcode the specific voice ID for consistency
-          settings: getMaxConsistencySettings()
+                          settings: getUnifiedVoiceSettings('homepage')
         })
       })
       const blob = await vr.blob()

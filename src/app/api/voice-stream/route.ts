@@ -1,11 +1,7 @@
 // src/app/api/voice-stream/route.ts
 import { NextResponse } from 'next/server'
-import { getOptimizedVoiceSettings, getStreamingConsistencySettings } from '@/lib/voiceSettings'
-import { 
-  normalizeTextForVoice, 
-  generateConversationSeed, 
-  getMaxConsistencySettings 
-} from '@/lib/voiceConsistency'
+import { createUnifiedVoiceRequest, getUnifiedVoiceSettings } from '@/lib/unifiedVoiceConfig'
+import { normalizeTextForVoice } from '@/lib/voiceConsistency'
 
 export const runtime = 'edge'
 
@@ -150,37 +146,19 @@ export async function POST(req: Request) {
     // Clean and normalize the text for consistent voice generation
     const cleanedText = normalizeTextForVoice(sentence)
     
-    // Use maximum consistency settings
-    const voiceSettings = getMaxConsistencySettings()
-    
-    // Generate a consistent seed based on conversation context
-    const seed = generateConversationSeed(conversationId || 'default', finalVoiceId)
-    
-    // Call ElevenLabs API with balanced consistency optimizations
-    const requestBody: any = {
-      text: cleanedText,
-      model_id: 'eleven_multilingual_v2', // Use most accurate model for voice cloning
-      voice_settings: {
-        ...voiceSettings,
-        // Use balanced settings for natural speech
-        stability: 0.85,
-        similarity_boost: 0.80,
-        style: 0.15,
-        use_speaker_boost: true
-      },
-      seed: seed, // Consistent seed for similar voice characteristics
-      // Add optimization flags for consistency
-      optimize_streaming_latency: 1,
-      output_format: 'mp3_44100_128'
-    };
+    // Use unified voice settings for streaming
+    const context = 'streaming';
+    const requestBody = createUnifiedVoiceRequest(
+      cleanedText,
+      finalVoiceId,
+      context,
+      settings,
+      conversationId || 'default'
+    );
     
     // Add previous context for better continuity (if supported)
     if (previousContext && previousContext.length > 0) {
-      requestBody.previous_text = previousContext.substring(-100); // Last 100 chars for context
-    }
-    
-    if (accent) {
-      requestBody.accent = accent;
+      (requestBody as any).previous_text = previousContext.substring(-100); // Last 100 chars for context
     }
     
     const response = await fetch(

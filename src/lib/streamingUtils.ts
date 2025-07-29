@@ -1,10 +1,10 @@
 // src/lib/streamingUtils.ts
 import { globalAudioManager } from './globalAudioManager';
 import { 
-  createVoiceBatchingDelay, 
-  getMaxConsistencySettings,
+  createVoiceBatchingDelay,
   normalizeTextForVoice 
 } from './voiceConsistency';
+import { getUnifiedVoiceSettings } from './unifiedVoiceConfig';
 
 export interface StreamingAudioManager {
   addSentence: (sentence: string) => Promise<void>;
@@ -162,14 +162,14 @@ export class AudioQueue {
     const response = await fetch('/api/voice-stream', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sentence: normalizedText,
-        voiceId: this.voiceId,
-        settings: getMaxConsistencySettings(), // Use maximum consistency settings
-        accent: this.accent,
-        conversationId: this.conversationId || 'default',
-        previousContext: this.previousContext
-      }),
+              body: JSON.stringify({
+          sentence: normalizedText,
+          voiceId: this.voiceId,
+          settings: getUnifiedVoiceSettings('streaming'), // Use unified streaming settings
+          accent: this.accent,
+          conversationId: this.conversationId || 'default',
+          previousContext: this.previousContext
+        }),
     });
 
     if (!response.ok) {
@@ -218,6 +218,10 @@ export class AudioQueue {
       const blob = new Blob([audioBuffer], { type: 'audio/mpeg' });
       const audioUrl = URL.createObjectURL(blob);
       const audio = new Audio(audioUrl);
+      
+      // Speed up the audio for better flow
+      audio.playbackRate = 1.15;
+      audio.volume = 1.0;
       
       this.currentAudio = audio;
       

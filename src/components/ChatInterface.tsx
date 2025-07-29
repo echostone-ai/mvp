@@ -14,6 +14,7 @@ import {
 } from '@/lib/streamingUtils';
 import { splitTextForConsistentVoice } from '@/lib/voiceConsistency';
 import { globalAudioManager } from '@/lib/globalAudioManager';
+import { getUnifiedVoiceSettings } from '@/lib/unifiedVoiceConfig';
 
 function getFirstName(profileData: any): string {
   if (profileData?.personal_snapshot?.full_legal_name)
@@ -252,6 +253,10 @@ export default function ChatInterface({
     audioUrlRef.current = url
     const audio = new Audio(url)
     
+    // Speed up the audio for better flow
+    audio.playbackRate = 1.15;
+    audio.volume = 1.0;
+    
     setPlaying(true)
     
     try {
@@ -322,16 +327,17 @@ export default function ChatInterface({
     }
 
     try {
-      // Initialize streaming audio manager with conversation context for consistency
-      if (voiceId) {
-        streamingAudioRef.current = createStreamingAudioManager(
-          voiceId,
-          voiceSettings,
-          accent,
-          {
-            conversationId: conversationId || `${userId}-${avatarId}` // Use conversation ID for consistent voice
-          }
-        );
+              // Initialize streaming audio manager with unified voice settings for profile
+        if (voiceId) {
+          const profileSettings = voiceSettings || getUnifiedVoiceSettings('profile');
+          streamingAudioRef.current = createStreamingAudioManager(
+            voiceId || '',
+            profileSettings,
+            accent || undefined,
+            {
+              conversationId: conversationId || `${userId}-${avatarId}` // Use conversation ID for consistent voice
+            }
+          );
         
         // Add immediate interjection to fill dead air (300-600ms delay)
         setTimeout(() => {
@@ -359,7 +365,7 @@ export default function ChatInterface({
         visitorName,
         isSharedAvatar,
         shareToken,
-        voiceId
+        voiceId: voiceId || undefined
       })) {
         fullResponse += char;
         setStreamingText(fullResponse);
@@ -481,7 +487,7 @@ export default function ChatInterface({
                 text: aiAnswer, 
                 voiceId,
                 accent,
-                settings: voiceSettings || undefined
+                settings: voiceSettings || getUnifiedVoiceSettings('profile')
               }),
             });
             if (vr.ok) {
@@ -770,7 +776,7 @@ export default function ChatInterface({
         body: JSON.stringify({ 
           text: answer, 
           voiceId,
-          settings: voiceSettings || undefined
+          settings: voiceSettings || getUnifiedVoiceSettings('profile')
         }),
       })
       const blob = await vr.blob()

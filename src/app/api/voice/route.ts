@@ -1,6 +1,6 @@
 // src/app/api/voice/route.ts
 import { NextResponse } from 'next/server'
-import { getOptimizedVoiceSettings } from '@/lib/voiceSettings'
+import { createUnifiedVoiceRequest, getUnifiedVoiceSettings } from '@/lib/unifiedVoiceConfig'
 
 export const runtime = 'edge'
 
@@ -159,19 +159,18 @@ export async function POST(req: Request) {
     // Clean the text for better voice quality
     const cleanedText = cleanTextForVoice(text)
     
-    // Use provided settings or get optimized defaults for voice cloning
-    const voiceSettings = getOptimizedVoiceSettings(settings)
+    // Use unified voice settings for consistent voice generation
+    const context = 'profile'; // Default to profile context
+    const requestBody = createUnifiedVoiceRequest(
+      cleanedText,
+      finalVoiceId,
+      context,
+      settings,
+      undefined // No conversation ID for single requests
+    );
     
     // Call ElevenLabs API
-    console.log('Calling ElevenLabs API...');
-    const requestBody: any = {
-      text: cleanedText,
-      model_id: 'eleven_multilingual_v2', // Use most accurate model for voice cloning
-      voice_settings: voiceSettings,
-    };
-    if (accent) {
-      requestBody.accent = accent;
-    }
+    console.log('Calling ElevenLabs API with unified settings...');
     const response = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${finalVoiceId}/stream`,
       {
