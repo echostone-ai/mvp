@@ -2,7 +2,7 @@
 
 import jonathanProfile from '@/data/jonathan_profile.json'
 import ProfileProvider from '@/components/ProfileContext'
-import AccountMenu from '@/components/AccountMenu'
+import SimpleNavigation from '@/components/SimpleNavigation'
 import Image from 'next/image'
 import { useState, useRef, useEffect } from 'react'
 import { globalAudioManager } from '@/lib/globalAudioManager'
@@ -351,9 +351,7 @@ export default function HomePage() {
 
   return (
     <ProfileProvider>
-      <div className="fixed top-4 right-4 z-50">
-        <AccountMenu />
-      </div>
+      <SimpleNavigation />
       <main className="main-container">
         <audio ref={audioRef} />
         <div className="mb-lg select-none">
@@ -367,8 +365,11 @@ export default function HomePage() {
           />
         </div>
         <h1 className="main-title">
-          {jonathanProfile?.full_name?.split(' ')[0] || 'Jonathan'} says:
+          Chat with {jonathanProfile?.full_name?.split(' ')[0] || 'Jonathan'}
         </h1>
+        <p className="main-subtitle-enhanced">
+          Ask me anything about my experiences, thoughts, or get advice
+        </p>
 
         <form className="ask-form" onSubmit={handleSubmit}>
           <input
@@ -388,8 +389,9 @@ export default function HomePage() {
           className={listening ? 'mic-btn active' : 'mic-btn'}
           onClick={handleMicClick}
           type="button"
+          disabled={loading}
         >
-          {listening ? '🎤 Listening… (tap to stop)' : '🎤 Speak'}
+          {listening ? '🎤 Listening… (tap to stop)' : loading ? '⏳ Processing...' : '🎤 Speak'}
         </button>
         <div className="main-subtitle">
           {hasSpeechRecognition
@@ -401,11 +403,18 @@ export default function HomePage() {
           <div className="answer">
             <h2>{jonathanProfile?.full_name?.split(' ')[0] || 'Jonathan'} says:</h2>
             <p>{answer}</p>
-            {!playing && (
-              <button onClick={handleReplay} className="play-btn">
-                🔊 Play Again
-              </button>
-            )}
+            <div className="answer-actions">
+              {!playing && (
+                <button onClick={handleReplay} className="play-btn">
+                  🔊 Play Again
+                </button>
+              )}
+              {playing && (
+                <div className="status-info">
+                  🔊 Playing audio...
+                </div>
+              )}
+            </div>
           </div>
         )}
 

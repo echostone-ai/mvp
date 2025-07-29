@@ -1,65 +1,65 @@
-# Legacy Hub Feature
+# EchoStone
 
-This project implements the Legacy Hub feature for EchoStone, allowing users to create and share memory collections with friends and family.
+EchoStone is a voice AI platform that allows users to create personalized digital avatars with custom voice training and conversational AI capabilities.
 
 ## Features
 
-- Create and manage Legacy Hubs
-- Add memories (text, images, audio)
-- Invite others to view and contribute
-- Flag inappropriate content
-- Moderate content as a hub owner
-- Secure invitation system
-- Notification system
+- **Voice AI Avatars**: Create personalized avatars with custom voice training
+- **Conversational Onboarding**: Natural conversation-based avatar creation
+- **Voice Streaming**: Real-time voice synthesis and playback
+- **Avatar Sharing**: Share your avatars with others via secure links
+- **Memory System**: Avatars learn and remember from conversations
+- **Profile Management**: Manage multiple avatars and voice settings
 
 ## Getting Started
 
 ### Prerequisites
 
 - Node.js 18+
-- PostgreSQL database
-- npm or yarn
+- Supabase account (for database and auth)
+- ElevenLabs API key (for voice synthesis)
+- OpenAI API key (for conversational AI)
 
 ### Installation
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/your-username/echostones-legacy-hub.git
-cd echostones-legacy-hub
+git clone https://github.com/your-username/echostone.git
+cd echostone
 ```
 
 2. Install dependencies:
 ```bash
 npm install
-# or
-yarn install
 ```
 
 3. Set up environment variables:
-```
-# Create a .env file with the following variables
-DATABASE_URL="postgresql://username:password@localhost:5432/echostones"
-NEXTAUTH_SECRET="your-secret-key"
-NEXT_PUBLIC_BASE_URL="http://localhost:3000"
-```
-
-4. Run database migrations:
 ```bash
-npx prisma migrate dev
+# Copy the example environment file
+cp .env.example .env.local
+
+# Add your API keys and configuration
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+ELEVENLABS_API_KEY=your_elevenlabs_api_key
+OPENAI_API_KEY=your_openai_api_key
 ```
 
-5. Start the development server:
+4. Start the development server:
 ```bash
 npm run dev
-# or
-yarn dev
 ```
 
-6. Open [http://localhost:3000](http://localhost:3000) in your browser.
+5. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## Documentation
+## Quick Start
 
-For detailed usage instructions, see [LEGACY_HUB_USAGE.md](LEGACY_HUB_USAGE.md).
+1. **Sign Up**: Create an account at `/signup`
+2. **Get Started**: Visit `/get-started` to create your first avatar
+3. **Voice Training**: Record voice samples or upload audio files
+4. **Chat**: Start conversing with your personalized avatar
+5. **Share**: Generate shareable links for others to chat with your avatar
 
 ## Project Structure
 

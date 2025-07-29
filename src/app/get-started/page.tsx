@@ -6,7 +6,8 @@ import { supabase } from '@/lib/supabase';
 import VoiceOnboardingComplete from '@/components/VoiceOnboardingComplete';
 import AvatarCreationFlow from '@/components/AvatarCreationFlow';
 import WorkingVoiceOnboarding from '@/components/WorkingVoiceOnboarding';
-import PageShell from '@/components/PageShell';
+import SimpleNavigation from '@/components/SimpleNavigation';
+import LoadingSpinner from '@/components/LoadingSpinner';
 import '@/styles/get-started.css';
 
 interface Avatar {
@@ -96,20 +97,19 @@ function GetStartedContent() {
 
   if (loading) {
     return (
-      <PageShell>
+      <>
+        <SimpleNavigation />
         <div className="get-started-container">
-          <div className="processing-status">
-            <div className="processing-spinner"></div>
-            <span>Loading...</span>
-          </div>
+          <LoadingSpinner message="Loading your profile..." size="lg" />
         </div>
-      </PageShell>
+      </>
     );
   }
 
   if (!user) {
     return (
-      <PageShell>
+      <>
+        <SimpleNavigation />
         <div className="get-started-container">
           <div className="get-started-content">
             <div className="get-started-header">
@@ -118,7 +118,7 @@ function GetStartedContent() {
                 Please sign in to create your personalized voice experience
               </p>
             </div>
-            <div className="get-started-card">
+            <div className="enhanced-card">
               <div style={{ textAlign: 'center' }}>
                 <a href="/login" className="next-step-button primary">
                   Sign In to Continue
@@ -127,13 +127,15 @@ function GetStartedContent() {
             </div>
           </div>
         </div>
-      </PageShell>
+      </>
     );
   }
 
   return (
-    <div className="get-started-container">
-      <div className="get-started-content">
+    <>
+      <SimpleNavigation />
+      <div className="get-started-container">
+        <div className="get-started-content">
         <div className="get-started-header">
           <h1 className="get-started-title">Get Started with EchoStone</h1>
           <p className="get-started-subtitle">
@@ -290,23 +292,21 @@ function GetStartedContent() {
           />
         )}
       </div>
-    </div>
+    </>
   );
 }
 
 export default function GetStartedPage() {
   return (
-    <PageShell>
-      <Suspense fallback={
+    <Suspense fallback={
+      <>
+        <SimpleNavigation />
         <div className="get-started-container">
-          <div className="processing-status">
-            <div className="processing-spinner"></div>
-            <span>Loading...</span>
-          </div>
+          <LoadingSpinner message="Loading..." size="lg" />
         </div>
-      }>
-        <GetStartedContent />
-      </Suspense>
-    </PageShell>
+      </>
+    }>
+      <GetStartedContent />
+    </Suspense>
   );
 }
