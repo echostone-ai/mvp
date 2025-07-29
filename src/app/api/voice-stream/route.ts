@@ -1,6 +1,11 @@
 // src/app/api/voice-stream/route.ts
 import { NextResponse } from 'next/server'
 import { getOptimizedVoiceSettings, getStreamingConsistencySettings } from '@/lib/voiceSettings'
+import { 
+  normalizeTextForVoice, 
+  generateConversationSeed, 
+  getMaxConsistencySettings 
+} from '@/lib/voiceConsistency'
 
 export const runtime = 'edge'
 
@@ -144,13 +149,13 @@ export async function POST(req: Request) {
     }
     
     // Clean and normalize the text for consistent voice generation
-    const cleanedText = normalizeTextForConsistency(sentence, previousContext)
+    const cleanedText = normalizeTextForVoice(sentence)
     
-    // Use streaming-optimized settings for maximum consistency
-    const voiceSettings = settings || getStreamingConsistencySettings()
+    // Use maximum consistency settings
+    const voiceSettings = getMaxConsistencySettings()
     
     // Generate a consistent seed based on conversation context
-    const seed = generateConsistentSeed(conversationId, finalVoiceId)
+    const seed = generateConversationSeed(conversationId || 'default', finalVoiceId)
     
     // Call ElevenLabs API with maximum consistency optimizations
     const requestBody: any = {

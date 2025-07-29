@@ -1,5 +1,10 @@
 // src/lib/streamingUtils.ts
 import { globalAudioManager } from './globalAudioManager';
+import { 
+  createVoiceBatchingDelay, 
+  getMaxConsistencySettings,
+  normalizeTextForVoice 
+} from './voiceConsistency';
 
 export interface StreamingAudioManager {
   addSentence: (sentence: string) => Promise<void>;
@@ -148,25 +153,21 @@ export class AudioQueue {
   }
 
   private async synthesizeWithContext(text: string): Promise<ArrayBuffer> {
-    // Add a small delay to batch similar requests and reduce voice variation
-    await new Promise(resolve => setTimeout(resolve, 50));
+    // Add batching delay to reduce voice variation
+    await createVoiceBatchingDelay();
+    
+    // Normalize text for consistency
+    const normalizedText = normalizeTextForVoice(text);
     
     const response = await fetch('/api/voice-stream', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        sentence: text,
+        sentence: normalizedText,
         voiceId: this.voiceId,
-        settings: {
-          ...this.voiceSettings,
-          // Force maximum consistency settings
-          stability: 0.99,
-          similarity_boost: 0.75,
-          style: 0.01,
-          use_speaker_boost: true
-        },
+        settings: getMaxConsistencySettings(), // Use maximum consistency settings
         accent: this.accent,
-        conversationId: this.conversationId,
+        conversationId: this.conversationId || 'default',
         previousContext: this.previousContext
       }),
     });

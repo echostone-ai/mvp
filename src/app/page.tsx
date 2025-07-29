@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { useState, useRef, useEffect } from 'react'
 import { globalAudioManager } from '@/lib/globalAudioManager'
 import { stopAllAudio, createStreamingAudioManager } from '@/lib/streamingUtils'
+import { splitTextForConsistentVoice, getMaxConsistencySettings } from '@/lib/voiceConsistency'
 
 export default function HomePage() {
   const [question, setQuestion] = useState('')
@@ -138,12 +139,7 @@ export default function HomePage() {
       if (res.ok && res.body) {
         // Initialize streaming audio manager with explicit voice ID and maximum consistency settings
         const voiceId = 'CO6pxVrMZfyL61ZIglyr'; // Hardcode the specific voice ID for consistency
-        const consistencySettings = {
-          stability: 0.99,           // Maximum stability for consistent voice
-          similarity_boost: 0.75,    // Lower similarity to reduce artifacts
-          style: 0.01,              // Minimal style variation
-          use_speaker_boost: true
-        };
+        const consistencySettings = getMaxConsistencySettings();
         streamingAudioRef.current = createStreamingAudioManager(
           voiceId, 
           consistencySettings,
@@ -165,19 +161,19 @@ export default function HomePage() {
             fullResponse += chunk
             setAnswer(fullResponse)
 
-            // Check for new complete sentences every 30 characters (faster detection)
-            if (fullResponse.length % 30 === 0 && fullResponse.length > 20) {
-              const sentences = fullResponse.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 8);
+            // Check for new complete segments every 50 characters (better consistency)
+            if (fullResponse.length % 50 === 0 && fullResponse.length > 30) {
+              const segments = splitTextForConsistentVoice(fullResponse);
 
-              // Process any new sentences since last check
-              if (sentences.length > lastSentenceCount && streamingAudioRef.current) {
-                // Process all complete sentences (including first one, excluding last incomplete)
-                const endIndex = sentences.length > 1 ? sentences.length - 1 : sentences.length;
+              // Process any new segments since last check
+              if (segments.length > lastSentenceCount && streamingAudioRef.current) {
+                // Process all complete segments (excluding the last potentially incomplete one)
+                const endIndex = segments.length > 1 ? segments.length - 1 : segments.length;
                 for (let i = lastSentenceCount; i < endIndex; i++) {
-                  const sentence = sentences[i].trim();
-                  if (sentence && !sentence.match(/\b(Mr|Mrs|Ms|Dr|Prof|Sr|Jr)\.$/) && sentence.length > 8) {
-                    console.log('[Homepage] New sentence detected:', sentence.substring(0, 50) + '...');
-                    streamingAudioRef.current.addSentence(sentence);
+                  const segment = segments[i].trim();
+                  if (segment && !segment.match(/\b(Mr|Mrs|Ms|Dr|Prof|Sr|Jr)\.$/) && segment.length > 12) {
+                    console.log('[Homepage] New segment detected:', segment.substring(0, 50) + '...');
+                    streamingAudioRef.current.addSentence(segment);
                   }
                 }
                 lastSentenceCount = endIndex;
@@ -185,14 +181,17 @@ export default function HomePage() {
             }
           }
 
-          // Process all sentences from the complete response
+          // Process all segments from the complete response
           if (fullResponse.trim() && streamingAudioRef.current) {
-            const sentences = fullResponse.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 5);
-            console.log(`[Homepage] Processing ${sentences.length} sentences from complete response`);
+            const segments = splitTextForConsistentVoice(fullResponse);
+            console.log(`[Homepage] Processing ${segments.length} segments from complete response`);
 
-            for (const sentence of sentences) {
-              console.log('[Homepage] Sending sentence to audio:', sentence.substring(0, 50) + '...');
-              streamingAudioRef.current.addSentence(sentence.trim());
+            for (let i = lastSentenceCount; i < segments.length; i++) {
+              const segment = segments[i].trim();
+              if (segment && segment.length > 8) {
+                console.log('[Homepage] Sending segment to audio:', segment.substring(0, 50) + '...');
+                streamingAudioRef.current.addSentence(segment);
+              }
             }
           }
 
@@ -339,12 +338,7 @@ export default function HomePage() {
         body: JSON.stringify({
           text: answer,
           voiceId: 'CO6pxVrMZfyL61ZIglyr', // Hardcode the specific voice ID for consistency
-          settings: {
-            stability: 0.98,           // Maximum stability
-            similarity_boost: 0.82,    // Moderate similarity to avoid artifacts
-            style: 0.02,              // Minimal style variation
-            use_speaker_boost: true
-          }
+          settings: getMaxConsistencySettings()
         })
       })
       const blob = await vr.blob()

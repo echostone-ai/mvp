@@ -12,6 +12,7 @@ import {
   StreamingAudioManager,
   stopAllAudio
 } from '@/lib/streamingUtils';
+import { splitTextForConsistentVoice } from '@/lib/voiceConsistency';
 import { globalAudioManager } from '@/lib/globalAudioManager';
 
 function getFirstName(profileData: any): string {
@@ -363,21 +364,21 @@ export default function ChatInterface({
         fullResponse += char;
         setStreamingText(fullResponse);
 
-        // Check for new sentences every 30 characters for better voice consistency
-        if (fullResponse.length % 30 === 0 && fullResponse.length > 20) {
-          const sentences = splitIntoSentences(fullResponse);
+        // Check for new segments every 50 characters for better voice consistency
+        if (fullResponse.length % 50 === 0 && fullResponse.length > 30) {
+          const segments = splitTextForConsistentVoice(fullResponse);
           
-          // Process any new complete sentences since last check
-          if (sentences.length > lastPhraseCount && streamingAudioRef.current) {
-            // Process all complete sentences (excluding the last potentially incomplete one)
-            const endIndex = sentences.length > 1 ? sentences.length - 1 : sentences.length;
+          // Process any new complete segments since last check
+          if (segments.length > lastPhraseCount && streamingAudioRef.current) {
+            // Process all complete segments (excluding the last potentially incomplete one)
+            const endIndex = segments.length > 1 ? segments.length - 1 : segments.length;
             for (let i = lastPhraseCount; i < endIndex; i++) {
-              const sentence = sentences[i].trim();
-              if (sentence && !sentence.match(/\b(Mr|Mrs|Ms|Dr|Prof|Sr|Jr)\.$/) && sentence.length > 8) {
-                console.log('[ChatInterface] New sentence detected:', sentence.substring(0, 50) + '...');
+              const segment = segments[i].trim();
+              if (segment && !segment.match(/\b(Mr|Mrs|Ms|Dr|Prof|Sr|Jr)\.$/) && segment.length > 10) {
+                console.log('[ChatInterface] New segment detected:', segment.substring(0, 50) + '...');
                 
-                // Always use addSentence for better consistency
-                streamingAudioRef.current.addSentence(sentence);
+                // Use addSentence for consistent voice generation
+                streamingAudioRef.current.addSentence(segment);
                 hasStartedSpeaking = true;
               }
             }
@@ -386,17 +387,17 @@ export default function ChatInterface({
         }
       }
 
-      // Process any remaining sentences from the complete response
+      // Process any remaining segments from the complete response
       if (fullResponse.trim() && streamingAudioRef.current) {
-        const sentences = splitIntoSentences(fullResponse);
-        console.log(`[ChatInterface] Processing ${sentences.length} sentences from complete response`);
+        const segments = splitTextForConsistentVoice(fullResponse);
+        console.log(`[ChatInterface] Processing ${segments.length} segments from complete response`);
         
-        // Process any sentences we might have missed
-        for (let i = lastPhraseCount; i < sentences.length; i++) {
-          const sentence = sentences[i].trim();
-          if (sentence && sentence.length > 5) {
-            console.log('[ChatInterface] Final sentence:', sentence.substring(0, 50) + '...');
-            streamingAudioRef.current.addSentence(sentence);
+        // Process any segments we might have missed
+        for (let i = lastPhraseCount; i < segments.length; i++) {
+          const segment = segments[i].trim();
+          if (segment && segment.length > 8) {
+            console.log('[ChatInterface] Final segment:', segment.substring(0, 50) + '...');
+            streamingAudioRef.current.addSentence(segment);
           }
         }
       }
