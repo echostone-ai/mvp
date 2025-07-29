@@ -1,90 +1,14 @@
 // src/app/api/voice/route.ts
 import { NextResponse } from 'next/server'
 import { createUnifiedVoiceRequest, getUnifiedVoiceSettings } from '@/lib/unifiedVoiceConfig'
+import { normalizeTextForVoice } from '@/lib/voiceConsistency'
 
 export const runtime = 'edge'
 
 /**
  * Clean text of fake laughs and artificial expressions that sound bad in TTS
  */
-function cleanTextForVoice(text: string): string {
-  return text
-    // Remove fake laughs
-    .replace(/\bhaha\b/gi, '')
-    .replace(/\blol\b/gi, '')
-    .replace(/\blmao\b/gi, '')
-    .replace(/\brofl\b/gi, '')
-    // Remove artificial expressions
-    .replace(/\*laughs\*/gi, '')
-    .replace(/\*chuckles\*/gi, '')
-    .replace(/\*giggles\*/gi, '')
-    .replace(/\*nervous laughter\*/gi, '')
-    // Remove excessive punctuation that sounds weird
-    .replace(/\.{3,}/g, '..') // Limit ellipses to 2 dots max
-    .replace(/!{2,}/g, '!') // Limit exclamations to 1
-    .replace(/\?{2,}/g, '?') // Limit questions to 1
-    // Clean up extra spaces
-    .replace(/\s+/g, ' ')
-    .trim()
-}
-
-/**
- * Generate dynamic voice settings based on content and emotional style
- */
-function generateVoiceSettings(text: string, emotionalStyle?: string) {
-  // Base settings
-  let stability = 0.5
-  let similarityBoost = 0.75
-  let style = 0.2
-  
-  // Adjust based on emotional context
-  if (emotionalStyle) {
-    const lowerStyle = emotionalStyle.toLowerCase()
-    
-    if (lowerStyle.includes('excited') || lowerStyle.includes('happy')) {
-      stability = 0.4
-      similarityBoost = 0.8
-      style = 0.35
-    } else if (lowerStyle.includes('sad') || lowerStyle.includes('somber')) {
-      stability = 0.7
-      similarityBoost = 0.6
-      style = 0.15
-    } else if (lowerStyle.includes('angry') || lowerStyle.includes('frustrated')) {
-      stability = 0.3
-      similarityBoost = 0.9
-      style = 0.4
-    } else if (lowerStyle.includes('calm') || lowerStyle.includes('relaxed')) {
-      stability = 0.6
-      similarityBoost = 0.7
-      style = 0.1
-    }
-  }
-  
-  // Adjust based on text content
-  if (text.includes('?')) {
-    // Questions should have more variation
-    stability -= 0.05
-    style += 0.05
-  }
-  
-  if (text.includes('!')) {
-    // Exclamations should be more expressive
-    stability -= 0.1
-    style += 0.1
-  }
-  
-  // Ensure values stay within bounds
-  stability = Math.max(0.1, Math.min(stability, 0.9))
-  similarityBoost = Math.max(0.1, Math.min(similarityBoost, 0.9))
-  style = Math.max(0.1, Math.min(style, 0.9))
-  
-  return {
-    stability,
-    similarity_boost: similarityBoost,
-    style,
-    use_speaker_boost: true
-  }
-}
+// Create a simple audio buffer for fallback
 
 // Create a simple audio buffer for fallback
 function createFallbackAudioBuffer(): ArrayBuffer {
@@ -156,11 +80,12 @@ export async function POST(req: Request) {
     
     console.log('ElevenLabs API key available:', !!apiKey)
     
-    // Clean the text for better voice quality
-    const cleanedText = cleanTextForVoice(text)
+    // Clean the text for better voice quality using unified normalization
+    const cleanedText = normalizeTextForVoice(text)
     
     // Use unified voice settings for consistent voice generation
-    const context = 'profile'; // Default to profile context
+    // Determine context based on voice ID - homepage uses specific voice ID
+    const context = finalVoiceId === 'CO6pxVrMZfyL61ZIglyr' ? 'homepage' : 'profile';
     const requestBody = createUnifiedVoiceRequest(
       cleanedText,
       finalVoiceId,

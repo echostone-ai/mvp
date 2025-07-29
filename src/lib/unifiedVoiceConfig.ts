@@ -34,9 +34,9 @@ export const DEFAULT_VOICE_SETTINGS: UnifiedVoiceSettings = {
  * Optimized for homepage demo with natural speed
  */
 export const HIGH_CONSISTENCY_SETTINGS: UnifiedVoiceSettings = {
-  stability: 0.75,              // Balanced stability for natural speed
-  similarity_boost: 0.85,       // High similarity for voice character
-  style: 0.25,                 // Moderate style for natural expression
+  stability: 0.80,              // High stability for consistent voice
+  similarity_boost: 0.90,       // Very high similarity for voice character
+  style: 0.20,                 // Moderate style for natural expression
   use_speaker_boost: true,
   model_id: 'eleven_multilingual_v2',
   optimize_streaming_latency: 1,
