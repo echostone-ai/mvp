@@ -140,32 +140,40 @@ export function createStreamingAudioManager(
   accent?: string
 ): StreamingAudioManager {
   const audioQueue = new AudioQueue();
+  let processingQueue: Promise<void> = Promise.resolve();
 
   const manager: StreamingAudioManager = {
     async addSentence(sentence: string) {
-      try {
-        const response = await fetch('/api/voice-stream', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            sentence: sentence.trim(),
-            voiceId,
-            settings: voiceSettings,
-            accent
-          }),
-        });
+      // Chain the processing to ensure sentences are processed in order
+      processingQueue = processingQueue.then(async () => {
+        try {
+          console.log('[StreamingAudioManager] Processing sentence:', sentence.substring(0, 50) + '...');
+          const response = await fetch('/api/voice-stream', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              sentence: sentence.trim(),
+              voiceId,
+              settings: voiceSettings,
+              accent
+            }),
+          });
 
-        if (response.ok) {
-          const audioBuffer = await response.arrayBuffer();
-          if (audioBuffer.byteLength > 0) {
-            await audioQueue.addAudio(audioBuffer);
+          if (response.ok) {
+            const audioBuffer = await response.arrayBuffer();
+            if (audioBuffer.byteLength > 0) {
+              console.log('[StreamingAudioManager] Adding audio to queue for:', sentence.substring(0, 30) + '...');
+              await audioQueue.addAudio(audioBuffer);
+            }
+          } else {
+            console.warn('Voice synthesis failed for sentence:', sentence);
           }
-        } else {
-          console.warn('Voice synthesis failed for sentence:', sentence);
+        } catch (error) {
+          console.error('Failed to synthesize sentence:', sentence, error);
         }
-      } catch (error) {
-        console.error('Failed to synthesize sentence:', sentence, error);
-      }
+      });
+      
+      return processingQueue;
     },
 
     stop() {

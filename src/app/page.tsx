@@ -143,8 +143,6 @@ export default function HomePage() {
         const reader = res.body.getReader()
         const decoder = new TextDecoder()
         let fullResponse = ''
-        let currentSentence = ''
-        let sentenceBuffer = ''
 
         try {
           while (true) {
@@ -153,37 +151,17 @@ export default function HomePage() {
 
             const chunk = decoder.decode(value, { stream: true })
             fullResponse += chunk
-            currentSentence += chunk
             setAnswer(fullResponse)
-
-            // Check for sentence completion and synthesize voice
-            if (chunk.match(/[.!?]/)) {
-              sentenceBuffer += currentSentence;
-              
-              // Look ahead to see if this is really the end of a sentence
-              const nextChars = fullResponse.slice(fullResponse.length - currentSentence.length + 1, fullResponse.length + 3);
-              const isRealSentenceEnd = !nextChars.match(/^[a-z]/);
-              
-              // Also check for common abbreviations to avoid false sentence breaks
-              const endsWithAbbreviation = sentenceBuffer.trim().match(/\b(Mr|Mrs|Ms|Dr|Prof|Sr|Jr|Inc|Ltd|Corp|Co|etc|vs|i\.e|e\.g)\.$/i);
-              
-              if (isRealSentenceEnd && !endsWithAbbreviation && sentenceBuffer.trim().length > 10) {
-                // Send complete sentence to streaming audio manager (handles queuing internally)
-                console.log('[Homepage] Sending sentence to audio:', sentenceBuffer.trim().substring(0, 50) + '...');
-                if (streamingAudioRef.current) {
-                  streamingAudioRef.current.addSentence(sentenceBuffer.trim());
-                }
-                sentenceBuffer = '';
-              }
-              currentSentence = '';
-            }
           }
 
-          // Handle any remaining text
-          if (sentenceBuffer.trim()) {
-            console.log('[Homepage] Sending final sentence to audio:', sentenceBuffer.trim().substring(0, 50) + '...');
-            if (streamingAudioRef.current) {
-              streamingAudioRef.current.addSentence(sentenceBuffer.trim());
+          // Process all sentences from the complete response
+          if (fullResponse.trim() && streamingAudioRef.current) {
+            const sentences = fullResponse.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 5);
+            console.log(`[Homepage] Processing ${sentences.length} sentences from complete response`);
+            
+            for (const sentence of sentences) {
+              console.log('[Homepage] Sending sentence to audio:', sentence.substring(0, 50) + '...');
+              streamingAudioRef.current.addSentence(sentence.trim());
             }
           }
 

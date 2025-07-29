@@ -328,10 +328,10 @@ export default function ChatInterface({
           accent
         );
       }
+      
+
 
       let fullResponse = '';
-      let currentSentence = '';
-      let sentenceBuffer = '';
 
       // Stream the response
       for await (const char of streamChatResponse(text, newHistory, profileData, {
@@ -343,7 +343,6 @@ export default function ChatInterface({
         voiceId
       })) {
         fullResponse += char;
-        currentSentence += char;
         setStreamingText(fullResponse);
 
         // Check if we have a complete sentence
@@ -370,11 +369,14 @@ export default function ChatInterface({
         }
       }
 
-      // Handle any remaining text
-      if (sentenceBuffer.trim()) {
-        console.log('[ChatInterface] Sending final sentence to audio:', sentenceBuffer.trim().substring(0, 50) + '...');
-        if (streamingAudioRef.current) {
-          streamingAudioRef.current.addSentence(sentenceBuffer.trim());
+      // Process all sentences from the complete response
+      if (fullResponse.trim() && streamingAudioRef.current) {
+        const sentences = fullResponse.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 5);
+        console.log(`[ChatInterface] Processing ${sentences.length} sentences from complete response`);
+        
+        for (const sentence of sentences) {
+          console.log('[ChatInterface] Sending sentence to audio:', sentence.substring(0, 50) + '...');
+          streamingAudioRef.current.addSentence(sentence.trim());
         }
       }
 
