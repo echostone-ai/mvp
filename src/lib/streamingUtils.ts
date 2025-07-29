@@ -3,6 +3,9 @@ import { globalAudioManager } from './globalAudioManager';
 
 export interface StreamingAudioManager {
   addSentence: (sentence: string) => Promise<void>;
+  addPhrase: (phrase: string) => Promise<void>; // New: for smaller chunks
+  interject: (phrase?: string) => Promise<void>; // New: for immediate interjections
+  addThinkingSound: () => Promise<void>; // New: for thinking/buffering states
   stop: () => void;
   isPlaying: () => boolean;
 }
@@ -17,6 +20,12 @@ export class AudioQueue {
   private accent?: string;
   private processedSentences = new Set<string>(); // Track processed sentences
   private sentenceHashes = new Set<string>(); // Track sentence hashes for better duplicate detection
+  private isFetchingNext = false; // Track if we're prefetching next audio
+  private audioCache = new Map<string, ArrayBuffer>(); // Cache for prefetched audio
+  private interjectionPhrases = [
+    "Alright...", "Let's see...", "Hmm...", "Okay...", "Well...", 
+    "So...", "Right...", "Now...", "Actually..."
+  ];
 
   constructor(voiceId: string, voiceSettings?: any, accent?: string) {
     this.voiceId = voiceId;
@@ -25,23 +34,63 @@ export class AudioQueue {
   }
 
   async addSentence(sentence: string) {
+    return this.addText(sentence, 'sentence');
+  }
+
+  async addPhrase(phrase: string) {
+    return this.addText(phrase, 'phrase');
+  }
+
+  private async addText(text: string, type: 'sentence' | 'phrase') {
     if (this.isDestroyed) return;
     
-    const trimmedSentence = sentence.trim();
+    const trimmedText = text.trim();
+    if (!trimmedText) return;
     
     // Create a simple hash to detect duplicates more reliably
-    const sentenceHash = trimmedSentence.toLowerCase().replace(/[^\w]/g, '');
+    const textHash = trimmedText.toLowerCase().replace(/[^\w]/g, '');
     
-    // Avoid duplicate sentences using hash
-    if (this.sentenceHashes.has(sentenceHash)) {
-      console.log(`[AudioQueue] Skipping duplicate sentence: "${trimmedSentence.substring(0, 30)}..."`);
+    // Avoid duplicate text using hash
+    if (this.sentenceHashes.has(textHash)) {
+      console.log(`[AudioQueue] Skipping duplicate ${type}: "${trimmedText.substring(0, 30)}..."`);
       return;
     }
     
-    this.sentenceHashes.add(sentenceHash);
-    this.processedSentences.add(trimmedSentence);
-    this.queue.push(trimmedSentence);
-    console.log(`[AudioQueue] Added sentence: "${trimmedSentence.substring(0, 30)}..." Queue: ${this.queue.length}`);
+    this.sentenceHashes.add(textHash);
+    this.processedSentences.add(trimmedText);
+    this.queue.push(trimmedText);
+    console.log(`[AudioQueue] Added ${type}: "${trimmedText.substring(0, 30)}..." Queue: ${this.queue.length}`);
+    
+    if (!this.isPlaying) {
+      this.playNext();
+    }
+  }
+
+  async interject(phrase?: string) {
+    if (this.isDestroyed) return;
+    
+    const interjection = phrase || this.interjectionPhrases[Math.floor(Math.random() * this.interjectionPhrases.length)];
+    
+    // Add interjection to front of queue for immediate playback
+    this.queue.unshift(interjection);
+    console.log(`[AudioQueue] Added interjection: "${interjection}"`);
+    
+    if (!this.isPlaying) {
+      this.playNext();
+    }
+  }
+
+  async addThinkingSound() {
+    if (this.isDestroyed) return;
+    
+    // Add a subtle thinking sound or breath
+    const thinkingSounds = ["*thinking*", "*hmm*", "*pause*"];
+    const sound = thinkingSounds[Math.floor(Math.random() * thinkingSounds.length)];
+    
+    // For now, we'll use a short interjection instead of actual sound effects
+    // In a full implementation, you could load actual audio files here
+    this.queue.unshift("Hmm...");
+    console.log(`[AudioQueue] Added thinking sound`);
     
     if (!this.isPlaying) {
       this.playNext();
@@ -51,20 +100,82 @@ export class AudioQueue {
   private async playNext() {
     if (this.isDestroyed || this.queue.length === 0) {
       this.isPlaying = false;
+      this.isFetchingNext = false;
       return;
     }
 
     this.isPlaying = true;
-    const sentence = this.queue.shift()!;
-    console.log(`[AudioQueue] Processing: "${sentence.substring(0, 30)}..." Remaining: ${this.queue.length}`);
+    const text = this.queue.shift()!;
+    console.log(`[AudioQueue] Processing: "${text.substring(0, 30)}..." Remaining: ${this.queue.length}`);
+    
+    // Start prefetching next audio while current one plays
+    this.prefetchNextAudio();
     
     try {
-      // Synthesize and play immediately
+      let audioBuffer: ArrayBuffer;
+      
+      // Check if we have cached audio for this text
+      const cacheKey = this.getCacheKey(text);
+      if (this.audioCache.has(cacheKey)) {
+        audioBuffer = this.audioCache.get(cacheKey)!;
+        this.audioCache.delete(cacheKey); // Remove from cache after use
+        console.log(`[AudioQueue] Using cached audio for: "${text.substring(0, 30)}..."`);
+      } else {
+        // Synthesize audio
+        const response = await fetch('/api/voice-stream', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sentence: text,
+            voiceId: this.voiceId,
+            settings: this.voiceSettings,
+            accent: this.accent
+          }),
+        });
+
+        if (response.ok) {
+          audioBuffer = await response.arrayBuffer();
+        } else {
+          throw new Error(`Voice synthesis failed: ${response.status}`);
+        }
+      }
+
+      if (audioBuffer.byteLength > 0) {
+        await this.playAudioBuffer(audioBuffer);
+      }
+    } catch (error) {
+      console.error('Failed to process text:', text, error);
+    }
+    
+    // Continue immediately to next text
+    if (!this.isDestroyed) {
+      this.playNext();
+    }
+  }
+
+  private async prefetchNextAudio() {
+    if (this.isFetchingNext || this.queue.length === 0 || this.isDestroyed) {
+      return;
+    }
+
+    this.isFetchingNext = true;
+    const nextText = this.queue[0];
+    const cacheKey = this.getCacheKey(nextText);
+    
+    // Don't prefetch if already cached
+    if (this.audioCache.has(cacheKey)) {
+      this.isFetchingNext = false;
+      return;
+    }
+
+    try {
+      console.log(`[AudioQueue] Prefetching audio for: "${nextText.substring(0, 30)}..."`);
+      
       const response = await fetch('/api/voice-stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          sentence,
+          sentence: nextText,
           voiceId: this.voiceId,
           settings: this.voiceSettings,
           accent: this.accent
@@ -74,17 +185,19 @@ export class AudioQueue {
       if (response.ok) {
         const audioBuffer = await response.arrayBuffer();
         if (audioBuffer.byteLength > 0) {
-          await this.playAudioBuffer(audioBuffer);
+          this.audioCache.set(cacheKey, audioBuffer);
+          console.log(`[AudioQueue] Cached audio for: "${nextText.substring(0, 30)}..."`);
         }
       }
     } catch (error) {
-      console.error('Failed to process sentence:', sentence, error);
+      console.error('Failed to prefetch audio:', error);
+    } finally {
+      this.isFetchingNext = false;
     }
-    
-    // Continue immediately to next sentence
-    if (!this.isDestroyed) {
-      this.playNext();
-    }
+  }
+
+  private getCacheKey(text: string): string {
+    return `${this.voiceId}-${text.substring(0, 100)}-${JSON.stringify(this.voiceSettings)}-${this.accent}`;
   }
 
   private async playAudioBuffer(audioBuffer: ArrayBuffer): Promise<void> {
@@ -116,6 +229,8 @@ export class AudioQueue {
     this.queue.length = 0;
     this.processedSentences.clear();
     this.sentenceHashes.clear();
+    this.audioCache.clear(); // Clear prefetched audio cache
+    this.isFetchingNext = false;
     
     if (this.currentAudio) {
       this.currentAudio.pause();
@@ -134,13 +249,29 @@ export class AudioQueue {
 export function createStreamingAudioManager(
   voiceId: string,
   voiceSettings?: any,
-  accent?: string
+  accent?: string,
+  options: {
+    useWebAudio?: boolean;
+    enableCrossfade?: boolean;
+  } = {}
 ): StreamingAudioManager {
   const audioQueue = new AudioQueue(voiceId, voiceSettings, accent);
 
   const manager: StreamingAudioManager = {
     async addSentence(sentence: string) {
       await audioQueue.addSentence(sentence);
+    },
+
+    async addPhrase(phrase: string) {
+      await audioQueue.addPhrase(phrase);
+    },
+
+    async interject(phrase?: string) {
+      await audioQueue.interject(phrase);
+    },
+
+    async addThinkingSound() {
+      await audioQueue.addThinkingSound();
     },
 
     stop() {
@@ -181,6 +312,27 @@ export function splitIntoSentences(text: string): string[] {
     .filter(s => s.length > 0);
   
   return sentences;
+}
+
+export function splitIntoPhrases(text: string): string[] {
+  // Split into smaller, more natural speaking chunks
+  // This creates more human-like pauses and reduces latency
+  const phrases = text
+    // Split on sentence endings first
+    .split(/(?<=[.!?])\s+/)
+    // Then split long sentences on natural pause points
+    .flatMap(sentence => {
+      if (sentence.length < 50) return [sentence];
+      
+      // Split on commas, semicolons, and conjunctions for natural pauses
+      return sentence
+        .split(/(?<=[,;])\s+|(?:\s+(?:and|but|or|so|yet|for|nor|because|although|though|while|since|if|when|where|after|before|until)\s+)/)
+        .filter(phrase => phrase.trim().length > 0);
+    })
+    .map(phrase => phrase.trim())
+    .filter(phrase => phrase.length > 0);
+  
+  return phrases;
 }
 
 export async function* streamChatResponse(

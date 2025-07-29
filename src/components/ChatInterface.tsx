@@ -6,7 +6,8 @@ import { ConversationService, ChatMessage as ConversationMessage } from '@/lib/c
 import { MemorySavedAnimation } from './MemorySavedAnimation';
 import { 
   createStreamingAudioManager, 
-  splitIntoSentences, 
+  splitIntoSentences,
+  splitIntoPhrases, 
   streamChatResponse,
   StreamingAudioManager,
   stopAllAudio
@@ -327,12 +328,25 @@ export default function ChatInterface({
           voiceSettings,
           accent
         );
-      }
-      
+        
+        // Add immediate interjection to fill dead air (300-600ms delay)
+        setTimeout(() => {
+          if (streamingAudioRef.current && !streamingAudioRef.current.isPlaying()) {
+            streamingAudioRef.current.interject();
+          }
+        }, 400);
 
+        // Add thinking sound if response takes too long (800ms+)
+        setTimeout(() => {
+          if (streamingAudioRef.current && !hasStartedSpeaking) {
+            streamingAudioRef.current.addThinkingSound();
+          }
+        }, 800);
+      }
 
       let fullResponse = '';
-      let lastSentenceCount = 0;
+      let lastPhraseCount = 0;
+      let hasStartedSpeaking = false;
 
       // Stream the response
       for await (const char of streamChatResponse(text, newHistory, profileData, {
@@ -346,34 +360,49 @@ export default function ChatInterface({
         fullResponse += char;
         setStreamingText(fullResponse);
 
-        // Check for new complete sentences every 30 characters (faster detection)
-        if (fullResponse.length % 30 === 0 && fullResponse.length > 20) {
-          const sentences = fullResponse.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 8);
+        // Check for new phrases every 15 characters for faster response
+        if (fullResponse.length % 15 === 0 && fullResponse.length > 10) {
+          const phrases = splitIntoPhrases(fullResponse);
           
-          // Process any new sentences since last check
-          if (sentences.length > lastSentenceCount && streamingAudioRef.current) {
-            // Process all complete sentences (including first one, excluding last incomplete)
-            const endIndex = sentences.length > 1 ? sentences.length - 1 : sentences.length;
-            for (let i = lastSentenceCount; i < endIndex; i++) {
-              const sentence = sentences[i].trim();
-              if (sentence && !sentence.match(/\b(Mr|Mrs|Ms|Dr|Prof|Sr|Jr)\.$/) && sentence.length > 8) {
-                console.log('[ChatInterface] New sentence detected:', sentence.substring(0, 50) + '...');
-                streamingAudioRef.current.addSentence(sentence);
+          // Process any new phrases since last check
+          if (phrases.length > lastPhraseCount && streamingAudioRef.current) {
+            // Process all complete phrases (excluding the last potentially incomplete one)
+            const endIndex = phrases.length > 1 ? phrases.length - 1 : phrases.length;
+            for (let i = lastPhraseCount; i < endIndex; i++) {
+              const phrase = phrases[i].trim();
+              if (phrase && !phrase.match(/\b(Mr|Mrs|Ms|Dr|Prof|Sr|Jr)\.$/) && phrase.length > 5) {
+                console.log('[ChatInterface] New phrase detected:', phrase.substring(0, 50) + '...');
+                
+                // Use addPhrase for smaller chunks, addSentence for complete sentences
+                if (phrase.match(/[.!?]$/)) {
+                  streamingAudioRef.current.addSentence(phrase);
+                } else {
+                  streamingAudioRef.current.addPhrase(phrase);
+                }
+                hasStartedSpeaking = true;
               }
             }
-            lastSentenceCount = endIndex;
+            lastPhraseCount = endIndex;
           }
         }
       }
 
-      // Process all sentences from the complete response
+      // Process any remaining phrases from the complete response
       if (fullResponse.trim() && streamingAudioRef.current) {
-        const sentences = fullResponse.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 5);
-        console.log(`[ChatInterface] Processing ${sentences.length} sentences from complete response`);
+        const phrases = splitIntoPhrases(fullResponse);
+        console.log(`[ChatInterface] Processing ${phrases.length} phrases from complete response`);
         
-        for (const sentence of sentences) {
-          console.log('[ChatInterface] Sending sentence to audio:', sentence.substring(0, 50) + '...');
-          streamingAudioRef.current.addSentence(sentence.trim());
+        // Process any phrases we might have missed
+        for (let i = lastPhraseCount; i < phrases.length; i++) {
+          const phrase = phrases[i].trim();
+          if (phrase && phrase.length > 3) {
+            console.log('[ChatInterface] Final phrase:', phrase.substring(0, 50) + '...');
+            if (phrase.match(/[.!?]$/)) {
+              streamingAudioRef.current.addSentence(phrase);
+            } else {
+              streamingAudioRef.current.addPhrase(phrase);
+            }
+          }
         }
       }
 
