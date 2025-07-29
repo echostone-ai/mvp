@@ -90,13 +90,13 @@ export async function POST(req: Request) {
       });
     }
     
-    // Clean and normalize the text minimally for consistent voice generation
-    const cleanedText = normalizeTextForVoice(sentence);
+    // TEMPORARILY DISABLE TEXT NORMALIZATION - use original text
+    // const cleanedText = normalizeTextForVoice(sentence);
     
     // Use unified voice settings - determine context based on voice ID
     const context = finalVoiceId === 'CO6pxVrMZfyL61ZIglyr' ? 'homepage' : 'streaming';
     const requestBody = createUnifiedVoiceRequest(
-      cleanedText,
+      sentence, // Use original text without any processing
       finalVoiceId,
       context,
       settings,

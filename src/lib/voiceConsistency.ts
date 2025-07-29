@@ -49,34 +49,8 @@ export function generateConversationSeed(conversationId: string, voiceId: string
  * This removes elements that can cause voice variation while preserving natural speech
  */
 export function normalizeTextForVoice(text: string): string {
-  return text
-    // Remove only the most problematic fake expressions
-    .replace(/\b(lol|lmao|rofl)\b/gi, '')
-    .replace(/\*[^*]*\*/g, '') // Remove *actions*
-    .replace(/\([^)]*\)/g, '') // Remove (parenthetical comments)
-    
-    // Don't standardize contractions - preserve natural speech patterns
-    // .replace(/\b(gonna|gotta|wanna)\b/gi, (match) => {
-    //   switch (match.toLowerCase()) {
-    //     case 'gonna': return 'going to';
-    //     case 'gotta': return 'got to';
-    //     case 'wanna': return 'want to';
-    //     default: return match;
-    //   }
-    // })
-    
-    // Minimal punctuation normalization
-    .replace(/\.{6,}/g, '.....') // Only standardize very excessive ellipses (6+ dots)
-    .replace(/!{5,}/g, '!!!!') // Allow up to 4 exclamations
-    .replace(/\?{5,}/g, '????') // Allow up to 4 question marks
-    
-    // Normalize quotation marks
-    .replace(/[""]/g, '"')
-    .replace(/['']/g, "'")
-    
-    // Minimal spacing cleanup
-    .replace(/\s{5,}/g, '    ') // Replace 5+ spaces with 4 spaces
-    .trim();
+  // TEMPORARILY DISABLE ALL TEXT PROCESSING - return original text
+  return text.trim();
 }
 
 /**
