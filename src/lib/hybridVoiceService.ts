@@ -48,7 +48,7 @@ export interface ProfessionalVoiceSettings {
   style: number;
   use_speaker_boost: boolean;
   optimize_streaming_latency: number;
-  model_id: 'eleven_turbo_v2_5' | 'eleven_multilingual_v2';
+  model_id: 'eleven_multilingual_v2' | 'eleven_turbo_v2_5';
 }
 
 export interface VoiceGenerationRequest {
@@ -121,7 +121,7 @@ export class HybridVoiceService {
         style: 0.2,
         use_speaker_boost: true,
         optimize_streaming_latency: 3,
-        model_id: 'eleven_turbo_v2_5',
+        model_id: 'eleven_multilingual_v2', // Use most accurate model for voice cloning
       },
       ...fallbackConfig,
     };
@@ -486,7 +486,7 @@ export class HybridVoiceService {
         },
         body: JSON.stringify({
           text: request.text,
-          model_id: 'eleven_turbo_v2_5',
+          model_id: 'eleven_multilingual_v2', // Use most accurate model for voice cloning
           voice_settings: voiceSettings,
         }),
       });
@@ -581,7 +581,7 @@ export class HybridVoiceService {
       style: 0.2,
       use_speaker_boost: true,
       optimize_streaming_latency: 3,
-      model_id: 'eleven_turbo_v2_5',
+      model_id: 'eleven_multilingual_v2', // Use most accurate model for voice cloning
     };
 
     if (!emotionalContext) {

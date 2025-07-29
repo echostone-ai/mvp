@@ -166,7 +166,7 @@ export async function POST(req: Request) {
     console.log('Calling ElevenLabs API...');
     const requestBody: any = {
       text: cleanedText,
-      model_id: 'eleven_turbo_v2',
+      model_id: 'eleven_multilingual_v2', // Use most accurate model for voice cloning
       voice_settings: voiceSettings,
     };
     if (accent) {

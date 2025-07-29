@@ -10,7 +10,7 @@ export interface ImprovedVoiceSettings {
   style: number;              // 0.1-0.2 for consistent delivery
   use_speaker_boost: boolean;  // Always true for clarity
   optimize_streaming_latency: number; // 0.3-0.5 for quality
-  model_id: 'eleven_turbo_v2_5' | 'eleven_multilingual_v2';
+  model_id: 'eleven_multilingual_v2' | 'eleven_turbo_v2_5';
 }
 
 export interface VoiceTrainingRequirements {
@@ -30,7 +30,7 @@ export const ACCENT_CONSISTENT_SETTINGS: ImprovedVoiceSettings = {
   style: 0.12,                 // Low style for consistent delivery
   use_speaker_boost: true,      // Enhanced clarity
   optimize_streaming_latency: 0.4, // Balanced quality/speed
-  model_id: 'eleven_turbo_v2_5'
+  model_id: 'eleven_multilingual_v2' // Use most accurate model for voice cloning
 };
 
 // Settings for expressive but consistent voice
@@ -40,7 +40,7 @@ export const EXPRESSIVE_CONSISTENT_SETTINGS: ImprovedVoiceSettings = {
   style: 0.18,                 // Moderate style for some variation
   use_speaker_boost: true,
   optimize_streaming_latency: 0.3,
-  model_id: 'eleven_turbo_v2_5'
+  model_id: 'eleven_multilingual_v2' // Use most accurate model for voice cloning
 };
 
 // Enhanced training requirements

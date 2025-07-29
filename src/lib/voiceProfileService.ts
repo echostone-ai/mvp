@@ -23,7 +23,7 @@ export interface ProfessionalVoiceSettings {
   style: number
   use_speaker_boost: boolean
   optimize_streaming_latency: number
-  model_id: 'eleven_turbo_v2_5' | 'eleven_multilingual_v2'
+  model_id: 'eleven_multilingual_v2' | 'eleven_turbo_v2_5'
 }
 
 export interface QualityMetrics {

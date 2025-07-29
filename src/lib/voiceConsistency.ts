@@ -122,7 +122,7 @@ export function createConsistentVoiceRequest(
     seed,
     previousContext: previousContext?.substring(-100), // Last 100 chars for context
     // Additional consistency parameters
-    model_id: 'eleven_turbo_v2_5',
+    model_id: 'eleven_multilingual_v2', // Use most accurate model for voice cloning
     optimize_streaming_latency: 1,
     output_format: 'mp3_44100_128'
   };

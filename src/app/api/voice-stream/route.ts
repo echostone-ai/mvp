@@ -160,7 +160,7 @@ export async function POST(req: Request) {
     // Call ElevenLabs API with maximum consistency optimizations
     const requestBody: any = {
       text: cleanedText,
-      model_id: 'eleven_turbo_v2_5', // Use latest model for better consistency
+      model_id: 'eleven_multilingual_v2', // Use most accurate model for voice cloning
       voice_settings: {
         ...voiceSettings,
         // Override with maximum consistency settings

@@ -435,7 +435,7 @@ export class EmotionalCalibrationService {
       },
       body: JSON.stringify({
         text,
-        model_id: 'eleven_turbo_v2_5',
+        model_id: 'eleven_multilingual_v2', // Use most accurate model for voice cloning
         voice_settings: {
           stability: parameters.stability,
           similarity_boost: parameters.similarity_boost,

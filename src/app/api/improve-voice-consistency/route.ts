@@ -310,7 +310,7 @@ async function testVoiceConsistency(voiceId: string, apiKey: string, settings: a
           },
           body: JSON.stringify({
             text,
-            model_id: 'eleven_turbo_v2_5',
+            model_id: 'eleven_multilingual_v2', // Use most accurate model for voice cloning
             voice_settings: settings
           })
         });
