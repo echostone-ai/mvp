@@ -163,8 +163,8 @@ export default function HomePage() {
             fullResponse += chunk
             setAnswer(fullResponse)
 
-            // Check for new complete segments every 100 characters (less frequent to avoid word cutting)
-            if (fullResponse.length % 100 === 0 && fullResponse.length > 50) {
+            // Check for new complete segments more frequently to catch first sentence
+            if (fullResponse.length % 50 === 0 || fullResponse.length < 100) {
               const segments = splitTextForConsistentVoice(fullResponse);
 
               // Process any new segments since last check

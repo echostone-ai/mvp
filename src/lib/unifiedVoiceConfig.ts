@@ -20,9 +20,9 @@ export interface UnifiedVoiceSettings {
  * These settings prioritize natural speech over maximum consistency
  */
 export const DEFAULT_VOICE_SETTINGS: UnifiedVoiceSettings = {
-  stability: 0.70,              // Higher stability to prevent accent
-  similarity_boost: 0.88,       // High similarity to preserve voice character
-  style: 0.30,                 // Higher style for more robust expression
+  stability: 0.75,              // Higher stability to prevent accent
+  similarity_boost: 0.85,       // High similarity to preserve voice character
+  style: 0.20,                 // Moderate style to prevent accent while keeping expressiveness
   use_speaker_boost: true,      // Enable speaker boost for better voice character
   model_id: 'eleven_turbo_v2',  // Turbo model for better voice quality
   optimize_streaming_latency: 1,
@@ -34,9 +34,9 @@ export const DEFAULT_VOICE_SETTINGS: UnifiedVoiceSettings = {
  * Optimized for homepage demo with natural speed - preserves voice character
  */
 export const HIGH_CONSISTENCY_SETTINGS: UnifiedVoiceSettings = {
-  stability: 0.65,              // Slightly higher stability to prevent accent
-  similarity_boost: 0.90,       // Very high similarity to preserve cloned voice character
-  style: 0.35,                 // Higher style for more robust expression
+  stability: 0.75,              // Higher stability to prevent accent
+  similarity_boost: 0.85,       // High similarity to preserve cloned voice character
+  style: 0.20,                 // Moderate style to prevent accent while keeping expressiveness
   use_speaker_boost: true,      // Enable speaker boost for better voice character
   model_id: 'eleven_turbo_v2',  // Turbo model for better voice quality
   optimize_streaming_latency: 1,
@@ -48,9 +48,9 @@ export const HIGH_CONSISTENCY_SETTINGS: UnifiedVoiceSettings = {
  * Best for most use cases
  */
 export const NATURAL_SPEECH_SETTINGS: UnifiedVoiceSettings = {
-  stability: 0.65,              // Higher stability to prevent accent
-  similarity_boost: 0.90,       // Very high similarity to preserve voice character
-  style: 0.40,                 // Higher style for more robust expression
+  stability: 0.75,              // Higher stability to prevent accent
+  similarity_boost: 0.85,       // High similarity to preserve voice character
+  style: 0.25,                 // Moderate style to prevent accent while keeping expressiveness
   use_speaker_boost: true,      // Enable speaker boost for better voice character
   model_id: 'eleven_turbo_v2',  // Turbo model for better voice quality
   optimize_streaming_latency: 1,
