@@ -85,7 +85,7 @@ export async function POST(req: Request) {
     
     const requestBody: any = {
       text: cleanedText,
-      model_id: 'eleven_multilingual_v2', // Use multilingual v2 model for high similarity
+      model_id: 'eleven_monolingual_v1', // Use monolingual model for better English and less accent variation
       voice_settings: naturalSettings,
     };
     

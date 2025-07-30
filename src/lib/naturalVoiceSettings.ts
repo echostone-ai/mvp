@@ -16,10 +16,10 @@ export interface NaturalVoiceSettings {
  */
 export function getNaturalVoiceSettings(): NaturalVoiceSettings {
   return {
-    stability: 0.50,           // Lower stability for more natural voice (prevents robotic speech)
-    similarity_boost: 0.75,    // Good similarity to preserve voice character (prevents accent variations)
-    style: 0.00,              // No style for maximum consistency
-    use_speaker_boost: false   // Disable speaker boost for cleaner audio
+    stability: 0.70,           // Higher stability for more consistent voice (prevents accent variations)
+    similarity_boost: 0.85,    // Higher similarity to preserve original voice character
+    style: 0.00,              // No style for maximum consistency with original voice
+    use_speaker_boost: false   // Disable speaker boost to avoid accent modifications
   };
 }
 
@@ -29,8 +29,8 @@ export function getNaturalVoiceSettings(): NaturalVoiceSettings {
  */
 export function getConversationalVoiceSettings(): NaturalVoiceSettings {
   return {
-    stability: 0.50,           // Lower stability for more natural voice
-    similarity_boost: 0.75,    // Good similarity to preserve voice character
+    stability: 0.70,           // Higher stability for more consistent voice
+    similarity_boost: 0.85,    // Higher similarity to preserve voice character
     style: 0.00,              // No style for maximum consistency
     use_speaker_boost: false
   };
@@ -42,9 +42,9 @@ export function getConversationalVoiceSettings(): NaturalVoiceSettings {
  */
 export function getExpressiveVoiceSettings(): NaturalVoiceSettings {
   return {
-    stability: 0.45,           // Lower stability for more expression
-    similarity_boost: 0.70,    // Good similarity to maintain voice identity
-    style: 0.15,              // Low style for natural expressiveness
+    stability: 0.65,           // Slightly lower stability for more expression
+    similarity_boost: 0.80,    // High similarity to maintain voice identity
+    style: 0.10,              // Very low style for minimal accent variation
     use_speaker_boost: false
   };
 }
@@ -79,10 +79,10 @@ export function getContextualVoiceSettings(context: 'homepage' | 'chat' | 'share
   switch (context) {
     case 'homepage':
       return {
-        stability: 0.50,           // Lower stability for more natural voice
-        similarity_boost: 0.75,    // Good similarity to preserve voice character
+        stability: 0.70,           // Higher stability for more consistent voice
+        similarity_boost: 0.85,    // Higher similarity to preserve voice character
         style: 0.00,              // No style for maximum consistency
-        use_speaker_boost: false   // Disable speaker boost for cleaner audio
+        use_speaker_boost: false   // Disable speaker boost to avoid accent modifications
       };
     case 'chat':
       return getNaturalVoiceSettings(); // Close to original voice for personal chat
@@ -99,9 +99,9 @@ export function getContextualVoiceSettings(context: 'homepage' | 'chat' | 'share
  */
 export function getHomepageDemoSettings(): NaturalVoiceSettings {
   return {
-    stability: 0.60,           // Slightly higher stability for consistency
-    similarity_boost: 0.80,    // Higher similarity to match ElevenLabs voice
+    stability: 0.75,           // Very high stability for maximum consistency
+    similarity_boost: 0.90,    // Very high similarity to match original voice exactly
     style: 0.00,              // No style for maximum consistency
-    use_speaker_boost: false   // Disable speaker boost for cleaner audio
+    use_speaker_boost: false   // Disable speaker boost to avoid accent modifications
   };
 }
