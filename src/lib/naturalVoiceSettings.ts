@@ -16,10 +16,10 @@ export interface NaturalVoiceSettings {
  */
 export function getNaturalVoiceSettings(): NaturalVoiceSettings {
   return {
-    stability: 0.75,           // High stability (75% to "More stable" in ElevenLabs)
-    similarity_boost: 1.0,     // Maximum similarity (all the way to "High" in ElevenLabs)
-    style: 0.25,              // Low style (25% from "None" in ElevenLabs)
-    use_speaker_boost: true    // Enhance clarity while preserving character
+    stability: 0.50,           // Lower stability for more natural voice (prevents robotic speech)
+    similarity_boost: 0.75,    // Good similarity to preserve voice character (prevents accent variations)
+    style: 0.00,              // No style for maximum consistency
+    use_speaker_boost: false   // Disable speaker boost for cleaner audio
   };
 }
 
@@ -29,10 +29,10 @@ export function getNaturalVoiceSettings(): NaturalVoiceSettings {
  */
 export function getConversationalVoiceSettings(): NaturalVoiceSettings {
   return {
-    stability: 0.75,           // High stability (75% to "More stable" in ElevenLabs)
-    similarity_boost: 1.0,     // Maximum similarity (all the way to "High" in ElevenLabs)
-    style: 0.25,              // Low style (25% from "None" in ElevenLabs)
-    use_speaker_boost: true
+    stability: 0.50,           // Lower stability for more natural voice
+    similarity_boost: 0.75,    // Good similarity to preserve voice character
+    style: 0.00,              // No style for maximum consistency
+    use_speaker_boost: false
   };
 }
 
@@ -42,10 +42,10 @@ export function getConversationalVoiceSettings(): NaturalVoiceSettings {
  */
 export function getExpressiveVoiceSettings(): NaturalVoiceSettings {
   return {
-    stability: 0.65,           // Lower stability for more expression
-    similarity_boost: 0.92,    // Very high similarity to maintain voice identity
-    style: 0.35,              // Higher style for expressiveness
-    use_speaker_boost: true
+    stability: 0.45,           // Lower stability for more expression
+    similarity_boost: 0.70,    // Good similarity to maintain voice identity
+    style: 0.15,              // Low style for natural expressiveness
+    use_speaker_boost: false
   };
 }
 
@@ -79,10 +79,10 @@ export function getContextualVoiceSettings(context: 'homepage' | 'chat' | 'share
   switch (context) {
     case 'homepage':
       return {
-        stability: 0.75,           // High stability (75% to "More stable" in ElevenLabs)
-        similarity_boost: 1.0,     // Maximum similarity (all the way to "High" in ElevenLabs)
-        style: 0.25,              // Low style (25% from "None" in ElevenLabs)
-        use_speaker_boost: true    // Enhance clarity
+        stability: 0.50,           // Lower stability for more natural voice
+        similarity_boost: 0.75,    // Good similarity to preserve voice character
+        style: 0.00,              // No style for maximum consistency
+        use_speaker_boost: false   // Disable speaker boost for cleaner audio
       };
     case 'chat':
       return getNaturalVoiceSettings(); // Close to original voice for personal chat
@@ -91,4 +91,17 @@ export function getContextualVoiceSettings(context: 'homepage' | 'chat' | 'share
     default:
       return getNaturalVoiceSettings();
   }
+}
+
+/**
+ * Get ultra-consistent settings for homepage demo
+ * These settings prioritize voice consistency over natural variation
+ */
+export function getHomepageDemoSettings(): NaturalVoiceSettings {
+  return {
+    stability: 0.60,           // Slightly higher stability for consistency
+    similarity_boost: 0.80,    // Higher similarity to match ElevenLabs voice
+    style: 0.00,              // No style for maximum consistency
+    use_speaker_boost: false   // Disable speaker boost for cleaner audio
+  };
 }

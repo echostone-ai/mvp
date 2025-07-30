@@ -10,7 +10,7 @@ import { stopAllAudio } from '@/lib/streamingUtils'
 import { createSeamlessStreamingManager, stopAllSeamlessAudio, splitTextForSeamlessStreaming, SeamlessStreamingManager } from '@/lib/seamlessStreamingUtils'
 import { splitTextForConsistentVoice } from '@/lib/voiceConsistency'
 import { getUnifiedVoiceSettings } from '@/lib/unifiedVoiceConfig'
-import { getContextualVoiceSettings } from '@/lib/naturalVoiceSettings'
+import { getContextualVoiceSettings, getHomepageDemoSettings } from '@/lib/naturalVoiceSettings'
 
 export default function HomePage() {
   const [question, setQuestion] = useState('')
@@ -143,9 +143,9 @@ export default function HomePage() {
       })
 
       if (res.ok && res.body) {
-        // Initialize seamless streaming audio manager with natural voice settings for homepage
+        // Initialize seamless streaming audio manager with ultra-consistent voice settings for homepage
         const voiceId = 'CO6pxVrMZfyL61ZIglyr'; // Hardcode the specific voice ID for consistency
-        const naturalSettings = getContextualVoiceSettings('homepage');
+        const naturalSettings = getHomepageDemoSettings();
         streamingAudioRef.current = createSeamlessStreamingManager(
           voiceId, 
           naturalSettings,
@@ -222,7 +222,7 @@ export default function HomePage() {
               body: JSON.stringify({
                 text: answer,
                 voiceId: 'CO6pxVrMZfyL61ZIglyr', // Hardcode the specific voice ID for consistency
-                settings: getContextualVoiceSettings('homepage')
+                settings: getHomepageDemoSettings()
               })
             })
             const blob = await vr.blob()

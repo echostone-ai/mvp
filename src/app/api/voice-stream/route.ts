@@ -77,40 +77,22 @@ export async function POST(req: Request) {
       });
     }
     
-    // TEMPORARILY DISABLE TEXT NORMALIZATION - use original text
-    // const cleanedText = normalizeTextForVoice(sentence);
+    // Use original text with minimal processing for natural voice
+    const cleanedText = sentence.trim();
     
-    // Use natural voice settings for more authentic voice reproduction
+    // Use natural voice settings for authentic voice reproduction
     const naturalSettings = settings || getNaturalVoiceSettings();
-    const seed = generateConsistentSeed(conversationId || 'default', finalVoiceId);
-    
-    console.log('Voice stream request:', {
-      voiceId: finalVoiceId,
-      settings: naturalSettings,
-      seed: seed,
-      conversationId: conversationId || 'default'
-    });
     
     const requestBody: any = {
-      text: sentence, // Use original text without processing to preserve natural speech
-      model_id: 'eleven_multilingual_v2', // Use multilingual v2 for better accent consistency
-      voice_settings: {
-        ...naturalSettings,
-        // Add speed parameter to match ElevenLabs interface
-        speed: 1.0 // Fast speed (matches ElevenLabs "Faster" setting)
-      },
-      seed: seed, // Consistent seed for similar voice characteristics
-      optimize_streaming_latency: 0, // Prioritize quality over speed for better voice consistency
-      output_format: 'mp3_44100_128'
+      text: cleanedText,
+      model_id: 'eleven_multilingual_v2', // Use multilingual v2 model for high similarity
+      voice_settings: naturalSettings,
     };
     
-    // Add previous context for better continuity (if supported)
-    if (previousContext && previousContext.length > 0) {
-      (requestBody as any).previous_text = previousContext.substring(-100); // Last 100 chars for context
-    }
-    
+    // Call ElevenLabs API
+    console.log('Calling ElevenLabs API with unified settings...');
     const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${finalVoiceId}/stream`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${finalVoiceId}`,
       {
         method: 'POST',
         headers: {

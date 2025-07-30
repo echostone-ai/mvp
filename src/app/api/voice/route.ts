@@ -96,7 +96,7 @@ export async function POST(req: Request) {
     // Call ElevenLabs API
     console.log('Calling ElevenLabs API with unified settings...');
     const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${finalVoiceId}/stream`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${finalVoiceId}`,
       {
         method: 'POST',
         headers: {
