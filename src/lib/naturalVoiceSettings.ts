@@ -16,9 +16,9 @@ export interface NaturalVoiceSettings {
  */
 export function getNaturalVoiceSettings(): NaturalVoiceSettings {
   return {
-    stability: 0.70,           // Lower stability for natural variation and expressiveness
-    similarity_boost: 0.90,    // High similarity to stay very close to original voice
-    style: 0.30,              // Allow natural style variation for expressiveness
+    stability: 0.85,           // Higher stability for consistent accent and tone
+    similarity_boost: 0.92,    // Very high similarity to stay very close to original voice
+    style: 0.15,              // Lower style to reduce accent variation
     use_speaker_boost: true    // Enhance clarity while preserving character
   };
 }
