@@ -101,7 +101,7 @@ export default function ChatInterface({
         streamingAudioRef.current.stop();
       }
       // Also stop any improved audio managers
-      await stopAllImprovedAudio();
+      stopAllImprovedAudio();
       if (audioUrlRef.current) {
         URL.revokeObjectURL(audioUrlRef.current);
       }
