@@ -1,6 +1,7 @@
 import StreamingTest from '@/components/StreamingTest';
 import SeamlessStreamingTest from '@/components/SeamlessStreamingTest';
 import AccentConsistencyFixer from '@/components/AccentConsistencyFixer';
+import VoiceConsistencyTest from '@/components/VoiceConsistencyTest';
 
 export default function TestStreamingPage() {
   return (
@@ -26,6 +27,16 @@ export default function TestStreamingPage() {
         avatarId="test-avatar"
         voiceId="CO6pxVrMZfyL61ZIglyr"
         avatarName="Test Avatar"
+      />
+      
+      <VoiceConsistencyTest 
+        voiceId="demtdoS7vT64FVzaPurk"
+        voiceSettings={{
+          stability: 0.85,
+          similarity_boost: 0.85,
+          style: 0.15,
+          use_speaker_boost: true
+        }}
       />
       
       <div style={{ marginTop: '2rem', padding: '1rem', background: 'rgba(156, 163, 175, 0.1)', borderRadius: '8px' }}>

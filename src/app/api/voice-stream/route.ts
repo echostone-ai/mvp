@@ -100,10 +100,10 @@ export async function POST(req: Request) {
     
     const requestBody: any = {
       text: sentence, // Use original text without processing to preserve natural speech
-      model_id: 'eleven_multilingual_v2', // Use multilingual v2 model for high similarity
+      model_id: 'eleven_turbo_v2_5', // Use Turbo model for better voice consistency
       voice_settings: naturalSettings,
       seed: seed, // Consistent seed for similar voice characteristics
-      optimize_streaming_latency: 2, // Balanced optimization for streaming latency and quality
+      optimize_streaming_latency: 0, // Prioritize quality over speed for better voice consistency
       output_format: 'mp3_44100_128'
     };
     
