@@ -24,9 +24,9 @@ export default function StreamingTest() {
     // Initialize improved streaming manager
     const voiceId = 'CO6pxVrMZfyL61ZIglyr'; // Use the specific voice ID
     const settings = {
-      stability: 0.95,           // Maximum stability for consistent speech
-      similarity_boost: 0.95,    // Maximum similarity to original voice
-      style: 0.0,               // Zero style to eliminate variations
+      stability: 0.75,           // High stability (75% to "More stable" in ElevenLabs)
+      similarity_boost: 1.0,     // Maximum similarity (all the way to "High" in ElevenLabs)
+      style: 0.25,              // Low style (25% from "None" in ElevenLabs)
       use_speaker_boost: true    // Enhance clarity
     };
     

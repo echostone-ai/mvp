@@ -55,6 +55,12 @@ export default function VoiceSettingsOptimizer({ voiceId, onSettingsChange }: Vo
   };
 
   const presetSettings = {
+    'ElevenLabs Matched': {
+      stability: 0.75,
+      similarity_boost: 1.0,
+      style: 0.25,
+      use_speaker_boost: true
+    },
     'ElevenLabs Default': {
       stability: 0.75,
       similarity_boost: 0.75,

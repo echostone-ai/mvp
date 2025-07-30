@@ -16,9 +16,9 @@ export interface NaturalVoiceSettings {
  */
 export function getNaturalVoiceSettings(): NaturalVoiceSettings {
   return {
-    stability: 0.95,           // Maximum stability to eliminate accent variations
-    similarity_boost: 0.95,    // Maximum similarity to match ElevenLabs quality
-    style: 0.0,               // Zero style to eliminate accent drift
+    stability: 0.75,           // High stability (75% to "More stable" in ElevenLabs)
+    similarity_boost: 1.0,     // Maximum similarity (all the way to "High" in ElevenLabs)
+    style: 0.25,              // Low style (25% from "None" in ElevenLabs)
     use_speaker_boost: true    // Enhance clarity while preserving character
   };
 }
@@ -29,9 +29,9 @@ export function getNaturalVoiceSettings(): NaturalVoiceSettings {
  */
 export function getConversationalVoiceSettings(): NaturalVoiceSettings {
   return {
-    stability: 0.95,           // Maximum stability for conversational consistency
-    similarity_boost: 0.95,    // Maximum similarity to match ElevenLabs quality
-    style: 0.0,               // Zero style to eliminate accent drift
+    stability: 0.75,           // High stability (75% to "More stable" in ElevenLabs)
+    similarity_boost: 1.0,     // Maximum similarity (all the way to "High" in ElevenLabs)
+    style: 0.25,              // Low style (25% from "None" in ElevenLabs)
     use_speaker_boost: true
   };
 }
@@ -79,9 +79,9 @@ export function getContextualVoiceSettings(context: 'homepage' | 'chat' | 'share
   switch (context) {
     case 'homepage':
       return {
-        stability: 0.95,           // Maximum stability for consistent speech
-        similarity_boost: 0.95,    // Maximum similarity to match ElevenLabs quality
-        style: 0.0,               // Zero style to eliminate accent drift
+        stability: 0.75,           // High stability (75% to "More stable" in ElevenLabs)
+        similarity_boost: 1.0,     // Maximum similarity (all the way to "High" in ElevenLabs)
+        style: 0.25,              // Low style (25% from "None" in ElevenLabs)
         use_speaker_boost: true    // Enhance clarity
       };
     case 'chat':

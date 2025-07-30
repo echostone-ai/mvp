@@ -32,9 +32,9 @@ export default function TestStreamingPage() {
       <VoiceConsistencyTest 
         voiceId="demtdoS7vT64FVzaPurk"
         voiceSettings={{
-          stability: 0.95,
-          similarity_boost: 0.95,
-          style: 0.0,
+          stability: 0.75,
+          similarity_boost: 1.0,
+          style: 0.25,
           use_speaker_boost: true
         }}
       />
