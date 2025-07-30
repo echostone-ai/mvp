@@ -297,7 +297,7 @@ export default function ChatInterface({
     if (!text.trim()) return
     
     // Stop all existing audio first to prevent overlaps - with proper coordination
-    const wasPlaying = globalAudioManager.getIsPlaying() || (streamingAudioRef.current?.isPlaying());
+    const wasPlaying = globalAudioManager.getIsPlaying() || (streamingAudioRef.current && streamingAudioRef.current.isPlaying());
     
     // Stop streaming audio first
     if (streamingAudioRef.current) {
@@ -1048,7 +1048,7 @@ export default function ChatInterface({
         </div>
       )}
 
-      {(playing || (streamingAudioRef.current?.isPlaying())) && (
+              {(playing || (streamingAudioRef.current && streamingAudioRef.current.isPlaying())) && (
         <div className="soundbars">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="soundbar" />

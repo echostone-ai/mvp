@@ -7,7 +7,7 @@ import Image from 'next/image'
 import { useState, useRef, useEffect } from 'react'
 import { globalAudioManager } from '@/lib/globalAudioManager'
 import { stopAllAudio } from '@/lib/streamingUtils'
-import { createSeamlessStreamingManager, stopAllSeamlessAudio, splitTextForSeamlessStreaming } from '@/lib/seamlessStreamingUtils'
+import { createSeamlessStreamingManager, stopAllSeamlessAudio, splitTextForSeamlessStreaming, SeamlessStreamingManager } from '@/lib/seamlessStreamingUtils'
 import { splitTextForConsistentVoice } from '@/lib/voiceConsistency'
 import { getUnifiedVoiceSettings } from '@/lib/unifiedVoiceConfig'
 import { getContextualVoiceSettings } from '@/lib/naturalVoiceSettings'
@@ -24,7 +24,7 @@ export default function HomePage() {
   const timeoutRef = useRef<any>(null)
   const audioUrlRef = useRef<string | null>(null)
   const audioRef = useRef<HTMLAudioElement>(null)
-  const streamingAudioRef = useRef<any>(null)
+  const streamingAudioRef = useRef<SeamlessStreamingManager | null>(null)
 
   // Check if Web Speech API is available
   const hasSpeechRecognition = typeof window !== 'undefined' &&

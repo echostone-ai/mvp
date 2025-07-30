@@ -11,7 +11,7 @@ export interface SeamlessStreamingManager {
 export class SeamlessAudioQueue {
   private textBuffer = '';
   private audioQueue: ArrayBuffer[] = [];
-  private isPlaying = false;
+  private isCurrentlyPlaying = false;
   private isDestroyed = false;
   private voiceId: string;
   private voiceSettings: any;
@@ -47,7 +47,7 @@ export class SeamlessAudioQueue {
     }
     
     // Wait for all audio to finish
-    while (this.audioQueue.length > 0 || this.isPlaying) {
+    while (this.audioQueue.length > 0 || this.isCurrentlyPlaying) {
       await new Promise(resolve => setTimeout(resolve, 100));
     }
   }
@@ -74,7 +74,7 @@ export class SeamlessAudioQueue {
           this.audioQueue.push(audioBuffer);
           
           // Start playing if not already playing
-          if (!this.isPlaying) {
+          if (!this.isCurrentlyPlaying) {
             this.playNext();
           }
         } catch (error) {
@@ -123,11 +123,11 @@ export class SeamlessAudioQueue {
 
   private async playNext() {
     if (this.isDestroyed || this.audioQueue.length === 0) {
-      this.isPlaying = false;
+      this.isCurrentlyPlaying = false;
       return;
     }
 
-    this.isPlaying = true;
+    this.isCurrentlyPlaying = true;
     const audioBuffer = this.audioQueue.shift()!;
     
     try {
@@ -180,11 +180,11 @@ export class SeamlessAudioQueue {
       this.currentAudio = null;
     }
     
-    this.isPlaying = false;
+    this.isCurrentlyPlaying = false;
   }
 
   isPlaying() {
-    return !this.isDestroyed && this.isPlaying;
+    return !this.isDestroyed && this.isCurrentlyPlaying;
   }
 }
 
@@ -197,7 +197,7 @@ export function createSeamlessStreamingManager(
 ): SeamlessStreamingManager {
   const audioQueue = new SeamlessAudioQueue(voiceId, voiceSettings, options.conversationId);
 
-  return {
+  const manager: SeamlessStreamingManager = {
     async addText(text: string) {
       await audioQueue.addText(text);
     },
@@ -208,12 +208,18 @@ export function createSeamlessStreamingManager(
 
     stop() {
       audioQueue.stop();
+      activeManagers.delete(manager);
     },
 
     isPlaying() {
       return audioQueue.isPlaying();
     }
   };
+
+  // Register this manager
+  activeManagers.add(manager);
+
+  return manager;
 }
 
 // Keep track of active managers
