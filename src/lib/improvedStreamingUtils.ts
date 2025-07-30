@@ -151,25 +151,30 @@ export class ImprovedAudioQueue {
   private async playNext() {
     if (this.isDestroyed || this.sentenceQueue.length === 0) {
       this.isPlaying = false;
+      console.log(`[ImprovedAudioQueue] Queue empty or destroyed, stopping playback`);
       return;
     }
 
     this.isPlaying = true;
     const text = this.sentenceQueue.shift()!;
     
-    console.log(`[ImprovedAudioQueue] Processing: "${text.substring(0, 50)}..." Remaining: ${this.sentenceQueue.length}`);
+    console.log(`[ImprovedAudioQueue] Processing: "${text.substring(0, 50)}..." Remaining: ${this.sentenceQueue.length}, Queue size: ${this.sentenceQueue.length}`);
     
     try {
       const audioBuffer = await this.synthesizeAudio(text);
       
       if (audioBuffer.byteLength > 0) {
+        console.log(`[ImprovedAudioQueue] Audio buffer size: ${audioBuffer.byteLength} bytes, playing audio...`);
         await this.playAudioBuffer(audioBuffer);
+        console.log(`[ImprovedAudioQueue] Audio playback completed for: "${text.substring(0, 30)}..."`);
         
         // Update context for next synthesis
         this.previousContext += ' ' + text;
         if (this.previousContext.length > 200) {
           this.previousContext = this.previousContext.substring(this.previousContext.length - 200);
         }
+      } else {
+        console.warn(`[ImprovedAudioQueue] Empty audio buffer for text: "${text.substring(0, 30)}..."`);
       }
     } catch (error) {
       console.error('Failed to process text:', text, error);

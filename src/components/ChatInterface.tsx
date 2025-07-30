@@ -5,13 +5,17 @@ import React, { useState, useRef, useEffect } from 'react'
 import { ConversationService, ChatMessage as ConversationMessage } from '@/lib/conversationService'
 import { MemorySavedAnimation } from './MemorySavedAnimation';
 import { 
-  createStreamingAudioManager, 
   splitIntoSentences,
   splitIntoPhrases, 
   streamChatResponse,
-  StreamingAudioManager,
   stopAllAudio
 } from '@/lib/streamingUtils';
+import { 
+  createImprovedStreamingAudioManager, 
+  stopAllImprovedAudio,
+  splitTextForImprovedStreaming,
+  ImprovedStreamingAudioManager
+} from '@/lib/improvedStreamingUtils';
 import { splitTextForConsistentVoice } from '@/lib/voiceConsistency';
 import { getContextualVoiceSettings } from '@/lib/naturalVoiceSettings';
 import { globalAudioManager } from '@/lib/globalAudioManager';
@@ -75,7 +79,7 @@ export default function ChatInterface({
   const [streamingText, setStreamingText] = useState('');
   const [audioInterrupted, setAudioInterrupted] = useState(false);
   const userMsgRef = useRef<HTMLDivElement>(null);
-  const streamingAudioRef = useRef<StreamingAudioManager | null>(null);
+  const streamingAudioRef = useRef<ImprovedStreamingAudioManager | null>(null);
 
   const recognitionRef = useRef<any>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
@@ -96,6 +100,8 @@ export default function ChatInterface({
       if (streamingAudioRef.current) {
         streamingAudioRef.current.stop();
       }
+      // Also stop any improved audio managers
+      await stopAllImprovedAudio();
       if (audioUrlRef.current) {
         URL.revokeObjectURL(audioUrlRef.current);
       }
@@ -248,6 +254,7 @@ export default function ChatInterface({
     
     // Wait for all audio to stop before playing new audio
     await globalAudioManager.stopAll();
+    await stopAllImprovedAudio();
     
     if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current)
     const url = URL.createObjectURL(blob)
@@ -299,6 +306,7 @@ export default function ChatInterface({
     
     // Then stop all other audio and wait for it to complete
     await globalAudioManager.stopAll();
+    await stopAllImprovedAudio();
     
     if (wasPlaying) {
       setAudioInterrupted(true);
@@ -328,10 +336,10 @@ export default function ChatInterface({
     }
 
     try {
-              // Initialize streaming audio manager with natural voice settings for chat
+              // Initialize improved streaming audio manager with natural voice settings for chat
         if (voiceId) {
           const naturalSettings = voiceSettings || getContextualVoiceSettings('chat');
-          streamingAudioRef.current = createStreamingAudioManager(
+          streamingAudioRef.current = createImprovedStreamingAudioManager(
             voiceId || '',
             naturalSettings,
             accent || undefined,
@@ -371,40 +379,42 @@ export default function ChatInterface({
         fullResponse += char;
         setStreamingText(fullResponse);
 
-        // Check for new segments every 50 characters for better voice consistency
-        if (fullResponse.length % 50 === 0 && fullResponse.length > 30) {
-          const segments = splitTextForConsistentVoice(fullResponse);
+        // Check for new segments more frequently for better responsiveness
+        if (fullResponse.length % 30 === 0 && fullResponse.length > 20) {
+          const segments = splitTextForImprovedStreaming(fullResponse);
           
-          // Process any new complete segments since last check
+          // Process any new segments since last check
           if (segments.length > lastPhraseCount && streamingAudioRef.current) {
-            // Process all complete segments (excluding the last potentially incomplete one)
-            const endIndex = segments.length > 1 ? segments.length - 1 : segments.length;
-            for (let i = lastPhraseCount; i < endIndex; i++) {
+            // Process all segments including potentially incomplete ones
+            for (let i = lastPhraseCount; i < segments.length; i++) {
               const segment = segments[i].trim();
-              if (segment && !segment.match(/\b(Mr|Mrs|Ms|Dr|Prof|Sr|Jr)\.$/) && segment.length > 10) {
+              if (segment && segment.length > 3) { // Much lower minimum length
                 console.log('[ChatInterface] New segment detected:', segment.substring(0, 50) + '...');
                 
-                // Use addSentence for consistent voice generation
-                streamingAudioRef.current.addSentence(segment);
+                // Use addText for better text handling
+                streamingAudioRef.current.addText(segment, false);
                 hasStartedSpeaking = true;
               }
             }
-            lastPhraseCount = endIndex;
+            lastPhraseCount = segments.length;
           }
         }
       }
 
       // Process any remaining segments from the complete response
       if (fullResponse.trim() && streamingAudioRef.current) {
-        const segments = splitTextForConsistentVoice(fullResponse);
+        // Flush any remaining text in the buffer
+        await streamingAudioRef.current.flush();
+        
+        const segments = splitTextForImprovedStreaming(fullResponse);
         console.log(`[ChatInterface] Processing ${segments.length} segments from complete response`);
         
         // Process any segments we might have missed
         for (let i = lastPhraseCount; i < segments.length; i++) {
           const segment = segments[i].trim();
-          if (segment && segment.length > 8) {
+          if (segment && segment.length > 3) { // Much lower minimum length
             console.log('[ChatInterface] Final segment:', segment.substring(0, 50) + '...');
-            streamingAudioRef.current.addSentence(segment);
+            streamingAudioRef.current.addText(segment, true); // Add as complete text
           }
         }
       }
@@ -768,6 +778,7 @@ export default function ChatInterface({
     
     // Wait for all audio to stop
     await globalAudioManager.stopAll();
+    await stopAllImprovedAudio();
     
     setPlaying(true)
     try {
