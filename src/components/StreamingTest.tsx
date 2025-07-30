@@ -22,8 +22,13 @@ export default function StreamingTest() {
     setIsPlaying(true);
 
     // Initialize improved streaming manager
-    const voiceId = 'CO6pxVrMZfyL61ZIglyr'; // Use the same voice ID
-    const settings = getNaturalVoiceSettings();
+    const voiceId = 'CO6pxVrMZfyL61ZIglyr'; // Use the specific voice ID
+    const settings = {
+      stability: 0.85,           // High stability for consistent speech
+      similarity_boost: 0.95,    // Very high similarity to original voice
+      style: 0.15,              // Lower style for consistency
+      use_speaker_boost: true    // Enhance clarity
+    };
     
     streamingRef.current = createImprovedStreamingAudioManager(
       voiceId,

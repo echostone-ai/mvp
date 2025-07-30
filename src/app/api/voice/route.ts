@@ -89,7 +89,7 @@ export async function POST(req: Request) {
     
     const requestBody: any = {
       text: cleanedText,
-      model_id: 'eleven_turbo_v2_5', // Use Turbo model for better accent consistency
+      model_id: 'eleven_multilingual_v2', // Use multilingual v2 model for high similarity
       voice_settings: naturalSettings,
     };
     

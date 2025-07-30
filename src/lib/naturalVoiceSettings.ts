@@ -65,7 +65,7 @@ export function createNaturalVoiceRequest(
     voiceId,
     settings: voiceSettings,
     conversationId: conversationId || 'natural-voice',
-    // Use ElevenLabs optimizations for natural speech
+    // Use ElevenLabs multilingual v2 model for high similarity
     model_id: 'eleven_multilingual_v2',
     optimize_streaming_latency: 0, // Prioritize quality over speed
     output_format: 'mp3_44100_128'
@@ -78,7 +78,12 @@ export function createNaturalVoiceRequest(
 export function getContextualVoiceSettings(context: 'homepage' | 'chat' | 'shared'): NaturalVoiceSettings {
   switch (context) {
     case 'homepage':
-      return getConversationalVoiceSettings(); // Friendly and natural for demos
+      return {
+        stability: 0.85,           // High stability for consistent speech
+        similarity_boost: 0.95,    // Very high similarity to original voice
+        style: 0.15,              // Lower style for consistency
+        use_speaker_boost: true    // Enhance clarity
+      };
     case 'chat':
       return getNaturalVoiceSettings(); // Close to original voice for personal chat
     case 'shared':
