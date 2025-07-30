@@ -84,6 +84,13 @@ export async function POST(req: Request) {
     const naturalSettings = settings || getNaturalVoiceSettings();
     const seed = generateConsistentSeed(conversationId || 'default', finalVoiceId);
     
+    console.log('Voice stream request:', {
+      voiceId: finalVoiceId,
+      settings: naturalSettings,
+      seed: seed,
+      conversationId: conversationId || 'default'
+    });
+    
     const requestBody: any = {
       text: sentence, // Use original text without processing to preserve natural speech
       model_id: 'eleven_turbo_v2_5', // Use Turbo model for better voice consistency

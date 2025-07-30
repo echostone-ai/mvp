@@ -19,9 +19,9 @@ export default function AccentConsistencyFixer({ avatarId, voiceId, avatarName }
     try {
       // For testing purposes, just show the recommended settings
       const recommendedSettings = {
-        stability: 0.90,           // Very high stability for consistent voice
-        similarity_boost: 0.90,    // Very high similarity to match ElevenLabs quality
-        style: 0.10,              // Minimal style for natural variation
+        stability: 0.95,           // Maximum stability for consistent voice
+        similarity_boost: 0.95,    // Maximum similarity to match ElevenLabs quality
+        style: 0.0,               // Zero style to eliminate accent drift
         use_speaker_boost: true    // Enhance clarity
       };
 
@@ -30,9 +30,9 @@ export default function AccentConsistencyFixer({ avatarId, voiceId, avatarName }
         message: 'Recommended settings for accent consistency',
         settings: recommendedSettings,
         recommendations: [
-          'Stability: 0.90 for very consistent voice character',
-          'Similarity Boost: 0.90 to match ElevenLabs quality',
-          'Style: 0.10 for minimal natural variation',
+          'Stability: 0.95 for maximum consistent voice character',
+          'Similarity Boost: 0.95 to match ElevenLabs quality',
+          'Style: 0.0 to eliminate accent drift completely',
           'Speaker Boost: true for enhanced clarity',
           'Use these settings in the Voice Settings Optimizer below'
         ]

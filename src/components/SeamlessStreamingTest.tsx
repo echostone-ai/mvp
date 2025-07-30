@@ -23,10 +23,10 @@ export default function SeamlessStreamingTest() {
     // Initialize seamless streaming manager
     const voiceId = 'CO6pxVrMZfyL61ZIglyr';
     const settings = {
-      stability: 0.90,
-      similarity_boost: 0.90,
-      style: 0.10,
-      use_speaker_boost: true
+      stability: 0.95,           // Maximum stability to eliminate accent variations
+      similarity_boost: 0.95,    // Maximum similarity to original voice
+      style: 0.0,               // Zero style to eliminate accent drift
+      use_speaker_boost: true    // Enhance clarity
     };
     
     streamingRef.current = createSeamlessStreamingManager(

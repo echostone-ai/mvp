@@ -25,6 +25,17 @@ export default function VoiceConsistencyTest({ voiceId, voiceSettings }: VoiceCo
     setIsPlaying(true);
     setTestResults([]);
     
+    // Use the most consistent settings possible
+    const consistentSettings = {
+      stability: 0.95,           // Maximum stability for consistency
+      similarity_boost: 0.95,    // Maximum similarity to original voice
+      style: 0.0,               // Zero style to eliminate variations
+      use_speaker_boost: true    // Enhance clarity
+    };
+    
+    console.log('[VoiceConsistencyTest] Using settings:', consistentSettings);
+    console.log('[VoiceConsistencyTest] Voice ID:', voiceId);
+    
     for (let i = 0; i < testPhrases.length; i++) {
       const phrase = testPhrases[i];
       setCurrentTest(`Testing phrase ${i + 1}: "${phrase.substring(0, 30)}..."`);
@@ -36,7 +47,7 @@ export default function VoiceConsistencyTest({ voiceId, voiceSettings }: VoiceCo
           body: JSON.stringify({
             sentence: phrase,
             voiceId: voiceId,
-            settings: voiceSettings,
+            settings: consistentSettings, // Use consistent settings
             conversationId: 'voice-consistency-test'
           }),
         });

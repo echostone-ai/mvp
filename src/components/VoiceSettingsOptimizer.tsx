@@ -61,6 +61,12 @@ export default function VoiceSettingsOptimizer({ voiceId, onSettingsChange }: Vo
       style: 0.0,
       use_speaker_boost: true
     },
+    'Maximum Consistency': {
+      stability: 0.95,
+      similarity_boost: 0.95,
+      style: 0.0,
+      use_speaker_boost: true
+    },
     'High Consistency': {
       stability: 0.90,
       similarity_boost: 0.90,
