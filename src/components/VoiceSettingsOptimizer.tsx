@@ -64,7 +64,7 @@ export default function VoiceSettingsOptimizer({ voiceId, onSettingsChange }: Vo
     'High Consistency': {
       stability: 0.90,
       similarity_boost: 0.90,
-      style: 0.0,
+      style: 0.10,
       use_speaker_boost: true
     },
     'Natural Variation': {
@@ -74,9 +74,9 @@ export default function VoiceSettingsOptimizer({ voiceId, onSettingsChange }: Vo
       use_speaker_boost: true
     },
     'Balanced': {
-      stability: 0.85,
-      similarity_boost: 0.85,
-      style: 0.15,
+      stability: 0.90,
+      similarity_boost: 0.90,
+      style: 0.10,
       use_speaker_boost: true
     }
   };

@@ -16,9 +16,9 @@ export interface NaturalVoiceSettings {
  */
 export function getNaturalVoiceSettings(): NaturalVoiceSettings {
   return {
-    stability: 0.85,           // Higher stability for consistent voice character
-    similarity_boost: 0.85,    // Higher similarity to match ElevenLabs quality
-    style: 0.15,              // Small amount of style for natural variation
+    stability: 0.90,           // Very high stability for maximum consistency
+    similarity_boost: 0.90,    // Very high similarity to match ElevenLabs quality
+    style: 0.10,              // Minimal style for slight natural variation
     use_speaker_boost: true    // Enhance clarity while preserving character
   };
 }
@@ -29,9 +29,9 @@ export function getNaturalVoiceSettings(): NaturalVoiceSettings {
  */
 export function getConversationalVoiceSettings(): NaturalVoiceSettings {
   return {
-    stability: 0.80,           // Higher stability for conversational consistency
-    similarity_boost: 0.80,    // Higher similarity to match ElevenLabs quality
-    style: 0.10,              // Small amount of style for natural variation
+    stability: 0.90,           // Very high stability for conversational consistency
+    similarity_boost: 0.90,    // Very high similarity to match ElevenLabs quality
+    style: 0.10,              // Minimal style for natural variation
     use_speaker_boost: true
   };
 }
@@ -79,9 +79,9 @@ export function getContextualVoiceSettings(context: 'homepage' | 'chat' | 'share
   switch (context) {
     case 'homepage':
       return {
-        stability: 0.85,           // Higher stability for consistent speech
-        similarity_boost: 0.85,    // Higher similarity to match ElevenLabs quality
-        style: 0.15,              // Small amount of style for natural variation
+        stability: 0.90,           // Very high stability for consistent speech
+        similarity_boost: 0.90,    // Very high similarity to match ElevenLabs quality
+        style: 0.10,              // Minimal style for natural variation
         use_speaker_boost: true    // Enhance clarity
       };
     case 'chat':

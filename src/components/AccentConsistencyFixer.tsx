@@ -17,33 +17,28 @@ export default function AccentConsistencyFixer({ avatarId, voiceId, avatarName }
     setResult(null);
 
     try {
-      const response = await fetch('/api/fix-avatar-voice', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          avatarId,
-          voiceId,
-          // Apply ElevenLabs recommended settings for accent consistency
-          settings: {
-            stability: 0.75,           // Balanced stability (not too high)
-            similarity_boost: 0.75,    // Moderate similarity to prevent accent drift
-            style: 0.0,               // Zero style to eliminate accent variations
-            use_speaker_boost: true    // Enhance clarity
-          }
-        })
+      // For testing purposes, just show the recommended settings
+      const recommendedSettings = {
+        stability: 0.90,           // Very high stability for consistent voice
+        similarity_boost: 0.90,    // Very high similarity to match ElevenLabs quality
+        style: 0.10,              // Minimal style for natural variation
+        use_speaker_boost: true    // Enhance clarity
+      };
+
+      setResult({
+        success: true,
+        message: 'Recommended settings for accent consistency',
+        settings: recommendedSettings,
+        recommendations: [
+          'Stability: 0.90 for very consistent voice character',
+          'Similarity Boost: 0.90 to match ElevenLabs quality',
+          'Style: 0.10 for minimal natural variation',
+          'Speaker Boost: true for enhanced clarity',
+          'Use these settings in the Voice Settings Optimizer below'
+        ]
       });
 
-      const data = await response.json();
-      setResult(data);
-
-      if (data.success) {
-        // Refresh the page to apply new settings
-        setTimeout(() => {
-          window.location.reload();
-        }, 2000);
-      }
+      // Don't refresh the page for testing
     } catch (error) {
       setResult({
         success: false,

@@ -23,9 +23,9 @@ export default function SeamlessStreamingTest() {
     // Initialize seamless streaming manager
     const voiceId = 'CO6pxVrMZfyL61ZIglyr';
     const settings = {
-      stability: 0.75,
-      similarity_boost: 0.75,
-      style: 0.0,
+      stability: 0.90,
+      similarity_boost: 0.90,
+      style: 0.10,
       use_speaker_boost: true
     };
     
@@ -47,7 +47,7 @@ export default function SeamlessStreamingTest() {
         await streamingRef.current.addText(sentence);
         
         // Small delay to simulate streaming
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
     }
 

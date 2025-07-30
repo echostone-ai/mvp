@@ -13,23 +13,9 @@ export const runtime = 'edge'
  * This ensures all segments of a conversation use the same voice characteristics
  */
 function generateConsistentSeed(conversationId?: string, voiceId?: string): number {
-  if (!conversationId || !voiceId) {
-    // Use a fixed seed for consistency when no context available
-    return 12345; // Fixed seed for maximum consistency
-  }
-  
-  // Create a simple hash from conversation and voice ID
-  let hash = 0;
-  const str = `${conversationId}-${voiceId}`;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32-bit integer
-  }
-  
-  // Ensure positive number within reasonable range and make it more stable
-  const seed = Math.abs(hash) % 10000; // Smaller range for more consistency
-  return seed;
+  // Use a completely fixed seed for maximum voice consistency
+  // This ensures the same voice characteristics across all requests
+  return 123456789; // Fixed seed for consistent voice
 }
 
 // Create a simple audio buffer for fallback
