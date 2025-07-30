@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import { useState, useRef } from 'react'
+import PageShell from '@/components/PageShell'
 
 export default function HomePage() {
   const [question, setQuestion] = useState('')
@@ -68,7 +69,8 @@ export default function HomePage() {
   }
 
   return (
-    <main className="page-container">
+    <PageShell>
+      <main className="page-container">
       {/* Logo */}
       <div className="logo-wrap">
         <Image
@@ -120,5 +122,6 @@ export default function HomePage() {
         </div>
       )}
     </main>
+    </PageShell>
   )
 }

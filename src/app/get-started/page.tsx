@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase';
 import VoiceOnboardingComplete from '@/components/VoiceOnboardingComplete';
 import AvatarCreationFlow from '@/components/AvatarCreationFlow';
 import WorkingVoiceOnboarding from '@/components/WorkingVoiceOnboarding';
-import SimpleNavigation from '@/components/SimpleNavigation';
+import PageShell from '@/components/PageShell';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import '@/styles/get-started.css';
 
@@ -97,19 +97,17 @@ function GetStartedContent() {
 
   if (loading) {
     return (
-      <>
-        <SimpleNavigation />
+      <PageShell>
         <div className="get-started-container">
           <LoadingSpinner message="Loading your profile..." size="lg" />
         </div>
-      </>
+      </PageShell>
     );
   }
 
   if (!user) {
     return (
-      <>
-        <SimpleNavigation />
+      <PageShell>
         <div className="get-started-container">
           <div className="get-started-content">
             <div className="get-started-header">
@@ -127,13 +125,12 @@ function GetStartedContent() {
             </div>
           </div>
         </div>
-      </>
+      </PageShell>
     );
   }
 
   return (
-    <>
-      <SimpleNavigation />
+    <PageShell>
       <div className="get-started-container">
         <div className="get-started-content">
           <div className="get-started-header">
@@ -293,19 +290,18 @@ function GetStartedContent() {
         )}
         </div>
       </div>
-    </>
+    </PageShell>
   );
 }
 
 export default function GetStartedPage() {
   return (
     <Suspense fallback={
-      <>
-        <SimpleNavigation />
+      <PageShell>
         <div className="get-started-container">
           <LoadingSpinner message="Loading..." size="lg" />
         </div>
-      </>
+      </PageShell>
     }>
       <GetStartedContent />
     </Suspense>

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import AccountMenu from '@/components/AccountMenu'
+import PageShell from '@/components/PageShell'
 import { useRouter } from 'next/navigation'
 
 export default function SignupPage() {
@@ -51,11 +51,7 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen w-screen relative">
-      <div className="fixed top-9 right-9 z-50">
-        <AccountMenu />
-      </div>
-      
+    <PageShell>
       <main className="min-h-screen flex flex-col items-center justify-center text-white p-4 text-center">
         <img
           src="/echostone_logo.png"
@@ -111,43 +107,30 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={!email.trim() || !name.trim() || loading}
-              className="auth-submit-btn w-full py-4 bg-gradient-to-r from-purple-600 to-purple-500 text-white border-none rounded-2xl font-bold text-lg cursor-pointer shadow-lg hover:from-purple-500 hover:to-purple-600 hover:transform hover:-translate-y-1 hover:shadow-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              className="auth-submit-btn w-full"
             >
               {loading ? 'Creating Account...' : 'Create Account'}
             </button>
           </form>
           
           {message && (
-            <div className="mt-6 p-4 bg-green-500/20 border border-green-500/30 rounded-xl text-green-400 font-medium">
+            <div className="auth-message success">
               {message}
             </div>
           )}
           {error && (
-            <div className="mt-6 p-4 bg-red-500/20 border border-red-500/30 rounded-xl text-red-400 font-medium">
+            <div className="auth-message error">
               {error}
             </div>
           )}
           
-          <div className="mt-6 text-center">
-            <p className="text-gray-300">
-              Already have an account?{' '}
-              <a href="/login" className="text-purple-400 hover:text-purple-300 font-semibold">
-                Sign in here
-              </a>
-            </p>
-          </div>
-          
-          <div className="auth-required-features mt-8">
-            <h3>What you'll get access to:</h3>
-            <ul>
-              <li>🎤 Train your personal AI voice</li>
-              <li>📝 Build your personality profile</li>
-              <li>💬 Chat with your digital twin</li>
-              <li>🔒 Secure, private data storage</li>
-            </ul>
+          <div className="auth-required-actions">
+            <a href="/login" className="auth-btn secondary">
+              Already have an account? Sign in
+            </a>
           </div>
         </div>
       </main>
-    </div>
+    </PageShell>
   )
 }

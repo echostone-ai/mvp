@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import PageShell from '@/components/PageShell';
 // CSS is imported in the layout file
 
 interface SharedAvatar {
@@ -62,15 +63,18 @@ export default function SharedAvatarsPage() {
 
   if (loading) {
     return (
-      <div className="hub-container">
-        <div className="loading-spinner"></div>
-        <p className="loading-text">Loading shared avatars...</p>
-      </div>
+      <PageShell>
+        <div className="hub-container">
+          <div className="loading-spinner"></div>
+          <p className="loading-text">Loading shared avatars...</p>
+        </div>
+      </PageShell>
     );
   }
 
   return (
-    <div className="hub-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minHeight: '100vh', justifyContent: 'center' }}>
+    <PageShell>
+      <div className="hub-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minHeight: '100vh', justifyContent: 'center' }}>
       <div style={{ maxWidth: 540, width: '100%', margin: '2rem auto', boxShadow: '0 4px 24px rgba(0,0,0,0.08)', borderRadius: 16, padding: '2.5rem 2rem', background: 'rgba(30,30,60,0.95)' }}>
         <h1 className="hub-title" style={{ textAlign: 'center' }}>Shared Avatars</h1>
         <p className="hub-description" style={{ textAlign: 'center', marginBottom: 32 }}>
@@ -130,6 +134,6 @@ export default function SharedAvatarsPage() {
           </a>
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 }

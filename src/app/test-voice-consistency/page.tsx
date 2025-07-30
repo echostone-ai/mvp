@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { getHomepageDemoSettings } from '@/lib/naturalVoiceSettings'
+import PageShell from '@/components/PageShell'
 
 export default function VoiceConsistencyTest() {
   const [testText] = useState('Hello! This is a test of voice consistency. The streaming voice and the fallback voice should now sound very similar.')
@@ -75,7 +76,8 @@ export default function VoiceConsistencyTest() {
   }
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
+    <PageShell>
+      <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
       <h1>Voice Consistency Test</h1>
       <p>This page helps test if the streaming voice and regular voice sound consistent.</p>
       
@@ -145,6 +147,6 @@ export default function VoiceConsistencyTest() {
           ← Back to Homepage
         </a>
       </div>
-    </div>
+    </PageShell>
   )
 } 

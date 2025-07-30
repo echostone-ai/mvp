@@ -2,8 +2,7 @@
 
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import AccountMenu from '@/components/AccountMenu'
-import Footer from '@/components/Footer'
+import PageShell from '@/components/PageShell'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -33,11 +32,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen w-screen relative">
-      <div className="fixed top-9 right-9 z-50">
-        <AccountMenu />
-      </div>
-      
+    <PageShell>
       <main className="auth-container">
         <a href="/" className="inline-block">
           <img
@@ -99,18 +94,8 @@ export default function LoginPage() {
               Create Account
             </a>
           </div>
-          
-          <div className="auth-required-features">
-            <h3>What you'll get access to:</h3>
-            <ul>
-              <li>🎤 Train your personal AI voice</li>
-              <li>📝 Build your personality profile</li>
-              <li>💬 Chat with your digital twin</li>
-              <li>🔒 Secure, private data storage</li>
-            </ul>
-          </div>
         </div>
       </main>
-    </div>
+    </PageShell>
   )
 }

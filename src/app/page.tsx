@@ -2,7 +2,7 @@
 
 import jonathanProfile from '@/data/jonathan_profile.json'
 import ProfileProvider from '@/components/ProfileContext'
-import SimpleNavigation from '@/components/SimpleNavigation'
+import PageShell from '@/components/PageShell'
 import Image from 'next/image'
 import { useState, useRef, useEffect } from 'react'
 import { globalAudioManager } from '@/lib/globalAudioManager'
@@ -354,81 +354,82 @@ export default function HomePage() {
 
   return (
     <ProfileProvider>
-      <SimpleNavigation />
-      <main className="main-container">
-        <audio ref={audioRef} />
-        <div className="mb-lg select-none">
-          <Image
-            src="/echostone_logo.png"
-            alt="EchoStone Logo"
-            width={140}
-            height={140}
-            className="logo-pulse"
-            draggable={false}
-          />
-        </div>
-        <h1 className="main-title">
-          Chat with {jonathanProfile?.full_name?.split(' ')[0] || 'Jonathan'}
-        </h1>
-        <p className="main-subtitle-enhanced">
-          Ask me anything about my experiences, thoughts, or get advice
-        </p>
+      <PageShell>
+        <main className="main-container">
+          <audio ref={audioRef} />
+          <div className="mb-lg select-none">
+            <Image
+              src="/echostone_logo.png"
+              alt="EchoStone Logo"
+              width={140}
+              height={140}
+              className="logo-pulse"
+              draggable={false}
+            />
+          </div>
+          <h1 className="main-title">
+            Chat with {jonathanProfile?.full_name?.split(' ')[0] || 'Jonathan'}
+          </h1>
+          <p className="main-subtitle-enhanced">
+            Ask me anything about my experiences, thoughts, or get advice
+          </p>
 
-        <form className="ask-form" onSubmit={handleSubmit}>
-          <input
-            type="text"
-            placeholder="Ask me anything…"
-            value={question}
-            onChange={e => setQuestion(e.target.value)}
-            spellCheck={false}
-            autoComplete="off"
-          />
-          <button type="submit" disabled={loading}>
-            {loading ? '…' : '→'}
+          <form className="ask-form" onSubmit={handleSubmit}>
+            <input
+              type="text"
+              placeholder="Ask me anything…"
+              value={question}
+              onChange={e => setQuestion(e.target.value)}
+              spellCheck={false}
+              autoComplete="off"
+            />
+            <button type="submit" disabled={loading}>
+              {loading ? '…' : '→'}
+            </button>
+          </form>
+
+          <button
+            className={listening ? 'mic-btn active' : 'mic-btn'}
+            onClick={handleMicClick}
+            type="button"
+            disabled={loading}
+          >
+            {listening ? '🎤 Listening… (tap to stop)' : loading ? '⏳ Processing...' : '🎤 Speak'}
           </button>
-        </form>
+          <div className="main-subtitle">
+            {hasSpeechRecognition
+              ? 'Speech recognition supported on this device.'
+              : 'On this device, your voice will be transcribed after recording.'}
+          </div>
 
-        <button
-          className={listening ? 'mic-btn active' : 'mic-btn'}
-          onClick={handleMicClick}
-          type="button"
-          disabled={loading}
-        >
-          {listening ? '🎤 Listening… (tap to stop)' : loading ? '⏳ Processing...' : '🎤 Speak'}
-        </button>
-        <div className="main-subtitle">
-          {hasSpeechRecognition
-            ? 'Speech recognition supported on this device.'
-            : 'On this device, your voice will be transcribed after recording.'}
-        </div>
-
-        {answer && (
-          <div className="answer">
-            <h2>{jonathanProfile?.full_name?.split(' ')[0] || 'Jonathan'} says:</h2>
-            <p>{answer}</p>
-            <div className="answer-actions">
-              {!playing && (
-                <button onClick={handleReplay} className="play-btn">
-                  🔊 Play Again
-                </button>
-              )}
-              {playing && (
-                <div className="status-info">
-                  🔊 Playing audio...
-                </div>
-              )}
+          {answer && (
+            <div className="answer">
+              <h2>{jonathanProfile?.full_name?.split(' ')[0] || 'Jonathan'} says:</h2>
+              <p>{answer}</p>
+              <div className="answer-actions">
+                {!playing && (
+                  <button onClick={handleReplay} className="play-btn">
+                    🔊 Play Again
+                  </button>
+                )}
+                {playing && (
+                  <div className="status-info">
+                    🔊 Playing audio...
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {playing && (
-          <div className="soundbars">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="soundbar" />
-            ))}
-          </div>
-        )}
-      </main>
+          {playing && (
+            <div className="soundbars">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="soundbar" />
+              ))}
+            </div>
+          )}
+        </main>
+      </PageShell>
     </ProfileProvider>
   )
 }
