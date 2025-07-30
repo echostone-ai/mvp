@@ -60,14 +60,14 @@ export class SeamlessAudioQueue {
     
     if (sentences.length === 0) return;
     
-    // Process all complete sentences
+    // If complete, process all sentences. If not complete, process all but the last incomplete sentence
     const sentencesToProcess = isComplete ? sentences : sentences.slice(0, -1);
     const remainingText = isComplete ? '' : sentences[sentences.length - 1];
     
     // Generate audio for each sentence
     for (const sentence of sentencesToProcess) {
       const trimmedSentence = sentence.trim();
-      if (trimmedSentence && trimmedSentence.length > 3) {
+      if (trimmedSentence && trimmedSentence.length > 8 && /[.!?]$/.test(trimmedSentence)) {
         try {
           console.log(`[SeamlessStreaming] Generating audio for: "${trimmedSentence.substring(0, 50)}..."`);
           const audioBuffer = await this.generateAudio(trimmedSentence);
@@ -83,13 +83,23 @@ export class SeamlessAudioQueue {
       }
     }
     
-    // Update buffer
+    // Update buffer with remaining text
     this.textBuffer = remainingText;
   }
 
   private splitIntoSentences(text: string): string[] {
-    // Simple sentence splitting
-    return text.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 0);
+    // More robust sentence splitting that handles edge cases
+    const sentences = text.split(/(?<=[.!?])\s+/);
+    
+    // Filter out very short fragments and ensure proper sentence endings
+    return sentences.filter(s => {
+      const trimmed = s.trim();
+      return trimmed.length > 0 && 
+             trimmed.length > 8 && // Increased minimum length for better quality
+             /[.!?]$/.test(trimmed) && // Must end with proper punctuation
+             !trimmed.includes('...') && // Avoid ellipsis fragments
+             trimmed.split(' ').length > 2; // Must have at least 3 words
+    });
   }
 
   private async generateAudio(text: string): Promise<ArrayBuffer> {
@@ -218,5 +228,15 @@ export function stopAllSeamlessAudio() {
 
 // Helper function to split text for streaming
 export function splitTextForSeamlessStreaming(text: string): string[] {
-  return text.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 0);
+  const sentences = text.split(/(?<=[.!?])\s+/);
+  
+  // Filter out very short fragments and ensure proper sentence endings
+  return sentences.filter(s => {
+    const trimmed = s.trim();
+    return trimmed.length > 0 && 
+           trimmed.length > 8 && // Increased minimum length for better quality
+           /[.!?]$/.test(trimmed) && // Must end with proper punctuation
+           !trimmed.includes('...') && // Avoid ellipsis fragments
+           trimmed.split(' ').length > 2; // Must have at least 3 words
+  });
 } 

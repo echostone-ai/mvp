@@ -16,9 +16,9 @@ export interface NaturalVoiceSettings {
  */
 export function getNaturalVoiceSettings(): NaturalVoiceSettings {
   return {
-    stability: 0.85,           // Higher stability for consistent accent and tone
-    similarity_boost: 0.92,    // Very high similarity to stay very close to original voice
-    style: 0.15,              // Lower style to reduce accent variation
+    stability: 0.75,           // Balanced stability for natural speech
+    similarity_boost: 0.75,    // Moderate similarity to prevent accent drift
+    style: 0.0,               // Zero style to eliminate accent variations
     use_speaker_boost: true    // Enhance clarity while preserving character
   };
 }
@@ -29,9 +29,9 @@ export function getNaturalVoiceSettings(): NaturalVoiceSettings {
  */
 export function getConversationalVoiceSettings(): NaturalVoiceSettings {
   return {
-    stability: 0.80,           // Higher stability for more consistent speech
-    similarity_boost: 0.88,    // High similarity to original voice
-    style: 0.20,              // Lower style for more consistency
+    stability: 0.70,           // Balanced stability for conversational flow
+    similarity_boost: 0.70,    // Moderate similarity to prevent accent drift
+    style: 0.0,               // Zero style to eliminate accent variations
     use_speaker_boost: true
   };
 }
@@ -79,9 +79,9 @@ export function getContextualVoiceSettings(context: 'homepage' | 'chat' | 'share
   switch (context) {
     case 'homepage':
       return {
-        stability: 0.85,           // High stability for consistent speech
-        similarity_boost: 0.95,    // Very high similarity to original voice
-        style: 0.15,              // Lower style for consistency
+        stability: 0.75,           // Balanced stability for consistent speech
+        similarity_boost: 0.75,    // Moderate similarity to prevent accent drift
+        style: 0.0,               // Zero style to eliminate accent variations
         use_speaker_boost: true    // Enhance clarity
       };
     case 'chat':

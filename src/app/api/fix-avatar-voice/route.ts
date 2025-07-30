@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
       }, { status: 401 });
     }
 
-    const { avatarId, voiceId } = await request.json();
+               const { avatarId, voiceId, settings: customSettings } = await request.json();
 
     if (!avatarId || !voiceId) {
       return NextResponse.json({ 
@@ -46,13 +46,13 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Optimized settings for accent consistency
-    const accentConsistentSettings = {
-      stability: 0.92,           // Very high stability for consistent accent
-      similarity_boost: 0.95,    // Maximum similarity to original voice
-      style: 0.08,              // Very low style to minimize accent variation
-      use_speaker_boost: true
-    };
+               // Use custom settings if provided, otherwise use optimized settings for accent consistency
+           const accentConsistentSettings = customSettings || {
+             stability: 0.75,           // Balanced stability for consistent accent
+             similarity_boost: 0.75,    // Moderate similarity to prevent accent drift
+             style: 0.0,               // Zero style to eliminate accent variation
+             use_speaker_boost: true
+           };
 
     // Update avatar profile with accent-consistent settings
     const updatedProfileData = {
@@ -86,13 +86,14 @@ export async function POST(request: NextRequest) {
       message: 'Accent consistency settings applied successfully',
       settings: accentConsistentSettings,
       testResult,
-      recommendations: [
-        'Voice settings optimized for accent consistency',
-        'Stability increased to 0.92 for more consistent tone',
-        'Style reduced to 0.08 to minimize accent variation',
-        'Test the voice with different content to verify improvements',
-        'If accent still varies, consider re-training with more consistent audio samples'
-      ]
+                   recommendations: [
+               'Voice settings optimized for accent consistency',
+               'Stability set to 0.75 for balanced consistency',
+               'Similarity boost set to 0.75 to prevent accent drift',
+               'Style set to 0.0 to eliminate accent variations',
+               'Test the voice with different content to verify improvements',
+               'If accent still varies, consider re-training with more consistent audio samples'
+             ]
     });
 
   } catch (error) {
@@ -130,7 +131,7 @@ async function testVoiceWithSettings(voiceId: string, settings: any) {
           },
           body: JSON.stringify({
             text,
-            model_id: 'eleven_turbo_v2_5',
+            model_id: 'eleven_multilingual_v2', // Use multilingual v2 for better accent consistency
             voice_settings: settings
           })
         });

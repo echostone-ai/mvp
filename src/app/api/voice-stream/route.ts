@@ -103,7 +103,7 @@ export async function POST(req: Request) {
       model_id: 'eleven_multilingual_v2', // Use multilingual v2 model for high similarity
       voice_settings: naturalSettings,
       seed: seed, // Consistent seed for similar voice characteristics
-      optimize_streaming_latency: 3, // Maximum optimization for streaming latency
+      optimize_streaming_latency: 2, // Balanced optimization for streaming latency and quality
       output_format: 'mp3_44100_128'
     };
     

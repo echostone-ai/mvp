@@ -23,9 +23,9 @@ export default function SeamlessStreamingTest() {
     // Initialize seamless streaming manager
     const voiceId = 'CO6pxVrMZfyL61ZIglyr';
     const settings = {
-      stability: 0.85,
-      similarity_boost: 0.95,
-      style: 0.15,
+      stability: 0.75,
+      similarity_boost: 0.75,
+      style: 0.0,
       use_speaker_boost: true
     };
     

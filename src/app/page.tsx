@@ -167,16 +167,16 @@ export default function HomePage() {
             setAnswer(fullResponse)
 
             // Use seamless streaming with immediate text processing
-            if (fullResponse.length % 20 === 0 || fullResponse.length < 30) {
+            if (fullResponse.length % 30 === 0 || fullResponse.length < 50) {
               // Use seamless text splitting for better responsiveness
               const segments = splitTextForSeamlessStreaming(fullResponse);
 
               // Process any new segments since last check
               if (segments.length > lastSentenceCount && streamingAudioRef.current) {
-                // Process all segments immediately
+                // Process only new segments to avoid duplicates
                 for (let i = lastSentenceCount; i < segments.length; i++) {
                   const segment = segments[i].trim();
-                  if (segment && segment.length > 3) {
+                  if (segment && segment.length > 8 && /[.!?]$/.test(segment) && !segment.includes('...') && segment.split(' ').length > 2) {
                     console.log('[Homepage] New segment detected:', segment.substring(0, 50) + '...');
                     await streamingAudioRef.current.addText(segment);
                   }
@@ -191,10 +191,11 @@ export default function HomePage() {
             const segments = splitTextForSeamlessStreaming(fullResponse);
             console.log(`[Homepage] Processing ${segments.length} segments from complete response`);
 
+            // Process any remaining segments that weren't processed during streaming
             for (let i = lastSentenceCount; i < segments.length; i++) {
               const segment = segments[i].trim();
-              if (segment && segment.length > 3) {
-                console.log('[Homepage] Sending segment to audio:', segment.substring(0, 50) + '...');
+              if (segment && segment.length > 8 && /[.!?]$/.test(segment) && !segment.includes('...') && segment.split(' ').length > 2) {
+                console.log('[Homepage] Final segment:', segment.substring(0, 50) + '...');
                 await streamingAudioRef.current.addText(segment);
               }
             }

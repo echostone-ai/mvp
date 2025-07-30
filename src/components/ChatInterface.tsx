@@ -367,15 +367,15 @@ export default function ChatInterface({
         setStreamingText(fullResponse);
 
         // Check for new segments more frequently for better responsiveness
-        if (fullResponse.length % 20 === 0 && fullResponse.length > 15) {
+        if (fullResponse.length % 30 === 0 && fullResponse.length > 25) {
           const segments = splitTextForSeamlessStreaming(fullResponse);
           
           // Process any new segments since last check
           if (segments.length > lastPhraseCount && streamingAudioRef.current) {
-            // Process all segments immediately
+            // Process only new segments to avoid duplicates
             for (let i = lastPhraseCount; i < segments.length; i++) {
               const segment = segments[i].trim();
-              if (segment && segment.length > 3) {
+              if (segment && segment.length > 8 && /[.!?]$/.test(segment) && !segment.includes('...') && segment.split(' ').length > 2) {
                 console.log('[ChatInterface] New segment detected:', segment.substring(0, 50) + '...');
                 
                 // Use addText for immediate processing
@@ -396,7 +396,7 @@ export default function ChatInterface({
         // Process any segments we might have missed
         for (let i = lastPhraseCount; i < segments.length; i++) {
           const segment = segments[i].trim();
-          if (segment && segment.length > 3) {
+          if (segment && segment.length > 8 && /[.!?]$/.test(segment) && !segment.includes('...') && segment.split(' ').length > 2) {
             console.log('[ChatInterface] Final segment:', segment.substring(0, 50) + '...');
             await streamingAudioRef.current.addText(segment);
           }
