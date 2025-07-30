@@ -29,9 +29,9 @@ export function getNaturalVoiceSettings(): NaturalVoiceSettings {
  */
 export function getConversationalVoiceSettings(): NaturalVoiceSettings {
   return {
-    stability: 0.75,           // Moderate stability for consistent but natural speech
-    similarity_boost: 0.85,    // High similarity to original voice
-    style: 0.25,              // Natural style variation
+    stability: 0.80,           // Higher stability for more consistent speech
+    similarity_boost: 0.88,    // High similarity to original voice
+    style: 0.20,              // Lower style for more consistency
     use_speaker_boost: true
   };
 }

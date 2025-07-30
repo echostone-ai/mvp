@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { useState, useRef, useEffect } from 'react'
 import { globalAudioManager } from '@/lib/globalAudioManager'
 import { stopAllAudio, createStreamingAudioManager } from '@/lib/streamingUtils'
+import { createImprovedStreamingAudioManager, stopAllImprovedAudio, splitTextForImprovedStreaming } from '@/lib/improvedStreamingUtils'
 import { splitTextForConsistentVoice } from '@/lib/voiceConsistency'
 import { getUnifiedVoiceSettings } from '@/lib/unifiedVoiceConfig'
 import { getContextualVoiceSettings } from '@/lib/naturalVoiceSettings'
@@ -120,6 +121,8 @@ export default function HomePage() {
     if (streamingAudioRef.current) {
       streamingAudioRef.current.stop();
     }
+    // Also stop any improved audio managers
+    await stopAllImprovedAudio();
     setPlaying(false);
 
     setLoading(true)
@@ -140,10 +143,10 @@ export default function HomePage() {
       })
 
       if (res.ok && res.body) {
-        // Initialize streaming audio manager with natural voice settings for homepage
+        // Initialize improved streaming audio manager with natural voice settings for homepage
         const voiceId = 'CO6pxVrMZfyL61ZIglyr'; // Hardcode the specific voice ID for consistency
         const naturalSettings = getContextualVoiceSettings('homepage');
-        streamingAudioRef.current = createStreamingAudioManager(
+        streamingAudioRef.current = createImprovedStreamingAudioManager(
           voiceId, 
           naturalSettings,
           undefined,
@@ -164,43 +167,41 @@ export default function HomePage() {
             fullResponse += chunk
             setAnswer(fullResponse)
 
-            // Check for new complete segments more frequently to catch first sentence
-            if (fullResponse.length % 50 === 0 || fullResponse.length < 100) {
-              const segments = splitTextForConsistentVoice(fullResponse);
+            // Use improved streaming with more responsive text processing
+            if (fullResponse.length % 30 === 0 || fullResponse.length < 50) {
+              // Use improved text splitting that handles incomplete sentences
+              const segments = splitTextForImprovedStreaming(fullResponse);
 
               // Process any new segments since last check
               if (segments.length > lastSentenceCount && streamingAudioRef.current) {
-                // Process all complete segments (excluding the last potentially incomplete one)
-                const endIndex = segments.length > 1 ? segments.length - 1 : segments.length;
-                for (let i = lastSentenceCount; i < endIndex; i++) {
+                // Process all segments including potentially incomplete ones
+                for (let i = lastSentenceCount; i < segments.length; i++) {
                   const segment = segments[i].trim();
-                  // More conservative filtering to avoid cutting off words
-                  if (segment && 
-                      !segment.match(/\b(Mr|Mrs|Ms|Dr|Prof|Sr|Jr)\.$/) && 
-                      segment.length > 15 && // Increased minimum length
-                      /[.!?]$/.test(segment)) { // Only complete sentences
+                  // Less restrictive filtering to catch more content
+                  if (segment && segment.length > 3) { // Much lower minimum length
                     console.log('[Homepage] New segment detected:', segment.substring(0, 50) + '...');
-                    streamingAudioRef.current.addSentence(segment);
+                    streamingAudioRef.current.addText(segment, false); // Add as incomplete text
                   }
                 }
-                lastSentenceCount = endIndex;
+                lastSentenceCount = segments.length;
               }
             }
           }
 
           // Process all segments from the complete response
           if (fullResponse.trim() && streamingAudioRef.current) {
-            const segments = splitTextForConsistentVoice(fullResponse);
+            // Flush any remaining text in the buffer
+            await streamingAudioRef.current.flush();
+            
+            const segments = splitTextForImprovedStreaming(fullResponse);
             console.log(`[Homepage] Processing ${segments.length} segments from complete response`);
 
             for (let i = lastSentenceCount; i < segments.length; i++) {
               const segment = segments[i].trim();
-              // More conservative filtering for final processing
-              if (segment && 
-                  segment.length > 12 && // Increased minimum length
-                  /[.!?]$/.test(segment)) { // Only complete sentences
+              // Less restrictive filtering for final processing
+              if (segment && segment.length > 3) { // Much lower minimum length
                 console.log('[Homepage] Sending segment to audio:', segment.substring(0, 50) + '...');
-                streamingAudioRef.current.addSentence(segment);
+                streamingAudioRef.current.addText(segment, true); // Add as complete text
               }
             }
           }
