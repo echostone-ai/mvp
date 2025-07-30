@@ -7,7 +7,7 @@ import Image from 'next/image'
 import { useState, useRef, useEffect } from 'react'
 import { globalAudioManager } from '@/lib/globalAudioManager'
 import { stopAllAudio } from '@/lib/streamingUtils'
-import { createImprovedStreamingAudioManager, stopAllImprovedAudio, splitTextForImprovedStreaming } from '@/lib/improvedStreamingUtils'
+import { createSeamlessStreamingManager, stopAllSeamlessAudio, splitTextForSeamlessStreaming } from '@/lib/seamlessStreamingUtils'
 import { splitTextForConsistentVoice } from '@/lib/voiceConsistency'
 import { getUnifiedVoiceSettings } from '@/lib/unifiedVoiceConfig'
 import { getContextualVoiceSettings } from '@/lib/naturalVoiceSettings'
@@ -121,8 +121,8 @@ export default function HomePage() {
     if (streamingAudioRef.current) {
       streamingAudioRef.current.stop();
     }
-    // Also stop any improved audio managers
-    await stopAllImprovedAudio();
+    // Also stop any seamless audio managers
+    await stopAllSeamlessAudio();
     setPlaying(false);
 
     setLoading(true)
@@ -143,13 +143,12 @@ export default function HomePage() {
       })
 
       if (res.ok && res.body) {
-        // Initialize improved streaming audio manager with natural voice settings for homepage
+        // Initialize seamless streaming audio manager with natural voice settings for homepage
         const voiceId = 'CO6pxVrMZfyL61ZIglyr'; // Hardcode the specific voice ID for consistency
         const naturalSettings = getContextualVoiceSettings('homepage');
-        streamingAudioRef.current = createImprovedStreamingAudioManager(
+        streamingAudioRef.current = createSeamlessStreamingManager(
           voiceId, 
           naturalSettings,
-          undefined,
           { conversationId: 'homepage-demo' } // Consistent conversation ID
         );
 
@@ -167,20 +166,19 @@ export default function HomePage() {
             fullResponse += chunk
             setAnswer(fullResponse)
 
-            // Use improved streaming with more responsive text processing
-            if (fullResponse.length % 30 === 0 || fullResponse.length < 50) {
-              // Use improved text splitting that handles incomplete sentences
-              const segments = splitTextForImprovedStreaming(fullResponse);
+            // Use seamless streaming with immediate text processing
+            if (fullResponse.length % 20 === 0 || fullResponse.length < 30) {
+              // Use seamless text splitting for better responsiveness
+              const segments = splitTextForSeamlessStreaming(fullResponse);
 
               // Process any new segments since last check
               if (segments.length > lastSentenceCount && streamingAudioRef.current) {
-                // Process all segments including potentially incomplete ones
+                // Process all segments immediately
                 for (let i = lastSentenceCount; i < segments.length; i++) {
                   const segment = segments[i].trim();
-                  // Less restrictive filtering to catch more content
-                  if (segment && segment.length > 3) { // Much lower minimum length
+                  if (segment && segment.length > 3) {
                     console.log('[Homepage] New segment detected:', segment.substring(0, 50) + '...');
-                    streamingAudioRef.current.addText(segment, false); // Add as incomplete text
+                    await streamingAudioRef.current.addText(segment);
                   }
                 }
                 lastSentenceCount = segments.length;
@@ -190,20 +188,19 @@ export default function HomePage() {
 
           // Process all segments from the complete response
           if (fullResponse.trim() && streamingAudioRef.current) {
-            // Flush any remaining text in the buffer
-            await streamingAudioRef.current.flush();
-            
-            const segments = splitTextForImprovedStreaming(fullResponse);
+            const segments = splitTextForSeamlessStreaming(fullResponse);
             console.log(`[Homepage] Processing ${segments.length} segments from complete response`);
 
             for (let i = lastSentenceCount; i < segments.length; i++) {
               const segment = segments[i].trim();
-              // Less restrictive filtering for final processing
-              if (segment && segment.length > 3) { // Much lower minimum length
+              if (segment && segment.length > 3) {
                 console.log('[Homepage] Sending segment to audio:', segment.substring(0, 50) + '...');
-                streamingAudioRef.current.addText(segment, true); // Add as complete text
+                await streamingAudioRef.current.addText(segment);
               }
             }
+            
+            // Complete the streaming
+            await streamingAudioRef.current.complete();
           }
 
         } finally {

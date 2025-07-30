@@ -1,4 +1,5 @@
 import StreamingTest from '@/components/StreamingTest';
+import SeamlessStreamingTest from '@/components/SeamlessStreamingTest';
 
 export default function TestStreamingPage() {
   return (
@@ -18,7 +19,12 @@ export default function TestStreamingPage() {
         <li>✅ More responsive streaming</li>
       </ul>
       
-      <StreamingTest />
+      <SeamlessStreamingTest />
+      
+      <div style={{ marginTop: '2rem', padding: '1rem', background: 'rgba(156, 163, 175, 0.1)', borderRadius: '8px' }}>
+        <h3 style={{ marginBottom: '1rem', color: '#374151' }}>Legacy Streaming Test (for comparison)</h3>
+        <StreamingTest />
+      </div>
       
       <div style={{
         background: 'rgba(34, 197, 94, 0.1)',

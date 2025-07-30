@@ -11,11 +11,11 @@ import {
   stopAllAudio
 } from '@/lib/streamingUtils';
 import { 
-  createImprovedStreamingAudioManager, 
-  stopAllImprovedAudio,
-  splitTextForImprovedStreaming,
-  ImprovedStreamingAudioManager
-} from '@/lib/improvedStreamingUtils';
+  createSeamlessStreamingManager, 
+  stopAllSeamlessAudio,
+  splitTextForSeamlessStreaming,
+  SeamlessStreamingManager
+} from '@/lib/seamlessStreamingUtils';
 import { splitTextForConsistentVoice } from '@/lib/voiceConsistency';
 import { getContextualVoiceSettings } from '@/lib/naturalVoiceSettings';
 import { globalAudioManager } from '@/lib/globalAudioManager';
@@ -79,7 +79,7 @@ export default function ChatInterface({
   const [streamingText, setStreamingText] = useState('');
   const [audioInterrupted, setAudioInterrupted] = useState(false);
   const userMsgRef = useRef<HTMLDivElement>(null);
-  const streamingAudioRef = useRef<ImprovedStreamingAudioManager | null>(null);
+  const streamingAudioRef = useRef<SeamlessStreamingManager | null>(null);
 
   const recognitionRef = useRef<any>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
@@ -101,7 +101,7 @@ export default function ChatInterface({
         streamingAudioRef.current.stop();
       }
       // Also stop any improved audio managers
-      stopAllImprovedAudio();
+      stopAllSeamlessAudio();
       if (audioUrlRef.current) {
         URL.revokeObjectURL(audioUrlRef.current);
       }
@@ -254,7 +254,7 @@ export default function ChatInterface({
     
     // Wait for all audio to stop before playing new audio
     await globalAudioManager.stopAll();
-    await stopAllImprovedAudio();
+    await stopAllSeamlessAudio();
     
     if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current)
     const url = URL.createObjectURL(blob)
@@ -306,7 +306,7 @@ export default function ChatInterface({
     
     // Then stop all other audio and wait for it to complete
     await globalAudioManager.stopAll();
-    await stopAllImprovedAudio();
+    await stopAllSeamlessAudio();
     
     if (wasPlaying) {
       setAudioInterrupted(true);
@@ -336,31 +336,18 @@ export default function ChatInterface({
     }
 
     try {
-              // Initialize improved streaming audio manager with natural voice settings for chat
+              // Initialize seamless streaming audio manager with natural voice settings for chat
         if (voiceId) {
           const naturalSettings = voiceSettings || getContextualVoiceSettings('chat');
-          streamingAudioRef.current = createImprovedStreamingAudioManager(
+          streamingAudioRef.current = createSeamlessStreamingManager(
             voiceId || '',
             naturalSettings,
-            accent || undefined,
             {
               conversationId: conversationId || `${userId}-${avatarId}` // Use conversation ID for consistent voice
             }
           );
         
-        // Add immediate interjection to fill dead air (300-600ms delay)
-        setTimeout(() => {
-          if (streamingAudioRef.current && !streamingAudioRef.current.isPlaying()) {
-            streamingAudioRef.current.interject();
-          }
-        }, 400);
-
-        // Add thinking sound if response takes too long (800ms+)
-        setTimeout(() => {
-          if (streamingAudioRef.current && !hasStartedSpeaking) {
-            streamingAudioRef.current.addThinkingSound();
-          }
-        }, 800);
+        // No interjections needed with seamless streaming
       }
 
       let fullResponse = '';
@@ -380,19 +367,19 @@ export default function ChatInterface({
         setStreamingText(fullResponse);
 
         // Check for new segments more frequently for better responsiveness
-        if (fullResponse.length % 30 === 0 && fullResponse.length > 20) {
-          const segments = splitTextForImprovedStreaming(fullResponse);
+        if (fullResponse.length % 20 === 0 && fullResponse.length > 15) {
+          const segments = splitTextForSeamlessStreaming(fullResponse);
           
           // Process any new segments since last check
           if (segments.length > lastPhraseCount && streamingAudioRef.current) {
-            // Process all segments including potentially incomplete ones
+            // Process all segments immediately
             for (let i = lastPhraseCount; i < segments.length; i++) {
               const segment = segments[i].trim();
-              if (segment && segment.length > 3) { // Much lower minimum length
+              if (segment && segment.length > 3) {
                 console.log('[ChatInterface] New segment detected:', segment.substring(0, 50) + '...');
                 
-                // Use addText for better text handling
-                streamingAudioRef.current.addText(segment, false);
+                // Use addText for immediate processing
+                await streamingAudioRef.current.addText(segment);
                 hasStartedSpeaking = true;
               }
             }
@@ -403,20 +390,20 @@ export default function ChatInterface({
 
       // Process any remaining segments from the complete response
       if (fullResponse.trim() && streamingAudioRef.current) {
-        // Flush any remaining text in the buffer
-        await streamingAudioRef.current.flush();
-        
-        const segments = splitTextForImprovedStreaming(fullResponse);
+        const segments = splitTextForSeamlessStreaming(fullResponse);
         console.log(`[ChatInterface] Processing ${segments.length} segments from complete response`);
         
         // Process any segments we might have missed
         for (let i = lastPhraseCount; i < segments.length; i++) {
           const segment = segments[i].trim();
-          if (segment && segment.length > 3) { // Much lower minimum length
+          if (segment && segment.length > 3) {
             console.log('[ChatInterface] Final segment:', segment.substring(0, 50) + '...');
-            streamingAudioRef.current.addText(segment, true); // Add as complete text
+            await streamingAudioRef.current.addText(segment);
           }
         }
+        
+        // Complete the streaming
+        await streamingAudioRef.current.complete();
       }
 
       setAnswer(fullResponse);
@@ -778,7 +765,7 @@ export default function ChatInterface({
     
     // Wait for all audio to stop
     await globalAudioManager.stopAll();
-    await stopAllImprovedAudio();
+    await stopAllSeamlessAudio();
     
     setPlaying(true)
     try {
