@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server'
 import { createUnifiedVoiceRequest, getUnifiedVoiceSettings } from '@/lib/unifiedVoiceConfig'
 import { normalizeTextForVoice } from '@/lib/voiceConsistency'
+import { getNaturalVoiceSettings } from '@/lib/naturalVoiceSettings'
 
 export const runtime = 'edge'
 
@@ -80,19 +81,17 @@ export async function POST(req: Request) {
     
     console.log('ElevenLabs API key available:', !!apiKey)
     
-    // Clean the text for better voice quality using unified normalization
-    const cleanedText = normalizeTextForVoice(text);
+    // Use original text with minimal processing for natural voice
+    const cleanedText = text.trim();
     
-    // Use unified voice settings for consistent voice generation
-    // Determine context based on voice ID - homepage uses specific voice ID
-    const context = finalVoiceId === 'CO6pxVrMZfyL61ZIglyr' ? 'homepage' : 'profile';
-    const requestBody = createUnifiedVoiceRequest(
-      cleanedText,
-      finalVoiceId,
-      context,
-      settings,
-      undefined // No conversation ID for single requests
-    );
+    // Use natural voice settings for authentic voice reproduction
+    const naturalSettings = settings || getNaturalVoiceSettings();
+    
+    const requestBody: any = {
+      text: cleanedText,
+      model_id: 'eleven_multilingual_v2', // Use most accurate model for voice cloning
+      voice_settings: naturalSettings,
+    };
     
     // Call ElevenLabs API
     console.log('Calling ElevenLabs API with unified settings...');

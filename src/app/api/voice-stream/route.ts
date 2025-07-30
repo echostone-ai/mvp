@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server'
 import { createUnifiedVoiceRequest, getUnifiedVoiceSettings } from '@/lib/unifiedVoiceConfig'
 import { normalizeTextForVoice } from '@/lib/voiceConsistency'
+import { getNaturalVoiceSettings } from '@/lib/naturalVoiceSettings'
 
 export const runtime = 'edge'
 
@@ -93,15 +94,18 @@ export async function POST(req: Request) {
     // TEMPORARILY DISABLE TEXT NORMALIZATION - use original text
     // const cleanedText = normalizeTextForVoice(sentence);
     
-    // Use unified voice settings - determine context based on voice ID
-    const context = finalVoiceId === 'CO6pxVrMZfyL61ZIglyr' ? 'homepage' : 'streaming';
-    const requestBody = createUnifiedVoiceRequest(
-      sentence, // Use original text without any processing
-      finalVoiceId,
-      context,
-      settings,
-      conversationId || 'default'
-    );
+    // Use natural voice settings for more authentic voice reproduction
+    const naturalSettings = settings || getNaturalVoiceSettings();
+    const seed = generateConsistentSeed(conversationId || 'default', finalVoiceId);
+    
+    const requestBody: any = {
+      text: sentence, // Use original text without processing to preserve natural speech
+      model_id: 'eleven_multilingual_v2', // Use most accurate model for voice cloning
+      voice_settings: naturalSettings,
+      seed: seed, // Consistent seed for similar voice characteristics
+      optimize_streaming_latency: 0, // Prioritize quality over speed for natural voice
+      output_format: 'mp3_44100_128'
+    };
     
     // Add previous context for better continuity (if supported)
     if (previousContext && previousContext.length > 0) {

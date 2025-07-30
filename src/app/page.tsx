@@ -9,6 +9,7 @@ import { globalAudioManager } from '@/lib/globalAudioManager'
 import { stopAllAudio, createStreamingAudioManager } from '@/lib/streamingUtils'
 import { splitTextForConsistentVoice } from '@/lib/voiceConsistency'
 import { getUnifiedVoiceSettings } from '@/lib/unifiedVoiceConfig'
+import { getContextualVoiceSettings } from '@/lib/naturalVoiceSettings'
 
 export default function HomePage() {
   const [question, setQuestion] = useState('')
@@ -139,12 +140,12 @@ export default function HomePage() {
       })
 
       if (res.ok && res.body) {
-        // Initialize streaming audio manager with unified voice settings for homepage
+        // Initialize streaming audio manager with natural voice settings for homepage
         const voiceId = 'CO6pxVrMZfyL61ZIglyr'; // Hardcode the specific voice ID for consistency
-        const homepageSettings = getUnifiedVoiceSettings('homepage');
+        const naturalSettings = getContextualVoiceSettings('homepage');
         streamingAudioRef.current = createStreamingAudioManager(
           voiceId, 
-          homepageSettings,
+          naturalSettings,
           undefined,
           { conversationId: 'homepage-demo' } // Consistent conversation ID
         );
@@ -222,12 +223,7 @@ export default function HomePage() {
               body: JSON.stringify({
                 text: answer,
                 voiceId: 'CO6pxVrMZfyL61ZIglyr', // Hardcode the specific voice ID for consistency
-                settings: {
-                  stability: 0.85,           // High stability but not maximum
-                  similarity_boost: 0.80,    // Balanced similarity
-                  style: 0.15,              // Moderate style variation for natural speech
-                  use_speaker_boost: true
-                }
+                settings: getContextualVoiceSettings('homepage')
               })
             })
             const blob = await vr.blob()
@@ -347,7 +343,7 @@ export default function HomePage() {
         body: JSON.stringify({
           text: answer,
           voiceId: 'CO6pxVrMZfyL61ZIglyr', // Hardcode the specific voice ID for consistency
-                          settings: getUnifiedVoiceSettings('homepage')
+          settings: getContextualVoiceSettings('homepage')
         })
       })
       const blob = await vr.blob()

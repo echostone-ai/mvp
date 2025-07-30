@@ -13,14 +13,26 @@ export interface VoiceConsistencySettings {
 }
 
 /**
- * Get maximum consistency voice settings
- * These settings prioritize voice consistency over expressiveness
+ * Get natural voice settings that preserve original voice character
+ * These settings balance consistency with natural expressiveness
  */
 export function getMaxConsistencySettings(): VoiceConsistencySettings {
   return {
-    stability: 0.85,           // High stability but not maximum to preserve natural speech
-    similarity_boost: 0.80,    // Balanced similarity to maintain voice character without artifacts
-    style: 0.15,              // Moderate style variation for more natural speech
+    stability: 0.75,           // Moderate stability to preserve natural speech patterns
+    similarity_boost: 0.85,    // Higher similarity to stay close to original voice
+    style: 0.25,              // Allow more natural style variation
+    use_speaker_boost: true
+  };
+}
+
+/**
+ * Get settings optimized for natural speech that closely matches ElevenLabs voice
+ */
+export function getNaturalVoiceSettings(): VoiceConsistencySettings {
+  return {
+    stability: 0.70,           // Lower stability for more natural variation
+    similarity_boost: 0.90,    // High similarity to match original voice closely
+    style: 0.30,              // More style for natural expressiveness
     use_speaker_boost: true
   };
 }

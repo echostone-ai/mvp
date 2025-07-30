@@ -5,6 +5,7 @@ import {
   normalizeTextForVoice 
 } from './voiceConsistency';
 import { getUnifiedVoiceSettings } from './unifiedVoiceConfig';
+import { getNaturalVoiceSettings } from './naturalVoiceSettings';
 
 export interface StreamingAudioManager {
   addSentence: (sentence: string) => Promise<void>;
@@ -156,17 +157,17 @@ export class AudioQueue {
     // Add batching delay to reduce voice variation
     await createVoiceBatchingDelay();
     
-    // Don't normalize text here - let the API handle it to avoid double processing
+    // Use original text with natural voice settings for authentic reproduction
     const response = await fetch('/api/voice-stream', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-          sentence: text, // Send original text, let API normalize
-          voiceId: this.voiceId,
-          settings: getUnifiedVoiceSettings('streaming'), // Use unified streaming settings
-          accent: this.accent,
-          conversationId: this.conversationId || 'default',
-          previousContext: this.previousContext
+      body: JSON.stringify({
+        sentence: text, // Send original text for natural speech
+        voiceId: this.voiceId,
+        settings: this.voiceSettings || getNaturalVoiceSettings(), // Use natural settings for authentic voice
+        accent: this.accent,
+        conversationId: this.conversationId || 'default',
+        previousContext: this.previousContext
         }),
     });
 

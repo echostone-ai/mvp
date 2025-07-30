@@ -13,6 +13,7 @@ import {
   stopAllAudio
 } from '@/lib/streamingUtils';
 import { splitTextForConsistentVoice } from '@/lib/voiceConsistency';
+import { getContextualVoiceSettings } from '@/lib/naturalVoiceSettings';
 import { globalAudioManager } from '@/lib/globalAudioManager';
 import { getUnifiedVoiceSettings } from '@/lib/unifiedVoiceConfig';
 
@@ -327,12 +328,12 @@ export default function ChatInterface({
     }
 
     try {
-              // Initialize streaming audio manager with unified voice settings for profile
+              // Initialize streaming audio manager with natural voice settings for chat
         if (voiceId) {
-          const profileSettings = voiceSettings || getUnifiedVoiceSettings('profile');
+          const naturalSettings = voiceSettings || getContextualVoiceSettings('chat');
           streamingAudioRef.current = createStreamingAudioManager(
             voiceId || '',
-            profileSettings,
+            naturalSettings,
             accent || undefined,
             {
               conversationId: conversationId || `${userId}-${avatarId}` // Use conversation ID for consistent voice
