@@ -11,16 +11,11 @@ interface FloatingImage {
   initialY: number;
   currentX: number;
   currentY: number;
-  targetX: number;
-  targetY: number;
   width: number;
   height: number;
   rotation: number;
   scale: number;
   zIndex: number;
-  velocity: { x: number; y: number };
-  magneticStrength: number;
-  restoreForce: number;
 }
 
 export default function Portfolio() {
@@ -48,10 +43,12 @@ export default function Portfolio() {
 
   // Initialize images with elegant positioning
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
     const initImages = imageData.map((img, index) => {
-      const scale = 0.5 + Math.random() * 0.6; // Random scale 0.5-1.1
+      const scale = 0.4 + Math.random() * 0.5; // Random scale 0.4-0.9
       const x = Math.random() * (window.innerWidth - img.width * scale);
-      const y = Math.random() * (window.innerHeight * 5 - img.height * scale);
+      const y = Math.random() * (window.innerHeight * 3 - img.height * scale);
       
       return {
         id: index,
@@ -61,16 +58,11 @@ export default function Portfolio() {
         initialY: y,
         currentX: x,
         currentY: y,
-        targetX: x,
-        targetY: y,
         width: img.width,
         height: img.height,
-        rotation: (Math.random() - 0.5) * 25, // -12.5 to 12.5 degrees
+        rotation: (Math.random() - 0.5) * 30, // -15 to 15 degrees
         scale,
-        zIndex: Math.floor(Math.random() * 20),
-        velocity: { x: 0, y: 0 },
-        magneticStrength: 0.3 + Math.random() * 0.4, // 0.3-0.7 attraction strength
-        restoreForce: 0.02 + Math.random() * 0.03, // 0.02-0.05 return to origin force
+        zIndex: Math.floor(Math.random() * 10),
       };
     });
     
@@ -97,84 +89,57 @@ export default function Portfolio() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Smooth animation loop with magnetic attraction
+  // Smooth animation loop with stable magnetic attraction
   useEffect(() => {
+    if (images.length === 0) return;
+    
     const animate = () => {
       setImages(prevImages =>
         prevImages.map(img => {
-          // Calculate image center position
+          // Calculate image center
           const imgCenterX = img.currentX + (img.width * img.scale) / 2;
           const imgCenterY = img.currentY + (img.height * img.scale) / 2;
           
-          // Adjust mouse position for scroll
+          // Mouse position adjusted for scroll
           const adjustedMouseY = mousePosition.y + scrollY;
           
-          // Distance from mouse to image center
-          const mouseDistance = Math.sqrt(
-            Math.pow(mousePosition.x - imgCenterX, 2) + 
-            Math.pow(adjustedMouseY - imgCenterY, 2)
-          );
-
-          // Magnetic attraction force - images are drawn TO the mouse
-          let attractionX = 0;
-          let attractionY = 0;
+          // Distance from mouse to image
+          const dx = mousePosition.x - imgCenterX;
+          const dy = adjustedMouseY - imgCenterY;
+          const distance = Math.sqrt(dx * dx + dy * dy);
           
-          // Attraction zone - much larger for subtle effect
-          const attractionRadius = 400;
+          // Calculate target position
+          let targetX = img.initialX;
+          let targetY = img.initialY;
           
-          if (mouseDistance < attractionRadius && mouseDistance > 0) {
-            // Calculate attraction strength (stronger when closer)
-            const influence = Math.pow((attractionRadius - mouseDistance) / attractionRadius, 1.5);
+          // Magnetic attraction zone
+          const attractionRadius = 300;
+          
+          if (distance < attractionRadius && distance > 0) {
+            // Attraction strength (0 to 1)
+            const strength = (attractionRadius - distance) / attractionRadius;
+            const smoothStrength = strength * strength; // Smooth curve
             
-            // Direction vector from image to mouse (attraction)
-            const directionX = (mousePosition.x - imgCenterX) / mouseDistance;
-            const directionY = (adjustedMouseY - imgCenterY) / mouseDistance;
+            // Maximum displacement
+            const maxDisplacement = 80;
             
-            // Apply magnetic force
-            const magneticForce = influence * img.magneticStrength;
-            attractionX = directionX * magneticForce;
-            attractionY = directionY * magneticForce;
+            // Calculate displacement towards mouse
+            const displacementX = (dx / distance) * smoothStrength * maxDisplacement;
+            const displacementY = (dy / distance) * smoothStrength * maxDisplacement;
+            
+            targetX = img.initialX + displacementX;
+            targetY = img.initialY + displacementY;
           }
-
-          // Restore force - gently pulls images back to their original position
-          const restoreX = (img.initialX - img.currentX) * img.restoreForce;
-          const restoreY = (img.initialY - img.currentY) * img.restoreForce;
-
-          // Combine forces
-          const totalForceX = attractionX + restoreX;
-          const totalForceY = attractionY + restoreY;
-
-          // Update velocity with forces and damping
-          const damping = 0.92;
-          const newVelocity = {
-            x: (img.velocity.x + totalForceX) * damping,
-            y: (img.velocity.y + totalForceY) * damping
-          };
-
-          // Update position
-          const newX = img.currentX + newVelocity.x;
-          const newY = img.currentY + newVelocity.y;
-
-          // Boundary constraints
-          const maxX = window.innerWidth - img.width * img.scale;
-          const maxY = window.innerHeight * 5 - img.height * img.scale;
           
-          const finalX = Math.max(0, Math.min(maxX, newX));
-          const finalY = Math.max(0, Math.min(maxY, newY));
-
-          // Soft boundary bounce
-          if (newX <= 0 || newX >= maxX) {
-            newVelocity.x *= -0.2;
-          }
-          if (newY <= 0 || newY >= maxY) {
-            newVelocity.y *= -0.2;
-          }
-
+          // Smooth interpolation to target (lerp)
+          const lerpFactor = 0.08; // Smooth movement speed
+          const newX = img.currentX + (targetX - img.currentX) * lerpFactor;
+          const newY = img.currentY + (targetY - img.currentY) * lerpFactor;
+          
           return {
             ...img,
-            currentX: finalX,
-            currentY: finalY,
-            velocity: newVelocity,
+            currentX: newX,
+            currentY: newY,
           };
         })
       );
@@ -189,37 +154,19 @@ export default function Portfolio() {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [mousePosition, scrollY]);
+  }, [mousePosition, scrollY, images.length]);
 
   return (
     <div ref={containerRef} className="chuck-portfolio">
       {/* Fixed positioned floating images */}
       <div className="chuck-images-container">
         {images.map((img) => {
-          // Calculate distance to mouse for dynamic effects
-          const imgCenterX = img.currentX + (img.width * img.scale) / 2;
-          const imgCenterY = img.currentY + (img.height * img.scale) / 2;
-          const adjustedMouseY = mousePosition.y + scrollY;
-          const mouseDistance = Math.sqrt(
-            Math.pow(mousePosition.x - imgCenterX, 2) + 
-            Math.pow(adjustedMouseY - imgCenterY, 2)
-          );
+          // Scroll-based blur effect
+          const scrollProgress = Math.max(0, scrollY - 50);
+          const blur = Math.min(scrollProgress / 500 * 10, 10);
           
-          // Progressive blur based on scroll - more elegant curve
-          const scrollProgress = Math.max(0, scrollY - 100);
-          const blur = Math.min(scrollProgress / 600 * 12, 12);
-          
-          // Dynamic opacity based on scroll and mouse proximity
-          const scrollOpacity = Math.max(0.2, 1 - (scrollProgress / 1200));
-          const mouseProximity = mouseDistance < 300 ? 1 : 0.85;
-          const finalOpacity = scrollOpacity * mouseProximity;
-          
-          // Subtle scale effect when near mouse
-          const proximityScale = mouseDistance < 200 ? 1 + (200 - mouseDistance) / 200 * 0.1 : 1;
-          
-          // Dynamic rotation based on velocity
-          const velocityRotation = Math.atan2(img.velocity.y, img.velocity.x) * (180 / Math.PI) * 0.1;
-          const totalRotation = img.rotation + velocityRotation;
+          // Opacity based on scroll
+          const opacity = Math.max(0.3, 1 - (scrollProgress / 1000));
           
           return (
             <div
@@ -228,15 +175,15 @@ export default function Portfolio() {
               style={{
                 position: 'fixed',
                 left: `${img.currentX}px`,
-                top: `${img.currentY - scrollY * 0.2}px`, // Subtle parallax
+                top: `${img.currentY - scrollY * 0.1}px`, // Subtle parallax
                 width: `${img.width}px`,
                 height: `${img.height}px`,
-                transform: `rotate(${totalRotation}deg) scale(${img.scale * proximityScale})`,
-                filter: `blur(${blur}px) brightness(${0.85 + finalOpacity * 0.15}) saturate(${0.9 + finalOpacity * 0.1})`,
-                opacity: finalOpacity,
+                transform: `rotate(${img.rotation}deg) scale(${img.scale})`,
+                filter: `blur(${blur}px)`,
+                opacity: opacity,
                 zIndex: img.zIndex,
-                transition: 'filter 0.4s ease-out',
                 pointerEvents: 'none',
+                willChange: 'transform, filter, opacity',
               }}
             >
               <Image
@@ -247,10 +194,11 @@ export default function Portfolio() {
                 className="chuck-image-img"
                 draggable={false}
                 style={{
-                  borderRadius: '8px',
-                  boxShadow: `0 ${6 + img.scale * 8}px ${15 + img.scale * 12}px rgba(0, 0, 0, ${0.15 + img.scale * 0.1}), 
-                             0 ${2 + img.scale * 3}px ${8 + img.scale * 5}px rgba(0, 0, 0, ${0.1 + img.scale * 0.05})`,
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: '6px',
+                  boxShadow: `0 ${4 + img.scale * 6}px ${12 + img.scale * 8}px rgba(0, 0, 0, 0.3)`,
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
                 }}
               />
             </div>
