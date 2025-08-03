@@ -43,25 +43,25 @@ export default function AvatarChat() {
         {/* Status and Instructions */}
         <div className="grid md:grid-cols-2 gap-6">
           <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-white mb-3">Current Features</h3>
+            <h3 className="text-lg font-semibold text-white mb-3">HeyGen Integration</h3>
             <div className="space-y-2 text-white/80 text-sm">
               <p>✓ Chat with Jonathan's AI using his profile data</p>
               <p>✓ Responses generated with his personality & memories</p>
-              <p>✓ Audio playback using his ElevenLabs voice ({voiceId})</p>
-              <p>✓ Real-time conversation interface</p>
-              <p>✓ Profile-aware responses about his life, travels, opinions</p>
+              <p>✓ HeyGen avatar with real-time lip-sync</p>
+              <p>✓ ElevenLabs voice integration ({voiceId})</p>
+              <p>✓ WebRTC streaming for smooth video</p>
             </div>
           </div>
 
           <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-white mb-3">Add D-ID API Key For</h3>
+            <h3 className="text-lg font-semibold text-white mb-3">Setup Required</h3>
             <div className="space-y-2 text-white/80 text-sm">
-              <p>○ Live avatar video with lip-sync animation</p>
-              <p>○ Facial expressions synchronized with speech</p>
-              <p>○ Real-time avatar that moves and talks</p>
-              <p>○ Complete audio-visual conversation experience</p>
+              <p>○ Add HeyGen API key to .env.local</p>
+              <p>○ Avatar ID: 826b9af269ef40d2b54add2f4777e635</p>
+              <p>○ Connect avatar first, then start chatting</p>
+              <p>○ Avatar will speak with your ElevenLabs voice</p>
               <p className="text-yellow-300 mt-3">
-                💡 Add DID_API_KEY to .env.local to enable avatar video
+                💡 Add HEYGEN_API_KEY to .env.local to enable avatar
               </p>
             </div>
           </div>

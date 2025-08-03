@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
+import HeyGenAvatar from './HeyGenAvatar';
 
 interface AvatarChatInterfaceProps {
   profileData: any;
@@ -19,8 +20,7 @@ export default function AvatarChatInterface({
   const [isAvatarSpeaking, setIsAvatarSpeaking] = useState(false);
   const [avatarConnected, setAvatarConnected] = useState(false);
   
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const avatarRef = useRef<any>(null);
 
   const sendMessage = async () => {
     if (!message.trim()) return;
@@ -47,8 +47,10 @@ export default function AvatarChatInterface({
       const aiResponse = await chatResponse.text();
       setConversation(prev => [...prev, { role: 'assistant', content: aiResponse }]);
 
-      // 2. Generate speech with your ElevenLabs voice
-      await generateSpeechAndAvatar(aiResponse);
+      // 2. Make HeyGen avatar speak with your voice
+      if (avatarConnected && (window as any).heygenAvatar) {
+        await (window as any).heygenAvatar.speak(aiResponse, voiceId);
+      }
 
     } catch (error) {
       console.error('Chat error:', error);
@@ -58,48 +60,6 @@ export default function AvatarChatInterface({
       }]);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const generateSpeechAndAvatar = async (text: string) => {
-    try {
-      setIsAvatarSpeaking(true);
-
-      // Generate speech with ElevenLabs
-      const speechResponse = await fetch('/api/generate-speech', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text: text,
-          voiceId: voiceId,
-        }),
-      });
-
-      if (speechResponse.ok) {
-        const audioBlob = await speechResponse.blob();
-        const audioUrl = URL.createObjectURL(audioBlob);
-        
-        // Play audio
-        if (audioRef.current) {
-          audioRef.current.src = audioUrl;
-          audioRef.current.play();
-        }
-
-        // TODO: When D-ID API key is added, also send to D-ID for lip-sync
-        // This would make the avatar video sync with the speech
-        
-        // Clean up when audio ends
-        if (audioRef.current) {
-          audioRef.current.onended = () => {
-            setIsAvatarSpeaking(false);
-            URL.revokeObjectURL(audioUrl);
-          };
-        }
-      }
-
-    } catch (error) {
-      console.error('Speech generation error:', error);
-      setIsAvatarSpeaking(false);
     }
   };
 
@@ -114,42 +74,26 @@ export default function AvatarChatInterface({
     <div className="grid lg:grid-cols-2 gap-6 h-full">
       {/* Avatar Section */}
       <div className="space-y-4">
-        <div className="relative bg-black rounded-lg overflow-hidden aspect-video">
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted={false}
-            className="w-full h-full object-cover"
-            poster="/api/placeholder/640/360"
-          />
-          
-          {/* Avatar placeholder when not connected */}
-          {!avatarConnected && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/80">
-              <div className="text-center text-white">
-                <div className="text-6xl mb-4">🎭</div>
-                <p className="text-lg mb-2">{profileData?.name || 'Jonathan Braden'}</p>
-                <p className="text-sm text-white/70">Add D-ID API key for live avatar</p>
-              </div>
-            </div>
-          )}
-          
-          {/* Speaking indicator */}
-          {isAvatarSpeaking && (
-            <div className="absolute top-4 left-4 bg-green-500/90 text-white px-3 py-1 rounded-full text-sm font-medium">
-              🎤 Speaking...
-            </div>
-          )}
-        </div>
+        <HeyGenAvatar 
+          className="aspect-video"
+          onConnected={() => setAvatarConnected(true)}
+          onDisconnected={() => setAvatarConnected(false)}
+          onSpeaking={(speaking) => setIsAvatarSpeaking(speaking)}
+        />
 
         {/* Avatar Status */}
         <div className="bg-white/10 rounded-lg p-4">
           <h3 className="font-medium text-white mb-2">Avatar Status</h3>
           <div className="space-y-1 text-sm text-white/70">
+            <p>Platform: HeyGen</p>
+            <p>Avatar ID: {process.env.HEYGEN_AVATAR_ID || '826b9af269ef40d2b54add2f4777e635'}</p>
             <p>Voice: {voiceId}</p>
             <p>Profile: {profileData?.name || 'Jonathan Braden'}</p>
-            <p>Status: {isAvatarSpeaking ? '🎤 Speaking' : '💤 Idle'}</p>
+            <p>Status: {
+              !avatarConnected ? '○ Disconnected' :
+              isAvatarSpeaking ? '🎤 Speaking' : 
+              '✓ Ready'
+            }</p>
           </div>
         </div>
       </div>
@@ -161,7 +105,7 @@ export default function AvatarChatInterface({
           {conversation.length === 0 && (
             <div className="text-white/60 text-center py-8">
               <p className="text-lg mb-2">Start chatting with {profileData?.name || 'Jonathan'}!</p>
-              <p className="text-sm">Ask about travels, projects, opinions, or anything else.</p>
+              <p className="text-sm">Connect the avatar first, then ask about travels, projects, opinions, or anything else.</p>
             </div>
           )}
           
@@ -199,16 +143,19 @@ export default function AvatarChatInterface({
           />
           <button
             onClick={sendMessage}
-            disabled={isLoading || !message.trim()}
+            disabled={isLoading || !message.trim() || !avatarConnected}
             className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium transition-colors"
           >
             {isLoading ? '...' : 'Send'}
           </button>
         </div>
+        
+        {!avatarConnected && (
+          <p className="text-xs text-white/50 mt-2 text-center">
+            Connect the avatar first to enable chat
+          </p>
+        )}
       </div>
-
-      {/* Hidden audio element for speech playback */}
-      <audio ref={audioRef} />
     </div>
   );
 }

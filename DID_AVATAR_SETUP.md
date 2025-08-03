@@ -1,58 +1,85 @@
-# Avatar Chat Integration
+# HeyGen Avatar Integration
 
-This integration connects your existing Echostone chat system with avatar visualization, using your profile data and ElevenLabs voice. When you add a D-ID API key, it will show a lip-synced talking avatar.
+This integration connects your existing Echostone chat system with HeyGen's real-time avatar streaming, using your profile data and ElevenLabs voice for a complete talking avatar experience.
 
 ## What I Built
 
-### 1. Working Now (No API Keys Needed)
-- Chat interface using your existing `/api/chat` endpoint
-- Responses generated with your profile personality
-- Audio playback using your ElevenLabs voice
-- Real-time conversation interface
+### 1. HeyGen Integration
+- Real-time avatar streaming with WebRTC
+- Lip-sync using your ElevenLabs voice
+- Your specific avatar ID: 826b9af269ef40d2b54add2f4777e635
+- Seamless integration with your existing chat system
 
 ### 2. Files Added
 - `src/app/avatar-chat/page.tsx` - Main avatar chat page at `/avatar-chat`
-- `src/components/AvatarChatInterface.tsx` - Reusable chat + avatar component
-- `src/app/api/profile-context/route.ts` - API endpoint for profile data
+- `src/components/AvatarChatInterface.tsx` - Chat interface with HeyGen avatar
+- `src/components/HeyGenAvatar.tsx` - HeyGen avatar component
+- `src/app/api/heygen/create-session/route.ts` - Creates HeyGen sessions
+- `src/app/api/heygen/start-session/route.ts` - Starts avatar streaming
+- `src/app/api/heygen/speak/route.ts` - Makes avatar speak with your voice
 
-### 3. How to Use
+### 3. Setup Instructions
+
+#### Step 1: Get HeyGen API Key
+1. Sign up at [HeyGen](https://www.heygen.com/)
+2. Get your API key from the dashboard
+3. Add to your `.env.local`:
+```bash
+HEYGEN_API_KEY=your_heygen_api_key_here
+HEYGEN_AVATAR_ID=826b9af269ef40d2b54add2f4777e635
+```
+
+#### Step 2: Test the Integration
+1. Visit `/avatar-chat`
+2. Click "Connect Avatar" 
+3. Start chatting with your AI
+4. Avatar will speak with your ElevenLabs voice and lip-sync
+
+### 4. Usage Options
 
 #### Option A: Full Avatar Chat Page
-Visit `/avatar-chat` to see the complete interface with chat + avatar video area.
+Visit `/avatar-chat` for the complete experience.
 
-#### Option B: Embed the Chat Component
-Add the avatar chat interface to any page:
+#### Option B: Embed HeyGen Avatar Anywhere
 ```tsx
-import AvatarChatInterface from '@/components/AvatarChatInterface';
-import jonathanProfile from '@/data/jonathan_profile.json';
+import HeyGenAvatar from '@/components/HeyGenAvatar';
 
 function MyPage() {
-  const voiceId = process.env.NEXT_PUBLIC_ELEVENLABS_VOICE_ID || 'CO6pxVrMZfyL61ZIglyr';
-  
   return (
-    <div className="w-full h-96">
-      <AvatarChatInterface 
-        profileData={jonathanProfile}
-        voiceId={voiceId}
-        onMessage={(msg) => console.log('User said:', msg)}
+    <div className="w-96 h-96">
+      <HeyGenAvatar 
+        onConnected={() => console.log('Avatar ready!')}
+        onSpeaking={(speaking) => console.log('Speaking:', speaking)}
       />
     </div>
   );
 }
 ```
 
-#### Option C: Add to Existing Pages
-You can integrate this into your current Echostone pages by importing the component.
+#### Option C: Full Chat Interface
+```tsx
+import AvatarChatInterface from '@/components/AvatarChatInterface';
 
-### 4. How It Works Right Now
+function MyPage() {
+  return (
+    <AvatarChatInterface 
+      profileData={profileData}
+      voiceId="CO6pxVrMZfyL61ZIglyr"
+    />
+  );
+}
+```
 
-1. **User types message** → Sent to your existing `/api/chat` endpoint
-2. **AI generates response** → Using your profile data and personality
-3. **Text sent to ElevenLabs** → Generates audio with your voice
-4. **Audio plays** → User hears your authentic voice responding
-5. **Avatar placeholder** → Shows where video will appear when D-ID is added
+### 5. How It Works
 
-### 5. What the AI Knows About You
+1. **User connects avatar** → Creates HeyGen streaming session
+2. **User types message** → Sent to your existing `/api/chat` endpoint  
+3. **AI generates response** → Using your profile data and personality
+4. **Text → ElevenLabs** → Generates audio with your voice
+5. **Audio → HeyGen** → Avatar lip-syncs and speaks
+6. **Real-time video** → User sees and hears you talking
+
+### 6. What the AI Knows About You
 
 The chat system uses your `jonathan_profile.json` data:
 - **Identity**: Name, location, age, relationships
@@ -62,20 +89,12 @@ The chat system uses your `jonathan_profile.json` data:
 - **Voice**: Your ElevenLabs voice ID for authentic speech
 - **Opinions**: Politics, culture, technology, life philosophy
 
-### 6. Adding D-ID Avatar Video
+### 7. Technical Details
 
-To enable the lip-synced talking avatar:
-
-1. **Get D-ID API Key**: Sign up at [D-ID](https://www.d-id.com/)
-2. **Add to .env.local**:
-```bash
-DID_API_KEY=your_did_api_key_here
-```
-3. **The system will automatically**:
-   - Create D-ID streaming sessions
-   - Send your ElevenLabs audio to D-ID
-   - Display lip-synced avatar video
-   - Sync facial movements with speech
+- **WebRTC Streaming**: Real-time video with low latency
+- **Avatar ID**: 826b9af269ef40d2b54add2f4777e635 (your HeyGen avatar)
+- **Voice Integration**: ElevenLabs audio sent to HeyGen for lip-sync
+- **Session Management**: Automatic connection and cleanup
 
 ### 7. Testing It Out
 
