@@ -8,40 +8,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'sessionId and text are required' }, { status: 400 });
     }
 
-    if (!process.env.HEYGEN_API_KEY || !process.env.ELEVENLABS_API_KEY) {
-      return NextResponse.json({ error: 'API keys not configured' }, { status: 500 });
+    if (!process.env.HEYGEN_API_KEY) {
+      return NextResponse.json({ error: 'HeyGen API key not configured' }, { status: 500 });
     }
 
-    console.log('🎤 Generating speech and sending to HeyGen avatar...');
+    console.log('🎤 Sending text to HeyGen avatar:', text.substring(0, 50) + '...');
 
-    // First, generate audio with ElevenLabs
-    const audioResponse = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
-      method: 'POST',
-      headers: {
-        'Accept': 'audio/mpeg',
-        'Content-Type': 'application/json',
-        'xi-api-key': process.env.ELEVENLABS_API_KEY,
-      },
-      body: JSON.stringify({
-        text,
-        model_id: 'eleven_monolingual_v1',
-        voice_settings: {
-          stability: 0.5,
-          similarity_boost: 0.5,
-          style: 0.0,
-          use_speaker_boost: true
-        }
-      }),
-    });
-
-    if (!audioResponse.ok) {
-      throw new Error('Failed to generate audio with ElevenLabs');
-    }
-
-    const audioBuffer = await audioResponse.arrayBuffer();
-    const audioBase64 = Buffer.from(audioBuffer).toString('base64');
-
-    // Send audio to HeyGen for lip-sync
+    // Send text directly to HeyGen - it will handle TTS with the configured voice
     const heygenResponse = await fetch('https://api.heygen.com/v1/streaming.task', {
       method: 'POST',
       headers: {
@@ -51,18 +24,31 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({
         session_id: sessionId,
         text: text,
-        audio_url: `data:audio/mpeg;base64,${audioBase64}`,
+        task_type: 'talk', // Specify task type
+        task_mode: 'sync', // Use sync mode for immediate response
       }),
     });
 
     if (!heygenResponse.ok) {
       const errorText = await heygenResponse.text();
-      console.error('HeyGen speak error:', errorText);
-      return NextResponse.json({ error: 'Failed to send speech to HeyGen' }, { status: 500 });
+      console.error('HeyGen task error:', errorText);
+      return NextResponse.json({ 
+        error: 'Failed to send task to HeyGen',
+        details: errorText 
+      }, { status: heygenResponse.status });
     }
 
     const result = await heygenResponse.json();
-    return NextResponse.json(result);
+    
+    if (!result.data) {
+      console.error('Invalid HeyGen task response:', result);
+      return NextResponse.json({ error: 'Invalid response from HeyGen' }, { status: 500 });
+    }
+    
+    return NextResponse.json({
+      task_id: result.data.task_id,
+      status: result.data.status,
+    });
 
   } catch (error) {
     console.error('HeyGen speak error:', error);

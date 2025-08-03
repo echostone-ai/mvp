@@ -1,19 +1,20 @@
-# HeyGen Avatar Integration
+# HeyGen Conversational Avatar
 
-This integration connects your existing Echostone chat system with HeyGen's real-time avatar streaming, using your profile data and ElevenLabs voice for a complete talking avatar experience.
+This creates an immediately conversational avatar that combines your profile data, ElevenLabs voice, and HeyGen avatar for a complete talking experience.
 
 ## What I Built
 
-### 1. HeyGen Integration
-- Real-time avatar streaming with WebRTC
-- Lip-sync using your ElevenLabs voice
+### 1. Immediate Conversational Avatar
+- Auto-connects and greets users immediately
+- Real-time streaming responses with your personality
+- Voice and text input options
 - Your specific avatar ID: 826b9af269ef40d2b54add2f4777e635
-- Seamless integration with your existing chat system
+- Uses your homepage voice settings and streaming system
 
 ### 2. Files Added
-- `src/app/avatar-chat/page.tsx` - Main avatar chat page at `/avatar-chat`
-- `src/components/AvatarChatInterface.tsx` - Chat interface with HeyGen avatar
+- `src/app/avatar-demo/page.tsx` - Main conversational avatar at `/avatar-demo`
 - `src/components/HeyGenAvatar.tsx` - HeyGen avatar component
+- `src/components/AvatarToggle.tsx` - Optional homepage toggle
 - `src/app/api/heygen/create-session/route.ts` - Creates HeyGen sessions
 - `src/app/api/heygen/start-session/route.ts` - Starts avatar streaming
 - `src/app/api/heygen/speak/route.ts` - Makes avatar speak with your voice
@@ -72,12 +73,12 @@ function MyPage() {
 
 ### 5. How It Works
 
-1. **User connects avatar** → Creates HeyGen streaming session
-2. **User types message** → Sent to your existing `/api/chat` endpoint  
-3. **AI generates response** → Using your profile data and personality
-4. **Text → ElevenLabs** → Generates audio with your voice
-5. **Audio → HeyGen** → Avatar lip-syncs and speaks
-6. **Real-time video** → User sees and hears you talking
+1. **Page loads** → Auto-connects HeyGen avatar and gives greeting
+2. **User speaks or types** → Sent to your existing `/api/chat` endpoint  
+3. **AI streams response** → Using your profile data and personality
+4. **Real-time speaking** → Avatar speaks as text streams in
+5. **ElevenLabs voice** → Your authentic voice with lip-sync
+6. **Continuous conversation** → Natural back-and-forth dialogue
 
 ### 6. What the AI Knows About You
 
@@ -91,10 +92,20 @@ The chat system uses your `jonathan_profile.json` data:
 
 ### 7. Technical Details
 
-- **WebRTC Streaming**: Real-time video with low latency
+- **WebRTC Streaming**: Real-time video with low latency using HeyGen's streaming API
 - **Avatar ID**: 826b9af269ef40d2b54add2f4777e635 (your HeyGen avatar)
-- **Voice Integration**: ElevenLabs audio sent to HeyGen for lip-sync
-- **Session Management**: Automatic connection and cleanup
+- **Voice Integration**: Uses HeyGen's built-in TTS with your ElevenLabs voice
+- **Session Management**: Proper token creation, session start/stop, and cleanup
+- **Task Management**: Async task submission with status tracking
+- **Error Handling**: Comprehensive error handling and user feedback
+
+### 8. API Endpoints Created
+
+- `POST /api/heygen/create-session` - Creates HeyGen streaming token
+- `POST /api/heygen/start-session` - Starts WebRTC session with avatar
+- `POST /api/heygen/speak` - Submits text for avatar to speak
+- `POST /api/heygen/task-status` - Checks status of speaking tasks
+- `POST /api/heygen/close-session` - Properly closes streaming session
 
 ### 7. Testing It Out
 

@@ -34,13 +34,20 @@ export default function HeyGenAvatar({
         headers: { 'Content-Type': 'application/json' },
       });
 
-      if (!tokenResponse.ok) throw new Error('Failed to create HeyGen session');
+      if (!tokenResponse.ok) {
+        const error = await tokenResponse.json();
+        throw new Error(error.error || 'Failed to create HeyGen token');
+      }
       
       const { token } = await tokenResponse.json();
+      console.log('✅ HeyGen token created');
 
       // 2. Set up WebRTC connection
       const peerConnection = new RTCPeerConnection({
-        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' }
+        ],
       });
       
       peerConnectionRef.current = peerConnection;
@@ -56,14 +63,22 @@ export default function HeyGenAvatar({
 
       peerConnection.oniceconnectionstatechange = () => {
         console.log('ICE connection state:', peerConnection.iceConnectionState);
-        if (peerConnection.iceConnectionState === 'connected') {
+        if (peerConnection.iceConnectionState === 'connected' || 
+            peerConnection.iceConnectionState === 'completed') {
           setIsConnected(true);
           onConnected?.();
+        } else if (peerConnection.iceConnectionState === 'disconnected' ||
+                   peerConnection.iceConnectionState === 'failed') {
+          setIsConnected(false);
+          onDisconnected?.();
         }
       };
 
       // Create offer
-      const offer = await peerConnection.createOffer();
+      const offer = await peerConnection.createOffer({
+        offerToReceiveVideo: true,
+        offerToReceiveAudio: true,
+      });
       await peerConnection.setLocalDescription(offer);
 
       // 3. Start HeyGen session
@@ -71,15 +86,23 @@ export default function HeyGenAvatar({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          sessionId: token,
+          token: token,
           sdp: offer,
         }),
       });
 
-      if (!startResponse.ok) throw new Error('Failed to start HeyGen session');
+      if (!startResponse.ok) {
+        const error = await startResponse.json();
+        throw new Error(error.error || 'Failed to start HeyGen session');
+      }
       
-      const { sdp, session_id } = await startResponse.json();
+      const { sdp, session_id, ice_servers } = await startResponse.json();
       setSessionId(session_id);
+
+      // Update ICE servers if provided
+      if (ice_servers && ice_servers.length > 0) {
+        console.log('Using HeyGen ICE servers:', ice_servers);
+      }
 
       // Set remote description
       await peerConnection.setRemoteDescription(new RTCSessionDescription({
@@ -87,11 +110,12 @@ export default function HeyGenAvatar({
         sdp: sdp,
       }));
 
-      console.log('✅ HeyGen avatar connected');
+      console.log('✅ HeyGen avatar connected with session:', session_id);
       
     } catch (error) {
       console.error('Failed to connect HeyGen avatar:', error);
       setIsConnected(false);
+      alert(`Failed to connect avatar: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -107,6 +131,8 @@ export default function HeyGenAvatar({
       setIsSpeaking(true);
       onSpeaking?.(true);
 
+      console.log('🎤 Avatar speaking:', text.substring(0, 50) + '...');
+
       const response = await fetch('/api/heygen/speak', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -117,15 +143,21 @@ export default function HeyGenAvatar({
         }),
       });
 
-      if (!response.ok) throw new Error('Failed to make avatar speak');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to make avatar speak');
+      }
       
-      console.log('🎤 Avatar is speaking:', text.substring(0, 50) + '...');
+      const { task_id, status } = await response.json();
+      console.log('✅ HeyGen task submitted:', task_id, 'Status:', status);
       
-      // HeyGen will handle the timing, but we'll reset after a delay
+      // More accurate timing based on text length and speaking rate
+      const estimatedDuration = Math.max(3000, text.length * 100); // Minimum 3 seconds
+      
       setTimeout(() => {
         setIsSpeaking(false);
         onSpeaking?.(false);
-      }, text.length * 100); // Rough estimate based on text length
+      }, estimatedDuration);
 
       return true;
       
@@ -137,18 +169,38 @@ export default function HeyGenAvatar({
     }
   };
 
-  const disconnect = () => {
+  const disconnect = async () => {
+    try {
+      // Close HeyGen session first
+      if (sessionId) {
+        await fetch('/api/heygen/close-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId }),
+        });
+      }
+    } catch (error) {
+      console.warn('Error closing HeyGen session:', error);
+    }
+
+    // Close WebRTC connection
     if (peerConnectionRef.current) {
       peerConnectionRef.current.close();
       peerConnectionRef.current = null;
     }
+    
+    // Clear video
     if (videoRef.current) {
       videoRef.current.srcObject = null;
     }
+    
+    // Reset state
     setIsConnected(false);
     setSessionId(null);
     setIsSpeaking(false);
     onDisconnected?.();
+    
+    console.log('🔚 HeyGen avatar disconnected');
   };
 
   // Expose methods globally for easy access
