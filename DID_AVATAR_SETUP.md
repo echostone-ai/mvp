@@ -1,120 +1,112 @@
-# Smart D-ID Agent Integration
+# Avatar Chat Integration
 
-This integration embeds your D-ID conversational agent with full access to your profile data and ElevenLabs voice, creating an authentic AI version of you that anyone can talk to.
+This integration connects your existing Echostone chat system with avatar visualization, using your profile data and ElevenLabs voice. When you add a D-ID API key, it will show a lip-synced talking avatar.
 
-## Setup Instructions
+## What I Built
 
-### 1. No API Keys Needed!
-Your D-ID agent uses the share link you provided, and automatically syncs with your profile data and ElevenLabs voice settings.
+### 1. Working Now (No API Keys Needed)
+- Chat interface using your existing `/api/chat` endpoint
+- Responses generated with your profile personality
+- Audio playback using your ElevenLabs voice
+- Real-time conversation interface
 
 ### 2. Files Added
-- `src/app/agent-demo/page.tsx` - Enhanced demo page at `/agent-demo`
+- `src/app/avatar-chat/page.tsx` - Main avatar chat page at `/avatar-chat`
+- `src/components/AvatarChatInterface.tsx` - Reusable chat + avatar component
 - `src/app/api/profile-context/route.ts` - API endpoint for profile data
-- `src/components/SmartDIDAgent.tsx` - Profile-aware agent component
-- `src/components/EchostoneAgent.tsx` - Smart chat bubble with profile sync
-- `src/components/DIDAgent.tsx` - Basic agent iframe component
 
-### 3. Usage Options
+### 3. How to Use
 
-#### Option A: Smart Demo Page (Recommended)
-Visit `/agent-demo` to see the full profile-aware agent with status indicators.
+#### Option A: Full Avatar Chat Page
+Visit `/avatar-chat` to see the complete interface with chat + avatar video area.
 
-#### Option B: Smart Chat Bubble
-Add this to any page for a floating chat bubble with profile sync:
+#### Option B: Embed the Chat Component
+Add the avatar chat interface to any page:
 ```tsx
-import EchostoneAgent from '@/components/EchostoneAgent';
+import AvatarChatInterface from '@/components/AvatarChatInterface';
+import jonathanProfile from '@/data/jonathan_profile.json';
 
 function MyPage() {
-  return (
-    <div>
-      {/* Your existing page content */}
-      <EchostoneAgent />
-    </div>
-  );
-}
-```
-
-#### Option C: Smart Embedded Agent
-Embed the profile-aware agent directly:
-```tsx
-import SmartDIDAgent from '@/components/SmartDIDAgent';
-
-function MyPage() {
+  const voiceId = process.env.NEXT_PUBLIC_ELEVENLABS_VOICE_ID || 'CO6pxVrMZfyL61ZIglyr';
+  
   return (
     <div className="w-full h-96">
-      <SmartDIDAgent showProfileSync={true} />
+      <AvatarChatInterface 
+        profileData={jonathanProfile}
+        voiceId={voiceId}
+        onMessage={(msg) => console.log('User said:', msg)}
+      />
     </div>
   );
 }
 ```
 
-#### Option D: Basic Agent (No Profile Sync)
-For simple embedding without profile features:
-```tsx
-import DIDAgent from '@/components/DIDAgent';
+#### Option C: Add to Existing Pages
+You can integrate this into your current Echostone pages by importing the component.
 
-function MyPage() {
-  return (
-    <div className="w-full h-96">
-      <DIDAgent />
-    </div>
-  );
-}
-```
+### 4. How It Works Right Now
 
-### 4. How It Works
+1. **User types message** → Sent to your existing `/api/chat` endpoint
+2. **AI generates response** → Using your profile data and personality
+3. **Text sent to ElevenLabs** → Generates audio with your voice
+4. **Audio plays** → User hears your authentic voice responding
+5. **Avatar placeholder** → Shows where video will appear when D-ID is added
 
-The smart D-ID agent integration:
-1. Loads your profile data from `jonathan_profile.json`
-2. Syncs your ElevenLabs voice ID automatically
-3. Sends personality context to the D-ID agent
-4. User clicks avatar to start voice chat
-5. Agent responds as YOU with your voice, personality, and memories
-6. Real-time lip-synced avatar video
+### 5. What the AI Knows About You
 
-### 5. What Gets Synced
-
-The agent automatically knows about:
-- **Identity**: Your name, nickname, age, location
-- **Personality**: Bio, humor style, language patterns, catchphrases  
-- **Current Life**: Partner (Krissy), dog (Romeo), living situation
-- **Background**: Places lived, recent memories, hobbies, music taste
+The chat system uses your `jonathan_profile.json` data:
+- **Identity**: Name, location, age, relationships
+- **Personality**: Humor style, language patterns, catchphrases  
+- **Current Life**: Partner Krissy, dog Romeo, living in Sofia
+- **Background**: Travel experiences, memories, hobbies, music
 - **Voice**: Your ElevenLabs voice ID for authentic speech
-- **Conversation Style**: Your humor examples, banter patterns, opinions
+- **Opinions**: Politics, culture, technology, life philosophy
 
-### 6. Customization
+### 6. Adding D-ID Avatar Video
 
-#### Profile Data
-The agent pulls from `src/data/jonathan_profile.json`. Update this file to change what the agent knows about you.
+To enable the lip-synced talking avatar:
 
-#### Voice Settings
-Your ElevenLabs voice ID comes from `.env.local`:
+1. **Get D-ID API Key**: Sign up at [D-ID](https://www.d-id.com/)
+2. **Add to .env.local**:
 ```bash
-NEXT_PUBLIC_ELEVENLABS_VOICE_ID="CO6pxVrMZfyL61ZIglyr"
+DID_API_KEY=your_did_api_key_here
 ```
+3. **The system will automatically**:
+   - Create D-ID streaming sessions
+   - Send your ElevenLabs audio to D-ID
+   - Display lip-synced avatar video
+   - Sync facial movements with speech
 
-#### Different Agent
-To use a different D-ID agent, update the share URL in the components.
+### 7. Testing It Out
 
-#### Styling
-```tsx
-<SmartDIDAgent 
-  className="custom-styles"
-  showProfileSync={true}
-/>
-```
+Visit `/avatar-chat` and try these conversations:
 
-### 6. Troubleshooting
+**Personal Questions:**
+- "Tell me about your partner Krissy"
+- "What's your dog Romeo like?"
+- "How do you like living in Sofia?"
 
-- **Agent not loading**: Check if the share link is still valid
-- **No audio**: Ensure browser allows microphone access
-- **Poor performance**: Try refreshing the page or different browser
+**Travel & Experiences:**
+- "What was Austin like?"
+- "Tell me about your travels in Europe"
+- "What celebrities have you met?"
 
-### 7. Production Notes
+**Projects & Opinions:**
+- "What is Echostone?"
+- "What do you think about AI and the future?"
+- "What's your view on politics?"
 
-- The agent uses your D-ID share link, so it's already configured for public access
-- No API keys needed - completely self-contained
-- Works across all modern browsers
-- Mobile-friendly
+### 8. Current Status
 
-The integration is super lightweight and won't disrupt your existing Echostone features. The demo page is at `/agent-demo` and you can drop the chat bubble component anywhere!
+✅ **Working Now:**
+- Chat with your AI personality
+- Audio responses with your ElevenLabs voice
+- Profile-aware conversations
+- Real-time interface
+
+🔄 **Add D-ID API Key For:**
+- Live avatar video with lip-sync
+- Facial expressions during speech
+- Complete audio-visual experience
+
+This gives you the foundation for avatar conversations using your existing Echostone system. When you add the D-ID API key, it will become a full talking avatar experience!
