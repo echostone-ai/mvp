@@ -9,18 +9,24 @@ interface FloatingImage {
   alt: string;
   x: number;
   y: number;
+  vx: number; // velocity x
+  vy: number; // velocity y
   width: number;
   height: number;
   rotation: number;
+  rotationSpeed: number;
   scale: number;
   blur: number;
+  baseScale: number;
 }
 
 export default function Portfolio() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const animationRef = useRef<number>();
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [scrollY, setScrollY] = useState(0);
   const [images, setImages] = useState<FloatingImage[]>([]);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
   // Your floating images data - replace with your actual images
   const imageData = [
@@ -34,24 +40,49 @@ export default function Portfolio() {
     { src: '/api/placeholder/260/360', alt: 'Artwork 8', width: 260, height: 360 },
     { src: '/api/placeholder/310/320', alt: 'Artwork 9', width: 310, height: 320 },
     { src: '/api/placeholder/270/340', alt: 'Artwork 10', width: 270, height: 340 },
+    { src: '/api/placeholder/330/290', alt: 'Artwork 11', width: 330, height: 290 },
+    { src: '/api/placeholder/240/380', alt: 'Artwork 12', width: 240, height: 380 },
   ];
 
-  // Initialize floating images with random positions
+  // Initialize dimensions
   useEffect(() => {
-    const initImages = imageData.map((img, index) => ({
-      id: index,
-      src: img.src,
-      alt: img.alt,
-      x: Math.random() * (window.innerWidth - img.width),
-      y: Math.random() * (window.innerHeight * 3), // Spread across scroll height
-      width: img.width,
-      height: img.height,
-      rotation: Math.random() * 30 - 15, // Random rotation between -15 and 15 degrees
-      scale: 0.8 + Math.random() * 0.4, // Random scale between 0.8 and 1.2
-      blur: 0,
-    }));
-    setImages(initImages);
+    const updateDimensions = () => {
+      setDimensions({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    };
+
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+    return () => window.removeEventListener('resize', updateDimensions);
   }, []);
+
+  // Initialize floating images with physics properties
+  useEffect(() => {
+    if (dimensions.width === 0) return;
+
+    const initImages = imageData.map((img, index) => {
+      const baseScale = 0.7 + Math.random() * 0.6; // Random scale between 0.7 and 1.3
+      return {
+        id: index,
+        src: img.src,
+        alt: img.alt,
+        x: Math.random() * (dimensions.width - img.width * baseScale),
+        y: Math.random() * (dimensions.height - img.height * baseScale),
+        vx: (Math.random() - 0.5) * 0.5, // Random velocity between -0.25 and 0.25
+        vy: (Math.random() - 0.5) * 0.5,
+        width: img.width,
+        height: img.height,
+        rotation: Math.random() * 360,
+        rotationSpeed: (Math.random() - 0.5) * 0.2, // Slow rotation
+        scale: baseScale,
+        baseScale,
+        blur: 0,
+      };
+    });
+    setImages(initImages);
+  }, [dimensions]);
 
   // Mouse move handler
   useEffect(() => {
@@ -73,40 +104,106 @@ export default function Portfolio() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Update image positions and blur based on mouse and scroll
+  // Physics animation loop
   useEffect(() => {
-    setImages(prevImages =>
-      prevImages.map(img => {
-        // Calculate distance from mouse to image center
-        const imgCenterX = img.x + img.width / 2;
-        const imgCenterY = img.y + img.height / 2 - scrollY;
-        const distanceFromMouse = Math.sqrt(
-          Math.pow(mousePosition.x - imgCenterX, 2) + 
-          Math.pow(mousePosition.y - imgCenterY, 2)
-        );
+    if (images.length === 0) return;
 
-        // Calculate blur based on distance from viewport center and scroll
-        const viewportCenterY = window.innerHeight / 2;
-        const distanceFromCenter = Math.abs(imgCenterY - viewportCenterY);
-        const maxDistance = window.innerHeight / 2;
-        const blurAmount = Math.min((distanceFromCenter / maxDistance) * 8, 8);
+    const animate = () => {
+      setImages(prevImages =>
+        prevImages.map(img => {
+          // Physics-based movement
+          let newX = img.x + img.vx;
+          let newY = img.y + img.vy;
+          let newVx = img.vx;
+          let newVy = img.vy;
 
-        // Mouse attraction effect
-        const attraction = 0.02;
-        const mouseInfluence = Math.max(0, 200 - distanceFromMouse) / 200;
-        const deltaX = (mousePosition.x - imgCenterX) * attraction * mouseInfluence;
-        const deltaY = (mousePosition.y - imgCenterY) * attraction * mouseInfluence;
+          // Boundary collision with soft bounce
+          const margin = 50;
+          if (newX <= -margin || newX >= dimensions.width - img.width * img.scale + margin) {
+            newVx = -newVx * 0.8; // Damping
+            newX = Math.max(-margin, Math.min(dimensions.width - img.width * img.scale + margin, newX));
+          }
+          if (newY <= -margin || newY >= dimensions.height - img.height * img.scale + margin) {
+            newVy = -newVy * 0.8; // Damping
+            newY = Math.max(-margin, Math.min(dimensions.height - img.height * img.scale + margin, newY));
+          }
 
-        return {
-          ...img,
-          x: img.x + deltaX,
-          y: img.y + deltaY,
-          blur: blurAmount,
-          scale: img.scale + mouseInfluence * 0.1, // Slight scale increase near mouse
-        };
-      })
-    );
-  }, [mousePosition, scrollY]);
+          // Mouse influence - gentle attraction/repulsion
+          const imgCenterX = newX + (img.width * img.scale) / 2;
+          const imgCenterY = newY + (img.height * img.scale) / 2;
+          const mouseDistance = Math.sqrt(
+            Math.pow(mousePosition.x - imgCenterX, 2) + 
+            Math.pow(mousePosition.y - imgCenterY, 2)
+          );
+
+          // Gentle mouse influence
+          if (mouseDistance < 300) {
+            const influence = (300 - mouseDistance) / 300;
+            const angle = Math.atan2(mousePosition.y - imgCenterY, mousePosition.x - imgCenterX);
+            
+            // Attraction with some randomness
+            const attractionStrength = 0.001 * influence;
+            newVx += Math.cos(angle) * attractionStrength;
+            newVy += Math.sin(angle) * attractionStrength;
+          }
+
+          // Add some random drift
+          newVx += (Math.random() - 0.5) * 0.002;
+          newVy += (Math.random() - 0.5) * 0.002;
+
+          // Velocity damping to prevent infinite acceleration
+          newVx *= 0.999;
+          newVy *= 0.999;
+
+          // Limit maximum velocity
+          const maxVelocity = 2;
+          const currentVelocity = Math.sqrt(newVx * newVx + newVy * newVy);
+          if (currentVelocity > maxVelocity) {
+            newVx = (newVx / currentVelocity) * maxVelocity;
+            newVy = (newVy / currentVelocity) * maxVelocity;
+          }
+
+          // Rotation
+          const newRotation = img.rotation + img.rotationSpeed;
+
+          // Scale based on mouse proximity
+          const scaleInfluence = mouseDistance < 200 ? (200 - mouseDistance) / 200 * 0.2 : 0;
+          const newScale = img.baseScale + scaleInfluence;
+
+          // Blur based on scroll position and distance from center
+          const viewportCenterY = dimensions.height / 2;
+          const distanceFromCenter = Math.abs(imgCenterY - viewportCenterY);
+          const maxDistance = dimensions.height / 2;
+          const scrollBlur = Math.min((distanceFromCenter / maxDistance) * 6, 6);
+          
+          // Additional blur based on velocity for motion blur effect
+          const velocityBlur = Math.min(currentVelocity * 0.5, 2);
+          const totalBlur = scrollBlur + velocityBlur;
+
+          return {
+            ...img,
+            x: newX,
+            y: newY,
+            vx: newVx,
+            vy: newVy,
+            rotation: newRotation,
+            scale: newScale,
+            blur: totalBlur,
+          };
+        })
+      );
+
+      animationRef.current = requestAnimationFrame(animate);
+    };
+
+    animationRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [images.length, mousePosition, dimensions, scrollY]);
 
   return (
     <div ref={containerRef} className="floating-portfolio">
@@ -180,18 +277,18 @@ export default function Portfolio() {
             <div className="floating-gallery-features">
               <div className="floating-feature">
                 <div className="floating-feature-icon">🎨</div>
-                <h3>Mouse Responsive</h3>
-                <p>Artworks react to your cursor movement</p>
+                <h3>Physics-Based Movement</h3>
+                <p>Artworks drift naturally with realistic physics</p>
               </div>
               <div className="floating-feature">
                 <div className="floating-feature-icon">🌊</div>
-                <h3>Scroll Effects</h3>
-                <p>Images blur and focus based on scroll position</p>
+                <h3>Mouse Interaction</h3>
+                <p>Images respond gently to your cursor presence</p>
               </div>
               <div className="floating-feature">
                 <div className="floating-feature-icon">✨</div>
-                <h3>Dynamic Layout</h3>
-                <p>Every visit creates a unique arrangement</p>
+                <h3>Dynamic Blur</h3>
+                <p>Motion and scroll create beautiful blur effects</p>
               </div>
             </div>
           </div>

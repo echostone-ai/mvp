@@ -11173,13 +11173,13 @@ vatar Header Chat Button */
 
 .floating-image {
   position: absolute;
-  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   cursor: pointer;
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
   will-change: transform, filter;
   pointer-events: auto;
+  transition: box-shadow 0.3s ease;
 }
 
 .floating-image:hover {
