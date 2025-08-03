@@ -14,24 +14,21 @@ export default function AvatarDemo() {
   const [listening, setListening] = useState(false);
   const [avatarConnected, setAvatarConnected] = useState(false);
   const [avatarSpeaking, setAvatarSpeaking] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
   
   const recognitionRef = useRef<any>(null);
   const streamingAudioRef = useRef<SeamlessStreamingManager | null>(null);
-  const voiceId = 'CO6pxVrMZfyL61ZIglyr'; // Your ElevenLabs voice
+  const voiceId = 'CO6pxVrMZfyL61ZIglyr';
 
-  // Check if Web Speech API is available
   const hasSpeechRecognition = typeof window !== 'undefined' &&
     ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
 
   useEffect(() => {
-    // Auto-connect avatar and give initial greeting
     const initializeAvatar = async () => {
-      // Small delay to let component mount
       setTimeout(async () => {
         if ((window as any).heygenAvatar && !avatarConnected) {
           await (window as any).heygenAvatar.connect();
           
-          // Give initial greeting after connection
           setTimeout(() => {
             if (avatarConnected) {
               const greetings = [
@@ -42,14 +39,16 @@ export default function AvatarDemo() {
               const greeting = greetings[Math.floor(Math.random() * greetings.length)];
               speakWithAvatar(greeting);
             }
+            setIsInitializing(false);
           }, 2000);
+        } else {
+          setIsInitializing(false);
         }
       }, 1000);
     };
 
     initializeAvatar();
 
-    // Cleanup
     return () => {
       if (streamingAudioRef.current) {
         streamingAudioRef.current.stop();
@@ -64,15 +63,13 @@ export default function AvatarDemo() {
     try {
       setAvatarSpeaking(true);
       
-      // Use HeyGen avatar to speak with your voice
       if ((window as any).heygenAvatar) {
         await (window as any).heygenAvatar.speak(text, voiceId);
       }
       
-      // Reset speaking state after estimated duration
       setTimeout(() => {
         setAvatarSpeaking(false);
-      }, text.length * 80); // Rough estimate
+      }, text.length * 80);
       
     } catch (error) {
       console.error('Avatar speak error:', error);
@@ -83,7 +80,6 @@ export default function AvatarDemo() {
   const askQuestion = async (text: string) => {
     if (!text.trim()) return;
 
-    // Stop any existing audio
     await stopAllSeamlessAudio();
     if (streamingAudioRef.current) {
       streamingAudioRef.current.stop();
@@ -92,12 +88,10 @@ export default function AvatarDemo() {
     setLoading(true);
     setAnswer('');
     
-    // Add user message to conversation
     const newConversation = [...conversation, { role: 'user', content: text }];
     setConversation(newConversation);
 
     try {
-      // Get AI response using your existing chat system
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -125,7 +119,6 @@ export default function AvatarDemo() {
             fullResponse += chunk;
             setAnswer(fullResponse);
 
-            // Stream to avatar as we get text
             if (avatarConnected && fullResponse.length > lastProcessedLength + 50) {
               const newText = fullResponse.substring(lastProcessedLength);
               const segments = splitTextForSeamlessStreaming(newText);
@@ -134,13 +127,12 @@ export default function AvatarDemo() {
                 if (segment.trim() && segment.length > 10 && /[.!?]$/.test(segment)) {
                   await speakWithAvatar(segment);
                   lastProcessedLength = fullResponse.length;
-                  break; // Process one segment at a time for real-time feel
+                  break;
                 }
               }
             }
           }
 
-          // Process any remaining text
           if (fullResponse.trim() && avatarConnected) {
             const remainingText = fullResponse.substring(lastProcessedLength);
             if (remainingText.trim()) {
@@ -148,14 +140,12 @@ export default function AvatarDemo() {
             }
           }
 
-          // Add AI response to conversation
           setConversation(prev => [...prev, { role: 'assistant', content: fullResponse }]);
 
         } finally {
           reader.releaseLock();
         }
       } else {
-        // Fallback to non-streaming
         const data = await res.json();
         const aiResponse = data.answer || 'Sorry, I encountered an error.';
         setAnswer(aiResponse);
@@ -184,10 +174,7 @@ export default function AvatarDemo() {
   };
 
   const startListening = () => {
-    if (!hasSpeechRecognition) {
-      alert('Speech recognition not supported on this device');
-      return;
-    }
+    if (!hasSpeechRecognition) return;
 
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
@@ -206,10 +193,7 @@ export default function AvatarDemo() {
       askQuestion(transcript);
     };
     recognition.onend = () => setListening(false);
-    recognition.onerror = () => {
-      setListening(false);
-      alert('Speech recognition error');
-    };
+    recognition.onerror = () => setListening(false);
     
     recognition.start();
   };
@@ -223,7 +207,7 @@ export default function AvatarDemo() {
 
   const quickQuestions = [
     "Tell me about your partner Krissy",
-    "What's your dog Romeo like?",
+    "What's your dog Romeo like?", 
     "How do you like living in Sofia?",
     "What was Austin like?",
     "Tell me about Echostone",
@@ -231,148 +215,166 @@ export default function AvatarDemo() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-4">
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-6">
-          <h1 className="text-4xl font-bold text-white mb-2">
-            Talk with Jonathan
-          </h1>
-          <p className="text-white/70">
-            Real-time conversational avatar with my personality and voice
-          </p>
-        </div>
-        
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Avatar Section - Larger */}
-          <div className="lg:col-span-2">
-            <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6">
-              <HeyGenAvatar 
-                className="aspect-video w-full"
-                onConnected={() => setAvatarConnected(true)}
-                onDisconnected={() => setAvatarConnected(false)}
-                onSpeaking={(speaking) => setAvatarSpeaking(speaking)}
-              />
-              
-              {/* Avatar Status */}
-              <div className="mt-4 flex justify-between items-center text-sm">
-                <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${
-                    avatarConnected ? 'bg-green-500' : 'bg-red-500'
-                  }`} />
-                  <span className="text-white/70">
-                    {avatarConnected ? 'Avatar Connected' : 'Avatar Disconnected'}
-                  </span>
-                </div>
-                
-                {avatarSpeaking && (
-                  <div className="flex items-center gap-2 text-blue-300">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-                    <span>Speaking...</span>
-                  </div>
-                )}
-              </div>
-            </div>
+    <div className="avatar-demo-container">
+      <div className="avatar-demo-content">
+        <header className="avatar-demo-header">
+          <div className="avatar-demo-title-container">
+            <h1 className="avatar-demo-title">Talk with Jonathan</h1>
+            <p className="avatar-demo-subtitle">
+              Real-time conversational avatar with my personality and voice
+            </p>
           </div>
+        </header>
 
-          {/* Chat Controls */}
-          <div className="space-y-6">
-            {/* Voice Input */}
-            <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Voice Chat</h3>
-              
-              <button
-                onClick={listening ? stopListening : startListening}
-                disabled={loading || !avatarConnected}
-                className={`w-full py-4 rounded-lg font-medium transition-all ${
-                  listening 
-                    ? 'bg-red-600 hover:bg-red-700 text-white' 
-                    : 'bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white'
-                }`}
-              >
-                {listening ? '🎤 Listening... (tap to stop)' : 
-                 loading ? '⏳ Processing...' : 
-                 !avatarConnected ? '○ Connect Avatar First' :
-                 '🎤 Start Speaking'}
-              </button>
-              
-              {hasSpeechRecognition ? (
-                <p className="text-xs text-white/60 mt-2 text-center">
-                  Speech recognition supported
-                </p>
-              ) : (
-                <p className="text-xs text-white/60 mt-2 text-center">
-                  Speech recognition not available
-                </p>
-              )}
-            </div>
-
-            {/* Text Input */}
-            <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Text Chat</h3>
-              
-              <form onSubmit={handleSubmit} className="space-y-3">
-                <textarea
-                  value={question}
-                  onChange={(e) => setQuestion(e.target.value)}
-                  placeholder="Ask me anything..."
-                  className="w-full px-4 py-3 rounded-lg bg-white/20 text-white placeholder-white/60 border border-white/30 resize-none"
-                  rows={3}
-                  disabled={loading || !avatarConnected}
+        <main className="avatar-demo-main">
+          <div className="avatar-demo-layout">
+            {/* Avatar Section */}
+            <section className="avatar-demo-video-section">
+              <div className="avatar-demo-video-container">
+                <HeyGenAvatar 
+                  className="avatar-demo-video"
+                  onConnected={() => setAvatarConnected(true)}
+                  onDisconnected={() => setAvatarConnected(false)}
+                  onSpeaking={(speaking) => setAvatarSpeaking(speaking)}
                 />
-                <button
-                  type="submit"
-                  disabled={loading || !question.trim() || !avatarConnected}
-                  className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white py-2 rounded-lg font-medium transition-colors"
-                >
-                  {loading ? 'Thinking...' : 'Send'}
-                </button>
-              </form>
-            </div>
-
-            {/* Quick Questions */}
-            <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Quick Questions</h3>
-              <div className="space-y-2">
-                {quickQuestions.map((q, i) => (
-                  <button
-                    key={i}
-                    onClick={() => {
-                      setQuestion(q);
-                      askQuestion(q);
-                    }}
-                    disabled={loading || !avatarConnected}
-                    className="w-full text-left px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 disabled:bg-white/5 text-white/80 text-sm transition-colors"
-                  >
-                    {q}
-                  </button>
-                ))}
+                
+                {/* Status Overlay */}
+                <div className="avatar-demo-status-overlay">
+                  <div className="avatar-demo-connection-status">
+                    <div className={`avatar-demo-status-dot ${avatarConnected ? 'connected' : 'disconnected'}`} />
+                    <span className="avatar-demo-status-text">
+                      {isInitializing ? 'Initializing...' : 
+                       avatarConnected ? 'Connected' : 'Disconnected'}
+                    </span>
+                  </div>
+                  
+                  {avatarSpeaking && (
+                    <div className="avatar-demo-speaking-indicator">
+                      <div className="avatar-demo-speaking-dot" />
+                      <span>Speaking</span>
+                      <div className="soundbars">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <div key={i} className="soundbar" />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          </div>
-        </div>
+            </section>
 
-        {/* Current Response */}
-        {answer && (
-          <div className="mt-6 bg-white/10 backdrop-blur-lg rounded-2xl p-6">
-            <h3 className="text-lg font-semibold text-white mb-3">Jonathan says:</h3>
-            <p className="text-white/90 leading-relaxed">{answer}</p>
-          </div>
-        )}
+            {/* Controls Section */}
+            <aside className="avatar-demo-controls-section">
+              {/* Voice Input */}
+              <div className="avatar-demo-control-panel">
+                <h3 className="avatar-demo-control-title">Voice Chat</h3>
+                
+                <button
+                  onClick={listening ? stopListening : startListening}
+                  disabled={loading || !avatarConnected}
+                  className={`avatar-demo-voice-btn ${listening ? 'listening' : ''} ${!avatarConnected ? 'disabled' : ''}`}
+                >
+                  <div className="avatar-demo-voice-btn-content">
+                    <div className={`avatar-demo-mic-icon ${listening ? 'active' : ''}`}>
+                      {listening ? '🔴' : '🎤'}
+                    </div>
+                    <span className="avatar-demo-voice-btn-text">
+                      {listening ? 'Listening... (tap to stop)' : 
+                       loading ? 'Processing...' : 
+                       !avatarConnected ? 'Connect Avatar First' :
+                       'Start Speaking'}
+                    </span>
+                  </div>
+                </button>
+                
+                <p className="avatar-demo-voice-support">
+                  {hasSpeechRecognition ? 
+                    '✓ Speech recognition supported' : 
+                    '✗ Speech recognition not available'}
+                </p>
+              </div>
 
-        {/* Setup Instructions */}
-        {!avatarConnected && (
-          <div className="mt-6 bg-yellow-500/10 border border-yellow-500/30 backdrop-blur-lg rounded-2xl p-6">
-            <h3 className="text-lg font-semibold text-yellow-300 mb-3">Setup Required</h3>
-            <div className="text-yellow-200/80 space-y-2 text-sm">
-              <p>To enable the avatar:</p>
-              <ol className="list-decimal list-inside space-y-1 ml-4">
-                <li>Get a HeyGen API key from <a href="https://www.heygen.com/" target="_blank" className="underline">heygen.com</a></li>
-                <li>Add <code className="bg-black/30 px-2 py-1 rounded">HEYGEN_API_KEY=your_key_here</code> to .env.local</li>
-                <li>Refresh the page and click "Connect Avatar"</li>
-              </ol>
-            </div>
+              {/* Text Input */}
+              <div className="avatar-demo-control-panel">
+                <h3 className="avatar-demo-control-title">Text Chat</h3>
+                
+                <form onSubmit={handleSubmit} className="avatar-demo-text-form">
+                  <textarea
+                    value={question}
+                    onChange={(e) => setQuestion(e.target.value)}
+                    placeholder="Ask me anything..."
+                    className="avatar-demo-textarea"
+                    rows={3}
+                    disabled={loading || !avatarConnected}
+                  />
+                  <button
+                    type="submit"
+                    disabled={loading || !question.trim() || !avatarConnected}
+                    className="avatar-demo-send-btn"
+                  >
+                    {loading ? (
+                      <div className="avatar-demo-loading">
+                        <div className="loading-spinner" />
+                        <span>Thinking...</span>
+                      </div>
+                    ) : (
+                      <span>Send Message</span>
+                    )}
+                  </button>
+                </form>
+              </div>
+
+              {/* Quick Questions */}
+              <div className="avatar-demo-control-panel">
+                <h3 className="avatar-demo-control-title">Quick Questions</h3>
+                <div className="avatar-demo-quick-questions">
+                  {quickQuestions.map((q, i) => (
+                    <button
+                      key={i}
+                      onClick={() => {
+                        setQuestion(q);
+                        askQuestion(q);
+                      }}
+                      disabled={loading || !avatarConnected}
+                      className="avatar-demo-quick-btn"
+                    >
+                      {q}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </aside>
           </div>
-        )}
+
+          {/* Current Response */}
+          {answer && (
+            <section className="avatar-demo-response-section">
+              <div className="avatar-demo-response-container">
+                <h3 className="avatar-demo-response-title">Jonathan says:</h3>
+                <div className="avatar-demo-response-content">
+                  <p className="avatar-demo-response-text">{answer}</p>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Setup Instructions */}
+          {!avatarConnected && !isInitializing && (
+            <section className="avatar-demo-setup-section">
+              <div className="avatar-demo-setup-container">
+                <h3 className="avatar-demo-setup-title">Setup Required</h3>
+                <div className="avatar-demo-setup-content">
+                  <p className="avatar-demo-setup-description">To enable the avatar:</p>
+                  <ol className="avatar-demo-setup-steps">
+                    <li>Get a HeyGen API key from <a href="https://www.heygen.com/" target="_blank" rel="noopener noreferrer" className="avatar-demo-setup-link">heygen.com</a></li>
+                    <li>Add <code className="avatar-demo-setup-code">HEYGEN_API_KEY=your_key_here</code> to .env.local</li>
+                    <li>Refresh the page and click "Connect Avatar"</li>
+                  </ol>
+                </div>
+              </div>
+            </section>
+          )}
+        </main>
       </div>
     </div>
   );

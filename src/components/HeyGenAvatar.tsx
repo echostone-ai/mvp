@@ -213,54 +213,56 @@ export default function HeyGenAvatar({
   }, []);
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`heygen-avatar-container ${className}`}>
       <video
         ref={videoRef}
         autoPlay
         playsInline
         muted={false}
-        className="w-full h-full object-cover rounded-lg bg-black"
+        className="heygen-avatar-video"
       />
       
       {/* Connection overlay */}
       {!isConnected && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/80 rounded-lg">
-          <div className="text-center text-white">
-            <div className="text-6xl mb-4">🎭</div>
-            <p className="text-lg mb-4">HeyGen Avatar</p>
+        <div className="heygen-avatar-overlay">
+          <div className="heygen-avatar-connect-prompt">
+            <div className="heygen-avatar-icon">🎭</div>
+            <h3 className="heygen-avatar-title">HeyGen Avatar</h3>
+            <p className="heygen-avatar-description">
+              Connect to start your conversation with Jonathan
+            </p>
             <button
               onClick={connect}
               disabled={isLoading}
-              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+              className="heygen-avatar-connect-btn"
             >
-              {isLoading ? 'Connecting...' : 'Connect Avatar'}
+              <div className="heygen-avatar-connect-content">
+                {isLoading ? (
+                  <>
+                    <div className="loading-spinner" />
+                    <span>Connecting...</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="heygen-avatar-connect-icon">⚡</span>
+                    <span>Connect Avatar</span>
+                  </>
+                )}
+              </div>
             </button>
           </div>
         </div>
       )}
       
-      {/* Status indicators */}
-      {isConnected && (
-        <div className="absolute top-2 left-2 space-y-1">
-          <div className="bg-green-500/90 text-white px-2 py-1 rounded text-xs font-medium">
-            ✓ Connected
-          </div>
-          {isSpeaking && (
-            <div className="bg-blue-500/90 text-white px-2 py-1 rounded text-xs font-medium">
-              🎤 Speaking
-            </div>
-          )}
-        </div>
-      )}
-      
       {/* Disconnect button */}
       {isConnected && (
-        <div className="absolute top-2 right-2">
+        <div className="heygen-avatar-disconnect">
           <button
             onClick={disconnect}
-            className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm"
+            className="heygen-avatar-disconnect-btn"
+            title="Disconnect Avatar"
           >
-            Disconnect
+            <span className="heygen-avatar-disconnect-icon">×</span>
           </button>
         </div>
       )}
