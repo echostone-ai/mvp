@@ -11152,12 +11152,13 @@ vatar Header Chat Button */
 
 .floating-portfolio {
   position: relative;
-  min-height: 500vh; /* Extended height for scrolling */
+  min-height: 400vh; /* Extended height for scrolling */
   background: var(--gradient-background);
   background-attachment: fixed;
   background-size: 400% 400%;
   animation: body-gradient-move 28s ease-in-out infinite;
   overflow-x: hidden;
+  perspective: 1000px;
 }
 
 /* Floating Images Container */
@@ -11176,15 +11177,15 @@ vatar Header Chat Button */
   cursor: pointer;
   border-radius: var(--radius-lg);
   overflow: hidden;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-  will-change: transform, filter;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  will-change: transform, filter, z-index;
   pointer-events: auto;
-  transition: box-shadow 0.3s ease;
+  transition: box-shadow 0.4s ease, z-index 0.2s ease;
+  transform-origin: center center;
 }
 
 .floating-image:hover {
-  z-index: 10;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
 }
 
 .floating-image-img {

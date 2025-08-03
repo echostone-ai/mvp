@@ -9,15 +9,20 @@ interface FloatingImage {
   alt: string;
   x: number;
   y: number;
-  vx: number; // velocity x
-  vy: number; // velocity y
+  targetX: number;
+  targetY: number;
+  vx: number;
+  vy: number;
   width: number;
   height: number;
   rotation: number;
   rotationSpeed: number;
   scale: number;
-  blur: number;
   baseScale: number;
+  blur: number;
+  zIndex: number;
+  driftAngle: number;
+  driftSpeed: number;
 }
 
 export default function Portfolio() {
@@ -28,20 +33,23 @@ export default function Portfolio() {
   const [images, setImages] = useState<FloatingImage[]>([]);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
-  // Your floating images data - replace with your actual images
+  // Curated image data with better variety
   const imageData = [
-    { src: '/api/placeholder/300/400', alt: 'Artwork 1', width: 300, height: 400 },
-    { src: '/api/placeholder/250/350', alt: 'Artwork 2', width: 250, height: 350 },
-    { src: '/api/placeholder/350/300', alt: 'Artwork 3', width: 350, height: 300 },
-    { src: '/api/placeholder/280/380', alt: 'Artwork 4', width: 280, height: 380 },
-    { src: '/api/placeholder/320/250', alt: 'Artwork 5', width: 320, height: 250 },
-    { src: '/api/placeholder/290/390', alt: 'Artwork 6', width: 290, height: 390 },
-    { src: '/api/placeholder/340/280', alt: 'Artwork 7', width: 340, height: 280 },
-    { src: '/api/placeholder/260/360', alt: 'Artwork 8', width: 260, height: 360 },
-    { src: '/api/placeholder/310/320', alt: 'Artwork 9', width: 310, height: 320 },
-    { src: '/api/placeholder/270/340', alt: 'Artwork 10', width: 270, height: 340 },
-    { src: '/api/placeholder/330/290', alt: 'Artwork 11', width: 330, height: 290 },
-    { src: '/api/placeholder/240/380', alt: 'Artwork 12', width: 240, height: 380 },
+    { src: '/api/placeholder/280/350', alt: 'Portrait Study', width: 280, height: 350 },
+    { src: '/api/placeholder/320/240', alt: 'Landscape View', width: 320, height: 240 },
+    { src: '/api/placeholder/250/400', alt: 'Abstract Form', width: 250, height: 400 },
+    { src: '/api/placeholder/380/280', alt: 'Urban Scene', width: 380, height: 280 },
+    { src: '/api/placeholder/300/380', alt: 'Still Life', width: 300, height: 380 },
+    { src: '/api/placeholder/350/260', alt: 'Color Study', width: 350, height: 260 },
+    { src: '/api/placeholder/260/340', alt: 'Figure Drawing', width: 260, height: 340 },
+    { src: '/api/placeholder/340/300', alt: 'Composition', width: 340, height: 300 },
+    { src: '/api/placeholder/290/360', alt: 'Mixed Media', width: 290, height: 360 },
+    { src: '/api/placeholder/360/280', alt: 'Digital Art', width: 360, height: 280 },
+    { src: '/api/placeholder/270/320', alt: 'Sketch Study', width: 270, height: 320 },
+    { src: '/api/placeholder/320/290', alt: 'Experimental', width: 320, height: 290 },
+    { src: '/api/placeholder/240/380', alt: 'Vertical Study', width: 240, height: 380 },
+    { src: '/api/placeholder/400/260', alt: 'Horizontal View', width: 400, height: 260 },
+    { src: '/api/placeholder/310/330', alt: 'Square Format', width: 310, height: 330 },
   ];
 
   // Initialize dimensions
@@ -49,7 +57,7 @@ export default function Portfolio() {
     const updateDimensions = () => {
       setDimensions({
         width: window.innerWidth,
-        height: window.innerHeight
+        height: window.innerHeight * 4 // Extended height for scrolling
       });
     };
 
@@ -58,29 +66,103 @@ export default function Portfolio() {
     return () => window.removeEventListener('resize', updateDimensions);
   }, []);
 
-  // Initialize floating images with physics properties
+  // Advanced spacing algorithm - Poisson disk sampling inspired
+  const generateOptimalPositions = (imageData: any[], width: number, height: number) => {
+    const positions: { x: number; y: number; width: number; height: number; scale: number }[] = [];
+    const minDistance = 150; // Minimum distance between images
+    const maxAttempts = 50;
+
+    for (let i = 0; i < imageData.length; i++) {
+      const img = imageData[i];
+      const baseScale = 0.6 + Math.random() * 0.8; // Scale between 0.6 and 1.4
+      const scaledWidth = img.width * baseScale;
+      const scaledHeight = img.height * baseScale;
+      
+      let placed = false;
+      let attempts = 0;
+
+      while (!placed && attempts < maxAttempts) {
+        const x = Math.random() * (width - scaledWidth);
+        const y = Math.random() * (height - scaledHeight);
+        
+        // Check distance from all existing positions
+        let validPosition = true;
+        for (const pos of positions) {
+          const centerX1 = x + scaledWidth / 2;
+          const centerY1 = y + scaledHeight / 2;
+          const centerX2 = pos.x + pos.width / 2;
+          const centerY2 = pos.y + pos.height / 2;
+          
+          const distance = Math.sqrt(
+            Math.pow(centerX1 - centerX2, 2) + Math.pow(centerY1 - centerY2, 2)
+          );
+          
+          const requiredDistance = minDistance + (pos.width + scaledWidth) / 4;
+          
+          if (distance < requiredDistance) {
+            validPosition = false;
+            break;
+          }
+        }
+        
+        if (validPosition) {
+          positions.push({ x, y, width: scaledWidth, height: scaledHeight, scale: baseScale });
+          placed = true;
+        }
+        
+        attempts++;
+      }
+      
+      // If we couldn't place it optimally, place it randomly with more space
+      if (!placed) {
+        const x = Math.random() * (width - scaledWidth);
+        const y = Math.random() * (height - scaledHeight);
+        positions.push({ x, y, width: scaledWidth, height: scaledHeight, scale: baseScale });
+      }
+    }
+    
+    return positions;
+  };
+
+  // Initialize floating images with optimal spacing
   useEffect(() => {
     if (dimensions.width === 0) return;
 
+    const positions = generateOptimalPositions(imageData, dimensions.width, dimensions.height);
+    
     const initImages = imageData.map((img, index) => {
-      const baseScale = 0.7 + Math.random() * 0.6; // Random scale between 0.7 and 1.3
+      const pos = positions[index] || { 
+        x: Math.random() * (dimensions.width - img.width), 
+        y: Math.random() * (dimensions.height - img.height),
+        scale: 0.8
+      };
+      
+      const driftAngle = Math.random() * Math.PI * 2;
+      const driftSpeed = 0.1 + Math.random() * 0.3;
+      
       return {
         id: index,
         src: img.src,
         alt: img.alt,
-        x: Math.random() * (dimensions.width - img.width * baseScale),
-        y: Math.random() * (dimensions.height - img.height * baseScale),
-        vx: (Math.random() - 0.5) * 0.5, // Random velocity between -0.25 and 0.25
-        vy: (Math.random() - 0.5) * 0.5,
+        x: pos.x,
+        y: pos.y,
+        targetX: pos.x,
+        targetY: pos.y,
+        vx: 0,
+        vy: 0,
         width: img.width,
         height: img.height,
-        rotation: Math.random() * 360,
-        rotationSpeed: (Math.random() - 0.5) * 0.2, // Slow rotation
-        scale: baseScale,
-        baseScale,
+        rotation: (Math.random() - 0.5) * 30, // Rotation between -15 and 15 degrees
+        rotationSpeed: (Math.random() - 0.5) * 0.1,
+        scale: pos.scale || 0.8,
+        baseScale: pos.scale || 0.8,
         blur: 0,
+        zIndex: Math.floor(Math.random() * 100),
+        driftAngle,
+        driftSpeed,
       };
     });
+    
     setImages(initImages);
   }, [dimensions]);
 
@@ -104,91 +186,110 @@ export default function Portfolio() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Physics animation loop
+  // Advanced physics animation loop
   useEffect(() => {
     if (images.length === 0) return;
 
     const animate = () => {
       setImages(prevImages =>
         prevImages.map(img => {
-          // Physics-based movement
-          let newX = img.x + img.vx;
-          let newY = img.y + img.vy;
-          let newVx = img.vx;
-          let newVy = img.vy;
-
-          // Boundary collision with soft bounce
-          const margin = 50;
-          if (newX <= -margin || newX >= dimensions.width - img.width * img.scale + margin) {
-            newVx = -newVx * 0.8; // Damping
-            newX = Math.max(-margin, Math.min(dimensions.width - img.width * img.scale + margin, newX));
-          }
-          if (newY <= -margin || newY >= dimensions.height - img.height * img.scale + margin) {
-            newVy = -newVy * 0.8; // Damping
-            newY = Math.max(-margin, Math.min(dimensions.height - img.height * img.scale + margin, newY));
-          }
-
-          // Mouse influence - gentle attraction/repulsion
-          const imgCenterX = newX + (img.width * img.scale) / 2;
-          const imgCenterY = newY + (img.height * img.scale) / 2;
+          // Organic drift movement
+          const time = Date.now() * 0.001;
+          const driftX = Math.cos(time * img.driftSpeed + img.driftAngle) * 0.5;
+          const driftY = Math.sin(time * img.driftSpeed + img.driftAngle * 1.3) * 0.3;
+          
+          // Update target position with drift
+          const newTargetX = img.targetX + driftX;
+          const newTargetY = img.targetY + driftY;
+          
+          // Smooth movement towards target with easing
+          const easing = 0.02;
+          let newVx = (newTargetX - img.x) * easing;
+          let newVy = (newTargetY - img.y) * easing;
+          
+          // Mouse influence - sophisticated attraction/repulsion
+          const imgCenterX = img.x + (img.width * img.scale) / 2;
+          const imgCenterY = img.y + (img.height * img.scale) / 2 - scrollY;
           const mouseDistance = Math.sqrt(
             Math.pow(mousePosition.x - imgCenterX, 2) + 
             Math.pow(mousePosition.y - imgCenterY, 2)
           );
-
-          // Gentle mouse influence
-          if (mouseDistance < 300) {
-            const influence = (300 - mouseDistance) / 300;
+          
+          // Multi-layered mouse influence
+          if (mouseDistance < 400) {
+            const influence = Math.pow((400 - mouseDistance) / 400, 2);
             const angle = Math.atan2(mousePosition.y - imgCenterY, mousePosition.x - imgCenterX);
             
-            // Attraction with some randomness
-            const attractionStrength = 0.001 * influence;
-            newVx += Math.cos(angle) * attractionStrength;
-            newVy += Math.sin(angle) * attractionStrength;
+            // Close attraction, far repulsion
+            let mouseForce;
+            if (mouseDistance < 150) {
+              // Repulsion when very close
+              mouseForce = -0.8 * influence;
+            } else {
+              // Gentle attraction when medium distance
+              mouseForce = 0.3 * influence;
+            }
+            
+            newVx += Math.cos(angle) * mouseForce;
+            newVy += Math.sin(angle) * mouseForce;
           }
-
-          // Add some random drift
-          newVx += (Math.random() - 0.5) * 0.002;
-          newVy += (Math.random() - 0.5) * 0.002;
-
-          // Velocity damping to prevent infinite acceleration
-          newVx *= 0.999;
-          newVy *= 0.999;
-
-          // Limit maximum velocity
-          const maxVelocity = 2;
-          const currentVelocity = Math.sqrt(newVx * newVx + newVy * newVy);
-          if (currentVelocity > maxVelocity) {
-            newVx = (newVx / currentVelocity) * maxVelocity;
-            newVy = (newVy / currentVelocity) * maxVelocity;
-          }
-
-          // Rotation
-          const newRotation = img.rotation + img.rotationSpeed;
-
-          // Scale based on mouse proximity
-          const scaleInfluence = mouseDistance < 200 ? (200 - mouseDistance) / 200 * 0.2 : 0;
-          const newScale = img.baseScale + scaleInfluence;
-
-          // Blur based on scroll position and distance from center
-          const viewportCenterY = dimensions.height / 2;
-          const distanceFromCenter = Math.abs(imgCenterY - viewportCenterY);
-          const maxDistance = dimensions.height / 2;
-          const scrollBlur = Math.min((distanceFromCenter / maxDistance) * 6, 6);
           
-          // Additional blur based on velocity for motion blur effect
-          const velocityBlur = Math.min(currentVelocity * 0.5, 2);
-          const totalBlur = scrollBlur + velocityBlur;
-
+          // Apply velocity with damping
+          const damping = 0.95;
+          newVx *= damping;
+          newVy *= damping;
+          
+          // Update position
+          const newX = img.x + newVx;
+          const newY = img.y + newVy;
+          
+          // Boundary wrapping (images can go slightly off-screen)
+          const margin = 100;
+          const wrappedX = newX < -margin ? dimensions.width + margin : 
+                          newX > dimensions.width + margin ? -margin : newX;
+          const wrappedY = newY < -margin ? dimensions.height + margin : 
+                          newY > dimensions.height + margin ? -margin : newY;
+          
+          // Smooth rotation
+          const newRotation = img.rotation + img.rotationSpeed;
+          
+          // Dynamic scaling based on mouse proximity and scroll
+          const mouseScaleInfluence = mouseDistance < 200 ? 
+            (200 - mouseDistance) / 200 * 0.15 : 0;
+          const scrollInfluence = Math.sin(time * 0.5 + img.id) * 0.05;
+          const newScale = img.baseScale + mouseScaleInfluence + scrollInfluence;
+          
+          // Advanced blur calculation
+          const viewportCenterY = window.innerHeight / 2;
+          const screenY = imgCenterY + scrollY;
+          const distanceFromViewportCenter = Math.abs(screenY - viewportCenterY);
+          const maxViewportDistance = window.innerHeight / 2;
+          
+          // Blur based on distance from viewport center
+          const viewportBlur = Math.min((distanceFromViewportCenter / maxViewportDistance) * 4, 4);
+          
+          // Motion blur based on velocity
+          const velocity = Math.sqrt(newVx * newVx + newVy * newVy);
+          const motionBlur = Math.min(velocity * 2, 3);
+          
+          // Depth blur for layering effect
+          const depthBlur = (img.zIndex / 100) * 1.5;
+          
+          const totalBlur = viewportBlur + motionBlur + depthBlur;
+          
+          // Update z-index based on mouse proximity
+          const newZIndex = mouseDistance < 150 ? 1000 + img.id : img.zIndex;
+          
           return {
             ...img,
-            x: newX,
-            y: newY,
+            x: wrappedX,
+            y: wrappedY,
             vx: newVx,
             vy: newVy,
             rotation: newRotation,
             scale: newScale,
             blur: totalBlur,
+            zIndex: newZIndex,
           };
         })
       );
@@ -220,6 +321,7 @@ export default function Portfolio() {
               filter: `blur(${img.blur}px)`,
               width: `${img.width}px`,
               height: `${img.height}px`,
+              zIndex: img.zIndex,
             }}
           >
             <Image
@@ -277,18 +379,18 @@ export default function Portfolio() {
             <div className="floating-gallery-features">
               <div className="floating-feature">
                 <div className="floating-feature-icon">🎨</div>
-                <h3>Physics-Based Movement</h3>
-                <p>Artworks drift naturally with realistic physics</p>
+                <h3>Organic Movement</h3>
+                <p>Artworks drift naturally with sophisticated physics</p>
               </div>
               <div className="floating-feature">
                 <div className="floating-feature-icon">🌊</div>
-                <h3>Mouse Interaction</h3>
-                <p>Images respond gently to your cursor presence</p>
+                <h3>Smart Spacing</h3>
+                <p>Optimal positioning algorithm ensures perfect composition</p>
               </div>
               <div className="floating-feature">
                 <div className="floating-feature-icon">✨</div>
-                <h3>Dynamic Blur</h3>
-                <p>Motion and scroll create beautiful blur effects</p>
+                <h3>Layered Depth</h3>
+                <p>Multi-dimensional blur and scaling create depth</p>
               </div>
             </div>
           </div>
