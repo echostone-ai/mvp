@@ -152,8 +152,8 @@ export default function Portfolio() {
         vy: 0,
         width: img.width,
         height: img.height,
-        rotation: (Math.random() - 0.5) * 30, // Rotation between -15 and 15 degrees
-        rotationSpeed: (Math.random() - 0.5) * 0.1,
+        rotation: (Math.random() - 0.5) * 20, // Rotation between -10 and 10 degrees
+        rotationSpeed: (Math.random() - 0.5) * 0.05, // Very slow rotation
         scale: pos.scale || 0.8,
         baseScale: pos.scale || 0.8,
         blur: 0,
@@ -193,49 +193,44 @@ export default function Portfolio() {
     const animate = () => {
       setImages(prevImages =>
         prevImages.map(img => {
-          // Organic drift movement
+          // Gentle floating movement - very subtle
           const time = Date.now() * 0.001;
-          const driftX = Math.cos(time * img.driftSpeed + img.driftAngle) * 0.5;
-          const driftY = Math.sin(time * img.driftSpeed + img.driftAngle * 1.3) * 0.3;
+          const floatX = Math.cos(time * img.driftSpeed + img.driftAngle) * 0.3;
+          const floatY = Math.sin(time * img.driftSpeed + img.driftAngle * 1.3) * 0.2;
           
-          // Update target position with drift
-          const newTargetX = img.targetX + driftX;
-          const newTargetY = img.targetY + driftY;
+          // Update target position with gentle float
+          const newTargetX = img.targetX + floatX;
+          const newTargetY = img.targetY + floatY;
           
-          // Smooth movement towards target with easing
-          const easing = 0.02;
+          // Very gentle movement towards target
+          const easing = 0.01;
           let newVx = (newTargetX - img.x) * easing;
           let newVy = (newTargetY - img.y) * easing;
           
-          // Mouse influence - sophisticated attraction/repulsion
+          // Mouse influence - gentle drift when cursor moves
           const imgCenterX = img.x + (img.width * img.scale) / 2;
-          const imgCenterY = img.y + (img.height * img.scale) / 2 - scrollY;
+          const imgCenterY = img.y + (img.height * img.scale) / 2;
           const mouseDistance = Math.sqrt(
             Math.pow(mousePosition.x - imgCenterX, 2) + 
-            Math.pow(mousePosition.y - imgCenterY, 2)
+            Math.pow(mousePosition.y - (imgCenterY - scrollY), 2)
           );
           
-          // Multi-layered mouse influence
-          if (mouseDistance < 400) {
-            const influence = Math.pow((400 - mouseDistance) / 400, 2);
-            const angle = Math.atan2(mousePosition.y - imgCenterY, mousePosition.x - imgCenterX);
+          // Gentle drift when mouse is nearby
+          if (mouseDistance < 300) {
+            const influence = (300 - mouseDistance) / 300;
+            const angle = Math.atan2(
+              mousePosition.y - (imgCenterY - scrollY), 
+              mousePosition.x - imgCenterX
+            );
             
-            // Close attraction, far repulsion
-            let mouseForce;
-            if (mouseDistance < 150) {
-              // Repulsion when very close
-              mouseForce = -0.8 * influence;
-            } else {
-              // Gentle attraction when medium distance
-              mouseForce = 0.3 * influence;
-            }
-            
-            newVx += Math.cos(angle) * mouseForce;
-            newVy += Math.sin(angle) * mouseForce;
+            // Gentle drift away from cursor
+            const driftForce = influence * 0.2;
+            newVx += Math.cos(angle + Math.PI) * driftForce; // Drift away
+            newVy += Math.sin(angle + Math.PI) * driftForce;
           }
           
-          // Apply velocity with damping
-          const damping = 0.95;
+          // Apply velocity with strong damping for smooth movement
+          const damping = 0.98;
           newVx *= damping;
           newVy *= damping;
           
@@ -253,29 +248,21 @@ export default function Portfolio() {
           // Smooth rotation
           const newRotation = img.rotation + img.rotationSpeed;
           
-          // Dynamic scaling based on mouse proximity and scroll
-          const mouseScaleInfluence = mouseDistance < 200 ? 
-            (200 - mouseDistance) / 200 * 0.15 : 0;
-          const scrollInfluence = Math.sin(time * 0.5 + img.id) * 0.05;
-          const newScale = img.baseScale + mouseScaleInfluence + scrollInfluence;
+          // Dynamic scaling - subtle mouse influence only
+          const mouseScaleInfluence = mouseDistance < 150 ? 
+            (150 - mouseDistance) / 150 * 0.1 : 0;
+          const newScale = img.baseScale + mouseScaleInfluence;
           
-          // Advanced blur calculation
-          const viewportCenterY = window.innerHeight / 2;
-          const screenY = imgCenterY + scrollY;
-          const distanceFromViewportCenter = Math.abs(screenY - viewportCenterY);
-          const maxViewportDistance = window.innerHeight / 2;
+          // Blur calculation - ONLY based on scroll position
+          let scrollBlur = 0;
           
-          // Blur based on distance from viewport center
-          const viewportBlur = Math.min((distanceFromViewportCenter / maxViewportDistance) * 4, 4);
+          // Only blur when scrolling down the page
+          if (scrollY > 50) {
+            const scrollProgress = Math.min(scrollY / 1000, 1); // Max blur at 1000px scroll
+            scrollBlur = scrollProgress * 8; // Max 8px blur
+          }
           
-          // Motion blur based on velocity
-          const velocity = Math.sqrt(newVx * newVx + newVy * newVy);
-          const motionBlur = Math.min(velocity * 2, 3);
-          
-          // Depth blur for layering effect
-          const depthBlur = (img.zIndex / 100) * 1.5;
-          
-          const totalBlur = viewportBlur + motionBlur + depthBlur;
+          const totalBlur = scrollBlur;
           
           // Update z-index based on mouse proximity
           const newZIndex = mouseDistance < 150 ? 1000 + img.id : img.zIndex;
