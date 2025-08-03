@@ -1,123 +1,109 @@
-# D-ID Avatar Integration Setup
+# D-ID Agent Integration Setup
 
-This integration adds real-time D-ID avatar support to your Echostone app, allowing AI responses to be delivered through a talking avatar with lip-sync.
+This integration embeds your D-ID conversational agent directly into Echostone, allowing users to interact with your AI avatar without any login required.
 
 ## Setup Instructions
 
-### 1. Get D-ID API Key
-1. Sign up at [D-ID](https://www.d-id.com/)
-2. Get your API key from the dashboard
-3. Add it to your `.env.local` file (already added for you):
-```bash
-DID_API_KEY=your_actual_did_api_key_here
-```
-Replace `your_did_api_key_here` with your actual D-ID API key.
+### 1. No API Keys Needed!
+Your D-ID agent is already configured with the share link you provided. No additional setup required!
 
 ### 2. Files Added
-- `src/app/api/did-stream/route.ts` - Creates D-ID streaming sessions
-- `src/app/api/did-stream/send-audio/route.ts` - Sends audio to avatar
-- `src/app/api/did-stream/answer/route.ts` - Handles WebRTC handshake
-- `src/app/avatar-demo/page.tsx` - Demo page at `/avatar-demo`
-- `src/components/DIDAvatar.tsx` - Reusable avatar component
-- `src/lib/useDIDAvatar.ts` - React hook for easy integration
+- `src/app/agent-demo/page.tsx` - Full demo page at `/agent-demo`
+- `src/components/DIDAgent.tsx` - Reusable agent iframe component
+- `src/components/EchostoneAgent.tsx` - Drop-in agent with chat bubble UI
 
 ### 3. Usage Options
 
 #### Option A: Demo Page
-Visit `/avatar-demo` to test the integration with a full UI.
+Visit `/agent-demo` to test the full agent integration.
 
-#### Option B: Drop-in Component
+#### Option B: Chat Bubble (Recommended)
+Add this to any page for a floating chat bubble:
 ```tsx
-import DIDAvatar from '@/components/DIDAvatar';
+import EchostoneAgent from '@/components/EchostoneAgent';
 
 function MyPage() {
   return (
-    <div className="w-96 h-96">
-      <DIDAvatar 
-        voiceId="your_elevenlabs_voice_id"
-        onConnected={() => console.log('Avatar connected!')}
+    <div>
+      {/* Your existing page content */}
+      <EchostoneAgent />
+    </div>
+  );
+}
+```
+
+#### Option C: Embedded Agent
+Embed the agent directly in your page:
+```tsx
+import DIDAgent from '@/components/DIDAgent';
+
+function MyPage() {
+  return (
+    <div className="w-full h-96">
+      <DIDAgent />
+    </div>
+  );
+}
+```
+
+#### Option D: Full Page Integration
+```tsx
+import EchostoneAgent from '@/components/EchostoneAgent';
+
+function AgentPage() {
+  return (
+    <div className="min-h-screen p-8">
+      <h1>Talk to My AI</h1>
+      <EchostoneAgent 
+        showToggle={false} 
+        className="w-full h-96" 
       />
     </div>
   );
 }
 ```
 
-#### Option C: React Hook (Most Flexible)
+### 4. How It Works
+
+The D-ID agent handles everything:
+1. User clicks avatar to start voice chat
+2. Speech-to-text happens in D-ID
+3. Your configured AI responds
+4. Text-to-speech with lip-sync
+5. Real-time avatar video
+
+### 5. Customization
+
+#### Different Agent
+To use a different D-ID agent, update the component:
 ```tsx
-import { useDIDAvatar } from '@/lib/useDIDAvatar';
-
-function MyComponent() {
-  const { videoRef, isConnected, connect, speak, disconnect } = useDIDAvatar({
-    voiceId: 'your_elevenlabs_voice_id',
-    onConnected: () => console.log('Connected!'),
-  });
-
-  const handleSpeak = () => {
-    speak('Hello from my avatar!');
-  };
-
-  return (
-    <div>
-      <video ref={videoRef} className="w-full h-full" />
-      {!isConnected ? (
-        <button onClick={connect}>Connect Avatar</button>
-      ) : (
-        <button onClick={handleSpeak}>Make Avatar Speak</button>
-      )}
-    </div>
-  );
-}
+<DIDAgent 
+  agentId="your_agent_id"
+  shareKey="your_share_key"
+/>
 ```
 
-### 4. Integration with Existing Voice Flow
-
-To integrate with your existing Echostone voice generation:
-
+#### Styling
+Customize the appearance:
 ```tsx
-// In your existing component where you handle AI responses
-const handleAIResponse = async (aiText: string) => {
-  // Your existing logic...
-  
-  // Add avatar speech
-  if (window.didAvatar?.isConnected) {
-    await window.didAvatar.speak(aiText);
-  }
-};
+<EchostoneAgent 
+  className="custom-styles"
+  showToggle={false}
+  defaultOpen={true}
+/>
 ```
 
-### 5. Pipeline Flow
-1. User speaks → Speech-to-text
-2. AI generates response text
-3. Text → ElevenLabs → Audio
-4. Audio → D-ID → Lip-synced avatar video
-5. Video streams to frontend via WebRTC
+### 6. Troubleshooting
 
-### 6. Customization
+- **Agent not loading**: Check if the share link is still valid
+- **No audio**: Ensure browser allows microphone access
+- **Poor performance**: Try refreshing the page or different browser
 
-#### Custom Avatar
-Replace the default avatar by providing your own image URL:
-```tsx
-<DIDAvatar avatarId="https://your-image-url.com/avatar.jpg" />
-```
+### 7. Production Notes
 
-#### Voice Settings
-Use any ElevenLabs voice ID:
-```tsx
-<DIDAvatar voiceId="your_custom_voice_id" />
-```
+- The agent uses your D-ID share link, so it's already configured for public access
+- No API keys needed - completely self-contained
+- Works across all modern browsers
+- Mobile-friendly
 
-### 7. Troubleshooting
-
-- **No video**: Check browser console for WebRTC errors
-- **No audio**: Ensure browser allows autoplay
-- **Connection fails**: Verify D-ID API key is correct
-- **Poor quality**: Try different avatar images (high-res, front-facing works best)
-
-### 8. Production Notes
-
-- D-ID has usage limits and costs per minute
-- Consider adding connection pooling for multiple users
-- WebRTC works best over HTTPS in production
-- Test across different browsers and devices
-
-The integration is lightweight and won't disrupt your existing Echostone features. The demo page is completely separate at `/avatar-demo`.
+The integration is super lightweight and won't disrupt your existing Echostone features. The demo page is at `/agent-demo` and you can drop the chat bubble component anywhere!
