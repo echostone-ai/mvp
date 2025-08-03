@@ -11145,4 +11145,444 @@ vatar Header Chat Button */
   .portfolio-contact-btn:hover {
     transform: none;
   }
+}/* ====
+===============================================================
+   FLOATING PORTFOLIO - INTERACTIVE ART GALLERY
+   ================================================================= */
+
+.floating-portfolio {
+  position: relative;
+  min-height: 500vh; /* Extended height for scrolling */
+  background: var(--gradient-background);
+  background-attachment: fixed;
+  background-size: 400% 400%;
+  animation: body-gradient-move 28s ease-in-out infinite;
+  overflow-x: hidden;
+}
+
+/* Floating Images Container */
+.floating-images-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.floating-image {
+  position: absolute;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  cursor: pointer;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  will-change: transform, filter;
+  pointer-events: auto;
+}
+
+.floating-image:hover {
+  z-index: 10;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+.floating-image-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Content Overlay */
+.floating-content {
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.floating-content > * {
+  pointer-events: auto;
+}
+
+/* Hero Section */
+.floating-hero {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+}
+
+.floating-hero-content {
+  max-width: 800px;
+  padding: 2rem;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(20px);
+  border-radius: var(--radius-2xl);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.floating-hero-title {
+  font-size: 5rem;
+  font-weight: 900;
+  color: var(--color-text-primary);
+  line-height: 1.1;
+  margin-bottom: 1rem;
+  letter-spacing: -0.02em;
+}
+
+.floating-hero-accent {
+  display: block;
+  background: linear-gradient(135deg, #9147ff, #6a00ff, #ff6b9d);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 200% 200%;
+  animation: gradient-shift 4s ease-in-out infinite;
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.floating-hero-subtitle {
+  font-size: 1.5rem;
+  color: var(--color-text-muted);
+  margin-bottom: 3rem;
+  opacity: 0.9;
+}
+
+.floating-hero-scroll-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  color: var(--color-text-muted);
+  font-size: 1rem;
+  animation: gentle-bounce 2s ease-in-out infinite;
+}
+
+.scroll-arrow {
+  font-size: 2rem;
+  color: var(--color-primary);
+}
+
+@keyframes gentle-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(10px); }
+}
+
+/* Content Sections */
+.floating-about,
+.floating-gallery-info,
+.floating-contact {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+}
+
+.floating-about-content,
+.floating-gallery-content,
+.floating-contact-content {
+  max-width: 800px;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(20px);
+  border-radius: var(--radius-2xl);
+  padding: 3rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.floating-section-title {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 2rem;
+  line-height: 1.2;
+}
+
+.floating-about-text {
+  color: var(--color-text-secondary);
+  font-size: 1.25rem;
+  line-height: 1.7;
+}
+
+.floating-about-text p {
+  margin-bottom: 1.5rem;
+}
+
+.floating-about-text p:last-child {
+  margin-bottom: 0;
+}
+
+/* Gallery Features */
+.floating-gallery-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.floating-feature {
+  text-align: center;
+  padding: 1.5rem;
+  background: rgba(147, 71, 255, 0.1);
+  border-radius: var(--radius-xl);
+  border: 1px solid rgba(147, 71, 255, 0.2);
+  backdrop-filter: blur(10px);
+  transition: all var(--transition-normal);
+}
+
+.floating-feature:hover {
+  background: rgba(147, 71, 255, 0.2);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(147, 71, 255, 0.2);
+}
+
+.floating-feature-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.floating-feature h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.floating-feature p {
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* Contact Section */
+.floating-contact-text {
+  color: var(--color-text-secondary);
+  font-size: 1.25rem;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.floating-contact-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.floating-contact-btn {
+  border: none;
+  border-radius: var(--radius-lg);
+  padding: 1.25rem 2.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  min-width: 200px;
+}
+
+.floating-contact-btn.primary {
+  background: linear-gradient(135deg, #9147ff, #6a00ff);
+  color: white;
+  box-shadow: 0 8px 25px rgba(147, 71, 255, 0.3);
+}
+
+.floating-contact-btn.primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 35px rgba(147, 71, 255, 0.4);
+}
+
+.floating-contact-btn.secondary {
+  background: rgba(147, 71, 255, 0.1);
+  border: 2px solid rgba(147, 71, 255, 0.3);
+  color: var(--color-text-primary);
+  backdrop-filter: blur(10px);
+}
+
+.floating-contact-btn.secondary:hover {
+  background: rgba(147, 71, 255, 0.2);
+  border-color: rgba(147, 71, 255, 0.6);
+  transform: translateY(-3px);
+}
+
+/* Background Elements */
+.floating-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.floating-gradient-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.3;
+  animation: float-orb 20s ease-in-out infinite;
+}
+
+.floating-gradient-orb.orb-1 {
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, #9147ff, transparent);
+  top: 20%;
+  left: 10%;
+  animation-delay: 0s;
+}
+
+.floating-gradient-orb.orb-2 {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, #6a00ff, transparent);
+  top: 60%;
+  right: 15%;
+  animation-delay: -7s;
+}
+
+.floating-gradient-orb.orb-3 {
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle, #ff6b9d, transparent);
+  bottom: 20%;
+  left: 60%;
+  animation-delay: -14s;
+}
+
+@keyframes float-orb {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(30px, -50px) scale(1.1); }
+  50% { transform: translate(-20px, -30px) scale(0.9); }
+  75% { transform: translate(40px, 20px) scale(1.05); }
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .floating-hero-title {
+    font-size: 4rem;
+  }
+  
+  .floating-section-title {
+    font-size: 2.5rem;
+  }
+  
+  .floating-gallery-features {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .floating-hero-content,
+  .floating-about-content,
+  .floating-gallery-content,
+  .floating-contact-content {
+    padding: 2rem;
+    margin: 1rem;
+  }
+  
+  .floating-hero-title {
+    font-size: 3rem;
+  }
+  
+  .floating-hero-subtitle {
+    font-size: 1.25rem;
+  }
+  
+  .floating-section-title {
+    font-size: 2rem;
+  }
+  
+  .floating-about-text,
+  .floating-contact-text {
+    font-size: 1.125rem;
+  }
+  
+  .floating-contact-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .floating-contact-btn {
+    width: 100%;
+    max-width: 300px;
+  }
+  
+  /* Adjust floating images for mobile */
+  .floating-image {
+    max-width: 200px;
+    max-height: 250px;
+  }
+}
+
+@media (max-width: 480px) {
+  .floating-hero-title {
+    font-size: 2.5rem;
+  }
+  
+  .floating-section-title {
+    font-size: 1.75rem;
+  }
+  
+  .floating-hero-subtitle {
+    font-size: 1.125rem;
+  }
+  
+  .floating-image {
+    max-width: 150px;
+    max-height: 200px;
+  }
+}
+
+/* Accessibility */
+.floating-contact-btn:focus {
+  outline: 2px solid #9147ff;
+  outline-offset: 2px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .floating-hero-accent {
+    animation: none;
+  }
+  
+  .floating-hero-scroll-indicator {
+    animation: none;
+  }
+  
+  .floating-gradient-orb {
+    animation: none;
+  }
+  
+  .floating-image {
+    transition: none;
+  }
+  
+  .floating-feature:hover,
+  .floating-contact-btn:hover {
+    transform: none;
+  }
+}
+
+/* Performance optimizations */
+.floating-image {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.floating-images-container {
+  transform: translateZ(0);
 }
