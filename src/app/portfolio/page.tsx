@@ -7,164 +7,72 @@ interface FloatingImage {
   id: number;
   src: string;
   alt: string;
-  x: number;
-  y: number;
-  targetX: number;
-  targetY: number;
-  vx: number;
-  vy: number;
+  initialX: number;
+  initialY: number;
+  currentX: number;
+  currentY: number;
   width: number;
   height: number;
   rotation: number;
-  rotationSpeed: number;
   scale: number;
-  baseScale: number;
-  blur: number;
   zIndex: number;
-  driftAngle: number;
-  driftSpeed: number;
+  velocity: { x: number; y: number };
+  drift: { x: number; y: number };
 }
 
 export default function Portfolio() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const animationRef = useRef<number>();
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [scrollY, setScrollY] = useState(0);
   const [images, setImages] = useState<FloatingImage[]>([]);
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const animationRef = useRef<number>();
 
-  // Curated image data with better variety
+  // Image data - replace with your actual images
   const imageData = [
-    { src: '/api/placeholder/280/350', alt: 'Portrait Study', width: 280, height: 350 },
-    { src: '/api/placeholder/320/240', alt: 'Landscape View', width: 320, height: 240 },
-    { src: '/api/placeholder/250/400', alt: 'Abstract Form', width: 250, height: 400 },
-    { src: '/api/placeholder/380/280', alt: 'Urban Scene', width: 380, height: 280 },
-    { src: '/api/placeholder/300/380', alt: 'Still Life', width: 300, height: 380 },
-    { src: '/api/placeholder/350/260', alt: 'Color Study', width: 350, height: 260 },
-    { src: '/api/placeholder/260/340', alt: 'Figure Drawing', width: 260, height: 340 },
-    { src: '/api/placeholder/340/300', alt: 'Composition', width: 340, height: 300 },
-    { src: '/api/placeholder/290/360', alt: 'Mixed Media', width: 290, height: 360 },
-    { src: '/api/placeholder/360/280', alt: 'Digital Art', width: 360, height: 280 },
-    { src: '/api/placeholder/270/320', alt: 'Sketch Study', width: 270, height: 320 },
-    { src: '/api/placeholder/320/290', alt: 'Experimental', width: 320, height: 290 },
-    { src: '/api/placeholder/240/380', alt: 'Vertical Study', width: 240, height: 380 },
-    { src: '/api/placeholder/400/260', alt: 'Horizontal View', width: 400, height: 260 },
-    { src: '/api/placeholder/310/330', alt: 'Square Format', width: 310, height: 330 },
+    { src: '/api/placeholder/300/400', alt: 'Artwork 1', width: 300, height: 400 },
+    { src: '/api/placeholder/250/350', alt: 'Artwork 2', width: 250, height: 350 },
+    { src: '/api/placeholder/350/280', alt: 'Artwork 3', width: 350, height: 280 },
+    { src: '/api/placeholder/280/380', alt: 'Artwork 4', width: 280, height: 380 },
+    { src: '/api/placeholder/320/250', alt: 'Artwork 5', width: 320, height: 250 },
+    { src: '/api/placeholder/290/360', alt: 'Artwork 6', width: 290, height: 360 },
+    { src: '/api/placeholder/340/300', alt: 'Artwork 7', width: 340, height: 300 },
+    { src: '/api/placeholder/260/340', alt: 'Artwork 8', width: 260, height: 340 },
+    { src: '/api/placeholder/380/280', alt: 'Artwork 9', width: 380, height: 280 },
+    { src: '/api/placeholder/270/320', alt: 'Artwork 10', width: 270, height: 320 },
+    { src: '/api/placeholder/310/350', alt: 'Artwork 11', width: 310, height: 350 },
+    { src: '/api/placeholder/240/300', alt: 'Artwork 12', width: 240, height: 300 },
   ];
 
-  // Initialize dimensions
+  // Initialize images with elegant positioning
   useEffect(() => {
-    const updateDimensions = () => {
-      setDimensions({
-        width: window.innerWidth,
-        height: window.innerHeight * 4 // Extended height for scrolling
-      });
-    };
-
-    updateDimensions();
-    window.addEventListener('resize', updateDimensions);
-    return () => window.removeEventListener('resize', updateDimensions);
-  }, []);
-
-  // Advanced spacing algorithm - Poisson disk sampling inspired
-  const generateOptimalPositions = (imageData: any[], width: number, height: number) => {
-    const positions: { x: number; y: number; width: number; height: number; scale: number }[] = [];
-    const minDistance = 150; // Minimum distance between images
-    const maxAttempts = 50;
-
-    for (let i = 0; i < imageData.length; i++) {
-      const img = imageData[i];
-      const baseScale = 0.6 + Math.random() * 0.8; // Scale between 0.6 and 1.4
-      const scaledWidth = img.width * baseScale;
-      const scaledHeight = img.height * baseScale;
-      
-      let placed = false;
-      let attempts = 0;
-
-      while (!placed && attempts < maxAttempts) {
-        const x = Math.random() * (width - scaledWidth);
-        const y = Math.random() * (height - scaledHeight);
-        
-        // Check distance from all existing positions
-        let validPosition = true;
-        for (const pos of positions) {
-          const centerX1 = x + scaledWidth / 2;
-          const centerY1 = y + scaledHeight / 2;
-          const centerX2 = pos.x + pos.width / 2;
-          const centerY2 = pos.y + pos.height / 2;
-          
-          const distance = Math.sqrt(
-            Math.pow(centerX1 - centerX2, 2) + Math.pow(centerY1 - centerY2, 2)
-          );
-          
-          const requiredDistance = minDistance + (pos.width + scaledWidth) / 4;
-          
-          if (distance < requiredDistance) {
-            validPosition = false;
-            break;
-          }
-        }
-        
-        if (validPosition) {
-          positions.push({ x, y, width: scaledWidth, height: scaledHeight, scale: baseScale });
-          placed = true;
-        }
-        
-        attempts++;
-      }
-      
-      // If we couldn't place it optimally, place it randomly with more space
-      if (!placed) {
-        const x = Math.random() * (width - scaledWidth);
-        const y = Math.random() * (height - scaledHeight);
-        positions.push({ x, y, width: scaledWidth, height: scaledHeight, scale: baseScale });
-      }
-    }
-    
-    return positions;
-  };
-
-  // Initialize floating images with optimal spacing
-  useEffect(() => {
-    if (dimensions.width === 0) return;
-
-    const positions = generateOptimalPositions(imageData, dimensions.width, dimensions.height);
-    
     const initImages = imageData.map((img, index) => {
-      const pos = positions[index] || { 
-        x: Math.random() * (dimensions.width - img.width), 
-        y: Math.random() * (dimensions.height - img.height),
-        scale: 0.8
-      };
-      
-      const driftAngle = Math.random() * Math.PI * 2;
-      const driftSpeed = 0.1 + Math.random() * 0.3;
+      const scale = 0.6 + Math.random() * 0.5; // Random scale 0.6-1.1
+      const x = Math.random() * (window.innerWidth - img.width * scale);
+      const y = Math.random() * (window.innerHeight * 4 - img.height * scale);
       
       return {
         id: index,
         src: img.src,
         alt: img.alt,
-        x: pos.x,
-        y: pos.y,
-        targetX: pos.x,
-        targetY: pos.y,
-        vx: 0,
-        vy: 0,
+        initialX: x,
+        initialY: y,
+        currentX: x,
+        currentY: y,
         width: img.width,
         height: img.height,
-        rotation: (Math.random() - 0.5) * 20, // Rotation between -10 and 10 degrees
-        rotationSpeed: (Math.random() - 0.5) * 0.05, // Very slow rotation
-        scale: pos.scale || 0.8,
-        baseScale: pos.scale || 0.8,
-        blur: 0,
-        zIndex: Math.floor(Math.random() * 100),
-        driftAngle,
-        driftSpeed,
+        rotation: (Math.random() - 0.5) * 20, // -10 to 10 degrees
+        scale,
+        zIndex: Math.floor(Math.random() * 15),
+        velocity: { x: 0, y: 0 },
+        drift: { 
+          x: (Math.random() - 0.5) * 0.3, 
+          y: (Math.random() - 0.5) * 0.2 
+        },
       };
     });
     
     setImages(initImages);
-  }, [dimensions]);
+  }, []);
 
   // Mouse move handler
   useEffect(() => {
@@ -186,227 +94,211 @@ export default function Portfolio() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Advanced physics animation loop
+  // Smooth animation loop for floating effect
   useEffect(() => {
-    if (images.length === 0) return;
-
     const animate = () => {
       setImages(prevImages =>
         prevImages.map(img => {
-          // Gentle floating movement - very subtle
-          const time = Date.now() * 0.001;
-          const floatX = Math.cos(time * img.driftSpeed + img.driftAngle) * 0.3;
-          const floatY = Math.sin(time * img.driftSpeed + img.driftAngle * 1.3) * 0.2;
+          // Calculate mouse influence
+          const imgCenterX = img.currentX + (img.width * img.scale) / 2;
+          const imgCenterY = img.currentY + (img.height * img.scale) / 2;
           
-          // Update target position with gentle float
-          const newTargetX = img.targetX + floatX;
-          const newTargetY = img.targetY + floatY;
-          
-          // Very gentle movement towards target
-          const easing = 0.01;
-          let newVx = (newTargetX - img.x) * easing;
-          let newVy = (newTargetY - img.y) * easing;
-          
-          // Mouse influence - gentle drift when cursor moves
-          const imgCenterX = img.x + (img.width * img.scale) / 2;
-          const imgCenterY = img.y + (img.height * img.scale) / 2;
+          // Distance from mouse to image center
           const mouseDistance = Math.sqrt(
             Math.pow(mousePosition.x - imgCenterX, 2) + 
             Math.pow(mousePosition.y - (imgCenterY - scrollY), 2)
           );
+
+          // Mouse repulsion force
+          let mouseForceX = 0;
+          let mouseForceY = 0;
           
-          // Gentle drift when mouse is nearby
-          if (mouseDistance < 300) {
-            const influence = (300 - mouseDistance) / 300;
+          if (mouseDistance < 250) {
+            const influence = Math.max(0, (250 - mouseDistance) / 250);
             const angle = Math.atan2(
-              mousePosition.y - (imgCenterY - scrollY), 
-              mousePosition.x - imgCenterX
+              (imgCenterY - scrollY) - mousePosition.y,
+              imgCenterX - mousePosition.x
             );
             
-            // Gentle drift away from cursor
-            const driftForce = influence * 0.2;
-            newVx += Math.cos(angle + Math.PI) * driftForce; // Drift away
-            newVy += Math.sin(angle + Math.PI) * driftForce;
+            const force = influence * 0.8;
+            mouseForceX = Math.cos(angle) * force;
+            mouseForceY = Math.sin(angle) * force;
           }
+
+          // Apply forces to velocity
+          const newVelocity = {
+            x: (img.velocity.x + mouseForceX + img.drift.x) * 0.95,
+            y: (img.velocity.y + mouseForceY + img.drift.y) * 0.95
+          };
+
+          // Update position with velocity
+          const newX = img.currentX + newVelocity.x;
+          const newY = img.currentY + newVelocity.y;
+
+          // Boundary constraints with gentle bounce
+          const maxX = window.innerWidth - img.width * img.scale;
+          const maxY = window.innerHeight * 4 - img.height * img.scale;
           
-          // Apply velocity with strong damping for smooth movement
-          const damping = 0.98;
-          newVx *= damping;
-          newVy *= damping;
+          let finalX = Math.max(0, Math.min(maxX, newX));
+          let finalY = Math.max(0, Math.min(maxY, newY));
           
-          // Update position
-          const newX = img.x + newVx;
-          const newY = img.y + newVy;
-          
-          // Boundary wrapping (images can go slightly off-screen)
-          const margin = 100;
-          const wrappedX = newX < -margin ? dimensions.width + margin : 
-                          newX > dimensions.width + margin ? -margin : newX;
-          const wrappedY = newY < -margin ? dimensions.height + margin : 
-                          newY > dimensions.height + margin ? -margin : newY;
-          
-          // Smooth rotation
-          const newRotation = img.rotation + img.rotationSpeed;
-          
-          // Dynamic scaling - subtle mouse influence only
-          const mouseScaleInfluence = mouseDistance < 150 ? 
-            (150 - mouseDistance) / 150 * 0.1 : 0;
-          const newScale = img.baseScale + mouseScaleInfluence;
-          
-          // Blur calculation - ONLY based on scroll position
-          let scrollBlur = 0;
-          
-          // Only blur when scrolling down the page
-          if (scrollY > 50) {
-            const scrollProgress = Math.min(scrollY / 1000, 1); // Max blur at 1000px scroll
-            scrollBlur = scrollProgress * 8; // Max 8px blur
+          // Bounce off edges
+          if (newX <= 0 || newX >= maxX) {
+            newVelocity.x *= -0.3;
           }
-          
-          const totalBlur = scrollBlur;
-          
-          // Update z-index based on mouse proximity
-          const newZIndex = mouseDistance < 150 ? 1000 + img.id : img.zIndex;
-          
+          if (newY <= 0 || newY >= maxY) {
+            newVelocity.y *= -0.3;
+          }
+
           return {
             ...img,
-            x: wrappedX,
-            y: wrappedY,
-            vx: newVx,
-            vy: newVy,
-            rotation: newRotation,
-            scale: newScale,
-            blur: totalBlur,
-            zIndex: newZIndex,
+            currentX: finalX,
+            currentY: finalY,
+            velocity: newVelocity,
           };
         })
       );
-
+      
       animationRef.current = requestAnimationFrame(animate);
     };
 
     animationRef.current = requestAnimationFrame(animate);
-
+    
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [images.length, mousePosition, dimensions, scrollY]);
+  }, [mousePosition, scrollY]);
 
   return (
-    <div ref={containerRef} className="floating-portfolio">
-      {/* Floating Images */}
-      <div className="floating-images-container">
-        {images.map((img) => (
-          <div
-            key={img.id}
-            className="floating-image"
-            style={{
-              left: `${img.x}px`,
-              top: `${img.y}px`,
-              transform: `rotate(${img.rotation}deg) scale(${img.scale})`,
-              filter: `blur(${img.blur}px)`,
-              width: `${img.width}px`,
-              height: `${img.height}px`,
-              zIndex: img.zIndex,
-            }}
-          >
-            <Image
-              src={img.src}
-              alt={img.alt}
-              width={img.width}
-              height={img.height}
-              className="floating-image-img"
-              draggable={false}
-            />
-          </div>
-        ))}
+    <div ref={containerRef} className="chuck-portfolio">
+      {/* Fixed positioned floating images */}
+      <div className="chuck-images-container">
+        {images.map((img) => {
+          // Progressive blur based on scroll - starts subtle, increases elegantly
+          const scrollProgress = Math.max(0, scrollY - 50);
+          const blur = Math.min(scrollProgress / 400 * 8, 8);
+          const opacity = Math.max(0.3, 1 - (scrollProgress / 1000));
+          
+          return (
+            <div
+              key={img.id}
+              className="chuck-image"
+              style={{
+                position: 'fixed',
+                left: `${img.currentX}px`,
+                top: `${img.currentY - scrollY * 0.3}px`, // Parallax effect
+                width: `${img.width}px`,
+                height: `${img.height}px`,
+                transform: `rotate(${img.rotation}deg) scale(${img.scale})`,
+                filter: `blur(${blur}px) brightness(${0.9 + opacity * 0.1})`,
+                opacity: opacity,
+                zIndex: img.zIndex,
+                transition: 'opacity 0.3s ease-out',
+                pointerEvents: 'none',
+              }}
+            >
+              <Image
+                src={img.src}
+                alt={img.alt}
+                width={img.width}
+                height={img.height}
+                className="chuck-image-img"
+                draggable={false}
+                style={{
+                  borderRadius: '12px',
+                  boxShadow: `0 ${8 + img.scale * 10}px ${20 + img.scale * 15}px rgba(0, 0, 0, ${0.2 + img.scale * 0.1})`,
+                }}
+              />
+            </div>
+          );
+        })}
       </div>
 
-      {/* Content Overlay */}
-      <div className="floating-content">
-        {/* Hero Section */}
-        <section className="floating-hero">
-          <div className="floating-hero-content">
-            <h1 className="floating-hero-title">
-              Chuck's
-              <span className="floating-hero-accent">Art</span>
+      {/* Content sections with elegant spacing */}
+      <div className="chuck-content">
+        <section className="chuck-hero">
+          <div className="chuck-hero-content">
+            <h1 className="chuck-title">
+              My
+              <span className="chuck-accent">Portfolio</span>
             </h1>
-            <p className="floating-hero-subtitle">
-              Contemporary artworks floating in digital space
+            <p className="chuck-subtitle">
+              Creative works floating in digital harmony
             </p>
-            <div className="floating-hero-scroll-indicator">
+            <div className="chuck-scroll-hint">
               <div className="scroll-arrow">↓</div>
-              <span>Scroll to explore</span>
+              <span>Scroll to explore the collection</span>
             </div>
           </div>
         </section>
 
-        {/* About Section */}
-        <section className="floating-about">
-          <div className="floating-about-content">
-            <h2 className="floating-section-title">About the Artist</h2>
-            <div className="floating-about-text">
+        <section className="chuck-about">
+          <div className="chuck-section-content">
+            <h2 className="chuck-section-title">About This Collection</h2>
+            <div className="chuck-text">
               <p>
-                Chuck's contemporary art explores the intersection of digital and physical spaces, 
-                creating immersive experiences that challenge traditional gallery presentations.
+                This portfolio showcases a curated selection of creative works, each piece 
+                floating gracefully in its own space, responding to your interaction and 
+                creating a unique viewing experience.
               </p>
               <p>
-                Each piece floats in its own dimensional space, responding to your presence 
-                and creating a unique viewing experience every time you visit.
+                Move your cursor around to see how the artworks gently drift away, 
+                creating an organic, living gallery that changes with every visit.
               </p>
             </div>
           </div>
         </section>
 
-        {/* Gallery Info */}
-        <section className="floating-gallery-info">
-          <div className="floating-gallery-content">
-            <h2 className="floating-section-title">Interactive Gallery</h2>
-            <div className="floating-gallery-features">
-              <div className="floating-feature">
-                <div className="floating-feature-icon">🎨</div>
-                <h3>Organic Movement</h3>
-                <p>Artworks drift naturally with sophisticated physics</p>
+        <section className="chuck-gallery">
+          <div className="chuck-section-content">
+            <h2 className="chuck-section-title">Interactive Experience</h2>
+            <div className="chuck-features">
+              <div className="chuck-feature">
+                <div className="chuck-feature-icon">🎨</div>
+                <h3>Mouse Responsive</h3>
+                <p>Artworks elegantly drift away from your cursor with smooth physics</p>
               </div>
-              <div className="floating-feature">
-                <div className="floating-feature-icon">🌊</div>
-                <h3>Smart Spacing</h3>
-                <p>Optimal positioning algorithm ensures perfect composition</p>
+              <div className="chuck-feature">
+                <div className="chuck-feature-icon">🌊</div>
+                <h3>Scroll Blur</h3>
+                <p>Images gradually blur as you scroll, creating depth and focus</p>
               </div>
-              <div className="floating-feature">
-                <div className="floating-feature-icon">✨</div>
-                <h3>Layered Depth</h3>
-                <p>Multi-dimensional blur and scaling create depth</p>
+              <div className="chuck-feature">
+                <div className="chuck-feature-icon">✨</div>
+                <h3>Parallax Motion</h3>
+                <p>Layered movement creates an immersive 3D-like experience</p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Contact Section */}
-        <section className="floating-contact">
-          <div className="floating-contact-content">
-            <h2 className="floating-section-title">Get in Touch</h2>
-            <p className="floating-contact-text">
-              Interested in commissioning a piece or learning more about the collection?
+        <section className="chuck-process">
+          <div className="chuck-section-content">
+            <h2 className="chuck-section-title">Creative Process</h2>
+            <div className="chuck-text">
+              <p>
+                Each piece in this collection represents a unique exploration of form, 
+                color, and digital interaction. The floating presentation allows viewers 
+                to experience the work in a non-linear, intuitive way.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section className="chuck-contact">
+          <div className="chuck-section-content">
+            <h2 className="chuck-section-title">Get in Touch</h2>
+            <p className="chuck-contact-text">
+              Interested in collaborating or learning more about these works?
             </p>
-            <div className="floating-contact-actions">
-              <button className="floating-contact-btn primary">
-                Contact Artist
-              </button>
-              <button className="floating-contact-btn secondary">
-                View Collection
-              </button>
+            <div className="chuck-contact-actions">
+              <button className="chuck-btn primary">Contact Me</button>
+              <button className="chuck-btn secondary">View More Work</button>
             </div>
           </div>
         </section>
-      </div>
-
-      {/* Background Elements */}
-      <div className="floating-background">
-        <div className="floating-gradient-orb orb-1"></div>
-        <div className="floating-gradient-orb orb-2"></div>
-        <div className="floating-gradient-orb orb-3"></div>
       </div>
     </div>
   );
