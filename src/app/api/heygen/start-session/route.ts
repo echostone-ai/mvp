@@ -27,15 +27,10 @@ export async function POST(request: NextRequest) {
     const requestBody = {
       session_token: token,
       avatar_id: process.env.HEYGEN_AVATAR_ID,
-      sdp: sdp,
-      quality: 'high',
-      voice: {
-        voice_id: process.env.NEXT_PUBLIC_ELEVENLABS_VOICE_ID || 'CO6pxVrMZfyL61ZIglyr',
-        provider: 'elevenlabs'
-      }
+      quality: 'high'
     };
 
-    const response = await fetch('https://api.heygen.com/v1/streaming.start', {
+    const response = await fetch('https://api.heygen.com/v1/streaming.new', {
       method: 'POST',
       headers: {
         'X-Api-Key': process.env.HEYGEN_API_KEY,
@@ -68,19 +63,19 @@ export async function POST(request: NextRequest) {
     }
     
     if (!data.data) {
-      console.error('❌ Invalid HeyGen start response structure:', data);
+      console.error('❌ Invalid HeyGen session response structure:', data);
       return NextResponse.json({ error: 'Invalid response structure from HeyGen' }, { status: 500 });
     }
 
-    console.log('✅ HeyGen session started successfully:', {
+    console.log('✅ HeyGen session created successfully:', {
       sessionId: data.data.session_id,
-      hasIceServers: !!(data.data.ice_servers && data.data.ice_servers.length > 0)
+      hasIceServers: !!(data.data.ice_servers2 && data.data.ice_servers2.length > 0)
     });
     
     return NextResponse.json({
       sdp: data.data.sdp,
       session_id: data.data.session_id,
-      ice_servers: data.data.ice_servers || [],
+      ice_servers: data.data.ice_servers2 || [],
     });
 
   } catch (error) {

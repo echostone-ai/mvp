@@ -74,20 +74,12 @@ export default function HeyGenAvatar({
         }
       };
 
-      // Create offer
-      const offer = await peerConnection.createOffer({
-        offerToReceiveVideo: true,
-        offerToReceiveAudio: true,
-      });
-      await peerConnection.setLocalDescription(offer);
-
-      // 3. Start HeyGen session
+      // 3. Create HeyGen session (this returns an SDP offer from HeyGen)
       const startResponse = await fetch('/api/heygen/start-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           token: token,
-          sdp: offer,
         }),
       });
 
@@ -102,13 +94,59 @@ export default function HeyGenAvatar({
       // Update ICE servers if provided
       if (ice_servers && ice_servers.length > 0) {
         console.log('Using HeyGen ICE servers:', ice_servers);
+        // Update peer connection with HeyGen's ICE servers
+        peerConnection.close();
+        peerConnectionRef.current = new RTCPeerConnection({
+          iceServers: ice_servers,
+        });
+        peerConnection = peerConnectionRef.current;
+        
+        // Re-setup event handlers
+        peerConnection.ontrack = (event) => {
+          console.log('📹 Received HeyGen video stream');
+          if (videoRef.current && event.streams[0]) {
+            videoRef.current.srcObject = event.streams[0];
+            videoRef.current.play().catch(console.error);
+          }
+        };
+
+        peerConnection.oniceconnectionstatechange = () => {
+          console.log('ICE connection state:', peerConnection.iceConnectionState);
+          if (peerConnection.iceConnectionState === 'connected' || 
+              peerConnection.iceConnectionState === 'completed') {
+            setIsConnected(true);
+            onConnected?.();
+          } else if (peerConnection.iceConnectionState === 'disconnected' ||
+                     peerConnection.iceConnectionState === 'failed') {
+            setIsConnected(false);
+            onDisconnected?.();
+          }
+        };
       }
 
-      // Set remote description
+      // Set HeyGen's offer as remote description
       await peerConnection.setRemoteDescription(new RTCSessionDescription({
-        type: 'answer',
-        sdp: sdp,
+        type: 'offer',
+        sdp: sdp.sdp,
       }));
+
+      // Create answer
+      const answer = await peerConnection.createAnswer();
+      await peerConnection.setLocalDescription(answer);
+
+      // Send answer back to HeyGen (we need a new API endpoint for this)
+      const answerResponse = await fetch('/api/heygen/set-answer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: session_id,
+          sdp: answer,
+        }),
+      });
+
+      if (!answerResponse.ok) {
+        console.warn('Failed to send answer to HeyGen:', await answerResponse.text());
+      }
 
       console.log('✅ HeyGen avatar connected with session:', session_id);
       
