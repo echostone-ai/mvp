@@ -24,6 +24,11 @@ export default function HeyGenAvatar({
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
 
   const connect = async () => {
+    if (isConnected || isLoading) {
+      console.log('⚠️ Already connected or connecting, skipping...');
+      return;
+    }
+    
     try {
       setIsLoading(true);
       console.log('🎭 Connecting to HeyGen avatar...');
@@ -66,15 +71,18 @@ export default function HeyGenAvatar({
         if (peerConnection.iceConnectionState === 'connected' || 
             peerConnection.iceConnectionState === 'completed') {
           setIsConnected(true);
+          setIsLoading(false);
           onConnected?.();
         } else if (peerConnection.iceConnectionState === 'disconnected' ||
                    peerConnection.iceConnectionState === 'failed') {
           setIsConnected(false);
+          setIsLoading(false);
           onDisconnected?.();
         }
       };
 
       // 3. Create HeyGen session (this returns an SDP offer from HeyGen)
+      console.log('🚀 Starting HeyGen session with token:', token);
       const startResponse = await fetch('/api/heygen/start-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -82,10 +90,24 @@ export default function HeyGenAvatar({
           token: token,
         }),
       });
+      
+      console.log('📡 Start session response status:', startResponse.status);
+      console.log('📡 Start session response headers:', Object.fromEntries(startResponse.headers.entries()));
 
       if (!startResponse.ok) {
-        const error = await startResponse.json();
-        throw new Error(error.error || 'Failed to start HeyGen session');
+        let error;
+        let errorText;
+        try {
+          errorText = await startResponse.text();
+          error = JSON.parse(errorText);
+        } catch (parseError) {
+          console.error('❌ HeyGen start session error (non-JSON):', errorText);
+          console.error('❌ Parse error:', parseError);
+          throw new Error(`Failed to start HeyGen session: ${startResponse.status} ${startResponse.statusText}`);
+        }
+        console.error('❌ HeyGen start session error:', error);
+        console.error('❌ Raw error text:', errorText);
+        throw new Error(error.error || error.message || `Failed to start HeyGen session: ${startResponse.status}`);
       }
       
       const { sdp, session_id, ice_servers } = await startResponse.json();
@@ -99,10 +121,10 @@ export default function HeyGenAvatar({
         peerConnectionRef.current = new RTCPeerConnection({
           iceServers: ice_servers,
         });
-        peerConnection = peerConnectionRef.current;
+        const newPeerConnection = peerConnectionRef.current;
         
         // Re-setup event handlers
-        peerConnection.ontrack = (event) => {
+        newPeerConnection.ontrack = (event) => {
           console.log('📹 Received HeyGen video stream');
           if (videoRef.current && event.streams[0]) {
             videoRef.current.srcObject = event.streams[0];
@@ -110,29 +132,34 @@ export default function HeyGenAvatar({
           }
         };
 
-        peerConnection.oniceconnectionstatechange = () => {
-          console.log('ICE connection state:', peerConnection.iceConnectionState);
-          if (peerConnection.iceConnectionState === 'connected' || 
-              peerConnection.iceConnectionState === 'completed') {
+        newPeerConnection.oniceconnectionstatechange = () => {
+          console.log('ICE connection state:', newPeerConnection.iceConnectionState);
+          if (newPeerConnection.iceConnectionState === 'connected' || 
+              newPeerConnection.iceConnectionState === 'completed') {
             setIsConnected(true);
+            setIsLoading(false);
             onConnected?.();
-          } else if (peerConnection.iceConnectionState === 'disconnected' ||
-                     peerConnection.iceConnectionState === 'failed') {
+          } else if (newPeerConnection.iceConnectionState === 'disconnected' ||
+                     newPeerConnection.iceConnectionState === 'failed') {
             setIsConnected(false);
+            setIsLoading(false);
             onDisconnected?.();
           }
         };
       }
 
+      // Get the current peer connection (either original or new one)
+      const currentPeerConnection = peerConnectionRef.current;
+
       // Set HeyGen's offer as remote description
-      await peerConnection.setRemoteDescription(new RTCSessionDescription({
+      await currentPeerConnection.setRemoteDescription(new RTCSessionDescription({
         type: 'offer',
         sdp: sdp.sdp,
       }));
 
       // Create answer
-      const answer = await peerConnection.createAnswer();
-      await peerConnection.setLocalDescription(answer);
+      const answer = await currentPeerConnection.createAnswer();
+      await currentPeerConnection.setLocalDescription(answer);
 
       // Send answer back to HeyGen (we need a new API endpoint for this)
       const answerResponse = await fetch('/api/heygen/set-answer', {
@@ -153,6 +180,18 @@ export default function HeyGenAvatar({
     } catch (error) {
       console.error('Failed to connect HeyGen avatar:', error);
       setIsConnected(false);
+      
+      // Try to cleanup any stuck sessions
+      try {
+        await fetch('/api/heygen/close-all-sessions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        console.log('🧹 Attempted to clean up stuck sessions');
+      } catch (cleanupError) {
+        console.warn('Failed to cleanup sessions:', cleanupError);
+      }
+      
       alert(`Failed to connect avatar: ${error.message}`);
     } finally {
       setIsLoading(false);
@@ -160,8 +199,15 @@ export default function HeyGenAvatar({
   };
 
   const speak = async (text: string, voiceId: string) => {
+    console.log('🗣️ HeyGen speak method called:', { 
+      text: text.substring(0, 50) + '...', 
+      voiceId, 
+      sessionId, 
+      isConnected 
+    });
+    
     if (!sessionId || !isConnected) {
-      console.warn('Avatar not connected, cannot speak');
+      console.warn('❌ Avatar not connected, cannot speak:', { sessionId, isConnected });
       return false;
     }
 
@@ -186,13 +232,18 @@ export default function HeyGenAvatar({
         throw new Error(error.error || 'Failed to make avatar speak');
       }
       
-      const { task_id, status } = await response.json();
+      const responseData = await response.json();
+      const { task_id, status } = responseData;
       console.log('✅ HeyGen task submitted:', task_id, 'Status:', status);
+      console.log('📋 Full HeyGen response:', responseData);
       
       // More accurate timing based on text length and speaking rate
-      const estimatedDuration = Math.max(3000, text.length * 100); // Minimum 3 seconds
+      // Increased timing to account for HeyGen processing and speaking delays
+      const estimatedDuration = Math.max(4000, text.length * 120); // Minimum 4 seconds, slower rate
+      console.log('⏰ Setting speaking timeout for:', estimatedDuration, 'ms');
       
       setTimeout(() => {
+        console.log('⏰ Speaking timeout completed, setting isSpeaking to false');
         setIsSpeaking(false);
         onSpeaking?.(false);
       }, estimatedDuration);

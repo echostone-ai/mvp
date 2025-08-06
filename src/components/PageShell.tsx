@@ -25,7 +25,7 @@ export default function PageShell({ children }: { children: React.ReactNode }) {
         background: 'rgba(15, 15, 35, 0.95)',
         backdropFilter: 'blur(8px)',
         borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-        padding: '16px 24px'
+        padding: '32px 24px' // Increased padding for larger logo
       }}>
         <div style={{
           display: 'flex',
@@ -44,20 +44,20 @@ export default function PageShell({ children }: { children: React.ReactNode }) {
             <Image
               src="/echostone_logo.png"
               alt="EchoStone"
-              width={60}
-              height={60}
+              width={100}
+              height={100}
               style={{
-                borderRadius: '12px',
-                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
+                borderRadius: '16px',
+                boxShadow: '0 6px 24px rgba(0, 0, 0, 0.3)',
                 transition: 'transform 0.2s ease, box-shadow 0.2s ease'
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = 'scale(1.05)'
-                e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.3)'
+                e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.4)'
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'scale(1)'
-                e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.2)'
+                e.currentTarget.style.boxShadow = '0 6px 24px rgba(0, 0, 0, 0.3)'
               }}
             />
           </Link>
@@ -71,7 +71,7 @@ export default function PageShell({ children }: { children: React.ReactNode }) {
       <main style={{ 
         flex: 1, 
         width: '100%', 
-        paddingTop: '100px', // Increased padding for larger logo
+        paddingTop: '180px', // Increased padding for larger header logo
         paddingBottom: '80px' // Space for footer
       }}>
         {children}

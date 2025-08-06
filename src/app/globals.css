@@ -11902,4 +11902,165 @@ html {
 .chuck-portfolio {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}/* Quic
+k Questions Section */
+.quick-questions-section {
+  margin: 2rem auto;
+  max-width: 600px;
+  text-align: center;
+}
+
+.quick-questions-section h3 {
+  color: white;
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.quick-questions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.quick-question-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.8rem 1rem;
+  background: rgba(30, 20, 60, 0.8);
+  border: 1.5px solid rgba(147, 71, 255, 0.3);
+  border-radius: 12px;
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.quick-question-btn:hover:not(:disabled) {
+  background: rgba(45, 25, 80, 0.9);
+  border-color: #9147ff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(145, 71, 255, 0.3);
+}
+
+.quick-question-btn:active {
+  transform: translateY(0);
+}
+
+.quick-question-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.question-emoji {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.question-text {
+  flex: 1;
+  line-height: 1.3;
+}
+
+/* Hero Section Improvements */
+.hero-section {
+  margin-bottom: 1.5rem;
+  padding-top: 0.5rem;
+}
+
+.main-title {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 0.8rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.main-subtitle-enhanced {
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 1.5rem;
+  line-height: 1.4;
+}
+
+/* Responsive Design for Quick Questions */
+@media (max-width: 768px) {
+  .quick-questions-grid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  
+  .quick-question-btn {
+    padding: 0.7rem 0.8rem;
+    font-size: 0.85rem;
+  }
+  
+  .main-title {
+    font-size: 1.8rem;
+  }
+  
+  .main-subtitle-enhanced {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .quick-questions-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .quick-question-btn {
+    padding: 0.6rem 0.7rem;
+    font-size: 0.8rem;
+  }
+  
+  .question-emoji {
+    font-size: 1rem;
+  }
+  
+  .main-title {
+    font-size: 1.6rem;
+  }
+}/* Mai
+n Container for Jonathan Demo */
+.main-container {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 1rem;
+  text-align: center;
+  min-height: calc(100vh - 200px);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+/* Compact form styling for above the fold */
+.ask-form {
+  margin: 1.5rem auto 1rem auto;
+}
+
+.mic-btn {
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.main-subtitle {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 1rem;
+}
+
+/* Answer section positioning */
+.answer {
+  margin-top: 1.5rem;
+  position: relative;
+  z-index: 10;
 }

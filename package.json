@@ -9,7 +9,8 @@
     "lint": "next lint",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "migrate-profile": "tsx src/scripts/migrateProfile.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",
@@ -21,7 +22,6 @@
     "@supabase/supabase-js": "^2.50.2",
     "@types/uuid": "^10.0.0",
     "@types/ws": "^8.18.1",
-    "dotenv": "^17.0.1",
     "embla-carousel-react": "^8.6.0",
     "formidable": "^3.5.4",
     "framer-motion": "^12.23.9",
@@ -48,6 +48,7 @@
     "@types/react-dom": "^19",
     "@vitest/ui": "^3.2.4",
     "autoprefixer": "^10.4.21",
+    "dotenv": "^17.2.1",
     "dotenv-cli": "^8.0.0",
     "eslint": "^9",
     "eslint-config-next": "15.3.4",
@@ -55,6 +56,7 @@
     "postcss": "^8.5.6",
     "prisma": "^6.12.0",
     "tailwindcss": "^4.1.11",
+    "tsx": "^4.20.3",
     "typescript": "^5",
     "vitest": "^3.2.4"
   }

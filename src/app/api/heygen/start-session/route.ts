@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const { token, sdp } = await request.json();
+    const { token } = await request.json();
 
-    if (!token || !sdp) {
-      console.error('❌ Missing required parameters:', { hasToken: !!token, hasSdp: !!sdp });
-      return NextResponse.json({ error: 'token and sdp are required' }, { status: 400 });
+    if (!token) {
+      console.error('❌ Missing required parameters:', { hasToken: !!token });
+      return NextResponse.json({ error: 'token is required' }, { status: 400 });
     }
 
     if (!process.env.HEYGEN_API_KEY || !process.env.HEYGEN_AVATAR_ID) {

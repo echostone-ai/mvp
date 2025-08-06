@@ -15,18 +15,19 @@ export async function POST(request: NextRequest) {
     }
 
     const textPreview = text.length > 100 ? text.substring(0, 100) + '...' : text;
-    console.log('🎤 Sending text to HeyGen avatar:', textPreview);
+    console.log('🎤 Sending EXACT text to HeyGen avatar to REPEAT:', textPreview);
     console.log('📋 Task details:', {
       sessionId: sessionId,
       textLength: text.length,
-      voiceId: voiceId
+      taskType: 'repeat',
+      taskMode: 'sync'
     });
+    console.log('📝 FULL TEXT being sent:', text);
 
     const requestBody = {
       session_id: sessionId,
       text: text,
-      task_type: 'talk',
-      task_mode: 'sync'
+      task_type: 'repeat'
     };
 
     const heygenResponse = await fetch('https://api.heygen.com/v1/streaming.task', {
@@ -69,12 +70,23 @@ export async function POST(request: NextRequest) {
     console.log('✅ HeyGen task submitted successfully:', {
       taskId: result.data.task_id,
       status: result.data.status,
-      textLength: text.length
+      textLength: text.length,
+      fullResponse: result
     });
+    
+    // Check if the task was actually accepted
+    if (result.data.status === 'failed' || result.data.status === 'error') {
+      console.error('❌ HeyGen task failed:', result.data);
+      return NextResponse.json({ 
+        error: 'HeyGen task failed',
+        details: result.data
+      }, { status: 400 });
+    }
     
     return NextResponse.json({
       task_id: result.data.task_id,
       status: result.data.status,
+      message: result.data.message || 'Task submitted successfully'
     });
 
   } catch (error) {

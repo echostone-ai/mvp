@@ -8,8 +8,7 @@ export async function POST(request: NextRequest) {
 
     console.log('🧹 Attempting to close all HeyGen sessions...');
 
-    // HeyGen doesn't have a "close all" endpoint, but we can try to close common session IDs
-    // This is a workaround for the concurrent limit issue
+    // List all active sessions first
     const response = await fetch('https://api.heygen.com/v1/streaming.list', {
       method: 'GET',
       headers: {
@@ -31,9 +30,9 @@ export async function POST(request: NextRequest) {
     console.log('Active sessions:', data);
 
     // Try to close any active sessions
-    if (data.data && Array.isArray(data.data)) {
+    if (data.data && data.data.sessions && Array.isArray(data.data.sessions)) {
       const closedSessions = [];
-      for (const session of data.data) {
+      for (const session of data.data.sessions) {
         if (session.session_id) {
           try {
             const closeResponse = await fetch('https://api.heygen.com/v1/streaming.stop', {
@@ -60,7 +59,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         message: 'Session cleanup completed',
         closedSessions,
-        totalSessions: data.data.length
+        totalSessions: data.data.sessions.length
       });
     }
 
