@@ -1,0 +1,611 @@
+
+> echostone@0.1.0 dev
+> next dev
+
+   ▲ Next.js 15.3.4
+   - Local:        http://localhost:3000
+   - Network:      http://10.95.5.179:3000
+   - Environments: .env.local, .env
+
+ ✓ Starting...
+ ✓ Ready in 1328ms
+ ○ Compiling /jonathan-demo ...
+ ✓ Compiled /jonathan-demo in 736ms (1142 modules)
+ GET /jonathan-demo 200 in 958ms
+ ○ Compiling /api/chat ...
+ ✓ Compiled /api/chat in 682ms (1377 modules)
+prewarm_demo_seeds_ok
+ POST /api/chat 400 in 818ms
+ GET /jonathan-demo 200 in 131ms
+fast_lane_session_check {
+  sessionKey: 'session:mock-jonathan-demo:5e9553bc-bbe4-4c70-98ba-e3dbfc1d71a0',
+  hasData: false,
+  turnsCount: 0
+}
+metrics_fast_first_byte_ms 4
+updating_session_cache {
+  cacheKey: 'session:mock-jonathan-demo:5e9553bc-bbe4-4c70-98ba-e3dbfc1d71a0',
+  userMsg: 'tell me a funny story!',
+  assistantMsg: ''
+}
+session_cache_updated {
+  cacheKey: 'session:mock-jonathan-demo:5e9553bc-bbe4-4c70-98ba-e3dbfc1d71a0',
+  cacheSize: 1
+}
+metrics {
+  trace_id: '373f9719',
+  path: 'demo',
+  intent_label: 'story',
+  t_fast_first_byte_ms: 4,
+  t_deep_started_ms: 2006,
+  t_deep_merged_ms: 2008,
+  deep_tokens_any: { value: false },
+  deep_cancel_reason: 'late_start',
+  latency_budget_ms: 1300,
+  fast_truncated: 'stop_time',
+  tuned_fast_max_tokens: 60,
+  deep_micro_budget_ms: -2,
+  deep_allowed_tokens: 200,
+  style_prefetch_fired: true,
+  memory_injection_queued: true,
+  current_location: 'Sofia, BG',
+  runtime: 'nodejs'
+}
+deep_lane_build_error late_start
+deep_lane_error late_start
+ POST /api/chat 200 in 2023ms
+ ✓ Compiled /api/expressions/play in 246ms (1379 modules)
+🎭 Expression API called with: { avatarId: 'jonathan-demo', type: 'laugh', tone: undefined }
+🎭 Querying expressions for: { avatarId: 'jonathan-demo' }
+🎭 Database query result: {
+  expressions: [
+    {
+      id: '0c42688c-8c79-411a-a12a-43b19e94115c',
+      owner_type: 'avatar',
+      owner_key: 'jonathan-demo',
+      filename: 'jonathan_Jeez_1755508365217.mp3',
+      type: 'catchphrase',
+      tone: 'Jeez! Excited, astonished, wowed.',
+      placement_hints: [Array],
+      duration_ms: 1619,
+      cdn_url: 'https://xiftnqnwyjixwqgxqfez.supabase.co/storage/v1/object/public/expressions/avatars/jonathan-demo/jonathan_Jeez_1755508365217.mp3',
+      priority: 50,
+      status: 'active',
+      created_at: '2025-08-18T09:12:46.346729+00:00',
+      updated_at: '2025-08-18T09:12:46.346729+00:00'
+    },
+    {
+      id: '63697cb7-5cbf-4a18-811a-ad310d88caf2',
+      owner_type: 'avatar',
+      owner_key: 'jonathan-demo',
+      filename: 'jonathan_Laugh_copy_1755508777740.mp3',
+      type: 'laugh',
+      tone: 'laugh',
+      placement_hints: [Array],
+      duration_ms: 675,
+      cdn_url: 'https://xiftnqnwyjixwqgxqfez.supabase.co/storage/v1/object/public/expressions/avatars/jonathan-demo/jonathan_Laugh_copy_1755508777740.mp3',
+      priority: 50,
+      status: 'active',
+      created_at: '2025-08-18T09:19:38.617816+00:00',
+      updated_at: '2025-08-18T09:19:38.617816+00:00'
+    },
+    {
+      id: 'e4c4cecf-0ecb-4176-b7eb-08d37fda4a71',
+      owner_type: 'avatar',
+      owner_key: 'jonathan-demo',
+      filename: 'jonathan_Sigh_1755522153865.mp3',
+      type: 'laugh',
+      tone: 'Sigh for sad, nostalgic, or overwhelmed',
+      placement_hints: [Array],
+      duration_ms: 710,
+      cdn_url: 'https://xiftnqnwyjixwqgxqfez.supabase.co/storage/v1/object/public/expressions/avatars/jonathan-demo/jonathan_Sigh_1755522153865.mp3',
+      priority: 46,
+      status: 'active',
+      created_at: '2025-08-18T13:02:34.64788+00:00',
+      updated_at: '2025-08-18T13:02:34.64788+00:00'
+    }
+  ],
+  error: null
+}
+🎭 Found expressions: [
+  {
+    id: '0c42688c-8c79-411a-a12a-43b19e94115c',
+    type: 'catchphrase',
+    filename: 'jonathan_Jeez_1755508365217.mp3'
+  },
+  {
+    id: '63697cb7-5cbf-4a18-811a-ad310d88caf2',
+    type: 'laugh',
+    filename: 'jonathan_Laugh_copy_1755508777740.mp3'
+  },
+  {
+    id: 'e4c4cecf-0ecb-4176-b7eb-08d37fda4a71',
+    type: 'laugh',
+    filename: 'jonathan_Sigh_1755522153865.mp3'
+  }
+]
+ POST /api/expressions/play 200 in 1430ms
+ ✓ Compiled /api/voice-stream in 148ms (1381 modules)
+ ✓ Compiled /api/voice/resolve in 99ms (1383 modules)
+ GET /api/voice/resolve?avatar=jonathan-demo 200 in 115ms
+voice_stream_metrics {
+  tts_first_byte_ms: 3911,
+  tts_total_ms: 3984,
+  voice_cache_hit: true,
+  text_length: 290,
+  head_length: 282,
+  tail_length: 8,
+  original_length: 292
+}
+ POST /api/voice-stream 200 in 4162ms
+prewarm_demo_seeds_ok
+fast_lane_session_check {
+  sessionKey: 'session:mock-jonathan-demo:5e9553bc-bbe4-4c70-98ba-e3dbfc1d71a0',
+  hasData: true,
+  turnsCount: 1
+}
+metrics_fast_first_byte_ms 1
+updating_session_cache {
+  cacheKey: 'session:mock-jonathan-demo:5e9553bc-bbe4-4c70-98ba-e3dbfc1d71a0',
+  userMsg: 'tell me a funny story!',
+  assistantMsg: ''
+}
+session_cache_updated {
+  cacheKey: 'session:mock-jonathan-demo:5e9553bc-bbe4-4c70-98ba-e3dbfc1d71a0',
+  cacheSize: 1
+}
+metrics {
+  trace_id: '6650462c',
+  path: 'demo',
+  intent_label: 'story',
+  t_fast_first_byte_ms: 1,
+  t_deep_started_ms: 2051,
+  t_deep_merged_ms: 2055,
+  deep_tokens_any: { value: false },
+  deep_cancel_reason: 'late_start',
+  latency_budget_ms: 1300,
+  fast_truncated: 'stop_time',
+  tuned_fast_max_tokens: 53,
+  deep_micro_budget_ms: -4,
+  deep_allowed_tokens: 200,
+  style_prefetch_fired: true,
+  memory_injection_queued: true,
+  current_location: 'Sofia, BG',
+  runtime: 'nodejs'
+}
+deep_lane_build_error late_start
+deep_lane_error late_start
+ POST /api/chat 200 in 2131ms
+🎭 Expression API called with: { avatarId: 'jonathan-demo', type: 'laugh', tone: undefined }
+🎭 Querying expressions for: { avatarId: 'jonathan-demo' }
+🎭 Database query result: {
+  expressions: [
+    {
+      id: '0c42688c-8c79-411a-a12a-43b19e94115c',
+      owner_type: 'avatar',
+      owner_key: 'jonathan-demo',
+      filename: 'jonathan_Jeez_1755508365217.mp3',
+      type: 'catchphrase',
+      tone: 'Jeez! Excited, astonished, wowed.',
+      placement_hints: [Array],
+      duration_ms: 1619,
+      cdn_url: 'https://xiftnqnwyjixwqgxqfez.supabase.co/storage/v1/object/public/expressions/avatars/jonathan-demo/jonathan_Jeez_1755508365217.mp3',
+      priority: 50,
+      status: 'active',
+      created_at: '2025-08-18T09:12:46.346729+00:00',
+      updated_at: '2025-08-18T09:12:46.346729+00:00'
+    },
+    {
+      id: '63697cb7-5cbf-4a18-811a-ad310d88caf2',
+      owner_type: 'avatar',
+      owner_key: 'jonathan-demo',
+      filename: 'jonathan_Laugh_copy_1755508777740.mp3',
+      type: 'laugh',
+      tone: 'laugh',
+      placement_hints: [Array],
+      duration_ms: 675,
+      cdn_url: 'https://xiftnqnwyjixwqgxqfez.supabase.co/storage/v1/object/public/expressions/avatars/jonathan-demo/jonathan_Laugh_copy_1755508777740.mp3',
+      priority: 50,
+      status: 'active',
+      created_at: '2025-08-18T09:19:38.617816+00:00',
+      updated_at: '2025-08-18T09:19:38.617816+00:00'
+    },
+    {
+      id: 'e4c4cecf-0ecb-4176-b7eb-08d37fda4a71',
+      owner_type: 'avatar',
+      owner_key: 'jonathan-demo',
+      filename: 'jonathan_Sigh_1755522153865.mp3',
+      type: 'laugh',
+      tone: 'Sigh for sad, nostalgic, or overwhelmed',
+      placement_hints: [Array],
+      duration_ms: 710,
+      cdn_url: 'https://xiftnqnwyjixwqgxqfez.supabase.co/storage/v1/object/public/expressions/avatars/jonathan-demo/jonathan_Sigh_1755522153865.mp3',
+      priority: 46,
+      status: 'active',
+      created_at: '2025-08-18T13:02:34.64788+00:00',
+      updated_at: '2025-08-18T13:02:34.64788+00:00'
+    }
+  ],
+  error: null
+}
+🎭 Found expressions: [
+  {
+    id: '0c42688c-8c79-411a-a12a-43b19e94115c',
+    type: 'catchphrase',
+    filename: 'jonathan_Jeez_1755508365217.mp3'
+  },
+  {
+    id: '63697cb7-5cbf-4a18-811a-ad310d88caf2',
+    type: 'laugh',
+    filename: 'jonathan_Laugh_copy_1755508777740.mp3'
+  },
+  {
+    id: 'e4c4cecf-0ecb-4176-b7eb-08d37fda4a71',
+    type: 'laugh',
+    filename: 'jonathan_Sigh_1755522153865.mp3'
+  }
+]
+ POST /api/expressions/play 200 in 390ms
+ GET /api/voice/resolve?avatar=jonathan-demo 200 in 9ms
+voice_stream_metrics {
+  tts_first_byte_ms: 2146,
+  tts_total_ms: 2177,
+  voice_cache_hit: true,
+  text_length: 135,
+  head_length: 120,
+  tail_length: 15,
+  original_length: 135
+}
+ POST /api/voice-stream 200 in 2194ms
+fast_lane_session_check {
+  sessionKey: 'session:mock-jonathan-demo:5e9553bc-bbe4-4c70-98ba-e3dbfc1d71a0',
+  hasData: true,
+  turnsCount: 2
+}
+metrics_fast_first_byte_ms 0
+updating_session_cache {
+  cacheKey: 'session:mock-jonathan-demo:5e9553bc-bbe4-4c70-98ba-e3dbfc1d71a0',
+  userMsg: 'tell me a funny story!',
+  assistantMsg: ''
+}
+session_cache_updated {
+  cacheKey: 'session:mock-jonathan-demo:5e9553bc-bbe4-4c70-98ba-e3dbfc1d71a0',
+  cacheSize: 1
+}
+metrics {
+  trace_id: '32a951f9',
+  path: 'demo',
+  intent_label: 'story',
+  t_fast_first_byte_ms: 0,
+  t_deep_started_ms: 2011,
+  t_deep_merged_ms: 2013,
+  deep_tokens_any: { value: false },
+  deep_cancel_reason: 'late_start',
+  latency_budget_ms: 1300,
+  fast_truncated: 'stop_time',
+  tuned_fast_max_tokens: 58,
+  deep_micro_budget_ms: -2,
+  deep_allowed_tokens: 200,
+  style_prefetch_fired: true,
+  memory_injection_queued: true,
+  current_location: 'Sofia, BG',
+  runtime: 'nodejs'
+}
+deep_lane_build_error late_start
+deep_lane_error late_start
+ POST /api/chat 200 in 2029ms
+🎭 Expression API called with: { avatarId: 'jonathan-demo', type: 'laugh', tone: undefined }
+🎭 Querying expressions for: { avatarId: 'jonathan-demo' }
+🎭 Database query result: {
+  expressions: [
+    {
+      id: '0c42688c-8c79-411a-a12a-43b19e94115c',
+      owner_type: 'avatar',
+      owner_key: 'jonathan-demo',
+      filename: 'jonathan_Jeez_1755508365217.mp3',
+      type: 'catchphrase',
+      tone: 'Jeez! Excited, astonished, wowed.',
+      placement_hints: [Array],
+      duration_ms: 1619,
+      cdn_url: 'https://xiftnqnwyjixwqgxqfez.supabase.co/storage/v1/object/public/expressions/avatars/jonathan-demo/jonathan_Jeez_1755508365217.mp3',
+      priority: 50,
+      status: 'active',
+      created_at: '2025-08-18T09:12:46.346729+00:00',
+      updated_at: '2025-08-18T09:12:46.346729+00:00'
+    },
+    {
+      id: '63697cb7-5cbf-4a18-811a-ad310d88caf2',
+      owner_type: 'avatar',
+      owner_key: 'jonathan-demo',
+      filename: 'jonathan_Laugh_copy_1755508777740.mp3',
+      type: 'laugh',
+      tone: 'laugh',
+      placement_hints: [Array],
+      duration_ms: 675,
+      cdn_url: 'https://xiftnqnwyjixwqgxqfez.supabase.co/storage/v1/object/public/expressions/avatars/jonathan-demo/jonathan_Laugh_copy_1755508777740.mp3',
+      priority: 50,
+      status: 'active',
+      created_at: '2025-08-18T09:19:38.617816+00:00',
+      updated_at: '2025-08-18T09:19:38.617816+00:00'
+    },
+    {
+      id: 'e4c4cecf-0ecb-4176-b7eb-08d37fda4a71',
+      owner_type: 'avatar',
+      owner_key: 'jonathan-demo',
+      filename: 'jonathan_Sigh_1755522153865.mp3',
+      type: 'laugh',
+      tone: 'Sigh for sad, nostalgic, or overwhelmed',
+      placement_hints: [Array],
+      duration_ms: 710,
+      cdn_url: 'https://xiftnqnwyjixwqgxqfez.supabase.co/storage/v1/object/public/expressions/avatars/jonathan-demo/jonathan_Sigh_1755522153865.mp3',
+      priority: 46,
+      status: 'active',
+      created_at: '2025-08-18T13:02:34.64788+00:00',
+      updated_at: '2025-08-18T13:02:34.64788+00:00'
+    }
+  ],
+  error: null
+}
+🎭 Found expressions: [
+  {
+    id: '0c42688c-8c79-411a-a12a-43b19e94115c',
+    type: 'catchphrase',
+    filename: 'jonathan_Jeez_1755508365217.mp3'
+  },
+  {
+    id: '63697cb7-5cbf-4a18-811a-ad310d88caf2',
+    type: 'laugh',
+    filename: 'jonathan_Laugh_copy_1755508777740.mp3'
+  },
+  {
+    id: 'e4c4cecf-0ecb-4176-b7eb-08d37fda4a71',
+    type: 'laugh',
+    filename: 'jonathan_Sigh_1755522153865.mp3'
+  }
+]
+ POST /api/expressions/play 200 in 697ms
+ GET /api/voice/resolve?avatar=jonathan-demo 200 in 7ms
+voice_stream_metrics {
+  tts_first_byte_ms: 3039,
+  tts_total_ms: 3110,
+  voice_cache_hit: true,
+  text_length: 284,
+  head_length: 195,
+  tail_length: 89,
+  original_length: 284
+}
+ POST /api/voice-stream 200 in 3127ms
+fast_lane_session_check {
+  sessionKey: 'session:mock-jonathan-demo:8cb3c866-a03b-4dfe-98d9-6c23cd261791',
+  hasData: false,
+  turnsCount: 0
+}
+metrics_fast_first_byte_ms 1
+updating_session_cache {
+  cacheKey: 'session:mock-jonathan-demo:8cb3c866-a03b-4dfe-98d9-6c23cd261791',
+  userMsg: 'hello',
+  assistantMsg: ''
+}
+session_cache_updated {
+  cacheKey: 'session:mock-jonathan-demo:8cb3c866-a03b-4dfe-98d9-6c23cd261791',
+  cacheSize: 2
+}
+metrics {
+  trace_id: '0053ed17',
+  path: 'demo',
+  intent_label: 'short',
+  t_fast_first_byte_ms: 1,
+  t_deep_started_ms: 1408,
+  t_deep_merged_ms: 1408,
+  deep_tokens_any: { value: false },
+  deep_cancel_reason: 'late_start',
+  latency_budget_ms: 900,
+  fast_truncated: false,
+  tuned_fast_max_tokens: 57,
+  deep_micro_budget_ms: 0,
+  deep_allowed_tokens: 200,
+  style_prefetch_fired: true,
+  memory_injection_queued: true,
+  current_location: 'Sofia, BG',
+  runtime: 'nodejs'
+}
+deep_lane_build_error late_start
+deep_lane_error late_start
+ POST /api/chat 200 in 1433ms
+ GET /jonathan-demo 200 in 153ms
+fast_lane_session_check {
+  sessionKey: 'session:mock-jonathan-demo:5e9553bc-bbe4-4c70-98ba-e3dbfc1d71a0',
+  hasData: true,
+  turnsCount: 3
+}
+metrics_fast_first_byte_ms 0
+updating_session_cache {
+  cacheKey: 'session:mock-jonathan-demo:5e9553bc-bbe4-4c70-98ba-e3dbfc1d71a0',
+  userMsg: 'Tell me a funny story',
+  assistantMsg: ''
+}
+session_cache_updated {
+  cacheKey: 'session:mock-jonathan-demo:5e9553bc-bbe4-4c70-98ba-e3dbfc1d71a0',
+  cacheSize: 2
+}
+metrics {
+  trace_id: '280d8b92',
+  path: 'demo',
+  intent_label: 'story',
+  t_fast_first_byte_ms: 0,
+  t_deep_started_ms: 1983,
+  t_deep_merged_ms: 1984,
+  deep_tokens_any: { value: false },
+  deep_cancel_reason: 'late_start',
+  latency_budget_ms: 1300,
+  fast_truncated: 'stop_sentences',
+  tuned_fast_max_tokens: 62,
+  deep_micro_budget_ms: -1,
+  deep_allowed_tokens: 200,
+  style_prefetch_fired: true,
+  memory_injection_queued: true,
+  current_location: 'Sofia, BG',
+  runtime: 'nodejs'
+}
+deep_lane_build_error late_start
+deep_lane_error late_start
+ POST /api/chat 200 in 2003ms
+🎭 Expression API called with: { avatarId: 'jonathan-demo', type: 'laugh', tone: undefined }
+🎭 Querying expressions for: { avatarId: 'jonathan-demo' }
+🎭 Database query result: {
+  expressions: [
+    {
+      id: '0c42688c-8c79-411a-a12a-43b19e94115c',
+      owner_type: 'avatar',
+      owner_key: 'jonathan-demo',
+      filename: 'jonathan_Jeez_1755508365217.mp3',
+      type: 'catchphrase',
+      tone: 'Jeez! Excited, astonished, wowed.',
+      placement_hints: [Array],
+      duration_ms: 1619,
+      cdn_url: 'https://xiftnqnwyjixwqgxqfez.supabase.co/storage/v1/object/public/expressions/avatars/jonathan-demo/jonathan_Jeez_1755508365217.mp3',
+      priority: 50,
+      status: 'active',
+      created_at: '2025-08-18T09:12:46.346729+00:00',
+      updated_at: '2025-08-18T09:12:46.346729+00:00'
+    },
+    {
+      id: '63697cb7-5cbf-4a18-811a-ad310d88caf2',
+      owner_type: 'avatar',
+      owner_key: 'jonathan-demo',
+      filename: 'jonathan_Laugh_copy_1755508777740.mp3',
+      type: 'laugh',
+      tone: 'laugh',
+      placement_hints: [Array],
+      duration_ms: 675,
+      cdn_url: 'https://xiftnqnwyjixwqgxqfez.supabase.co/storage/v1/object/public/expressions/avatars/jonathan-demo/jonathan_Laugh_copy_1755508777740.mp3',
+      priority: 50,
+      status: 'active',
+      created_at: '2025-08-18T09:19:38.617816+00:00',
+      updated_at: '2025-08-18T09:19:38.617816+00:00'
+    },
+    {
+      id: 'e4c4cecf-0ecb-4176-b7eb-08d37fda4a71',
+      owner_type: 'avatar',
+      owner_key: 'jonathan-demo',
+      filename: 'jonathan_Sigh_1755522153865.mp3',
+      type: 'laugh',
+      tone: 'Sigh for sad, nostalgic, or overwhelmed',
+      placement_hints: [Array],
+      duration_ms: 710,
+      cdn_url: 'https://xiftnqnwyjixwqgxqfez.supabase.co/storage/v1/object/public/expressions/avatars/jonathan-demo/jonathan_Sigh_1755522153865.mp3',
+      priority: 46,
+      status: 'active',
+      created_at: '2025-08-18T13:02:34.64788+00:00',
+      updated_at: '2025-08-18T13:02:34.64788+00:00'
+    }
+  ],
+  error: null
+}
+🎭 Found expressions: [
+  {
+    id: '0c42688c-8c79-411a-a12a-43b19e94115c',
+    type: 'catchphrase',
+    filename: 'jonathan_Jeez_1755508365217.mp3'
+  },
+  {
+    id: '63697cb7-5cbf-4a18-811a-ad310d88caf2',
+    type: 'laugh',
+    filename: 'jonathan_Laugh_copy_1755508777740.mp3'
+  },
+  {
+    id: 'e4c4cecf-0ecb-4176-b7eb-08d37fda4a71',
+    type: 'laugh',
+    filename: 'jonathan_Sigh_1755522153865.mp3'
+  }
+]
+ POST /api/expressions/play 200 in 666ms
+ GET /api/voice/resolve?avatar=jonathan-demo 200 in 9ms
+voice_stream_metrics {
+  tts_first_byte_ms: 3576,
+  tts_total_ms: 3807,
+  voice_cache_hit: true,
+  text_length: 340,
+  head_length: 222,
+  tail_length: 118,
+  original_length: 340
+}
+ POST /api/voice-stream 200 in 3818ms
+fast_lane_session_check {
+  sessionKey: 'session:mock-jonathan-demo:5e9553bc-bbe4-4c70-98ba-e3dbfc1d71a0',
+  hasData: true,
+  turnsCount: 3
+}
+metrics_fast_first_byte_ms 0
+updating_session_cache {
+  cacheKey: 'session:mock-jonathan-demo:5e9553bc-bbe4-4c70-98ba-e3dbfc1d71a0',
+  userMsg: 'tell me somethign touching',
+  assistantMsg: ''
+}
+session_cache_updated {
+  cacheKey: 'session:mock-jonathan-demo:5e9553bc-bbe4-4c70-98ba-e3dbfc1d71a0',
+  cacheSize: 2
+}
+metrics {
+  trace_id: '8c59495f',
+  path: 'demo',
+  intent_label: 'short',
+  t_fast_first_byte_ms: 0,
+  t_deep_started_ms: 1985,
+  t_deep_merged_ms: 1986,
+  deep_tokens_any: { value: false },
+  deep_cancel_reason: 'late_start',
+  latency_budget_ms: 900,
+  fast_truncated: 'stop_sentences',
+  tuned_fast_max_tokens: 66,
+  deep_micro_budget_ms: -1,
+  deep_allowed_tokens: 200,
+  style_prefetch_fired: true,
+  memory_injection_queued: true,
+  current_location: 'Sofia, BG',
+  runtime: 'nodejs'
+}
+deep_lane_build_error late_start
+deep_lane_error late_start
+ POST /api/chat 200 in 2003ms
+ GET /api/voice/resolve?avatar=jonathan-demo 200 in 8ms
+voice_stream_metrics {
+  tts_first_byte_ms: 3957,
+  tts_total_ms: 4006,
+  voice_cache_hit: true,
+  text_length: 380,
+  head_length: 314,
+  tail_length: 66,
+  original_length: 380
+}
+ POST /api/voice-stream 200 in 4019ms
+ GET /jonathan-demo 200 in 40ms
+ ✓ Compiled in 633ms (722 modules)
+ ✓ Compiled in 1158ms (1143 modules)
+ ✓ Compiled in 302ms (1143 modules)
+ ✓ Compiled in 396ms (1143 modules)
+ ✓ Compiled in 295ms (1143 modules)
+ ✓ Compiled in 327ms (1145 modules)
+ ✓ Compiled in 475ms (1145 modules)
+ ✓ Compiled in 242ms (1145 modules)
+ ✓ Compiled in 248ms (1145 modules)
+ ✓ Compiled in 281ms (1145 modules)
+ ✓ Compiled in 479ms (1145 modules)
+ ✓ Compiled /_not-found in 159ms (1149 modules)
+ ⨯ Error: ENOENT: no such file or directory, open '/Users/jonathanbraden/Documents/echostone/.next/server/vendor-chunks/next.js'
+    at __webpack_require__.f.require (.next/server/webpack-runtime.js:198:28)
+    at <unknown> (.next/server/webpack-runtime.js:111:40)
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (.next/server/webpack-runtime.js:110:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (.next/server/webpack-runtime.js:162:22)
+    at <unknown> (.next/server/app/_not-found/page.js:455:47)
+    at Object.<anonymous> (.next/server/app/_not-found/page.js:458:3) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/jonathanbraden/Documents/echostone/.next/server/vendor-chunks/next.js'
+}
+ ✓ Compiled /_error in 320ms (1484 modules)
+ GET /jonathan-demo 500 in 1778ms
+[?25h

@@ -166,10 +166,7 @@ export default function HomePage() {
 
   return (
     <div className={styles.fullPageContainer}>
-      {/* Login Button */}
-      <Link href="/login" className={styles.loginButton}>
-        Login
-      </Link>
+      {/* Header renders Login when logged out; remove inline Login link */}
       
       <main className={styles.landingContainer}>
         {/* Video Background Header */}

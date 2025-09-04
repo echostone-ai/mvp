@@ -38,13 +38,7 @@ const revokeShareSchema = z.object({
   shareId: z.string()
 });
 
-// Create handlers for each action with proper type safety
-const handlers: Record<ActionType, (request: NextRequest) => Promise<Response>> = {
-  'create-share': createApiHandler(createShareSchema, createShare),
-  'accept-share': createApiHandler(acceptShareSchema, acceptShare),
-  'get-shared-avatars': createApiHandler(getSharedAvatarsSchema, getSharedAvatars),
-  'revoke-share': createApiHandler(revokeShareSchema, revokeShare)
-};
+// Handlers are defined inline in the POST function for better error handling
 
 // POST handler for all avatar sharing operations
 export async function POST(request: NextRequest) {

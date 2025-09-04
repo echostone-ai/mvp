@@ -1,0 +1,80 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+  
+  resource:
+    attributes:
+      - key: service.name
+        value: echostone-streaming-audio
+        action: upsert
+      - key: service.version
+        value: 1.0.0
+        action: upsert
+
+  # Add SLA compliance processing
+  transform:
+    metric_statements:
+      - context: metric
+        statements:
+          # Calculate SLA compliance for TTS latency
+          - set(attributes["sla_compliant"], "true") where name == "tts_first_byte_duration_ms" and value <= 1000
+          - set(attributes["sla_compliant"], "false") where name == "tts_first_byte_duration_ms" and value > 1000
+          
+          # Calculate SLA compliance for memory fetch
+          - set(attributes["sla_compliant"], "true") where name == "memory_fetch_duration_ms" and value <= 200
+          - set(attributes["sla_compliant"], "false") where name == "memory_fetch_duration_ms" and value > 200
+          
+          # Calculate SLA compliance for expression timing
+          - set(attributes["sla_compliant"], "true") where name == "expression_overlay_timing_ms" and value <= 50
+          - set(attributes["sla_compliant"], "false") where name == "expression_overlay_timing_ms" and value > 50
+
+exporters:
+  # Prometheus for metrics
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+    namespace: echostone
+    const_labels:
+      environment: ${ENVIRONMENT:-development}
+    
+  # Tempo for traces
+  otlp/tempo:
+    endpoint: tempo:4317
+    tls:
+      insecure: true
+
+  # Loki for logs
+  loki:
+    endpoint: http://loki:3100/loki/api/v1/push
+    tenant_id: "echostone"
+
+  # Debug logging
+  logging:
+    loglevel: info
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch, resource]
+      exporters: [otlp/tempo, logging]
+    
+    metrics:
+      receivers: [otlp]
+      processors: [batch, resource, transform]
+      exporters: [prometheus, logging]
+    
+    logs:
+      receivers: [otlp]
+      processors: [batch, resource]
+      exporters: [loki, logging]
+
+  extensions: []

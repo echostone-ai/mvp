@@ -1,5 +1,4 @@
 // src/lib/memoryService.ts
-import { OpenAI } from 'openai'
 import { supabase } from './supabase'
 import { 
   MemoryErrorHandler, 
@@ -8,10 +7,23 @@ import {
   withMemoryErrorHandling 
 } from './memoryErrorHandler'
 import { MemoryPerformanceMonitor } from './memoryPerformanceMonitor'
+import { resolveAvatarId } from './services/identity'
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!,
-})
+// Server-side only check
+const isServerSide = typeof window === 'undefined';
+
+// Conditionally import and initialize OpenAI only on server side
+let openai: any = null;
+if (isServerSide) {
+  try {
+    const { OpenAI } = require('openai');
+    openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  } catch (error) {
+    console.warn('OpenAI client not available:', error);
+  }
+}
 
 export interface MemoryFragment {
   id?: string
@@ -26,6 +38,28 @@ export interface MemoryFragment {
   }
   createdAt?: Date
   updatedAt?: Date
+}
+
+/**
+ * Helper function to resolve avatar ID from slug or return as-is if already a UUID
+ */
+async function resolveAvatarIdIfNeeded(avatarId: string | undefined): Promise<string | undefined> {
+  if (!avatarId) return undefined;
+  
+  // If it's already a UUID format, return as-is
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  if (uuidRegex.test(avatarId)) {
+    return avatarId;
+  }
+  
+  // If it's a slug like "jonathan-demo", resolve it to UUID
+  try {
+    const resolvedId = await resolveAvatarId({ avatarSlug: avatarId }, supabase);
+    return resolvedId;
+  } catch (error) {
+    console.warn(`Failed to resolve avatar ID for "${avatarId}":`, error);
+    return undefined;
+  }
 }
 
 export class MemoryExtractionService {
@@ -70,6 +104,7 @@ Now extract memory fragments from this message:
 
   /**
    * Extracts meaningful memory fragments from a user message
+   * Server-side only operation with simplified extraction for preference keywords
    */
   static async extractMemoryFragments(
     message: string, 
@@ -77,6 +112,36 @@ Now extract memory fragments from this message:
     conversationContext?: any,
     extractionThreshold?: number
   ): Promise<MemoryFragment[]> {
+    // Client-side guard
+    if (!isServerSide) {
+      console.warn('[MemoryService] Memory extraction is server-side only, returning empty array');
+      return [];
+    }
+
+    // Check for preference keywords - restrict bypass to benign tastes only
+    const hasBenignPreferenceKeywords = /\b(favorite|music|dog|pet|prefer|like|love|band|artist|food|hobby|color|movie|book|sport)\b/i.test(message);
+    const hasPoliticalKeywords = /\b(trump|biden|election|politic|america|immigration|emigration|policy|vote)\b/i.test(message);
+    
+    // Only bypass for benign preferences, NOT for political content
+    if (hasBenignPreferenceKeywords && !hasPoliticalKeywords) {
+      console.log('[MemoryService] Benign preference keywords detected, bypassing heavy extraction', {
+        bypass_prefs_applied: true,
+        query: message.substring(0, 50),
+        has_political: false
+      });
+      // Return empty array to trigger direct memory service hit instead
+      return [];
+    }
+    
+    // Log when political keywords prevent bypass
+    if (hasBenignPreferenceKeywords && hasPoliticalKeywords) {
+      console.log('[MemoryService] Political keywords detected, preventing preference bypass', {
+        bypass_prefs_applied: false,
+        query: message.substring(0, 50),
+        has_political: true
+      });
+    }
+
     return MemoryPerformanceMonitor.withPerformanceTracking(
       'memory_extraction',
       () => MemoryErrorHandler.withGracefulDegradation(
@@ -108,6 +173,13 @@ Now extract memory fragments from this message:
             : 'Format each memory as a complete sentence starting with "The user"'
         );
         
+        if (!openai) {
+          throw new MemoryError(
+            MemoryErrorType.MEMORY_EXTRACTION_FAILED,
+            'OpenAI client not available (server-side only)'
+          )
+        }
+
         const completion = await openai.chat.completions.create({
           model: 'gpt-4o-mini',
           messages: [
@@ -233,10 +305,24 @@ Now extract memory fragments from this message:
 export class MemoryStorageService {
   /**
    * Generates embeddings for text using OpenAI's text-embedding-3-small model
+   * Server-side only operation
    */
   static async generateEmbedding(text: string): Promise<number[]> {
+    // Client-side guard
+    if (!isServerSide) {
+      console.warn('[MemoryService] Embedding generation is server-side only, returning empty array');
+      return [];
+    }
+
     return MemoryErrorHandler.withRetry(
       async () => {
+        if (!openai) {
+          throw new MemoryError(
+            MemoryErrorType.EMBEDDING_GENERATION_FAILED,
+            'OpenAI client not available (server-side only)'
+          )
+        }
+
         const response = await openai.embeddings.create({
           model: 'text-embedding-3-small',
           input: text,
@@ -270,6 +356,13 @@ export class MemoryStorageService {
         for (let i = 0; i < texts.length; i += batchSize) {
           const batch = texts.slice(i, i + batchSize)
           
+          if (!openai) {
+            throw new MemoryError(
+              MemoryErrorType.EMBEDDING_GENERATION_FAILED,
+              'OpenAI client not available (server-side only)'
+            )
+          }
+
           const response = await openai.embeddings.create({
             model: 'text-embedding-3-small',
             input: batch,
@@ -320,6 +413,9 @@ export class MemoryStorageService {
           fragment.embedding = await this.generateEmbedding(fragment.fragmentText)
         }
 
+        // Resolve avatarId if it's a slug
+        const resolvedAvatarId = fragment.avatarId ? await resolveAvatarIdIfNeeded(fragment.avatarId) : undefined;
+
         const insertData: any = {
           user_id: fragment.userId,
           fragment_text: fragment.fragmentText,
@@ -328,8 +424,8 @@ export class MemoryStorageService {
         }
         
         // Include avatarId if it exists in the fragment
-        if (fragment.avatarId) {
-          insertData.avatar_id = fragment.avatarId
+        if (resolvedAvatarId) {
+          insertData.avatar_id = resolvedAvatarId
         }
         
         const { data, error } = await supabase
@@ -386,8 +482,11 @@ export class MemoryStorageService {
           })
         }
 
-        // Prepare data for insertion
-        const insertData = fragments.map(fragment => {
+        // Prepare data for insertion with resolved avatar IDs
+        const insertData = await Promise.all(fragments.map(async (fragment) => {
+          // Resolve avatarId if it's a slug
+          const resolvedAvatarId = fragment.avatarId ? await resolveAvatarIdIfNeeded(fragment.avatarId) : undefined;
+          
           const data: any = {
             user_id: fragment.userId,
             fragment_text: fragment.fragmentText,
@@ -396,12 +495,12 @@ export class MemoryStorageService {
           };
           
           // Include avatar_id if it exists
-          if (fragment.avatarId) {
-            data.avatar_id = fragment.avatarId;
+          if (resolvedAvatarId) {
+            data.avatar_id = resolvedAvatarId;
           }
           
           return data;
-        })
+        }))
 
         const { data, error } = await supabase
           .from('memory_fragments')
@@ -514,14 +613,17 @@ export class MemoryStorageService {
   static async deleteAllUserMemories(userId: string, avatarId?: string | null): Promise<void> {
     return MemoryErrorHandler.withRetry(
       async () => {
+        // Resolve avatarId if it's a slug
+        const resolvedAvatarId = avatarId ? await resolveAvatarIdIfNeeded(avatarId) : null;
+        
         let query = supabase
           .from('memory_fragments')
           .delete()
           .eq('user_id', userId)
           
         // Filter by avatarId if provided
-        if (avatarId) {
-          query = query.eq('avatar_id', avatarId)
+        if (resolvedAvatarId) {
+          query = query.eq('avatar_id', resolvedAvatarId)
         }
         
         const { error } = await query
@@ -547,7 +649,7 @@ export class MemoryRetrievalService {
   private static readonly DEFAULT_LIMIT = 10
 
   /**
-   * Retrieves relevant memory fragments using semantic similarity search
+   * Retrieves relevant memory fragments using enhanced hybrid search
    */
   static async retrieveRelevantMemories(
     query: string,
@@ -560,8 +662,8 @@ export class MemoryRetrievalService {
     } = {}
   ): Promise<MemoryFragment[]> {
     const {
-      limit = this.DEFAULT_LIMIT,
-      similarityThreshold = this.DEFAULT_SIMILARITY_THRESHOLD,
+      limit = 64, // Increased from 10 to 64 for better coverage
+      similarityThreshold = 0.2, // Lowered to 0.2 for better semantic matching
       includeContext = true,
       avatarId
     } = options
@@ -581,18 +683,128 @@ export class MemoryRetrievalService {
       cacheKey,
       () => MemoryErrorHandler.withGracefulDegradation(
         async () => {
-          // Generate embedding for the query
-          const queryEmbedding = await MemoryStorageService.generateEmbedding(query)
+          // Resolve avatarId if it's a slug
+          const resolvedAvatarId = avatarId ? await resolveAvatarIdIfNeeded(avatarId) : null;
+          
+          console.log('[MemoryService] Using enhanced retrieval, user:', userId, 'avatar:', resolvedAvatarId, 'query:', query.substring(0, 30));
+          
+          // Extract keywords from query for better semantic matching
+          const extractKeywords = (text: string): string[] => {
+            const stopWords = new Set(['what', 'was', 'your', 'the', 'a', 'an', 'is', 'are', 'were', 'been', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'can', 'may', 'might', 'must', 'shall', 'to', 'of', 'in', 'on', 'at', 'by', 'for', 'with', 'from', 'up', 'about', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'between', 'among', 'and', 'or', 'but', 'so', 'if', 'then', 'else', 'when', 'where', 'why', 'how', 'who', 'which', 'that', 'this', 'these', 'those', 'me', 'my', 'mine', 'you', 'yours', 'he', 'his', 'she', 'her', 'hers', 'it', 'its', 'we', 'our', 'ours', 'they', 'their', 'theirs', 'i', 'tell', 'about']);
+            const importantWords = new Set(['dog', 'cat', 'pet', 'music', 'band', 'song', 'name', 'age', 'job', 'work', 'live', 'born', 'from']);
+            
+            return text.toLowerCase()
+              .replace(/[^\w\s]/g, '') // Remove punctuation
+              .split(/\s+/)
+              .filter(word => 
+                word.length > 0 && (
+                  (word.length >= 3 && !stopWords.has(word)) || 
+                  importantWords.has(word)
+                )
+              );
+          };
+          
+          const keywords = extractKeywords(query);
+          console.log('[MemoryService] Extracted keywords:', keywords);
+          
+          // Detect political/opinion queries for special handling
+          const isPoliticalQuery = /\b(trump|political|politics|america|emigration|left america|political climate)\b/i.test(query);
+          const isOpinionQuery = /\b(think|opinion|feel|believe|view|like|dislike|hate|love)\b/i.test(query);
+          const adjustedThreshold = (isPoliticalQuery || isOpinionQuery) ? 0.25 : similarityThreshold;
+          
+          console.log(`[MemoryService] Political query: ${isPoliticalQuery}, Opinion query: ${isOpinionQuery}, Adjusted threshold: ${adjustedThreshold}`);
+          
+          // Try keywords individually and combine results for better semantic matching
+          let allResults: any[] = [];
+          const seenIds = new Set<string>();
+          
+          if (keywords.length > 0) {
+            // Try each keyword individually to get better coverage
+            for (const keyword of keywords) {
+              const { data: keywordData, error: keywordError } = await supabase.rpc('get_enhanced_memories', {
+                target_user_id: userId,
+                target_avatar_id: resolvedAvatarId,
+                search_query: keyword,
+                match_count: Math.ceil(limit / keywords.length) + 5, // Get more results per keyword
+                similarity_threshold: adjustedThreshold, // Use adjusted threshold
+                include_bio_facts: true
+              });
+              
+              if (!keywordError && keywordData) {
+                keywordData.forEach((result: any) => {
+                  if (!seenIds.has(result.id)) {
+                    seenIds.add(result.id);
+                    allResults.push(result);
+                  }
+                });
+              }
+            }
+            
+            // Sort by similarity score and limit results
+            allResults.sort((a, b) => b.similarity_score - a.similarity_score);
+            allResults = allResults.slice(0, limit);
+          }
+          
+          // Fallback to original query if no keywords or no results
+          if (allResults.length === 0) {
+            console.log('[MemoryService] No results from keywords, trying original query:', query.substring(0, 30));
+            const { data, error } = await supabase.rpc('get_enhanced_memories', {
+              target_user_id: userId,
+              target_avatar_id: resolvedAvatarId,
+              search_query: query,
+              match_count: limit,
+              similarity_threshold: adjustedThreshold, // Use adjusted threshold
+              include_bio_facts: true
+            });
+            
+            if (error) {
+              console.warn('[MemoryService] Enhanced retrieval failed, falling back:', error);
+              return this.searchMemoriesByText(query, userId, limit, avatarId);
+            }
+            
+            allResults = data || [];
+          }
+          
+          // Additional fallback: if still no results, use comprehensive text search
+          if (allResults.length === 0) {
+            console.log('[MemoryService] Enhanced function returned 0 results, using comprehensive fallback');
+            return this.searchMemoriesByText(query, userId, limit, avatarId);
+          }
+          
+          const data = allResults;
+          const error = null;
 
-          // Use simple text search instead of vector search for now
-          console.log('[MemoryService] Using text search for memories, user:', userId, 'avatar:', avatarId, 'query:', query.substring(0, 30));
-          const textSearchResults = await this.searchMemoriesByText(query, userId, limit, avatarId);
-          console.log('[MemoryService] Text search returned', textSearchResults.length, 'memories');
-          return textSearchResults;
+          if (error) {
+            console.warn('[MemoryService] Enhanced retrieval failed, falling back:', error);
+            return this.searchMemoriesByText(query, userId, limit, avatarId);
+          }
+
+          if (!data || !Array.isArray(data)) {
+            console.log('[MemoryService] No data returned from enhanced retrieval');
+            return [];
+          }
+
+          console.log('[MemoryService] Enhanced retrieval returned', data.length, 'memories');
+          
+          // Convert to MemoryFragment format
+          return data.map((item: any) => ({
+            id: item.id,
+            userId: item.user_id,
+            avatarId: item.avatar_id,
+            fragmentText: item.fragment_text,
+            embedding: undefined, // Don't return embeddings to save memory
+            conversationContext: {
+              ...item.conversation_context,
+              similarity: item.similarity_score,
+              matchType: item.match_type
+            },
+            createdAt: new Date(item.created_at),
+            updatedAt: new Date(item.updated_at)
+          }));
         },
         async () => {
-          // Fallback to text search if vector search fails
-          console.warn('Vector search failed, falling back to text search')
+          // Fallback to text search if enhanced search fails
+          console.warn('Enhanced search failed, falling back to text search')
           return this.searchMemoriesByText(query, userId, limit, avatarId)
         },
         'retrieve_relevant_memories',
@@ -623,6 +835,9 @@ export class MemoryRetrievalService {
       avatarId = null
     } = options
 
+    // Resolve avatarId if it's a slug
+    const resolvedAvatarId = avatarId ? await resolveAvatarIdIfNeeded(avatarId) : null;
+
     // Create cache key for user memories
     const cacheKey = MemoryPerformanceMonitor.getCacheKey('user_memories', {
       userId,
@@ -630,7 +845,7 @@ export class MemoryRetrievalService {
       offset,
       orderBy,
       orderDirection,
-      avatarId
+      avatarId: resolvedAvatarId
     })
 
     return MemoryPerformanceMonitor.withCaching(
@@ -638,16 +853,16 @@ export class MemoryRetrievalService {
       cacheKey,
       () => MemoryErrorHandler.withRetry(
         async () => {
-          console.log('[MemoryService] getUserMemories query:', { userId, avatarId, limit, orderBy, orderDirection });
+          console.log('[MemoryService] getUserMemories query:', { userId, avatarId, resolvedAvatarId, limit, orderBy, orderDirection });
           let query = supabase
           .from('memory_fragments')
           .select('*')
           .eq('user_id', userId)
           
           // Filter by avatarId if provided
-          if (avatarId) {
-            query = query.eq('avatar_id', avatarId)
-            console.log('[MemoryService] Filtering by avatarId:', avatarId);
+          if (resolvedAvatarId) {
+            query = query.eq('avatar_id', resolvedAvatarId)
+            console.log('[MemoryService] Filtering by resolvedAvatarId:', resolvedAvatarId);
           }
           
           query = query.order(orderBy, { ascending: orderDirection === 'asc' })
@@ -756,6 +971,7 @@ export class MemoryRetrievalService {
 
   /**
    * Searches memory fragments by text content (fallback when vector search fails)
+   * Enhanced to include avatar-scoped memories (bio facts without user_id)
    */
   static async searchMemoriesByText(
     searchText: string,
@@ -765,21 +981,72 @@ export class MemoryRetrievalService {
   ): Promise<MemoryFragment[]> {
     return MemoryErrorHandler.withGracefulDegradation(
       async () => {
+        // Resolve avatarId if it's a slug
+        const resolvedAvatarId = avatarId ? await resolveAvatarIdIfNeeded(avatarId) : null;
+        
+        console.log('[MemoryService] searchMemoriesByText - enhanced search for user:', userId, 'avatar:', resolvedAvatarId, 'query:', searchText.substring(0, 30));
+        
+        // Build query to include both user memories AND avatar bio memories
         let query = supabase
           .from('memory_fragments')
-          .select('*')
-          .eq('user_id', userId)
+          .select('*');
           
-        // Filter by avatarId if provided
-        if (avatarId) {
-          query = query.eq('avatar_id', avatarId)
+        if (resolvedAvatarId) {
+          // Include memories that belong to either:
+          // 1. This user AND this avatar (conversation memories)
+          // 2. This avatar with no user (bio/seeded memories)
+          query = query.or(`and(user_id.eq.${userId},avatar_id.eq.${resolvedAvatarId}),and(user_id.is.null,avatar_id.eq.${resolvedAvatarId})`);
+        } else {
+          // Fallback to user-only if no avatar
+          query = query.eq('user_id', userId);
         }
         
-        // Use simple query instead of text search (which might not be available)
-        console.log('[MemoryService] searchMemoriesByText - getting all memories for user:', userId, 'avatar:', avatarId);
+        // Enhanced text search with comprehensive term matching
+        if (searchText && searchText.trim()) {
+          const queryLower = searchText.toLowerCase();
+          
+          // Enhanced query analysis for better term extraction
+          const isDogQuery = /\b(dog|dogs|pet|pets|bucky|george|olive|romeo|poodle|valentine)\b/i.test(queryLower);
+          const isMusicQuery = /\b(music|favorite|band|artist|nirvana|sound|emotion|kurt|cobain)\b/i.test(queryLower);
+          
+          let searchTerms: string[] = [];
+          
+          if (isDogQuery) {
+            // Comprehensive dog search terms
+            searchTerms = ['dog', 'dogs', 'pet', 'pets', 'bucky', 'george', 'olive', 'romeo', 'poodle', 'valentine', 'toy', 'golden', 'retriever'];
+          } else if (isMusicQuery) {
+            // Comprehensive music search terms
+            searchTerms = ['music', 'favorite', 'band', 'artist', 'nirvana', 'song', 'sound', 'emotion', 'kurt', 'cobain'];
+          } else {
+            // General search - extract meaningful words
+            searchTerms = searchText.toLowerCase().split(/\s+/).filter(w => 
+              w.length > 1 && 
+              !['what', 'was', 'your', 'the', 'a', 'an', 'is', 'are', 'tell', 'me', 'about'].includes(w)
+            );
+          }
+          
+          console.log('[MemoryService] Using search terms:', searchTerms);
+          
+          if (searchTerms.length > 0) {
+            const orConditions = [];
+            
+            // Add individual term searches
+            searchTerms.forEach(term => {
+              orConditions.push(`fragment_text.ilike.%${term}%`);
+            });
+            
+            // Add exact phrase search if multiple words
+            if (searchText.includes(' ')) {
+              orConditions.push(`fragment_text.ilike.%${searchText}%`);
+            }
+            
+            query = query.or(orConditions.join(','));
+          }
+        }
+        
         const { data, error } = await query
           .order('created_at', { ascending: false })
-          .limit(limit * 2); // Get more to allow for filtering
+          .limit(limit * 3); // Get more to allow for filtering and ranking
         
         console.log('[MemoryService] Retrieved', data?.length || 0, 'memories before filtering');
 
@@ -826,14 +1093,17 @@ export class MemoryRetrievalService {
   }> {
     return MemoryErrorHandler.withRetry(
       async () => {
+        // Resolve avatarId if it's a slug
+        const resolvedAvatarId = avatarId ? await resolveAvatarIdIfNeeded(avatarId) : null;
+        
         let query = supabase
           .from('memory_fragments')
           .select('created_at')
           .eq('user_id', userId)
           
         // Filter by avatarId if provided
-        if (avatarId) {
-          query = query.eq('avatar_id', avatarId)
+        if (resolvedAvatarId) {
+          query = query.eq('avatar_id', resolvedAvatarId)
         }
         
         const { data, error } = await query.order('created_at', { ascending: true })

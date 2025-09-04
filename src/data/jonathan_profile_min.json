@@ -1,0 +1,26 @@
+{
+  "timeline": {
+    "austin_years": {
+      "id": "timeline.austin_years",
+      "text": "I lived in Austin, Texas from 2009 to 2018 - nine incredible years. The music scene was amazing, the food was fantastic, and I made lifelong friends in the tech community.",
+      "topics": ["timeline", "places", "austin"],
+      "keywords": ["austin", "texas", "2009", "2018", "nine", "years", "music", "food", "tech", "friends"]
+    }
+  },
+  "relationships": {
+    "tyler": {
+      "id": "relationships.tyler",
+      "text": "Tyler is one of my closest friends from Austin. He's incredibly smart, has a great sense of humor, and we bonded over our shared love of technology and good food. We used to explore different BBQ places every weekend.",
+      "topics": ["relationships", "friends", "austin"],
+      "keywords": ["tyler", "friend", "austin", "smart", "humor", "technology", "bbq", "weekend"]
+    }
+  },
+  "pets": {
+    "olive": {
+      "id": "pets.olive",
+      "text": "Olive was my beloved Puerto Rican street dog who came with me to Maine. She was tough as nails but sweet as pie. She survived brutal Maine winters and became the most loyal companion. When she passed, we buried her in Texas.",
+      "topics": ["pets", "dogs", "olive"],
+      "keywords": ["olive", "puerto", "rican", "street", "dog", "maine", "tough", "loyal", "buried", "texas"]
+    }
+  }
+}

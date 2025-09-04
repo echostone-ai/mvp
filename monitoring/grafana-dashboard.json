@@ -1,0 +1,225 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "EchoStone Streaming Audio Performance",
+    "tags": ["echostone", "audio", "performance"],
+    "style": "dark",
+    "timezone": "browser",
+    "refresh": "30s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "SLA Compliance Overview",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "rate(echostone_sla_violations_total[5m]) * 100",
+            "legendFormat": "SLA Violations %"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 1},
+                {"color": "red", "value": 5}
+              ]
+            },
+            "unit": "percent"
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "TTS First Byte Latency",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(tts_first_byte_duration_ms_bucket[5m]))",
+            "legendFormat": "P50"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(tts_first_byte_duration_ms_bucket[5m]))",
+            "legendFormat": "P95"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(tts_first_byte_duration_ms_bucket[5m]))",
+            "legendFormat": "P99"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "unit": "ms",
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 800},
+                {"color": "red", "value": 1000}
+              ]
+            }
+          }
+        },
+        "options": {
+          "legend": {"displayMode": "table", "placement": "bottom"}
+        }
+      },
+      {
+        "id": 3,
+        "title": "Memory Fetch Performance",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(memory_fetch_duration_ms_bucket[5m]))",
+            "legendFormat": "P50"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(memory_fetch_duration_ms_bucket[5m]))",
+            "legendFormat": "P95"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "unit": "ms",
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 150},
+                {"color": "red", "value": 200}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "Expression Overlay Metrics",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+        "targets": [
+          {
+            "expr": "rate(overlay_injections_total[5m]) * 60",
+            "legendFormat": "Injections/min"
+          },
+          {
+            "expr": "rate(overlay_dropped_total[5m]) * 60",
+            "legendFormat": "Dropped/min"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "unit": "reqps"
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "Stream Interrupts & Errors",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+        "targets": [
+          {
+            "expr": "rate(stream_interrupts_total[5m]) * 60",
+            "legendFormat": "Stream Interrupts/min"
+          },
+          {
+            "expr": "rate(errors_total[5m]) * 60",
+            "legendFormat": "Errors/min"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "unit": "reqps"
+          }
+        }
+      },
+      {
+        "id": 6,
+        "title": "Expression Timing Distribution",
+        "type": "heatmap",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 24},
+        "targets": [
+          {
+            "expr": "rate(expression_overlay_timing_ms_bucket[5m])",
+            "legendFormat": "{{le}}"
+          }
+        ],
+        "options": {
+          "calculate": true,
+          "yAxis": {"unit": "ms"}
+        }
+      },
+      {
+        "id": 7,
+        "title": "Error Rate by Component",
+        "type": "piechart",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 32},
+        "targets": [
+          {
+            "expr": "sum by (component) (rate(errors_total[5m]))",
+            "legendFormat": "{{component}}"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "SLA Threshold Violations",
+        "type": "table",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 32},
+        "targets": [
+          {
+            "expr": "sum by (metric_type) (rate(echostone_sla_violations_total[5m]))",
+            "legendFormat": "{{metric_type}}"
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {},
+              "indexByName": {},
+              "renameByName": {
+                "metric_type": "SLA Metric",
+                "Value": "Violations/sec"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "templating": {
+      "list": [
+        {
+          "name": "environment",
+          "type": "query",
+          "query": "label_values(deployment_environment)",
+          "current": {"text": "All", "value": "$__all"},
+          "includeAll": true
+        }
+      ]
+    },
+    "annotations": {
+      "list": [
+        {
+          "name": "Deployments",
+          "datasource": "Loki",
+          "expr": "{job=\"echostone\"} |= \"deployment\"",
+          "textFormat": "{{message}}",
+          "titleFormat": "Deployment"
+        }
+      ]
+    }
+  }
+}

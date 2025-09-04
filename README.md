@@ -44,6 +44,10 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ELEVENLABS_API_KEY=your_elevenlabs_api_key
 OPENAI_API_KEY=your_openai_api_key
+
+# Performance & Location
+ECHO_CURRENT_LOCATION="Sofia, BG"  # Current location for avatar context
+FEATURE_HYBRID_STREAMING=true     # Enable hybrid streaming architecture
 ```
 
 4. Start the development server:
@@ -76,3 +80,58 @@ See [LEGACY_HUB_USAGE.md](LEGACY_HUB_USAGE.md) for a complete list of API endpoi
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+## 
+Performance Ops
+
+EchoStone includes advanced performance monitoring and load testing capabilities for the hybrid streaming chat system.
+
+### Load Testing
+
+Test system performance under concurrent load:
+
+```bash
+# Demo mode load test (20 concurrent users for 60 seconds)
+node scripts/bench-load.mjs C=30 D=60000 MODE=demo
+
+# Normal mode load test
+node scripts/bench-load.mjs C=30 D=60000 MODE=normal
+
+# Custom load test with early abort
+node scripts/bench-load.mjs C=10 D=30000 MODE=demo ABORT=5000
+```
+
+### Metrics Analysis
+
+Monitor real-time performance metrics:
+
+```bash
+# Pipe server logs into metrics analyzer
+npm run dev 2>&1 | node scripts/metrics-tail.mjs
+
+# Or analyze saved logs
+node scripts/metrics-tail.mjs < server.log
+```
+
+### Performance Targets
+
+- **Demo Mode**: ≤900ms total response time, ≤200ms first token
+- **Normal Mode**: ≤1500ms total response time, ≤600ms first token
+- **Load Testing**: p95 stays within budgets at C=20 for 60s
+- **Availability**: opens≈closes, errors ~0, no unhandled rejections
+
+### Intent-Aware Budgets
+
+The system automatically adjusts response budgets based on user intent:
+
+- **Short**: Default budget (900ms demo, 1500ms normal)
+- **Explain**: +300ms budget, +16 tokens for detailed responses
+- **List**: +200ms budget, +8 tokens for structured content
+- **Story**: +400ms budget, +24 tokens for narrative responses
+- **Sensitive**: +200ms budget, +8 tokens for careful handling
+
+### Avatar Auto-Tuning
+
+Fast Lane token limits automatically adapt per avatar based on usage patterns:
+- Bounded between 40-72 tokens
+- Gradually adjusts to keep responses within 80% of budget
+- Uses rolling average of last 50 interactions

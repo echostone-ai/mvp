@@ -1,0 +1,546 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Story System Validation Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { background: #f5f5f5; padding: 20px; border-radius: 5px; }
+        .summary { display: flex; gap: 20px; margin: 20px 0; }
+        .metric { background: #e8f4fd; padding: 15px; border-radius: 5px; text-align: center; }
+        .passed { color: #28a745; }
+        .failed { color: #dc3545; }
+        .test-category { margin: 20px 0; }
+        .test-item { padding: 10px; border-left: 3px solid #ddd; margin: 5px 0; }
+        .test-item.passed { border-left-color: #28a745; }
+        .test-item.failed { border-left-color: #dc3545; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Story System Validation Report</h1>
+        <p>Generated: 2025-08-20T08:12:17.434Z</p>
+        <p>Environment: v22.17.0 on darwin</p>
+    </div>
+
+    <div class="summary">
+        <div class="metric">
+            <h3>Total Tests</h3>
+            <div>0</div>
+        </div>
+        <div class="metric">
+            <h3 class="passed">Passed</h3>
+            <div>0</div>
+        </div>
+        <div class="metric">
+            <h3 class="failed">Failed</h3>
+            <div>19</div>
+        </div>
+        <div class="metric">
+            <h3>Success Rate</h3>
+            <div>NaN%</div>
+        </div>
+    </div>
+
+    <h2>Test Results by Category</h2>
+    
+        <div class="test-category">
+            <h3>unit</h3>
+            
+                <div class="test-item failed">
+                    <strong>src/lib/services/__tests__/userStoryService.test.ts</strong>
+                    <div>Status: ❌ FAILED</div>
+                    
+                    
+                    <div>Error: Command failed: npx vitest run src/lib/services/__tests__/userStoryService.test.ts --reporter=json --timeout=30000
+file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:404
+          throw new CACError(`Unknown option \`${name.length > 1 ? `--${name}` : `-${name}`}\``);
+                ^
+
+CACError: Unknown option `--timeout`
+    at Command.checkUnknownOptions (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:404:17)
+    at CAC.runMatchedCommand (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:604:13)
+    at CAC.parse (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:545:12)
+    at file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/cli.js:27:13
+    at ModuleJob.run (node:internal/modules/esm/module_job:329:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+
+Node.js v22.17.0
+</div>
+                </div>
+            
+                <div class="test-item failed">
+                    <strong>src/lib/services/__tests__/storyTriggerMatcher.test.ts</strong>
+                    <div>Status: ❌ FAILED</div>
+                    
+                    
+                    <div>Error: Command failed: npx vitest run src/lib/services/__tests__/storyTriggerMatcher.test.ts --reporter=json --timeout=30000
+file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:404
+          throw new CACError(`Unknown option \`${name.length > 1 ? `--${name}` : `-${name}`}\``);
+                ^
+
+CACError: Unknown option `--timeout`
+    at Command.checkUnknownOptions (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:404:17)
+    at CAC.runMatchedCommand (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:604:13)
+    at CAC.parse (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:545:12)
+    at file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/cli.js:27:13
+    at ModuleJob.run (node:internal/modules/esm/module_job:329:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+
+Node.js v22.17.0
+</div>
+                </div>
+            
+                <div class="test-item failed">
+                    <strong>src/lib/services/__tests__/storyAudioManager.test.ts</strong>
+                    <div>Status: ❌ FAILED</div>
+                    
+                    
+                    <div>Error: Command failed: npx vitest run src/lib/services/__tests__/storyAudioManager.test.ts --reporter=json --timeout=30000
+file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:404
+          throw new CACError(`Unknown option \`${name.length > 1 ? `--${name}` : `-${name}`}\``);
+                ^
+
+CACError: Unknown option `--timeout`
+    at Command.checkUnknownOptions (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:404:17)
+    at CAC.runMatchedCommand (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:604:13)
+    at CAC.parse (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:545:12)
+    at file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/cli.js:27:13
+    at ModuleJob.run (node:internal/modules/esm/module_job:329:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+
+Node.js v22.17.0
+</div>
+                </div>
+            
+                <div class="test-item failed">
+                    <strong>src/lib/services/__tests__/storyErrorHandler.test.ts</strong>
+                    <div>Status: ❌ FAILED</div>
+                    
+                    
+                    <div>Error: Command failed: npx vitest run src/lib/services/__tests__/storyErrorHandler.test.ts --reporter=json --timeout=30000
+file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:404
+          throw new CACError(`Unknown option \`${name.length > 1 ? `--${name}` : `-${name}`}\``);
+                ^
+
+CACError: Unknown option `--timeout`
+    at Command.checkUnknownOptions (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:404:17)
+    at CAC.runMatchedCommand (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:604:13)
+    at CAC.parse (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:545:12)
+    at file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/cli.js:27:13
+    at ModuleJob.run (node:internal/modules/esm/module_job:329:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+
+Node.js v22.17.0
+</div>
+                </div>
+            
+                <div class="test-item failed">
+                    <strong>src/lib/services/__tests__/storyMetrics.test.ts</strong>
+                    <div>Status: ❌ FAILED</div>
+                    
+                    
+                    <div>Error: Command failed: npx vitest run src/lib/services/__tests__/storyMetrics.test.ts --reporter=json --timeout=30000
+file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:404
+          throw new CACError(`Unknown option \`${name.length > 1 ? `--${name}` : `-${name}`}\``);
+                ^
+
+CACError: Unknown option `--timeout`
+    at Command.checkUnknownOptions (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:404:17)
+    at CAC.runMatchedCommand (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:604:13)
+    at CAC.parse (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:545:12)
+    at file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/cli.js:27:13
+    at ModuleJob.run (node:internal/modules/esm/module_job:329:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+
+Node.js v22.17.0
+</div>
+                </div>
+            
+        </div>
+    
+        <div class="test-category">
+            <h3>mobile</h3>
+            
+                <div class="test-item failed">
+                    <strong>src/lib/services/__tests__/mobileStoryResourceManager.test.ts</strong>
+                    <div>Status: ❌ FAILED</div>
+                    
+                    
+                    <div>Error: Command failed: npx vitest run src/lib/services/__tests__/mobileStoryResourceManager.test.ts --reporter=json --timeout=30000
+file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:404
+          throw new CACError(`Unknown option \`${name.length > 1 ? `--${name}` : `-${name}`}\``);
+                ^
+
+CACError: Unknown option `--timeout`
+    at Command.checkUnknownOptions (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:404:17)
+    at CAC.runMatchedCommand (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:604:13)
+    at CAC.parse (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:545:12)
+    at file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/cli.js:27:13
+    at ModuleJob.run (node:internal/modules/esm/module_job:329:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+
+Node.js v22.17.0
+</div>
+                </div>
+            
+                <div class="test-item failed">
+                    <strong>src/lib/__tests__/storyMobileCompatibility.test.ts</strong>
+                    <div>Status: ❌ FAILED</div>
+                    
+                    
+                    <div>Error: Command failed: npx vitest run src/lib/__tests__/storyMobileCompatibility.test.ts --reporter=json --timeout=30000
+file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:404
+          throw new CACError(`Unknown option \`${name.length > 1 ? `--${name}` : `-${name}`}\``);
+                ^
+
+CACError: Unknown option `--timeout`
+    at Command.checkUnknownOptions (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:404:17)
+    at CAC.runMatchedCommand (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:604:13)
+    at CAC.parse (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:545:12)
+    at file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/cli.js:27:13
+    at ModuleJob.run (node:internal/modules/esm/module_job:329:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+
+Node.js v22.17.0
+</div>
+                </div>
+            
+                <div class="test-item failed">
+                    <strong>src/lib/services/__tests__/storyAudioManager.mobile.test.ts</strong>
+                    <div>Status: ❌ FAILED</div>
+                    
+                    
+                    <div>Error: Command failed: npx vitest run src/lib/services/__tests__/storyAudioManager.mobile.test.ts --reporter=json --timeout=30000
+file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:404
+          throw new CACError(`Unknown option \`${name.length > 1 ? `--${name}` : `-${name}`}\``);
+                ^
+
+CACError: Unknown option `--timeout`
+    at Command.checkUnknownOptions (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:404:17)
+    at CAC.runMatchedCommand (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:604:13)
+    at CAC.parse (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:545:12)
+    at file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/cli.js:27:13
+    at ModuleJob.run (node:internal/modules/esm/module_job:329:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+
+Node.js v22.17.0
+</div>
+                </div>
+            
+        </div>
+    
+        <div class="test-category">
+            <h3>integration</h3>
+            
+                <div class="test-item failed">
+                    <strong>src/lib/__tests__/storySystemE2E.comprehensive.test.ts</strong>
+                    <div>Status: ❌ FAILED</div>
+                    
+                    
+                    <div>Error: Command failed: npx vitest run src/lib/__tests__/storySystemE2E.comprehensive.test.ts --reporter=json --timeout=30000
+file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:404
+          throw new CACError(`Unknown option \`${name.length > 1 ? `--${name}` : `-${name}`}\``);
+                ^
+
+CACError: Unknown option `--timeout`
+    at Command.checkUnknownOptions (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:404:17)
+    at CAC.runMatchedCommand (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:604:13)
+    at CAC.parse (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:545:12)
+    at file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/cli.js:27:13
+    at ModuleJob.run (node:internal/modules/esm/module_job:329:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+
+Node.js v22.17.0
+</div>
+                </div>
+            
+                <div class="test-item failed">
+                    <strong>src/lib/__tests__/storyTTSExpressionIntegration.test.ts</strong>
+                    <div>Status: ❌ FAILED</div>
+                    
+                    
+                    <div>Error: Command failed: npx vitest run src/lib/__tests__/storyTTSExpressionIntegration.test.ts --reporter=json --timeout=30000
+file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:404
+          throw new CACError(`Unknown option \`${name.length > 1 ? `--${name}` : `-${name}`}\``);
+                ^
+
+CACError: Unknown option `--timeout`
+    at Command.checkUnknownOptions (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:404:17)
+    at CAC.runMatchedCommand (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:604:13)
+    at CAC.parse (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:545:12)
+    at file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/cli.js:27:13
+    at ModuleJob.run (node:internal/modules/esm/module_job:329:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+
+Node.js v22.17.0
+</div>
+                </div>
+            
+                <div class="test-item failed">
+                    <strong>src/lib/services/__tests__/storyAudioManager.integration.test.ts</strong>
+                    <div>Status: ❌ FAILED</div>
+                    
+                    
+                    <div>Error: Command failed: npx vitest run src/lib/services/__tests__/storyAudioManager.integration.test.ts --reporter=json --timeout=30000
+file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:404
+          throw new CACError(`Unknown option \`${name.length > 1 ? `--${name}` : `-${name}`}\``);
+                ^
+
+CACError: Unknown option `--timeout`
+    at Command.checkUnknownOptions (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:404:17)
+    at CAC.runMatchedCommand (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:604:13)
+    at CAC.parse (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:545:12)
+    at file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/cli.js:27:13
+    at ModuleJob.run (node:internal/modules/esm/module_job:329:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+
+Node.js v22.17.0
+</div>
+                </div>
+            
+                <div class="test-item failed">
+                    <strong>src/lib/services/__tests__/storyTriggerMatcher.integration.test.ts</strong>
+                    <div>Status: ❌ FAILED</div>
+                    
+                    
+                    <div>Error: Command failed: npx vitest run src/lib/services/__tests__/storyTriggerMatcher.integration.test.ts --reporter=json --timeout=30000
+file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:404
+          throw new CACError(`Unknown option \`${name.length > 1 ? `--${name}` : `-${name}`}\``);
+                ^
+
+CACError: Unknown option `--timeout`
+    at Command.checkUnknownOptions (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:404:17)
+    at CAC.runMatchedCommand (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:604:13)
+    at CAC.parse (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:545:12)
+    at file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/cli.js:27:13
+    at ModuleJob.run (node:internal/modules/esm/module_job:329:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+
+Node.js v22.17.0
+</div>
+                </div>
+            
+        </div>
+    
+        <div class="test-category">
+            <h3>performance</h3>
+            
+                <div class="test-item failed">
+                    <strong>src/lib/__tests__/storyPerformanceValidation.test.ts</strong>
+                    <div>Status: ❌ FAILED</div>
+                    
+                    
+                    <div>Error: Command failed: npx vitest run src/lib/__tests__/storyPerformanceValidation.test.ts --reporter=json --timeout=30000
+file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:404
+          throw new CACError(`Unknown option \`${name.length > 1 ? `--${name}` : `-${name}`}\``);
+                ^
+
+CACError: Unknown option `--timeout`
+    at Command.checkUnknownOptions (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:404:17)
+    at CAC.runMatchedCommand (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:604:13)
+    at CAC.parse (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:545:12)
+    at file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/cli.js:27:13
+    at ModuleJob.run (node:internal/modules/esm/module_job:329:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+
+Node.js v22.17.0
+</div>
+                </div>
+            
+                <div class="test-item failed">
+                    <strong>src/lib/services/__tests__/storyTriggerMatcher.performance.test.ts</strong>
+                    <div>Status: ❌ FAILED</div>
+                    
+                    
+                    <div>Error: Command failed: npx vitest run src/lib/services/__tests__/storyTriggerMatcher.performance.test.ts --reporter=json --timeout=30000
+file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:404
+          throw new CACError(`Unknown option \`${name.length > 1 ? `--${name}` : `-${name}`}\``);
+                ^
+
+CACError: Unknown option `--timeout`
+    at Command.checkUnknownOptions (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:404:17)
+    at CAC.runMatchedCommand (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:604:13)
+    at CAC.parse (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:545:12)
+    at file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/cli.js:27:13
+    at ModuleJob.run (node:internal/modules/esm/module_job:329:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+
+Node.js v22.17.0
+</div>
+                </div>
+            
+                <div class="test-item failed">
+                    <strong>src/lib/__tests__/storyPerformanceCanary.test.ts</strong>
+                    <div>Status: ❌ FAILED</div>
+                    
+                    
+                    <div>Error: Command failed: npx vitest run src/lib/__tests__/storyPerformanceCanary.test.ts --reporter=json --timeout=30000
+file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:404
+          throw new CACError(`Unknown option \`${name.length > 1 ? `--${name}` : `-${name}`}\``);
+                ^
+
+CACError: Unknown option `--timeout`
+    at Command.checkUnknownOptions (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:404:17)
+    at CAC.runMatchedCommand (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:604:13)
+    at CAC.parse (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:545:12)
+    at file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/cli.js:27:13
+    at ModuleJob.run (node:internal/modules/esm/module_job:329:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+
+Node.js v22.17.0
+</div>
+                </div>
+            
+        </div>
+    
+        <div class="test-category">
+            <h3>e2e</h3>
+            
+                <div class="test-item failed">
+                    <strong>src/lib/__tests__/storyPlaybackFlow.integration.test.ts</strong>
+                    <div>Status: ❌ FAILED</div>
+                    
+                    
+                    <div>Error: Command failed: npx vitest run src/lib/__tests__/storyPlaybackFlow.integration.test.ts --reporter=json --timeout=30000
+file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:404
+          throw new CACError(`Unknown option \`${name.length > 1 ? `--${name}` : `-${name}`}\``);
+                ^
+
+CACError: Unknown option `--timeout`
+    at Command.checkUnknownOptions (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:404:17)
+    at CAC.runMatchedCommand (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:604:13)
+    at CAC.parse (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:545:12)
+    at file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/cli.js:27:13
+    at ModuleJob.run (node:internal/modules/esm/module_job:329:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+
+Node.js v22.17.0
+</div>
+                </div>
+            
+                <div class="test-item failed">
+                    <strong>src/lib/__tests__/storyTTSFallback.e2e.test.ts</strong>
+                    <div>Status: ❌ FAILED</div>
+                    
+                    
+                    <div>Error: Command failed: npx vitest run src/lib/__tests__/storyTTSFallback.e2e.test.ts --reporter=json --timeout=30000
+file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:404
+          throw new CACError(`Unknown option \`${name.length > 1 ? `--${name}` : `-${name}`}\``);
+                ^
+
+CACError: Unknown option `--timeout`
+    at Command.checkUnknownOptions (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:404:17)
+    at CAC.runMatchedCommand (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:604:13)
+    at CAC.parse (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:545:12)
+    at file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/cli.js:27:13
+    at ModuleJob.run (node:internal/modules/esm/module_job:329:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+
+Node.js v22.17.0
+</div>
+                </div>
+            
+                <div class="test-item failed">
+                    <strong>src/lib/services/__tests__/storyTriggerMatcher.e2e.test.ts</strong>
+                    <div>Status: ❌ FAILED</div>
+                    
+                    
+                    <div>Error: Command failed: npx vitest run src/lib/services/__tests__/storyTriggerMatcher.e2e.test.ts --reporter=json --timeout=30000
+file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:404
+          throw new CACError(`Unknown option \`${name.length > 1 ? `--${name}` : `-${name}`}\``);
+                ^
+
+CACError: Unknown option `--timeout`
+    at Command.checkUnknownOptions (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:404:17)
+    at CAC.runMatchedCommand (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:604:13)
+    at CAC.parse (file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:545:12)
+    at file:///Users/jonathanbraden/Documents/echostone/node_modules/vitest/dist/cli.js:27:13
+    at ModuleJob.run (node:internal/modules/esm/module_job:329:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+
+Node.js v22.17.0
+</div>
+                </div>
+            
+        </div>
+    
+
+    <h2>Deployment Readiness</h2>
+    
+        <div class="test-item passed">
+            <strong>Story Upload Limit</strong>
+            <div>Story upload limit (5 per avatar) enforced</div>
+        </div>
+    
+        <div class="test-item passed">
+            <strong>Duration Validation</strong>
+            <div>Duration validation (30s-5m) implemented</div>
+        </div>
+    
+        <div class="test-item failed">
+            <strong>Trigger Performance</strong>
+            <div>Trigger matching performance: FAIL</div>
+        </div>
+    
+        <div class="test-item failed">
+            <strong>TTS Fallback</strong>
+            <div>TTS fallback mechanism: FAILED</div>
+        </div>
+    
+        <div class="test-item failed">
+            <strong>Browser Compatibility</strong>
+            <div>Browser compatibility: ISSUES FOUND</div>
+        </div>
+    
+        <div class="test-item passed">
+            <strong>Feature Flags</strong>
+            <div>Feature flags functional for instant rollback</div>
+        </div>
+    
+        <div class="test-item failed">
+            <strong>Metrics Collection</strong>
+            <div>Metrics collection: NOT WORKING</div>
+        </div>
+    
+
+    <h2>Performance Metrics</h2>
+    
+        <div class="test-item">
+            <strong>src/lib/__tests__/storyPerformanceValidation.test.ts</strong>
+            <div>Duration: 229ms</div>
+            <div>Status: ❌ FAILED</div>
+        </div>
+    
+        <div class="test-item">
+            <strong>src/lib/services/__tests__/storyTriggerMatcher.performance.test.ts</strong>
+            <div>Duration: 266ms</div>
+            <div>Status: ❌ FAILED</div>
+        </div>
+    
+        <div class="test-item">
+            <strong>src/lib/__tests__/storyPerformanceCanary.test.ts</strong>
+            <div>Duration: 263ms</div>
+            <div>Status: ❌ FAILED</div>
+        </div>
+    
+</body>
+</html>

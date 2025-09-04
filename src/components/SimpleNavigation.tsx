@@ -4,10 +4,12 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
+import { isFeatureEnabled } from '@/lib/featureFlags'
 
 export default function SimpleNavigation() {
   const [user, setUser] = useState<any>(null)
   const [showMenu, setShowMenu] = useState(false)
+  const voiceExpressionsEnabled = isFeatureEnabled('VOICE_OVERLAYS')
 
   useEffect(() => {
     async function getUser() {
@@ -57,6 +59,11 @@ export default function SimpleNavigation() {
                   <Link href="/get-started" className="nav-dropdown-item">
                     🚀 Get Started
                   </Link>
+                  {voiceExpressionsEnabled && (
+                    <Link href="/voice-expressions" className="nav-dropdown-item">
+                      🎤 Voice & Expressions
+                    </Link>
+                  )}
                   <button 
                     onClick={() => supabase.auth.signOut()}
                     className="nav-dropdown-item nav-dropdown-button"

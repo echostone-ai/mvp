@@ -41,12 +41,10 @@ function GetStartedContent() {
       setUser(currentUser);
 
       if (currentUser) {
-        // Load existing avatars
-        const { data: avatarData } = await supabase
-          .from('avatar_profiles')
-          .select('*')
-          .eq('user_id', currentUser.id)
-          .order('created_at', { ascending: false });
+        // Load existing avatars via API to avoid client RLS/transform issues
+        const resp = await fetch(`/api/avatars?userId=${encodeURIComponent(currentUser.id)}`);
+        const apiJson = await resp.json();
+        const avatarData = apiJson?.avatars || [];
         
         setAvatars(avatarData || []);
 
@@ -118,7 +116,7 @@ function GetStartedContent() {
             </div>
             <div className="enhanced-card">
               <div style={{ textAlign: 'center' }}>
-                <a href="/login" className="next-step-button primary">
+                 <a href="/login" className="next-step-button primary">
                   Sign In to Continue
                 </a>
               </div>

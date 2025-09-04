@@ -48,20 +48,42 @@ export default function AvatarCreationFlow({ onComplete, onBack }: AvatarCreatio
       }
 
       // Create the avatar in the database
-      const { data: newAvatar, error } = await supabase
-        .from('avatar_profiles')
-        .insert([{
-          user_id: user.id,
-          name: avatarName,
-          description: `Meet ${avatarName} - a unique personality ready to connect with you.`,
-          profile_data: {
+      // Prefer server-side creation to avoid RLS/transform issues; fallback to direct insert
+      let newAvatar: any = null;
+      try {
+        const resp = await fetch('/api/avatars', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            slug: avatarName.toLowerCase().replace(/\s+/g, '_'),
+            display_name: avatarName,
+            user_id: user.id
+          })
+        });
+        if (resp.ok) {
+          const json = await resp.json();
+          newAvatar = { id: json.avatar.id };
+        } else {
+          throw new Error(`server_create_failed_${resp.status}`);
+        }
+      } catch (_) {
+        const { data, error } = await supabase
+          .from('avatar_profiles')
+          .insert([{
+            user_id: user.id,
             name: avatarName,
-            created_via: 'voice_onboarding',
-            creation_date: new Date().toISOString()
-          }
-        }])
-        .select()
-        .single();
+            description: `Meet ${avatarName} - a unique personality ready to connect with you.`,
+            profile_data: {
+              name: avatarName,
+              created_via: 'voice_onboarding',
+              creation_date: new Date().toISOString()
+            }
+          }])
+          .select()
+          .single();
+        if (error) throw error;
+        newAvatar = data;
+      }
 
       if (error) throw error;
 

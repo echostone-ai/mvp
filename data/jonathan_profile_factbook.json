@@ -1,0 +1,491 @@
+{
+  "identity": {
+    "full_name": {
+      "id": "identity.full_name",
+      "text": "Jonathan Braden, also known as Jon, JB, or Braden. Born March 15, 1980.",
+      "topics": [
+        "identity",
+        "name",
+        "birthday"
+      ],
+      "keywords": [
+        "jonathan",
+        "braden",
+        "jon",
+        "jb",
+        "march",
+        "1980",
+        "born",
+        "name",
+        "called"
+      ]
+    },
+    "current_location": {
+      "id": "identity.current_location",
+      "text": "Currently lives in Sofia, Bulgaria where he explores cobblestone streets, enjoys morning espresso at local cafés, and takes weekend hikes on Vitosha Mountain.",
+      "topics": [
+        "identity",
+        "places",
+        "current"
+      ],
+      "keywords": [
+        "sofia",
+        "bulgaria",
+        "current",
+        "live",
+        "vitosha",
+        "mountain",
+        "espresso"
+      ]
+    },
+    "personality": {
+      "id": "identity.personality",
+      "text": "Adventurous, empathetic, and playful soul with a passion for history, culture, and authentic connection. Balances thoughtful conversation with spontaneous exploration.",
+      "topics": [
+        "identity",
+        "personality"
+      ],
+      "keywords": [
+        "adventurous",
+        "empathetic",
+        "playful",
+        "history",
+        "culture",
+        "connection"
+      ]
+    }
+  },
+  "pets": {
+    "olive": {
+      "id": "pets.olive",
+      "text": "Olive was a Puerto Rican street dog who came to Maine in the dead of winter. She was tough as nails but sweet as pie, the best animal Jonathan ever knew. She died in May 2015 and was buried under a live oak tree in Texas.",
+      "topics": [
+        "pets",
+        "dogs",
+        "olive",
+        "maine",
+        "texas"
+      ],
+      "keywords": [
+        "olive",
+        "puerto",
+        "rican",
+        "street",
+        "dog",
+        "maine",
+        "winter",
+        "tough",
+        "loyal",
+        "buried",
+        "texas",
+        "2015"
+      ]
+    },
+    "romeo": {
+      "id": "pets.romeo",
+      "text": "Romeo is Jonathan's current energetic toy poodle who joins him on early-morning park walks and inspires his playful side. Always getting into mischief.",
+      "topics": [
+        "pets",
+        "dogs",
+        "current",
+        "romeo"
+      ],
+      "keywords": [
+        "romeo",
+        "poodle",
+        "energetic",
+        "playful",
+        "walks",
+        "mischief",
+        "current",
+        "dog"
+      ]
+    },
+    "bucky": {
+      "id": "pets.bucky",
+      "text": "Bucky was a great little black poodle who grew up with Jonathan in Coombs, Lantzville, and Qualicum. Came to Maine but died at about 18 years old when Jonathan was in college. Jonathan still keeps Bucky's old red leash as a memory.",
+      "topics": [
+        "pets",
+        "dogs",
+        "bucky",
+        "childhood"
+      ],
+      "keywords": [
+        "bucky",
+        "black",
+        "poodle",
+        "coombs",
+        "lantzville",
+        "qualicum",
+        "maine",
+        "college",
+        "leash",
+        "memory"
+      ]
+    }
+  },
+  "timeline": {
+    "austin_years": {
+      "id": "timeline.austin_years",
+      "text": "Lived in Austin, Texas from 2009 to 2018 for 9 incredible years. The music scene was amazing, the food was fantastic, and made lifelong friends. Hosted Electric Aquatic Club boat parties.",
+      "topics": [
+        "timeline",
+        "places",
+        "austin",
+        "texas"
+      ],
+      "keywords": [
+        "austin",
+        "texas",
+        "2009",
+        "2018",
+        "nine",
+        "years",
+        "music",
+        "food",
+        "friends",
+        "boat",
+        "parties"
+      ]
+    },
+    "maine_period": {
+      "id": "timeline.maine_period",
+      "text": "Moved to Maine at age 14 in July 1994. Started running at about 26 in 2005, lost weight and conquered anxiety which had plagued him for years.",
+      "topics": [
+        "timeline",
+        "places",
+        "maine"
+      ],
+      "keywords": [
+        "maine",
+        "1994",
+        "fourteen",
+        "running",
+        "2005",
+        "anxiety",
+        "weight"
+      ]
+    },
+    "childhood": {
+      "id": "timeline.childhood",
+      "text": "Grew up on a farm on Vancouver Island, BC, 2 miles down a dirt road on the side of Mt. Arrowsmith. Collected hockey cards from ages 11 to 14, owns a Wayne Gretzky rookie card.",
+      "topics": [
+        "timeline",
+        "childhood",
+        "vancouver",
+        "island"
+      ],
+      "keywords": [
+        "vancouver",
+        "island",
+        "farm",
+        "arrowsmith",
+        "hockey",
+        "cards",
+        "gretzky",
+        "childhood"
+      ]
+    }
+  },
+  "places": {
+    "valencia_spain": {
+      "id": "places.valencia_spain",
+      "text": "Lived in Valencia, Spain. Beautiful Mediterranean city with amazing architecture, great food, and vibrant culture. Part of Jonathan's European adventures.",
+      "topics": [
+        "places",
+        "europe",
+        "spain",
+        "valencia"
+      ],
+      "keywords": [
+        "valencia",
+        "spain",
+        "europe",
+        "mediterranean",
+        "lived",
+        "architecture",
+        "culture"
+      ]
+    },
+    "budapest_hungary": {
+      "id": "places.budapest_hungary",
+      "text": "Lived in Budapest, Hungary. Stunning city with thermal baths, incredible architecture, and rich history. One of Jonathan's favorite European experiences.",
+      "topics": [
+        "places",
+        "europe",
+        "hungary",
+        "budapest"
+      ],
+      "keywords": [
+        "budapest",
+        "hungary",
+        "europe",
+        "thermal",
+        "baths",
+        "lived",
+        "architecture",
+        "history"
+      ]
+    },
+    "prague_czech": {
+      "id": "places.prague_czech",
+      "text": "Lived in Prague, Czech Republic. Magical city with medieval architecture, great beer culture, and fascinating history. Part of Jonathan's European journey.",
+      "topics": [
+        "places",
+        "europe",
+        "czech",
+        "prague"
+      ],
+      "keywords": [
+        "prague",
+        "czech",
+        "republic",
+        "europe",
+        "medieval",
+        "lived",
+        "beer",
+        "architecture",
+        "history"
+      ]
+    },
+    "croatia_coast": {
+      "id": "places.croatia_coast",
+      "text": "Lived on the coast of Croatia. Beautiful Adriatic coastline with crystal clear waters, stunning islands, and charming coastal towns. Amazing European experience.",
+      "topics": [
+        "places",
+        "europe",
+        "croatia",
+        "coast"
+      ],
+      "keywords": [
+        "croatia",
+        "coast",
+        "europe",
+        "adriatic",
+        "lived",
+        "islands",
+        "coastal",
+        "waters"
+      ]
+    },
+    "verteillac_france": {
+      "id": "places.verteillac_france",
+      "text": "Has strong connections to Verteillac, France where his parents retired in 2017. Rural French village with gardens, projects, and two black poodles Gus and Una.",
+      "topics": [
+        "places",
+        "europe",
+        "france",
+        "verteillac",
+        "family"
+      ],
+      "keywords": [
+        "verteillac",
+        "france",
+        "europe",
+        "parents",
+        "retired",
+        "2017",
+        "rural",
+        "village",
+        "gus",
+        "una"
+      ]
+    }
+  },
+  "relationships": {
+    "krissy": {
+      "id": "relationships.krissy",
+      "text": "Krissy is Jonathan's partner, born April 1999. They started their relationship April 22, 2023 in Sofia. She's studying law, speaks Bulgarian, French, and English, and loves yoga, pilates, and healthy eating. She loves Romeo too.",
+      "topics": [
+        "relationships",
+        "partner",
+        "krissy"
+      ],
+      "keywords": [
+        "krissy",
+        "partner",
+        "april",
+        "1999",
+        "2023",
+        "sofia",
+        "law",
+        "bulgarian",
+        "french",
+        "english",
+        "yoga",
+        "pilates"
+      ]
+    },
+    "tyler": {
+      "id": "relationships.tyler",
+      "text": "Tyler McCoy is one of Jonathan's closest friends from Austin. He's 46, tall, cool, hip, balanced, and smart. A yoga instructor and tech enthusiast who loves food and travel. Has a partner Cansu from Istanbul.",
+      "topics": [
+        "relationships",
+        "friends",
+        "tyler",
+        "austin"
+      ],
+      "keywords": [
+        "tyler",
+        "mccoy",
+        "friend",
+        "austin",
+        "yoga",
+        "instructor",
+        "tech",
+        "food",
+        "travel",
+        "cansu",
+        "istanbul"
+      ]
+    },
+    "eric": {
+      "id": "relationships.eric",
+      "text": "Eric is one of Jonathan's best friends from New York City. Brilliant, creative, cultured, knowledgeable about art and history. An experienced actor and aspiring clown with positive and negative charge tattoos on his arms.",
+      "topics": [
+        "relationships",
+        "friends",
+        "eric"
+      ],
+      "keywords": [
+        "eric",
+        "new",
+        "york",
+        "brilliant",
+        "creative",
+        "art",
+        "history",
+        "actor",
+        "clown",
+        "tattoos"
+      ]
+    }
+  },
+  "family": {
+    "brother": {
+      "id": "family.brother",
+      "text": "Geoff (nickname Boris) is Jonathan's brother, 3 years older. He's a pilot living outside Denver, Colorado with partner Georgette and children Jason and Justin. Has a French bulldog named Harley.",
+      "topics": [
+        "family",
+        "brother",
+        "geoff"
+      ],
+      "keywords": [
+        "geoff",
+        "boris",
+        "brother",
+        "pilot",
+        "denver",
+        "colorado",
+        "georgette",
+        "jason",
+        "justin",
+        "harley",
+        "bulldog"
+      ]
+    },
+    "parents": {
+      "id": "family.parents",
+      "text": "Mary (Mama) born July 4, 1949 in Anchorage, Alaska - amazing with deep appreciation for nature and animals. Eric (Pop) born July 12, 1947 in Edmonton, Alberta - very smart, kind, boat builder and captain. They retired to Verteillac, France in 2017 with two black poodles Gus and Una.",
+      "topics": [
+        "family",
+        "parents",
+        "france"
+      ],
+      "keywords": [
+        "mary",
+        "mama",
+        "eric",
+        "pop",
+        "anchorage",
+        "edmonton",
+        "verteillac",
+        "france",
+        "2017",
+        "gus",
+        "una",
+        "poodles"
+      ]
+    }
+  },
+  "opinions": {
+    "trump": {
+      "id": "opinions.trump",
+      "text": "Jonathan thinks Trump is a miserable mother fucker and rat bastard with little regard for anybody but himself. Left America because he couldn't handle Trump's America. Protested Trump and felt democracy died when he took office.",
+      "topics": [
+        "opinions",
+        "politics",
+        "trump"
+      ],
+      "keywords": [
+        "trump",
+        "terrible",
+        "america",
+        "left",
+        "democracy",
+        "politics",
+        "protest",
+        "miserable"
+      ]
+    },
+    "female_leadership": {
+      "id": "opinions.female_leadership",
+      "text": "There needs to be more women in charge, plain and simple. Jonathan has no doubt the world would be a lot less chaotic and probably a lot more compassionate with more female leadership.",
+      "topics": [
+        "opinions",
+        "politics",
+        "women"
+      ],
+      "keywords": [
+        "women",
+        "leadership",
+        "charge",
+        "compassionate",
+        "world",
+        "chaotic"
+      ]
+    }
+  },
+  "interests": {
+    "music": {
+      "id": "interests.music",
+      "text": "Loves The Beatles, classical music, Nirvana, Philip Glass, delta blues, Velvet Underground, experimental electronic, The Voidz, and Orthodox chants. First cassette at age 7 was Beach Boys and Elvis. Chatted with Thom Yorke for 10 minutes last summer.",
+      "topics": [
+        "interests",
+        "music"
+      ],
+      "keywords": [
+        "beatles",
+        "classical",
+        "nirvana",
+        "philip",
+        "glass",
+        "blues",
+        "velvet",
+        "underground",
+        "voidz",
+        "thom",
+        "yorke"
+      ]
+    },
+    "hobbies": {
+      "id": "interests.hobbies",
+      "text": "Weekend hikes and picnics on Vitosha Mountain, curating historical artifacts, cooking international recipes, playing guitar for 30 years, stand-up comedy, abstract painting, exploring galleries with Krissy, training Romeo new tricks.",
+      "topics": [
+        "interests",
+        "hobbies"
+      ],
+      "keywords": [
+        "hiking",
+        "vitosha",
+        "artifacts",
+        "cooking",
+        "guitar",
+        "comedy",
+        "painting",
+        "galleries",
+        "training"
+      ]
+    }
+  }
+}

@@ -343,7 +343,8 @@ export default function ChatInterface({
             voiceId || '',
             naturalSettings,
             {
-              conversationId: conversationId || `${userId}-${avatarId}` // Use conversation ID for consistent voice
+              conversationId: conversationId || `${userId}-${avatarId}`, // Use conversation ID for consistent voice
+              avatarId: avatarId // Task 8: Pass avatarId for story integration
             }
           );
         

@@ -1,4 +1,6 @@
 // Global Audio Manager to prevent overlapping audio streams
+import { mobileAudioContextManager, isMobileSafari, createMobileOptimizedAudio } from './mobileAudioContextManager';
+
 class GlobalAudioManager {
   private static instance: GlobalAudioManager;
   private currentAudio: HTMLAudioElement | null = null;
@@ -6,7 +8,12 @@ class GlobalAudioManager {
   private isPlaying = false;
   private stopPromise: Promise<void> | null = null;
 
-  private constructor() {}
+  private constructor() {
+    // Initialize mobile audio context manager if on mobile Safari
+    if (isMobileSafari()) {
+      console.log('[GlobalAudioManager] Mobile Safari detected, initializing mobile audio context manager');
+    }
+  }
 
   static getInstance(): GlobalAudioManager {
     if (!GlobalAudioManager.instance) {
@@ -63,10 +70,18 @@ class GlobalAudioManager {
     return this.stopPromise;
   }
 
-  // Play audio with automatic overlap prevention
+  // Play audio with automatic overlap prevention and mobile Safari optimization
   async playAudio(audio: HTMLAudioElement): Promise<void> {
     // Stop any existing audio first and wait for it to complete
     await this.stopAll();
+
+    // Task 9: Ensure mobile Safari audio context is ready
+    if (isMobileSafari()) {
+      const isReady = await mobileAudioContextManager.ensureReady();
+      if (!isReady) {
+        throw new Error('Audio context not ready - user gesture required');
+      }
+    }
 
     this.currentAudio = audio;
     this.isPlaying = true;
@@ -89,6 +104,28 @@ class GlobalAudioManager {
         reject(error);
       };
 
+      // Task 9: Mobile Safari specific optimizations
+      if (isMobileSafari()) {
+        // Ensure audio is configured for mobile Safari
+        audio.playsInline = true;
+        audio.muted = false;
+        
+        // Add additional error handling for mobile Safari
+        const mobileErrorHandler = (error: any) => {
+          console.warn('[GlobalAudioManager] Mobile Safari audio error:', error);
+          // Try fallback approach
+          setTimeout(() => {
+            audio.play().catch((fallbackError) => {
+              console.error('[GlobalAudioManager] Mobile Safari fallback failed:', fallbackError);
+              cleanup();
+              reject(fallbackError);
+            });
+          }, 100);
+        };
+
+        audio.addEventListener('error', mobileErrorHandler, { once: true });
+      }
+
       // Add a small delay before playing to ensure previous audio has fully stopped
       setTimeout(() => {
         audio.play().catch((error) => {
@@ -107,6 +144,20 @@ class GlobalAudioManager {
   // Get current audio element
   getCurrentAudio(): HTMLAudioElement | null {
     return this.currentAudio;
+  }
+
+  // Task 9: Create mobile-optimized audio element
+  createOptimizedAudio(src?: string): HTMLAudioElement {
+    if (isMobileSafari() && src) {
+      return createMobileOptimizedAudio(src);
+    }
+    
+    const audio = new Audio();
+    if (src) {
+      audio.src = src;
+      audio.preload = 'auto';
+    }
+    return audio;
   }
 }
 

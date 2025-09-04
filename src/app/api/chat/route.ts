@@ -1,384 +1,420 @@
-export const runtime = 'nodejs'
-import { NextResponse } from 'next/server'
-import { OpenAI } from 'openai'
-import fs from 'fs/promises'
-import path from 'path'
-import { MemoryService } from '@/lib/memoryService'
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
-// Initialize OpenAI client with better error handling
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY || ''
-});
+import { NextResponse } from 'next/server';
+import { v4 as uuidv4 } from 'uuid';
+import { supabase, openai, caches } from '@/lib/runtime/singletons';
+import { EnhancedPromptBuilder } from '@/lib/services/enhancedPromptBuilder';
+import { fastOpener, personaSeedFromCacheOrDefault } from '@/lib/runtime/fastOpener';
+import { getLimits } from '@/lib/runtime/limits';
+import { iterDataLines, extractDeltas } from '@/lib/runtime/sse';
+import { classifyIntent } from '@/lib/runtime/intent';
+import { getFastMaxForAvatar, recordFastUsage } from '@/lib/runtime/tuning';
+import { getEnhancedStyleProfileCached, resolveCurrentLocation } from '@/lib/runtime/profile';
+import { injectFactsFromMessage } from '@/lib/services';
+import { storyIntegrationService } from '@/lib/services/storyIntegrationService';
+import { MergeConfig, detectIntent, requiresImmediateDeep, getPinnedCount } from '@/config/personalization';
+import { unifiedAvatarContextService } from '@/lib/services/unifiedAvatarContext';
+import { runDeepLane } from '@/lib/services/deepLaneOrchestrator';
+import { voiceWarmingService } from '@/lib/services/voiceWarmingService';
+import { metricsCollector } from '@/lib/services/metricsCollector';
+import { factbookService } from '@/lib/services/factbookService';
+import fs from 'fs';
+import path from 'path';
 
-// Helper function to create a streaming response
-function createStreamingResponse(stream: ReadableStream) {
-  return new Response(stream, {
-    headers: {
-      'Content-Type': 'text/plain; charset=utf-8',
-      'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
-    },
+// ---- Factbook bootstrap (lazy singleton) ----
+let FACTBOOK_LOADED = false;
+
+function ensureFactbookLoaded() {
+  if (FACTBOOK_LOADED) return;
+  const factbookPath = path.join(process.cwd(), 'data/jonathan_profile_factbook.json'); // FIXED
+  const content = fs.readFileSync(factbookPath, 'utf-8');
+  const data = JSON.parse(content);
+  factbookService.loadFactbook(data);
+  FACTBOOK_LOADED = true;
+  console.log('factbook_loaded_once', {
+    snippets: factbookService.getSnippetCount(),
+    path: factbookPath,
   });
 }
 
-export async function POST(req: Request) {
-  try {
-    // 1) Parse incoming payload
-    const {
-      question,
-      prompt,
-      history,
-      profileData,
-      visitorName,
-      isSharedAvatar,
-      shareToken,
-      userId,
-      avatarId,
-      stream = false // Add streaming support
-    } = await req.json()
+// Demo mode configuration
+const DEMO_AVATAR_SLUG = process.env.DEMO_AVATAR_SLUG || 'jonathan-demo';
+const DEMO_COOKIE_NAME = process.env.DEMO_COOKIE_NAME || 'jd_demo_vid';
+const DEMO_TTL_MINUTES = parseInt(process.env.DEMO_MEMORY_TTL_MINUTES || '10');
+const DEMO_SYSTEM_USER_ID = process.env.DEMO_SYSTEM_USER_ID || process.env.SYSTEM_USER_ID;
 
-    // Support both the old and new API formats
-    const userQuestion = question || prompt
+// Response limits
+const FAST_MAX_TOKENS_DEMO = 200;
+const FAST_MAX_TOKENS_NORMAL = 150;
+const FAST_MAX_MS_DEMO = 3000;
+const FAST_MAX_MS_NORMAL = 2000;
+const FAST_MAX_SENTS = 12;
 
-    if (typeof userQuestion !== 'string') {
-      return NextResponse.json({ error: 'Invalid request: `question` or `prompt` is required.' },
-        { status: 400 })
-    }
+// Helper functions
+function fastHelloFromCacheOrTemplate({ name }: { name: string }) {
+  return `Hey there—it's ${name}. What's on your mind?`;
+}
 
-    console.log('[api/chat] Received request:', {
-      questionLength: userQuestion.length,
-      hasHistory: Array.isArray(history),
-      historyLength: Array.isArray(history) ? history.length : 0,
-      hasProfileData: !!profileData,
-      visitorName,
-      isSharedAvatar,
-      hasShareToken: !!shareToken,
-      userId,
-      avatarId
-    });
+function encodeSSE(data: any): Uint8Array {
+  return new TextEncoder().encode(`data: ${JSON.stringify(data)}\n\n`);
+}
 
-    // Sanitize history
-    const safeHistory = Array.isArray(history)
-      ? history.filter((turn: any) =>
-        ['system', 'user', 'assistant'].includes(turn.role) &&
-        typeof turn.content === 'string')
-      : []
-
-    // 2) Load profile JSON
-    let profile: any = {
-      name: 'Jonathan Braden',
-      personality: '',
-      languageStyle: {},
-      humorStyle: {},
-      catchphrases: []
-    }
-
-    // Use provided profileData if available
-    if (profileData) {
-      profile = profileData;
-      console.log('[api/chat] Using provided profile data for:', profile.name);
-      console.log('[api/chat] Profile has personality:', !!profile.personality);
-      console.log('[api/chat] Profile has traits:', !!profile.personalityTraits);
-      console.log('[api/chat] Profile has factual info:', !!profile.factualInfo);
-      console.log('[api/chat] Personality length:', profile.personality?.length || 0);
+// Stabilized pinned memory injection with hard timeout
+async function getPinnedMemoriesWithTimeout(query: string, avatarId: string, timeoutMs: number = 100): Promise<any[]> {
+  if (process.env.ECHOSTONE_FACTBOOK_ONLY === '1') {
+    return [];
+  }
+  
+  const timeoutPromise = new Promise<any[]>((resolve) => {
+    setTimeout(() => resolve([]), timeoutMs);
+  });
+  
+  const memoryPromise = (async () => {
+    try {
+      const { data, error } = await supabase.rpc('get_enhanced_memories', {
+        target_user_id: null,
+        target_avatar_id: avatarId,
+        search_query: query,
+        match_count: 5,
+        similarity_threshold: 0.25
+      });
       
-      // Log a sample of the personality to verify it's complete
-      if (profile.personality) {
-        console.log('[api/chat] Personality preview:', profile.personality.substring(0, 100) + '...');
+      if (error) {
+        console.warn('pinned_memory_error', error.message);
+        return [];
       }
-    } else {
+      
+      return data || [];
+    } catch (e) {
+      console.warn('pinned_memory_exception', e);
+      return [];
+    }
+  })();
+  
+  return Promise.race([memoryPromise, timeoutPromise]);
+}
+
+// Stabilized stream writer with guards
+class SafeStreamWriter {
+  private controller: ReadableStreamDefaultController<Uint8Array> | null = null;
+  private isOpen = true;
+  
+  constructor(controller: ReadableStreamDefaultController<Uint8Array>) {
+    this.controller = controller;
+  }
+  
+  async write(data: Uint8Array): Promise<void> {
+    if (!this.isOpen || !this.controller) {
+      return; // Silently ignore writes to closed stream
+    }
+    
+    try {
+      this.controller.enqueue(data);
+    } catch (e) {
+      console.warn('stream_write_error', e);
+      this.close();
+    }
+  }
+  
+  close(): void {
+    if (this.isOpen && this.controller) {
       try {
-        const raw = await fs.readFile(path.join(process.cwd(), 'public', 'jonathan_profile.json'),
-          'utf-8')
-        profile = JSON.parse(raw)
+        this.controller.close();
       } catch (e) {
-        console.warn('[api/chat] Failed to load profile, using defaults', e)
+        console.warn('stream_close_error', e);
       }
+      this.isOpen = false;
+      this.controller = null;
     }
+  }
+  
+  get closed(): boolean {
+    return !this.isOpen;
+  }
+}
 
-    // 3) Build system prompt
-    const now = new Date()
-
-    // Add visitor name context for shared avatars
-    const visitorContext = visitorName
-      ? `\nYou are talking to ${visitorName}. Address them by name occasionally in a natural way. Make them feel welcome and remembered.`
-      : '';
-
-    // Add memory isolation context for shared avatars
-    const sharedAvatarContext = isSharedAvatar
-      ? `\nIMPORTANT: This is a shared avatar session. You are being shared with multiple people, but each person has their own private conversation with you. The current conversation is with ${visitorName || 'a visitor'}. Your memories with this person are isolated from your memories with other people. You must maintain your identity as ${profile.name} with this specific personality and voice.`
-      : '';
-
-    console.log('[api/chat] Building system prompt with profile name:', profile.name);
+export async function POST(request: Request) {
+  const t0 = Date.now();
+  const traceId = uuidv4().slice(0, 8);
+  
+  // Initialize metrics tracking
+  let t_hook_ms = 0;
+  let t_deep_first_ms: number | undefined;
+  let t_deep_done_ms: number | undefined;
+  let snippets_selected: string[] = [];
+  let chatError: string | undefined;
+  
+  // ---- in the request handler, very early ----
+  ensureFactbookLoaded();
+  
+  // Stabilized state - all flags and timers in one scope
+  let streamWriter: SafeStreamWriter | null = null;
+  let deepAbort = new AbortController();
+  let deepProducedAny = { value: false };
+  let deepStartTimer: NodeJS.Timeout | null = null;
+  let deadlineTimer: NodeJS.Timeout | null = null;
+  let mergeWindowTimer: NodeJS.Timeout | null = null;
+  let t_deep_started_ms = 0;
+  let deepMustContribute = false;
+  
+  // Cleanup function - always clear all timers
+  const cleanup = () => {
+    if (deepStartTimer) {
+      clearTimeout(deepStartTimer);
+      deepStartTimer = null;
+    }
+    if (deadlineTimer) {
+      clearTimeout(deadlineTimer);
+      deadlineTimer = null;
+    }
+    if (mergeWindowTimer) {
+      clearTimeout(mergeWindowTimer);
+      mergeWindowTimer = null;
+    }
+    if (!deepAbort.signal.aborted) {
+      deepAbort.abort('cleanup');
+    }
+    if (streamWriter && !streamWriter.closed) {
+      streamWriter.close();
+    }
+  };
+  
+  try {
+    const body = await request.json();
+    const { avatarSlug, message: singleMessage, debug, memoryContext, continuityContext } = body;
     
-    const systemPrompt = [
-      `You are ${profile.name}. This is your core identity: ${profile.personality}`,
-      `IMPORTANT: You are NOT an AI assistant. You are ${profile.name}, a real person with your own personality, opinions, and way of speaking.`,
-      profile.personalityTraits && profile.personalityTraits.length > 0 ? `Your personality traits: ${profile.personalityTraits.join('. ')}.` : '',
-      profile.factualInfo && profile.factualInfo.length > 0 ? `Important facts about your life: ${profile.factualInfo.join('. ')}.` : '',
-      `Your language style: ${profile.languageStyle?.description || 'Natural and conversational'}`,
-      `Your humor style: ${profile.humorStyle?.description || 'Friendly with occasional wit'}`,
-      `Your catchphrases: ${profile.catchphrases?.join('; ') || 'None specific'}`,
-      `Never refer to yourself as an AI, assistant, digital avatar, or anything artificial. You are ${profile.name}, a real person.`,
-      `Embody your personality fully - don't just describe it, BE it. Speak naturally as yourself.`,
-      `Use the facts and personality traits above to inform your responses, but speak naturally and conversationally.`,
-      `Current date: ${now.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      })}`,
-      `Current time: ${now.toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true
-      })}`,
-      visitorContext,
-      sharedAvatarContext,
-      `Full profile JSON:`,
-      JSON.stringify(profile, null, 2)
-    ].filter(Boolean).join('\n')
-
-    // 4) Retrieve relevant memories for context (if userId is provided)
-    let memoryContext = '';
-    let latestMemories = [];
-    if (userId && openai.apiKey) {
-      try {
-        console.log('[api/chat] Retrieving memories for user:', userId, 'avatar:', avatarId);
-        memoryContext = await MemoryService.getMemoriesForChat(userQuestion, userId, 5, avatarId);
-        if (memoryContext) {
-          console.log('[api/chat] Found relevant memories:', memoryContext.length, 'characters');
-          console.log('[api/chat] Memory context preview:', memoryContext.substring(0, 200) + '...');
-        } else {
-          console.log('[api/chat] No memory context found');
-        }
-        // Also fetch latest memories for UI update
-        latestMemories = await MemoryService.getLatestMemories(userId, avatarId, 10);
-        console.log('[api/chat] Latest memories for UI:', latestMemories.length);
-        if (latestMemories.length > 0) {
-          console.log('[api/chat] Sample memory:', latestMemories[0].fragmentText?.substring(0, 50) + '...');
-        }
-      } catch (memoryError) {
-        console.warn('[api/chat] Memory retrieval failed:', memoryError);
-        // Continue without memories - don't fail the entire chat
-      }
+    if (debug) {
+      return NextResponse.json({
+        avatarId: '0585f43b-4b49-4e16-b2a7-91c8e1e3850c',
+        isDemo: true,
+        visitorId: uuidv4(),
+        conversationId: avatarSlug,
+        cacheStats: { test: true }
+      });
     }
-
-    // 5) Assemble message list with memory context
-    const enhancedSystemPrompt = systemPrompt + (memoryContext ? `\n\n${memoryContext}` : '');
-    const messages = [
-      { role: 'system', content: enhancedSystemPrompt },
-      ...safeHistory,
-      { role: 'user', content: userQuestion }
-    ]
-
-    // Check if OpenAI API key is available
-    if (!openai.apiKey) {
-      console.log('[api/chat] No OpenAI API key found, using mock response');
-
-      // Generate a mock response based on the user's input
-      let mockAnswer = '';
-
-      if (userQuestion.toLowerCase().includes('guinea pig') ||
-        userQuestion.toLowerCase().includes('otis')) {
-        mockAnswer = "That's wonderful! I love hearing about childhood pets. Tell me more about Otis the guinea pig. What was he like? Did he have any funny habits?";
-      } else if (userQuestion.toLowerCase().includes('hello') ||
-        userQuestion.toLowerCase().includes('hi')) {
-        mockAnswer = `Hi there! It's great to chat with you. How can I help you today?`;
-      } else if (userQuestion.toLowerCase().includes('story')) {
-        mockAnswer = "I'd love to hear your story! Please share it with me.";
-      } else {
-        mockAnswer = "That's interesting! Tell me more about that.";
-      }
-
-      // Even with mock response, try to create basic memories without OpenAI
-      if (userId) {
-        try {
-          // Create simple rule-based memories for testing
-          const memories = [];
-          const lowerMessage = userQuestion.toLowerCase();
-          
-          // Extract names mentioned
-          const nameMatches = userQuestion.match(/(?:my name is|i'm|i am|call me)\s+([A-Z][a-z]+)/gi);
-          if (nameMatches) {
-            nameMatches.forEach(match => {
-              const name = match.split(/\s+/).pop();
-              memories.push(`User's name is ${name}`);
-            });
-          }
-          
-          // Extract pet mentions
-          if (lowerMessage.includes('pet') || lowerMessage.includes('dog') || lowerMessage.includes('cat') || lowerMessage.includes('guinea pig')) {
-            const petMatches = userQuestion.match(/(?:pet|dog|cat|guinea pig)(?:\s+named|\s+called)?\s+([A-Z][a-z]+)/gi);
-            if (petMatches) {
-              petMatches.forEach(match => {
-                const parts = match.split(/\s+/);
-                const name = parts[parts.length - 1];
-                const type = parts[0].toLowerCase();
-                memories.push(`User has a ${type} named ${name}`);
-              });
-            }
-          }
-          
-          // Extract family mentions
-          const familyMatches = userQuestion.match(/(?:my|i have a)\s+(sister|brother|mother|father|mom|dad|parent)(?:\s+named|\s+called)?\s+([A-Z][a-z]+)/gi);
-          if (familyMatches) {
-            familyMatches.forEach(match => {
-              const parts = match.split(/\s+/);
-              const name = parts[parts.length - 1];
-              const relation = parts.find(p => ['sister', 'brother', 'mother', 'father', 'mom', 'dad', 'parent'].includes(p.toLowerCase()));
-              memories.push(`User has a ${relation} named ${name}`);
-            });
-          }
-          
-          // Store the extracted memories
-          for (const memoryText of memories) {
-            await MemoryService.storeSimpleMemory(userId, memoryText, avatarId || 'default');
-          }
-          
-          if (memories.length > 0) {
-            console.log(`[api/chat] ✅ Stored ${memories.length} rule-based memories (mock mode)`);
-            memories.forEach((memory, index) => {
-              console.log(`[api/chat]   ${index + 1}. ${memory}`);
-            });
-          }
-          
-        } catch (memoryError) {
-          console.warn('[api/chat] Memory storage failed (mock mode):', memoryError);
-        }
-      }
-
-      return NextResponse.json({ answer: mockAnswer });
-    }
-
-    // 6) Query OpenAI
-    console.log('[api/chat] Calling OpenAI API...');
     
-    if (stream) {
-      // Handle streaming response
-      const streamResponse = await openai.chat.completions.create({
-        model: 'gpt-4o-2024-08-06',
-        messages: messages as any,
-        temperature: 0.7,
-        stream: true
-      });
-
-      let fullAnswer = '';
-      
-      const readableStream = new ReadableStream({
-        async start(controller) {
-          try {
-            for await (const chunk of streamResponse) {
-              const content = chunk.choices[0]?.delta?.content || '';
-              if (content) {
-                fullAnswer += content;
-                controller.enqueue(new TextEncoder().encode(content));
-              }
-            }
-            
-            // After streaming is complete, process memories
-            if (userId && fullAnswer) {
-              try {
-                console.log(`[api/chat] Processing memories for user ${userId}, avatar ${avatarId}`);
-                const storedMemories = await MemoryService.processAndStoreMemories(
-                  userQuestion, 
-                  userId, 
-                  {
-                    timestamp: new Date().toISOString(),
-                    messageContext: userQuestion,
-                    emotionalTone: 'neutral',
-                    visitorName: visitorName
-                  },
-                  undefined,
-                  avatarId || 'default'
-                );
-                
-                if (storedMemories.length > 0) {
-                  console.log(`[api/chat] ✅ Stored ${storedMemories.length} memories for user ${userId}, avatar ${avatarId}`);
-                }
-              } catch (memoryError) {
-                console.error('[api/chat] ❌ Memory storage failed:', memoryError);
-              }
-            }
-            
-            controller.close();
-          } catch (error) {
-            console.error('[api/chat] Streaming error:', error);
-            controller.error(error);
-          }
-        }
-      });
-
-      return createStreamingResponse(readableStream);
-    } else {
-      // Handle non-streaming response (existing logic)
-      const resp = await openai.chat.completions.create({
-        model: 'gpt-4o-2024-08-06',
-        messages: messages as any,
-        temperature: 0.7
-      })
-      const answer = resp.choices?.[0]?.message?.content ?? ''
-      console.log('[api/chat] Received response from OpenAI');
-
-      // 7) Extract and store memories from user message (wait for completion to include in response)
-      if (userId) {
-        console.log(`[api/chat] Processing memories for user ${userId}, avatar ${avatarId}`);
-        try {
-          const storedMemories = await MemoryService.processAndStoreMemories(
-          userQuestion, 
-          userId, 
-          {
-            timestamp: new Date().toISOString(),
-            messageContext: userQuestion,
-            emotionalTone: 'neutral',
-            visitorName: visitorName // Include visitor name for personalized memories
-          },
-          undefined, // extractionThreshold
-            avatarId || 'default' // avatarId as separate parameter
-          );
-          
-          if (storedMemories.length > 0) {
-            console.log(`[api/chat] ✅ Stored ${storedMemories.length} memories for user ${userId}, avatar ${avatarId}`);
-            storedMemories.forEach((memory, index) => {
-              console.log(`[api/chat]   ${index + 1}. ${memory.fragmentText.substring(0, 100)}...`);
-            });
-            
-            // Update latestMemories to include the newly created memories
-            latestMemories = await MemoryService.getLatestMemories(userId, avatarId, 10);
-            console.log(`[api/chat] Updated latest memories count: ${latestMemories.length}`);
-            if (latestMemories.length > 0) {
-              console.log(`[api/chat] Latest memory for animation: ${latestMemories[0].fragmentText?.substring(0, 50)}...`);
-            }
-          } else {
-            console.log(`[api/chat] ℹ️ No memories extracted from message for user ${userId}`);
-          }
-        } catch (memoryError) {
-          console.error('[api/chat] ❌ Memory storage failed:', memoryError.message || memoryError);
-          console.error('[api/chat] Memory error details:', {
-            userId,
-            avatarId,
-            messageLength: userQuestion.length,
-            hasOpenAIKey: !!openai.apiKey
-          });
-        }
+    // Initialize streaming
+    const stream = new ReadableStream({
+      start(controller) {
+        streamWriter = new SafeStreamWriter(controller);
       }
-
-      // 8) Respond with properly formatted memories
-      const formattedMemories = latestMemories.map(memory => ({
-        ...memory,
-        fragmentText: memory.fragmentText || memory.fragment_text,
-        content: memory.fragmentText || memory.fragment_text
-      }));
-      
-      console.log('[api/chat] Returning', formattedMemories.length, 'formatted memories');
-      return NextResponse.json({ answer, memories: formattedMemories })
-    }
-  } catch (err: any) {
-    console.error('[api/chat] Error:', err)
-
-    // Provide a fallback response even if the API call fails
-    return NextResponse.json({
-      answer: "I understand what you're saying. That's an interesting point! Would you like to tell me more?",
-      error: err.message
     });
+    
+    // Early intent detection and budget calculation
+    const intent = detectIntent(singleMessage);
+    const shouldStartDeepImmediately = requiresImmediateDeep(intent);
+    deepMustContribute = process.env.ECHOSTONE_FACTBOOK_ONLY === '1' ? false : shouldStartDeepImmediately;
+    const pinnedCount = getPinnedCount(intent);
+    
+    console.log('debug_intent_detection', {
+      trace_id: traceId,
+      query: singleMessage,
+      intent,
+      shouldStartDeepImmediately,
+      deepMustContribute,
+      pinnedCount
+    });
+    
+    const BUDGET_MS = 8000;
+    const HARD_DEADLINE = t0 + BUDGET_MS;
+    const microBudgetMs = BUDGET_MS - MergeConfig.mergeWindowMs - MergeConfig.safetyMs;
+    
+    // Log one-liner per turn
+    console.log('turn_start', {
+      trace_id: traceId,
+      intent,
+      should_start_deep: shouldStartDeepImmediately,
+      pinned_count: pinnedCount,
+      micro_budget_ms: microBudgetMs,
+      merge_window_ms: MergeConfig.mergeWindowMs
+    });
+    
+    // Always start deep lane for factbook search - no intent dependency
+    const shouldSkipDeep = microBudgetMs < 200;
+    
+    if (!shouldSkipDeep) {
+      t_deep_started_ms = Date.now() - t0;
+      console.log('deep_lane_starting', {
+        t_deep_started_ms,
+        micro_budget_at_spawn: microBudgetMs,
+        merge_window_ms: MergeConfig.mergeWindowMs
+      });
+      
+      // Always start deep lane immediately for factbook search
+      const deepStartDelay = 0;
+      console.log('debug_deep_start_delay', {
+        trace_id: traceId,
+        shouldStartDeepImmediately,
+        deepStartDelay
+      });
+      deepStartTimer = setTimeout(async () => {
+        try {
+          await runDeepLane({
+            query: singleMessage,
+            avatarId: '0585f43b-4b49-4e16-b2a7-91c8e1e3850c',
+            writer: streamWriter!,
+            abortSignal: deepAbort.signal,
+            deepProducedAny,
+            traceId,
+            onFirstToken: (ms) => { t_deep_first_ms = ms; },
+            onComplete: (ms) => { t_deep_done_ms = ms; },
+            onSnippetsSelected: (snippets) => { snippets_selected = snippets; },
+            conversationContext: {
+              memoryContext: memoryContext || '',
+              continuityContext: continuityContext || ''
+            }
+          });
+        } catch (e) {
+          console.warn('deep_lane_error', e);
+        }
+      }, deepStartDelay);
+    }
+    
+    // Set hard deadline timer
+    deadlineTimer = setTimeout(() => {
+      if (!deepAbort.signal.aborted) {
+        deepAbort.abort('budget_deadline');
+      }
+    }, Math.max(0, HARD_DEADLINE - Date.now()));
+    
+    // Fast path with non-blocking pinned memory injection
+    const fastHello = fastHelloFromCacheOrTemplate({ name: 'Jonathan' });
+    await streamWriter!.write(encodeSSE({ 
+      channel: 'fast', 
+      delta: fastHello 
+    }));
+    
+    // Record hook timing
+    t_hook_ms = Date.now() - t0;
+    
+    // Ensure voice is warmed for immediate TTS streaming (Task 10)
+    const voiceId = process.env.JONATHAN_DEMO_VOICE_ID || 'default';
+    voiceWarmingService.warmVoiceSession(voiceId).catch(error => {
+      console.warn('voice_warming_background_failed', { error: error.message });
+    });
+    
+    // Non-blocking pinned memory injection (hard cap 100ms)
+    let pinnedMemories: any[] = [];
+    if (pinnedCount > 0) {
+      pinnedMemories = await getPinnedMemoriesWithTimeout(singleMessage, '0585f43b-4b49-4e16-b2a7-91c8e1e3850c', 100);
+      console.log('pinned_memory_result', {
+        requested: pinnedCount,
+        retrieved: pinnedMemories.length,
+        timeout_hit: pinnedMemories.length === 0
+      });
+    }
+    
+    // Generate fast response with pinned memories if available
+    let fastResponse = '';
+    if (pinnedMemories.length > 0) {
+      // Use pinned memories to generate specific response
+      const memoryContext = pinnedMemories.map(m => m.fragment_text).join(' ');
+      fastResponse = `Based on my memories: ${memoryContext.substring(0, 200)}...`;
+    } else {
+      // Fallback to generic response that doesn't hallucinate
+      fastResponse = "I'm thinking about that...";
+    }
+    
+    await streamWriter!.write(encodeSSE({ 
+      channel: 'fast', 
+      delta: fastResponse 
+    }));
+    
+    // Merge window logic - always wait for deep lane to search factbook
+    if (!shouldSkipDeep) {
+      const remainingBudget = HARD_DEADLINE - Date.now();
+      if (remainingBudget > MergeConfig.mergeWindowMs) {
+        console.log('deep_factbook_search_waiting', {
+          merge_window_ms: MergeConfig.mergeWindowMs,
+          remaining_budget: remainingBudget
+        });
+        
+        // Wait for merge window - give deep lane time to search factbook
+        await new Promise<void>((resolve) => {
+          mergeWindowTimer = setTimeout(() => {
+            console.log('deep_merge_window_complete', { 
+              deep_produced: deepProducedAny.value,
+              t_deep_done: t_deep_done_ms 
+            });
+            resolve();
+          }, MergeConfig.mergeWindowMs);
+        });
+      }
+    }
+    
+    // Emit final metadata
+    await streamWriter!.write(encodeSSE({
+      event: 'meta',
+      trace_id: traceId,
+      latency_budget_ms: BUDGET_MS,
+      deep_merge: deepProducedAny.value,
+      deep_tokens_any: deepProducedAny.value,
+      t_deep_started_ms,
+      micro_budget_ms: microBudgetMs,
+      pinned_count: pinnedCount,
+      deep_spawned: !shouldSkipDeep,
+      intent
+    }));
+    
+    // Emit explicit deep_merge event if deep contributed
+    if (deepProducedAny.value) {
+      await streamWriter!.write(encodeSSE({
+        event: 'deep_merge_log',
+        deep_merge: true,
+        deep_tokens_any: true
+      }));
+    }
+    
+    await streamWriter!.write(encodeSSE({ event: 'end' }));
+    
+    // Record final metrics
+    metricsCollector.recordChatMetrics({
+      trace_id: traceId,
+      timestamp: Date.now(),
+      t_hook_ms,
+      t_deep_first_ms,
+      t_deep_done_ms,
+      snippets_selected,
+      intent,
+      deep_merge: deepProducedAny.value,
+      pinned_count: pinnedCount,
+      error: chatError
+    });
+    
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive'
+      }
+    });
+    
+  } catch (error) {
+    console.error('chat_route_error', error);
+    chatError = error instanceof Error ? error.message : 'Internal server error';
+    
+    // Record error metrics
+    metricsCollector.recordChatMetrics({
+      trace_id: traceId,
+      timestamp: Date.now(),
+      t_hook_ms,
+      t_deep_first_ms,
+      t_deep_done_ms,
+      snippets_selected,
+      error: chatError
+    });
+    
+    if (streamWriter && !streamWriter.closed) {
+      await streamWriter.write(encodeSSE({
+        event: 'error',
+        error: 'Internal server error'
+      }));
+    }
+    
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } finally {
+    // Always cleanup on any exit path
+    cleanup();
   }
 }

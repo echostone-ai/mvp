@@ -1,0 +1,98 @@
+{
+  "packName": "Jonathan Demo Expression Pack",
+  "version": "1.0.0",
+  "avatarId": "jonathan-demo",
+  "expressions": [
+    {
+      "filename": "jonathan_laugh_cheerful.mp3",
+      "type": "laugh",
+      "tone": "cheerful",
+      "placementHints": ["funny", "joke", "humor", "amusing", "hilarious"],
+      "priority": 70
+    },
+    {
+      "filename": "jonathan_laugh_hearty.mp3",
+      "type": "laugh",
+      "tone": "hearty",
+      "placementHints": ["funny", "laughter", "comedy"],
+      "priority": 65
+    },
+    {
+      "filename": "jonathan_sigh_thoughtful.mp3",
+      "type": "sigh",
+      "tone": "thoughtful",
+      "placementHints": ["unfortunately", "sadly", "disappointing", "tough"],
+      "priority": 60
+    },
+    {
+      "filename": "jonathan_sigh_resigned.mp3",
+      "type": "sigh",
+      "tone": "resigned",
+      "placementHints": ["oh well", "regret", "sigh"],
+      "priority": 55
+    },
+    {
+      "filename": "jonathan_breath_natural.mp3",
+      "type": "breath",
+      "tone": "natural",
+      "placementHints": [],
+      "priority": 50
+    },
+    {
+      "filename": "jonathan_breath_deep.mp3",
+      "type": "breath",
+      "tone": "deep",
+      "placementHints": [],
+      "priority": 45
+    },
+    {
+      "filename": "jonathan_affirmation_confident.mp3",
+      "type": "affirmation",
+      "tone": "confident",
+      "placementHints": ["exactly", "absolutely", "definitely", "yes", "correct"],
+      "priority": 65
+    },
+    {
+      "filename": "jonathan_affirmation_agreeable.mp3",
+      "type": "affirmation",
+      "tone": "agreeable",
+      "placementHints": ["right", "agreed", "precisely"],
+      "priority": 60
+    },
+    {
+      "filename": "jonathan_greeting_warm.mp3",
+      "type": "greeting",
+      "tone": "warm",
+      "placementHints": ["hello", "hi", "hey", "welcome"],
+      "priority": 70
+    },
+    {
+      "filename": "jonathan_greeting_casual.mp3",
+      "type": "greeting",
+      "tone": "casual",
+      "placementHints": ["good morning", "good afternoon", "good evening"],
+      "priority": 65
+    },
+    {
+      "filename": "jonathan_catchphrase_signature.mp3",
+      "type": "catchphrase",
+      "tone": "signature",
+      "placementHints": [],
+      "priority": 80
+    },
+    {
+      "filename": "jonathan_filler_thoughtful.mp3",
+      "type": "filler",
+      "tone": "thoughtful",
+      "placementHints": [],
+      "priority": 40
+    },
+    {
+      "filename": "jonathan_filler_natural.mp3",
+      "type": "filler",
+      "tone": "natural",
+      "placementHints": [],
+      "priority": 35
+    }
+  ]
+}

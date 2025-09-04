@@ -81,7 +81,16 @@ export class MemoryPerformanceMonitor {
     context: Record<string, any> = {}
   ): void {
     const duration = Date.now() - startTime
-    const memoryUsage = process.memoryUsage()
+    
+    // Get memory usage safely (server-side only)
+    let memoryUsage: any = undefined;
+    if (typeof process !== 'undefined' && process.memoryUsage && typeof window === 'undefined') {
+      try {
+        memoryUsage = process.memoryUsage();
+      } catch (error) {
+        // Silently ignore memory usage errors
+      }
+    }
 
     const metric: PerformanceMetrics = {
       operationType,
@@ -89,11 +98,11 @@ export class MemoryPerformanceMonitor {
       timestamp: new Date(),
       success,
       context,
-      memoryUsage: {
+      memoryUsage: memoryUsage ? {
         heapUsed: memoryUsage.heapUsed,
         heapTotal: memoryUsage.heapTotal,
         external: memoryUsage.external
-      }
+      } : undefined
     }
 
     this.metrics.push(metric)
@@ -222,7 +231,9 @@ export class MemoryPerformanceMonitor {
       .filter(m => m.memoryUsage)
       .map(m => m.memoryUsage!.heapUsed / 1024 / 1024) // Convert to MB
     
-    const currentMemory = process.memoryUsage().heapUsed / 1024 / 1024
+    const currentMemory = (typeof process !== 'undefined' && process.memoryUsage && typeof window === 'undefined') 
+      ? process.memoryUsage().heapUsed / 1024 / 1024 
+      : 0
     const peakMemory = memoryUsages.length > 0 ? Math.max(...memoryUsages) : currentMemory
     const avgMemory = memoryUsages.length > 0 ? memoryUsages.reduce((sum, m) => sum + m, 0) / memoryUsages.length : currentMemory
 

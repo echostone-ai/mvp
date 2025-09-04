@@ -1,0 +1,520 @@
+/* Jonathan Demo Page Styles */
+
+.main-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  color: var(--color-text);
+}
+
+.hero-section {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.main-title {
+  font-size: 3rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, #9147ff, #ff6b6b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: logo-pulse 4s ease-in-out infinite;
+}
+
+.main-subtitle-enhanced {
+  font-size: 1.2rem;
+  color: #b8b8d4;
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.main-subtitle {
+  font-size: 0.9rem;
+  color: #8a8aa8;
+  margin: 1rem 0;
+  text-align: center;
+}
+
+/* Form Styles */
+.ask-form {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 0.5rem;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.ask-form input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--color-text);
+  font-size: 1.1rem;
+  padding: 1rem;
+  outline: none;
+}
+
+.ask-form input::placeholder {
+  color: #8a8aa8;
+}
+
+.ask-form button {
+  background: var(--color-btn-gradient);
+  border: none;
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 60px;
+}
+
+.ask-form button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(106, 65, 241, 0.4);
+}
+
+.ask-form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Microphone Button */
+.mic-btn {
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  color: var(--color-text);
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.mic-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+.mic-btn.active {
+  background: var(--color-btn-gradient);
+  border-color: #9147ff;
+  animation: pulse 2s infinite;
+}
+
+.mic-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(145, 71, 255, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(145, 71, 255, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(145, 71, 255, 0); }
+}
+
+/* Quick Questions */
+.quick-questions-section {
+  margin: 3rem 0;
+}
+
+.quick-questions-section h3 {
+  text-align: center;
+  font-size: 1.5rem;
+  margin-bottom: 2rem;
+  color: var(--color-text);
+}
+
+.quick-questions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.quick-question-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--color-text);
+  padding: 1.5rem;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  backdrop-filter: blur(10px);
+}
+
+.quick-question-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.quick-question-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.question-emoji {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.question-text {
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+/* Answer Section */
+.answer {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  padding: 2rem;
+  margin: 2rem 0;
+  backdrop-filter: blur(10px);
+}
+
+.answer h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.answer p {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #e2e2f6;
+  margin-bottom: 1.5rem;
+}
+
+.answer-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.play-btn {
+  background: var(--color-btn-gradient);
+  border: none;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.play-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(106, 65, 241, 0.4);
+}
+
+.status-info {
+  color: #b8b8d4;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Sound Bars Animation */
+.soundbars {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  margin: 2rem 0;
+  height: 40px;
+}
+
+.soundbar {
+  width: 4px;
+  height: 20px;
+  background: var(--color-btn-gradient);
+  border-radius: 2px;
+  animation: soundbar-move 1.5s ease-in-out infinite;
+}
+
+.soundbar:nth-child(1) { animation-delay: 0s; }
+.soundbar:nth-child(2) { animation-delay: 0.1s; }
+.soundbar:nth-child(3) { animation-delay: 0.2s; }
+.soundbar:nth-child(4) { animation-delay: 0.3s; }
+.soundbar:nth-child(5) { animation-delay: 0.4s; }
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .main-container {
+    padding: 1rem;
+  }
+  
+  .main-title {
+    font-size: 2rem;
+  }
+  
+  .ask-form {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .ask-form button {
+    padding: 1rem;
+  }
+  
+  .quick-questions-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .answer {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-title {
+    font-size: 1.8rem;
+  }
+  
+  .main-subtitle-enhanced {
+    font-size: 1rem;
+  }
+  
+  .quick-question-btn {
+    padding: 1rem;
+  }
+  
+  .question-text {
+    font-size: 0.9rem;
+  }
+}/* 
+Expression Manager Section */
+.expression-manager-section {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.expression-manager-toggle {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 1.5rem;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  text-align: left;
+  backdrop-filter: blur(10px);
+}
+
+.expression-manager-toggle:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(147, 71, 255, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(147, 71, 255, 0.2);
+}
+
+.toggle-icon {
+  font-size: 1.2rem;
+  color: #9147ff;
+  transition: transform 0.3s ease;
+  flex-shrink: 0;
+}
+
+.toggle-text {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 0.25rem;
+}
+
+.toggle-subtitle {
+  font-size: 0.9rem;
+  color: #e2e2f6;
+  opacity: 0.8;
+  margin-left: auto;
+}
+
+.expression-manager-content {
+  margin-top: 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1.5rem;
+  backdrop-filter: blur(5px);
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive adjustments for expression manager */
+@media (max-width: 768px) {
+  .expression-manager-toggle {
+    padding: 1rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .toggle-subtitle {
+    margin-left: 0;
+    margin-top: 0.25rem;
+  }
+  
+  .expression-manager-content {
+    padding: 1rem;
+  }
+}/* 
+Analytics Dashboard Section */
+.analytics-dashboard-section {
+  margin-top: 3rem;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.analytics-dashboard-toggle {
+  width: 100%;
+  background: none;
+  border: none;
+  color: var(--color-text);
+  cursor: pointer;
+  padding: 1rem 0;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.2s ease;
+}
+
+.analytics-dashboard-toggle:hover {
+  color: #9147ff;
+}
+
+.analytics-dashboard-toggle .toggle-icon {
+  font-size: 1.2rem;
+  color: #9147ff;
+  transition: transform 0.2s ease;
+}
+
+.analytics-dashboard-toggle .toggle-text {
+  font-size: 1.1rem;
+  font-weight: 600;
+  flex: 1;
+}
+
+.analytics-dashboard-toggle .toggle-subtitle {
+  font-size: 0.9rem;
+  color: #8a8aa8;
+  margin-left: auto;
+  max-width: 300px;
+  text-align: right;
+}
+
+.analytics-dashboard-content {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Override analytics dashboard styles for dark theme */
+.analytics-dashboard-content .analytics-dashboard {
+  background: transparent;
+  color: var(--color-text);
+}
+
+.analytics-dashboard-content .metric-card,
+.analytics-dashboard-content .trend-card,
+.analytics-dashboard-content .test-card,
+.analytics-dashboard-content .suggestion,
+.analytics-dashboard-content .report-summary,
+.analytics-dashboard-content .export-section,
+.analytics-dashboard-content .share-section {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: var(--color-text);
+}
+
+.analytics-dashboard-content .tab-navigation button {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-text);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.analytics-dashboard-content .tab-navigation button.active {
+  background: #9147ff;
+  color: white;
+}
+
+.analytics-dashboard-content .tab-navigation button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.analytics-dashboard-content .create-test-btn,
+.analytics-dashboard-content .export-options button,
+.analytics-dashboard-content .share-options button {
+  background: #9147ff;
+  border: none;
+}
+
+.analytics-dashboard-content .create-test-btn:hover,
+.analytics-dashboard-content .export-options button:hover:not(:disabled),
+.analytics-dashboard-content .share-options button:hover:not(:disabled) {
+  background: #7c3aed;
+}
+
+/* Responsive adjustments for analytics dashboard */
+@media (max-width: 768px) {
+  .analytics-dashboard-toggle .toggle-subtitle {
+    display: none;
+  }
+  
+  .analytics-dashboard-section {
+    margin-top: 2rem;
+    padding: 1rem;
+  }
+}

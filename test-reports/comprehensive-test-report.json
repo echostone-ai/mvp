@@ -1,0 +1,60 @@
+{
+  "timestamp": "2025-08-19T10:13:24.485Z",
+  "duration": "47s",
+  "summary": {
+    "totalCategories": 6,
+    "failedCategories": 3,
+    "totalTests": 44,
+    "totalPassed": 44,
+    "passRate": 100,
+    "overallStatus": "FAILED"
+  },
+  "results": {
+    "audioQuality": {
+      "passed": 12,
+      "total": 12,
+      "failed": false
+    },
+    "performance": {
+      "passed": 0,
+      "total": 0,
+      "failed": true,
+      "error": "Command failed: npm run test -- src/lib/__tests__/performanceRegression.test.ts --run --reporter=json"
+    },
+    "userAcceptance": {
+      "passed": 0,
+      "total": 0,
+      "failed": true,
+      "error": "Command failed: npm run test -- src/lib/__tests__/userAcceptanceTesting.test.ts --run --reporter=json"
+    },
+    "loadTesting": {
+      "passed": 0,
+      "total": 0,
+      "failed": true,
+      "error": "Command failed: npm run test -- src/lib/__tests__/loadTesting.test.ts --run --reporter=json"
+    },
+    "integration": {
+      "passed": 26,
+      "total": 26,
+      "failed": false
+    },
+    "security": {
+      "passed": 6,
+      "total": 6,
+      "failed": false,
+      "note": "Manual verification required"
+    }
+  },
+  "recommendations": [
+    "Investigate performance bottlenecks and optimize critical paths",
+    "Improve user experience based on acceptance test feedback",
+    "Optimize system for higher concurrent load handling"
+  ],
+  "readinessAssessment": {
+    "level": "MOSTLY_READY",
+    "confidence": "MEDIUM",
+    "passRate": 100,
+    "criticalIssues": 3,
+    "recommendedAction": "Address minor issues before production deployment"
+  }
+}

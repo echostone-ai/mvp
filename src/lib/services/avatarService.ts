@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { sbAdmin, hasSupabaseAdmin } from '@/lib/data/supabaseAdmin';
 import { getCached, setCached } from '@/lib/cache';
 
 export interface Avatar {
@@ -30,7 +31,9 @@ export async function getAvatars(data: {
         });
       }
 
-      const { data: avatarData, error } = await supabase
+      const db = hasSupabaseAdmin && sbAdmin ? sbAdmin : supabase
+
+      const { data: avatarData, error } = await db
         .from('avatar_profiles')
         .select('*')
         .eq('user_id', userId)

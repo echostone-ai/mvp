@@ -1,0 +1,74 @@
+.storyManagerContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.tabNavigation {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding-bottom: 1rem;
+}
+
+.tabButton {
+  padding: 0.75rem 1.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  color: #e2e2f6;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px 8px 0 0;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tabButton:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.tabButtonActive {
+  background: rgba(147, 71, 255, 0.8);
+  color: white;
+  border-color: rgba(147, 71, 255, 1);
+  box-shadow: 0 2px 8px rgba(147, 71, 255, 0.3);
+}
+
+.tabButtonActive:hover {
+  background: rgba(147, 71, 255, 1);
+}
+
+.tabContent {
+  min-height: 400px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .storyManagerContainer {
+    padding: 0.5rem;
+  }
+  
+  .tabNavigation {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  
+  .tabButton {
+    border-radius: 8px;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .tabButton {
+    padding: 0.625rem 1rem;
+    font-size: 0.9rem;
+  }
+}

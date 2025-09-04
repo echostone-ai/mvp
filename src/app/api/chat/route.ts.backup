@@ -1,0 +1,1364 @@
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+import { NextResponse } from 'next/server';
+import { v4 as uuidv4 } from 'uuid';
+import { supabase, openai, caches } from '@/lib/runtime/singletons';
+import { EnhancedPromptBuilder } from '@/lib/services/enhancedPromptBuilder';
+import { fastOpener, personaSeedFromCacheOrDefault } from '@/lib/runtime/fastOpener';
+import { getLimits } from '@/lib/runtime/limits';
+import { iterDataLines, extractDeltas } from '@/lib/runtime/sse';
+import { classifyIntent } from '@/lib/runtime/intent';
+import { getFastMaxForAvatar, recordFastUsage } from '@/lib/runtime/tuning';
+import { getEnhancedStyleProfileCached, resolveCurrentLocation } from '@/lib/runtime/profile';
+import { injectFactsFromMessage } from '@/lib/services';
+import { storyIntegrationService } from '@/lib/services/storyIntegrationService';
+import { MergeConfig, detectIntent, requiresImmediateDeep, getPinnedCount } from '@/config/personalization';
+import { unifiedAvatarContextService } from '@/lib/services/unifiedAvatarContext';
+import { runDeepLane } from '@/lib/services/deepLaneOrchestrator';
+
+// Demo mode configuration
+const DEMO_AVATAR_SLUG = process.env.DEMO_AVATAR_SLUG || 'jonathan-demo';
+const DEMO_COOKIE_NAME = process.env.DEMO_COOKIE_NAME || 'jd_demo_vid';
+const DEMO_TTL_MINUTES = parseInt(process.env.DEMO_MEMORY_TTL_MINUTES || '10');
+const DEMO_SYSTEM_USER_ID = process.env.DEMO_SYSTEM_USER_ID || process.env.SYSTEM_USER_ID;
+
+// Feature flags
+const FEATURE_HYBRID_STREAMING = process.env.FEATURE_HYBRID_STREAMING === 'true';
+
+// Enhanced response limits for all avatars (system-wide improvements)
+const FAST_MAX_TOKENS_DEMO = 200;  // increased for complete demo responses
+const FAST_MAX_TOKENS_NORMAL = 150; // increased for all avatars to allow complete thoughts
+const FAST_MAX_MS_DEMO = 3000;     // increased for demo mode to ensure complete responses
+const FAST_MAX_MS_NORMAL = 2000;   // increased for all avatars to allow complete responses
+const FAST_MAX_SENTS = 12;         // increased for all avatars to allow complete thoughts and stories
+
+// Helper functions
+function fastHelloFromCacheOrTemplate({ name }: { name: string }) {
+  // Deterministic, friendly, model-free opener; keep < 120 chars
+  return `Hey there—it's ${name}. What's on your mind?`;
+}
+
+// Get pinned memories for fast path political/opinion queries
+async function getPinnedMemoriesForFastPath(query: string, avatarId: string) {
+  try {
+    const { data, error } = await supabase.rpc('get_enhanced_memories', {
+      target_user_id: null,
+      target_avatar_id: avatarId,
+      search_query: query,
+      match_count: 10,
+      similarity_threshold: 0.25,
+      include_bio_facts: true
+    });
+
+    if (error || !data) {
+      return [];
+    }
+
+    // Filter for political/opinion content
+    const candidates = data.filter((memory: any) => {
+      const ctx = memory.conversation_context || {};
+      const text = memory.fragment_text.toLowerCase();
+      
+      // Include if context type is opinion or language_style
+      if (ctx.type === 'opinion' || ctx.type === 'language_style') {
+        return true;
+      }
+      
+      // Include if fragment contains Trump content
+      if (text.includes('trump')) {
+        return true;
+      }
+      
+      // Include if context contains politics
+      if (ctx.context && ctx.context.includes('politics')) {
+        return true;
+      }
+      
+      return false;
+    });
+
+    // Boost scores and return top 3
+    const boosted = candidates.map((memory: any) => {
+      const ctx = memory.conversation_context || {};
+      let boost = 0;
+      
+      if (ctx.type === 'opinion' || (ctx.context && ctx.context.includes('politics'))) {
+        boost = 0.4;
+      }
+      
+      return {
+        ...memory,
+        similarity_score: Math.min(1.0, (memory.similarity_score || 0.8) + boost)
+      };
+    });
+
+    return boosted
+      .sort((a: any, b: any) => b.similarity_score - a.similarity_score)
+      .slice(0, 3);
+      
+  } catch (error) {
+    console.warn('Failed to get pinned memories for fast path:', error);
+    return [];
+  }
+}
+
+async function prewarmDemoSeeds(demoAvatarId: string) {
+  const key = `demo-seed:${demoAvatarId}`;
+  if (!caches.demoSeeds.get(key)) {
+    const prompt = `BASICS:
+full_name: Jonathan Braden
+pet_name: Romeo
+pet_type: toy poodle
+speaking_style: warm, conversational, engaging, humorous
+origin_location: Vancouver Island
+moved_to_maine_at: age 14
+personality: playful, witty, authentic, loves to laugh
+
+CURRENT STATUS:
+- Currently dating Krissy
+- Living in Verteillac, France
+
+HISTORICAL FACTS:
+- Was married to Tia (first girlfriend) from 1999 to 2009 (10 years)
+- Relationship history: Married Tia 1999-2009 (first girlfriend, 10 years). Currently dating Krissy since 2023.
+
+You are Jonathan Braden. You're naturally warm and engaging with a good sense of humor. You laugh easily, make witty observations, and have genuine reactions to what people tell you. You don't always need to ask questions - sometimes you just share thoughts, make jokes, or react authentically to what someone says.`;
+    caches.demoSeeds.set(key, { prompt, expires: Date.now() + 5 * 60 * 1000 });
+  }
+}
+
+const encodeSSE = (obj: any) => new TextEncoder().encode(`data: ${JSON.stringify(obj)}\n\n`);
+
+// Safe spawn for fire-and-forget tasks
+function safeSpawn(task: () => Promise<void>): void {
+  task().catch(error => console.warn('safeSpawn_error', error));
+}
+
+// Timeout helper
+function timeoutPromise(ms: number) {
+  return new Promise<never>((_, rej) =>
+    setTimeout(() => rej(new Error('deep_timeout')), ms)
+  );
+}
+
+// Micro-Deep budget helpers
+const guardMs = 80; // keep some headroom for end/flush
+function remainingBudgetMs(hardDeadline: number) {
+  return Math.max(0, hardDeadline - Date.now() - guardMs);
+}
+
+// Fixed pipe provider stream with proper streaming
+async function pipeProviderStream(
+  resp: Response,
+  writer: WritableStreamDefaultWriter<Uint8Array>,
+  channel: 'fast' | 'deep',
+  provider: 'openai-chat' | 'openai-responses' | 'anthropic' | 'azure-openai',
+  shouldStop?: (delta: string) => null | 'stop_tokens' | 'stop_sentences' | 'stop_time',
+  abortCtl?: AbortController,
+  deepProducedAnyRef?: { value: boolean },
+  deepStartTimer?: NodeJS.Timeout,
+  deepStopAt?: number,
+  isDemo?: boolean
+) {
+  const reader = resp.body!.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let deepSentCount = 0;
+
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      const blocks = buffer.split('\n\n');
+      buffer = blocks.pop() ?? '';
+      for (const block of blocks) {
+        for (const data of iterDataLines(block)) {
+          if (data === '[DONE]') continue;
+          let json: any;
+          try { json = JSON.parse(data); } catch { continue; }
+          const deltas = extractDeltas(json, provider);
+          for (const delta of deltas) {
+            // Micro-Deep budget check
+            if (channel === 'deep' && deepStopAt && Date.now() >= deepStopAt) {
+              abortCtl?.abort('deep_micro_budget');
+              return;
+            }
+            
+            // Deep sentence limit in demo
+            if (channel === 'deep' && isDemo) {
+              for (let i = 0; i < delta.length; i++) {
+                const c = delta[i];
+                if (c === '.' || c === '!' || c === '?') deepSentCount++;
+              }
+              if (deepSentCount >= 20) { // Increased to 20 for all avatars to allow complete stories and thoughts
+                abortCtl?.abort('deep_sentence_limit');
+                return;
+              }
+            }
+            
+            // clamp if requested
+            if (shouldStop) {
+              const reason = shouldStop(delta);
+              if (reason) {
+                abortCtl?.abort(reason);
+                return; // exit fast pipe immediately
+              }
+            }
+            await writer.write(new TextEncoder().encode(`data: ${JSON.stringify({ channel, delta })}\n\n`));
+            if (channel === 'deep' && !deepProducedAnyRef?.value) {
+              deepProducedAnyRef!.value = true;
+              // Clear deepStartTimer on first deep token
+              if (deepStartTimer) {
+                clearTimeout(deepStartTimer);
+              }
+              // Send deep merge logging event
+              await writer.write(new TextEncoder().encode(`data: ${JSON.stringify({ 
+                event: 'deep_merge_log',
+                deep_merge: true,
+                deep_tokens_any: true
+              })}\n\n`));
+            }
+          }
+        }
+      }
+      // also guard against time at chunk level
+      if (abortCtl?.signal.aborted) return;
+    }
+  } catch (e) {
+    // swallow on abort; log only if not aborted
+    if (!(abortCtl?.signal.aborted)) console.warn(`${channel}_pipe_error`, e);
+  }
+}
+
+// Create OpenAI streaming request with abort signal
+async function createStreamingRequest(
+  messages: any[],
+  isDemo: boolean,
+  provider: 'openai-chat' | 'openai-responses',
+  abortSignal?: AbortSignal,
+  isFastLane?: boolean
+): Promise<Response> {
+  const baseUrl = 'https://api.openai.com/v1';
+  const endpoint = provider === 'openai-responses' ? '/chat/responses' : '/chat/completions';
+  
+  // Use Fast Lane clamps or regular limits
+  const maxOut = isFastLane 
+    ? (isDemo ? FAST_MAX_TOKENS_DEMO : FAST_MAX_TOKENS_NORMAL)
+    : (isDemo ? 192 : 320);
+  
+  const body = provider === 'openai-responses' ? {
+    model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+    input: messages,
+    stream: true,
+    temperature: 0.6,
+    max_output_tokens: maxOut
+  } : {
+    model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+    stream: true,
+    temperature: 0.6,
+    messages: isFastLane ? [
+      { role: 'system', content: 'Reply in no more than two concise sentences.' },
+      ...messages
+    ] : messages,
+    max_tokens: maxOut,
+    ...(isFastLane && { stop: ['\n\nUser:', '\n\nAssistant:'] })
+  };
+
+  return fetch(`${baseUrl}${endpoint}`, {
+    method: 'POST',
+    signal: abortSignal,
+    headers: {
+      'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
+  });
+}
+
+// Update session cache with TTL and size bounds
+function updateSessionCache(options: {
+  sessionKey: string;
+  userMsg: string;
+  assistantMsg: string;
+  resolvedEntities?: { friends?: any[]; family?: any[] };
+}): void {
+  const { sessionKey, userMsg, assistantMsg, resolvedEntities } = options;
+  
+  const existing = caches.sessionCtx.get(sessionKey) || {
+    lastTurns: [],
+    friendEntities: [],
+    familyEntities: [],
+    expires: 0
+  };
+  
+  // Append turn and enforce size bounds (last 6 turns)
+  existing.lastTurns = [
+    ...existing.lastTurns,
+    { userMsg, assistantMsg, ts: Date.now() }
+  ].slice(-6);
+  
+  // Merge entities with deduplication (max 50 per type)
+  if (resolvedEntities?.friends) {
+    existing.friendEntities = mergeDedup(existing.friendEntities, resolvedEntities.friends, 50);
+  }
+  if (resolvedEntities?.family) {
+    existing.familyEntities = mergeDedup(existing.familyEntities, resolvedEntities.family, 50);
+  }
+  
+  // Set TTL (10 minutes)
+  existing.expires = Date.now() + 10 * 60 * 1000;
+  
+  caches.sessionCtx.set(sessionKey, existing);
+}
+
+// Merge and deduplicate entities
+function mergeDedup(existing: any[], incoming: any[], maxSize: number): any[] {
+  const merged = [...existing];
+  
+  for (const item of incoming) {
+    const exists = merged.find(e => e.name === item.name || e.id === item.id);
+    if (!exists) {
+      merged.push(item);
+    }
+  }
+  
+  return merged.slice(-maxSize);
+}
+
+// Prefill EPB context from session cache
+function prefillFromSessionCache(options: { avatarId: string; sessionCtx: any }): any {
+  const { avatarId, sessionCtx } = options;
+  const sessionKey = `session:${avatarId}`;
+  const cached = sessionCtx.get(sessionKey);
+  
+  if (!cached || cached.expires < Date.now()) {
+    return { lastTurns: [], friendEntities: [], familyEntities: [] };
+  }
+  
+  return {
+    lastTurns: cached.lastTurns || [],
+    friendEntities: cached.friendEntities || [],
+    familyEntities: cached.familyEntities || []
+  };
+}
+
+// Get cached avatar ID
+async function getCachedAvatarId(avatarSlug: string): Promise<string | null> {
+  const cached = caches.avatarId.get(avatarSlug);
+  if (cached) return cached;
+
+  try {
+    const { data } = await supabase
+      .from('avatar_profiles')
+      .select('id')
+      .eq('name', avatarSlug)
+      .single();
+    
+    const avatarId = data?.id || null;
+    if (avatarId) {
+      caches.avatarId.set(avatarSlug, avatarId);
+    }
+    return avatarId;
+  } catch {
+    return null;
+  }
+}
+
+// Fire-and-forget memory writes
+function queueMemoryWrite(
+  avatarId: string,
+  userMessage: string,
+  assistantResponse: string,
+  visitorId: string,
+  isDemo: boolean,
+  conversationId: string
+): void {
+  (async () => {
+    try {
+      const writes = [];
+      
+      if (isDemo) {
+        const expiresAt = new Date(Date.now() + DEMO_TTL_MINUTES * 60 * 1000).toISOString();
+        
+        // Store raw conversation turns for continuity
+        writes.push(
+          supabase.from('memory_fragments').insert({
+            user_id: DEMO_SYSTEM_USER_ID,
+            avatar_id: avatarId,
+            fragment_text: userMessage.trim(),
+            conversation_context: {
+              source: 'chat',
+              type: 'user',
+              conversation_id: 'jonathan-demo',
+              visitor_id: visitorId,
+              expires_at: expiresAt,
+              ctx_type: 'user',
+              tags: ['query', 'raw_turn']
+            }
+          })
+        );
+
+        writes.push(
+          supabase.from('memory_fragments').insert({
+            user_id: DEMO_SYSTEM_USER_ID,
+            avatar_id: avatarId,
+            fragment_text: assistantResponse.trim(),
+            conversation_context: {
+              source: 'chat',
+              type: 'assistant',
+              conversation_id: 'jonathan-demo',
+              visitor_id: visitorId,
+              expires_at: expiresAt,
+              ctx_type: 'user',
+              gist: assistantResponse.split(/\n|(?<=\.)\s+/)[0]?.slice(0, 200) || '',
+              tags: ['reply', 'raw_turn']
+            }
+          })
+        );
+
+        // Background: Extract meaningful memories from user message
+        safeSpawn(async () => {
+          try {
+            console.log('[Chat API] Extracting memories from user message for jonathan-demo...');
+            
+            // Import MemoryService dynamically to avoid circular dependencies
+            const { MemoryService } = await import('@/lib/memoryService');
+            
+            // Extract meaningful memories from the user's message
+            const extractedMemories = await MemoryService.Extraction.extractMemoryFragments(
+              userMessage.trim(),
+              DEMO_SYSTEM_USER_ID,
+              {
+                source: 'chat',
+                conversation_id: 'jonathan-demo',
+                visitor_id: visitorId,
+                visitorName: 'User' // Could be enhanced with actual name if available
+              }
+            );
+
+            if (extractedMemories.length > 0) {
+              console.log(`[Chat API] Extracted ${extractedMemories.length} meaningful memories from user message`);
+              
+              // Store extracted memories with avatar_id and expiration
+              const memoryInserts = extractedMemories.map(memory => ({
+                user_id: DEMO_SYSTEM_USER_ID,
+                avatar_id: avatarId,
+                fragment_text: memory.fragmentText,
+                conversation_context: {
+                  ...memory.conversationContext,
+                  source: 'chat_extraction',
+                  conversation_id: 'jonathan-demo',
+                  visitor_id: visitorId,
+                  expires_at: expiresAt,
+                  tags: ['extracted_memory', 'personal_info']
+                }
+              }));
+
+              await supabase.from('memory_fragments').insert(memoryInserts);
+              console.log(`[Chat API] Successfully stored ${memoryInserts.length} extracted memories`);
+            } else {
+              console.log('[Chat API] No meaningful memories extracted from user message');
+            }
+          } catch (error) {
+            console.error('[Chat API] Failed to extract memories from user message:', {
+              error: error instanceof Error ? error.message : String(error),
+              userMessage: userMessage.substring(0, 100)
+            });
+          }
+        });
+
+      } else {
+        // Store raw conversation turns
+        writes.push(
+          supabase.from('memory_fragments').insert({
+            avatar_id: avatarId,
+            fragment_text: userMessage.trim(),
+            conversation_context: {
+              source: 'chat',
+              type: 'user',
+              conversation_id: conversationId,
+              visitor_id: visitorId,
+              tags: ['query', 'raw_turn']
+            }
+          })
+        );
+
+        writes.push(
+          supabase.from('memory_fragments').insert({
+            avatar_id: avatarId,
+            fragment_text: assistantResponse.trim(),
+            conversation_context: {
+              source: 'chat',
+              type: 'assistant',
+              conversation_id: conversationId,
+              visitor_id: visitorId,
+              gist: assistantResponse.split(/\n|(?<=\.)\s+/)[0]?.slice(0, 200) || '',
+              tags: ['reply', 'raw_turn']
+            }
+          })
+        );
+
+        // Background: Extract meaningful memories from user message for regular avatars too
+        safeSpawn(async () => {
+          try {
+            console.log('[Chat API] Extracting memories from user message for avatar:', avatarId);
+            
+            // Import MemoryService dynamically to avoid circular dependencies
+            const { MemoryService } = await import('@/lib/memoryService');
+            
+            // Extract meaningful memories from the user's message
+            const extractedMemories = await MemoryService.Extraction.extractMemoryFragments(
+              userMessage.trim(),
+              userId, // Use actual user ID for regular avatars
+              {
+                source: 'chat',
+                conversation_id: conversationId,
+                visitor_id: visitorId
+              }
+            );
+
+            if (extractedMemories.length > 0) {
+              console.log(`[Chat API] Extracted ${extractedMemories.length} meaningful memories from user message`);
+              
+              // Store extracted memories with avatar_id
+              const memoryInserts = extractedMemories.map(memory => ({
+                user_id: userId,
+                avatar_id: avatarId,
+                fragment_text: memory.fragmentText,
+                conversation_context: {
+                  ...memory.conversationContext,
+                  source: 'chat_extraction',
+                  conversation_id: conversationId,
+                  visitor_id: visitorId,
+                  tags: ['extracted_memory', 'personal_info']
+                }
+              }));
+
+              await supabase.from('memory_fragments').insert(memoryInserts);
+              console.log(`[Chat API] Successfully stored ${memoryInserts.length} extracted memories`);
+            } else {
+              console.log('[Chat API] No meaningful memories extracted from user message');
+            }
+          } catch (error) {
+            console.error('[Chat API] Failed to extract memories from user message:', {
+              error: error instanceof Error ? error.message : String(error),
+              userMessage: userMessage.substring(0, 100),
+              avatarId,
+              userId
+            });
+          }
+        });
+      }
+
+      await Promise.all(writes);
+    } catch (error) {
+      console.warn('Memory write failed:', error);
+    }
+  })();
+}
+
+
+
+export async function POST(req: Request) {
+  const t0 = Date.now();
+  
+  try {
+    const body = await req.json();
+    const debug = body.debug === true;
+    const avatarSlug = (body.avatar || body.avatarSlug) as string | undefined;
+    const singleMessage = (body.message as string | undefined) || (body.question as string | undefined);
+    const memoryContext = (body.memoryContext as string | undefined) || '';
+    const continuityContext = (body.continuityContext as string | undefined) || '';
+
+    if (!singleMessage || !avatarSlug) {
+      return NextResponse.json({ error: 'Missing message or avatarSlug' }, { status: 400 });
+    }
+
+    // Demo mode detection
+    const isDemo = avatarSlug === DEMO_AVATAR_SLUG;
+
+    // Cookie handling
+    const cookiesHeader = req.headers.get('cookie') || '';
+    const cookieMap = Object.fromEntries(
+      cookiesHeader.split(/;\s*/)
+        .filter(Boolean)
+        .map(p => {
+          const idx = p.indexOf('=');
+          return idx === -1 ? [p, ''] : [
+            decodeURIComponent(p.slice(0, idx)),
+            decodeURIComponent(p.slice(idx + 1))
+          ];
+        })
+    );
+
+    const cookieName = isDemo ? DEMO_COOKIE_NAME : 'jd_vid';
+    let visitorId = cookieMap[cookieName] || '';
+    let setVisitorCookie: string | undefined;
+
+    if (!visitorId) {
+      visitorId = uuidv4();
+      const maxAge = isDemo ? 3600 : 31536000;
+      setVisitorCookie = `${cookieName}=${encodeURIComponent(visitorId)}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
+    }
+
+    const conversationId = isDemo ? 'jonathan-demo' : `chat-${visitorId}`;
+    let avatarId = await getCachedAvatarId(avatarSlug);
+
+    // For testing: create a mock avatar ID if not found
+    if (!avatarId && (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test')) {
+      avatarId = `mock-${avatarSlug}`;
+      caches.avatarId.set(avatarSlug, avatarId);
+      console.log(`Created mock avatar ID for testing: ${avatarId}`);
+    }
+
+    if (!avatarId) {
+      return NextResponse.json({ error: 'Avatar not found' }, { status: 404 });
+    }
+
+    // Debug mode
+    if (debug) {
+      const seedKey = `demo-seed:${avatarId}`;
+      const cachedSeed = caches.demoSeeds.get(seedKey);
+      
+      return NextResponse.json({
+        avatarId,
+        isDemo,
+        visitorId,
+        conversationId,
+        cacheStats: {
+          avatarIdCacheSize: caches.avatarId.size,
+          demoSeedsCacheSize: caches.demoSeeds.size,
+          sessionCtxCacheSize: caches.sessionCtx.size,
+          demoSeedHit: !!cachedSeed && cachedSeed.expires > Date.now()
+        }
+      });
+    }
+
+    // HYBRID STREAMING: Fast Lane + Deep Lane
+    if (FEATURE_HYBRID_STREAMING) {
+      const headers = new Headers({
+        'Content-Type': 'text/event-stream; charset=utf-8',
+        'Cache-Control': 'no-cache, no-transform',
+        'Connection': 'keep-alive',
+        'X-Accel-Buffering': 'no'
+      });
+
+      if (setVisitorCookie) {
+        headers.append('Set-Cookie', setVisitorCookie);
+      }
+
+      // 1) INTENT-AWARE LATENCY BUDGET MANAGER
+      const t0 = Date.now();
+      const lastUser = singleMessage || '';
+      const { label: intent_label, adj } = classifyIntent(lastUser);
+      
+      let BUDGET_MS = isDemo ? 8000 : 2000; // Increased budget significantly for demo mode to allow memory retrieval
+      BUDGET_MS += adj.budgetMsDelta;
+      const HARD_DEADLINE = t0 + BUDGET_MS + 200; // +200ms grace for complete responses
+      const deepAbort = new AbortController();
+      const trace_id = uuidv4().slice(0, 8);
+
+      // 1. UNIFY DEEP LANE STATE - Single source of truth
+      const deepProducedAnyRef = { value: false };
+      
+      // Metrics tracking
+      let t_fast_first_byte_ms = 0;
+      let t_deep_started_ms = 0;
+      let cache_avatarId_hit = caches.avatarId.has(avatarSlug);
+      let cache_demoSeed_hit = false;
+      let fullResponse = '';
+      let deepContributed = false;
+
+      const encoder = new TextEncoder();
+      
+      // Deadline timer that aborts Deep if still running
+      const deadlineTimer = setTimeout(() => {
+        try { 
+          deepAbort.abort('budget_deadline'); 
+        } catch {}
+      }, Math.max(0, HARD_DEADLINE - Date.now()));
+
+      // 2) STABILIZED DEEP LANE SCHEDULING
+      const intent = detectIntent(singleMessage);
+      const shouldStartDeepImmediately = requiresImmediateDeep(intent);
+      const deepMustContribute = shouldStartDeepImmediately;
+      const pinnedCount = getPinnedCount(intent);
+      
+      console.log('intent_detection_debug', {
+        message: singleMessage,
+        intent,
+        shouldStartImmediately: shouldStartDeepImmediately,
+        deepMustContribute,
+        pinnedCount
+      });
+      
+      // Compute microBudget with safety clamps
+      const nowMs = Date.now();
+      const elapsedMs = nowMs - t0;
+      let microBudgetMs = BUDGET_MS - elapsedMs - MergeConfig.mergeWindowMs - MergeConfig.safetyMs;
+      microBudgetMs = Math.max(microBudgetMs, MergeConfig.minDeepBudgetMs);
+      
+      console.log('deep_budget_calc', {
+        intent,
+        shouldStartImmediately: shouldStartDeepImmediately,
+        pinnedCount,
+        latencyBudgetMs: BUDGET_MS,
+        elapsedMs,
+        mergeWindowMs: MergeConfig.mergeWindowMs,
+        safetyMs: MergeConfig.safetyMs,
+        microBudgetMs,
+        willSkipDeep: !shouldStartDeepImmediately && microBudgetMs < 200
+      });
+      
+      // Check if we should skip deep entirely - be more lenient for critical intents
+      const shouldSkipDeep = !shouldStartDeepImmediately && microBudgetMs < 200;
+      
+      // 2. START DEEP EARLY - Spawn immediately after intent detection + budget calc
+      let deepStartTimer: NodeJS.Timeout | null = null;
+      let memoryInjectionQueued = false;
+      
+      if (shouldSkipDeep) {
+        console.log('deep_spawned', false, 'deep_skip_reason', 'insufficient_budget');
+      } else {
+        // Start deep lane immediately for critical intents, before any pinned memory or DB fetch
+        if (shouldStartDeepImmediately) {
+          t_deep_started_ms = Date.now() - t0;
+          console.log('deep_started_early', { t_deep_started_ms, microBudgetMs });
+        }
+        
+        // Queue memory injection for fast path if we have pinned memories
+        if (pinnedCount > 0) {
+          memoryInjectionQueued = true;
+          console.log('memory_injection_queued', true, 'pinned_count', pinnedCount);
+        }
+        
+        // Set up late start timer only for non-immediate intents
+        if (!shouldStartDeepImmediately) {
+          const DEEP_START_WINDOW = isDemo ? 400 : 300;
+          deepStartTimer = setTimeout(() => {
+            if (!deepProducedAnyRef.value) {
+              try { 
+                deepAbort.abort('late_start'); 
+              } catch {}
+            }
+          }, DEEP_START_WINDOW);
+        }
+      }
+
+      // Helper function to check if we should end now
+      function shouldEndNow() {
+        return Date.now() >= HARD_DEADLINE || deepAbort.signal.aborted;
+      }
+      
+      const readable = new ReadableStream({
+        async start(controller) {
+          // 5. STREAM STABILITY - Safe guards for all stream operations
+          let streamClosed = false;
+          let mergeTimers: NodeJS.Timeout[] = [];
+          
+          function safeWrite(chunk: any) {
+            if (!streamClosed) {
+              try {
+                controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify(chunk)}\n\n`));
+              } catch {
+                streamClosed = true;
+              }
+            }
+          }
+          
+          function safeClose() {
+            if (!streamClosed) {
+              try {
+                controller.close();
+              } catch {}
+              streamClosed = true;
+            }
+            // Clear all merge timers on close
+            mergeTimers.forEach(timer => clearTimeout(timer));
+            mergeTimers = [];
+          }
+          
+          try {
+            // 3) BRANCH EXECUTION - Fast Lane (immediate, no awaits before first write)
+            
+            // 3) RESOLVE CURRENT LOCATION (never block Fast)
+            const currentLocation = resolveCurrentLocation(avatarId ?? 'demo', {
+              env: process.env.ECHO_CURRENT_LOCATION,     // e.g., "Sofia, BG"
+              session: req.headers.get('x-geo-city') ?? undefined,
+              seed: undefined                             // no legacy fallback
+            });
+            
+            // Compose lightPrompt synchronously (no DB calls)
+            const seed = personaSeedFromCacheOrDefault(avatarId);
+            
+            let lightPrompt;
+            let fastPinnedInjected = false;
+            
+            if (isDemo) {
+              // Get conversation history for demo mode
+              const sessionKey = `session:${avatarId}:${visitorId}`;
+              const sessionData = caches.sessionCtx.get(sessionKey);
+              const recentTurns = sessionData?.lastTurns?.slice(-3) || []; // Last 3 turns
+              console.log('fast_lane_session_check', { sessionKey, hasData: !!sessionData, turnsCount: recentTurns.length });
+              
+              let conversationContext = '';
+              if (recentTurns.length > 0) {
+                conversationContext = '\n\nPrevious conversation:\n' + 
+                  recentTurns.map(turn => `User: ${turn.userMsg}\nYou: ${turn.assistantMsg}`).join('\n') + '\n';
+              }
+              
+              // 3. PINNED MEMORIES - Non-blocking with ~100ms timeout
+              let pinnedMemoriesContext = '';
+              if (memoryInjectionQueued && pinnedCount > 0) {
+                try {
+                  const enhancedBuilder = new EnhancedPromptBuilder();
+                  const pinnedMemoriesPromise = Promise.race([
+                    enhancedBuilder.getPinnedMemoriesForFastPath(
+                      avatarId,
+                      singleMessage,
+                      intent,
+                      isDemo ? { isDemo: true, visitorId, conversationId } : undefined
+                    ),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 100))
+                  ]);
+                  
+                  const pinnedMemories = await pinnedMemoriesPromise;
+                  
+                  if (pinnedMemories.length > 0) {
+                    // Loosen demo filtering - ensure bio/travel/people memories are never excluded
+                    const filteredMemories = isDemo ? 
+                      pinnedMemories.filter(memory => {
+                        const text = memory.fragment_text.toLowerCase();
+                        const ctx = memory.conversation_context || {};
+                        // Never exclude Austin, Tyler, bio, travel, or people memories
+                        if (text.includes('austin') || text.includes('tyler') || 
+                            ctx.type === 'bio' || ctx.type === 'travel' || ctx.type === 'people') {
+                          return true;
+                        }
+                        return true; // Keep all memories for now
+                      }) : pinnedMemories;
+                    
+                    if (filteredMemories.length > 0) {
+                      pinnedMemoriesContext = '\n\nKEY MEMORIES (use for specific responses):\n';
+                      filteredMemories.forEach(memory => {
+                        pinnedMemoriesContext += `- ${memory.fragment_text.substring(0, 150)}...\n`;
+                      });
+                      fastPinnedInjected = true;
+                      console.log('fast_pinned_injected', true, 'count', filteredMemories.length);
+                    }
+                  }
+                } catch (error) {
+                  console.warn('Failed to get pinned memories for fast path (timeout):', error.message);
+                  // Continue without pinned memories to avoid blocking deep lane
+                }
+              }
+              
+              // Use the cached seed which has the proper persona, then add current location, memory context, and conversation context
+              lightPrompt = `${seed}
+
+IMPORTANT: You currently live in ${currentLocation}. This is where you are now, not where you used to live.
+
+${memoryContext}${continuityContext}${pinnedMemoriesContext}${conversationContext}User: ${singleMessage}
+
+CRITICAL RULE - HALLUCINATION GUARD:
+- If asked about specific people, places, or timeline details (like "Austin years", "Tyler's city", etc.) and you don't have high confidence information, you MUST say "I'm not sure yet—let me check my notes" instead of guessing
+- Only provide specific facts if you have clear memory context above
+- The deep lane will provide accurate details when available
+
+Respond as Jonathan would naturally - with humor, authentic reactions, and genuine personality. Mix up your response styles:
+- Sometimes react with genuine surprise or amusement
+- Sometimes share related thoughts or memories
+- Sometimes make witty observations or jokes
+- Sometimes ask questions, but not always
+- Be authentic and spontaneous, not formulaic. Vary your openings completely - never use the same reaction twice in a row. Let your natural personality shine through:`;
+            } else {
+              lightPrompt = seed + '\n\nUser: ' + singleMessage;
+            }
+            
+            // 1) ELIMINATE PRE-TOKEN AWAITS - Write opener FIRST, no awaits before
+            // For demo mode, check if we have conversation history to decide on opener
+            const sessionKey = `session:${avatarId}:${visitorId}`;
+            const hasHistory = caches.sessionCtx.get(sessionKey)?.lastTurns?.length > 0;
+            
+            if (!isDemo || !hasHistory) {
+              const displayName = isDemo ? 'Jonathan' : avatarSlug;
+              const opener = fastOpener({ displayName }); // sync, no style profile
+              safeWrite({ channel: 'fast', delta: opener });
+              fullResponse += opener;
+            }
+            t_fast_first_byte_ms = Date.now() - t0;
+            console.log('metrics_fast_first_byte_ms', t_fast_first_byte_ms);
+            
+            // Add header after first byte (non-blocking)
+            safeWrite({ 
+              event: 'meta', 
+              trace_id, 
+              latency_budget_ms: BUDGET_MS,
+              deep_merge: false, // Will be updated when deep lane produces tokens
+              deep_tokens_any: false,
+              bypass_prefs_applied: false // Will be updated based on memory extraction
+            });
+            
+            // Check cache hits
+            const seedKey = `demo-seed:${avatarId}`;
+            const cached = caches.demoSeeds.get(seedKey);
+            cache_demoSeed_hit = !!cached && cached.expires > Date.now();
+            
+            // Fire-and-forget background tasks (never block Fast Lane)
+            let style_prefetch_fired = false;
+            let memory_injection_queued = false;
+            
+            safeSpawn(async () => {
+              // Style profile prefetch
+              try {
+                await getEnhancedStyleProfileCached(avatarId ?? 'demo');
+                style_prefetch_fired = true;
+              } catch (e) {
+                console.warn('style_prefetch_error', e);
+              }
+            });
+            
+            safeSpawn(async () => {
+              // Memory injection (never throw)
+              try {
+                if (typeof injectFactsFromMessage === 'function') {
+                  await injectFactsFromMessage({ 
+                    avatarId: avatarId ?? 'demo', 
+                    text: singleMessage 
+                  });
+                  memory_injection_queued = true;
+                } else {
+                  console.warn('memory_injection_skipped', 'injectFactsFromMessage not found');
+                }
+              } catch (e) { 
+                console.warn('memory_injection_error', e); 
+              }
+            });
+            
+            // CHECK FOR STORY TRIGGERS BEFORE AI GENERATION
+            let storyTriggered = false;
+            
+            try {
+              console.log('[Chat] Checking for story triggers in message:', singleMessage);
+              console.log('[Chat] Avatar ID:', avatarId, 'Demo mode:', isDemo);
+              
+              const storyCheck = await storyIntegrationService.checkForStoryTrigger(singleMessage, {
+                enableStories: true,
+                avatarId: avatarId || 'jonathan-demo',
+                userId: isDemo ? DEMO_SYSTEM_USER_ID : undefined
+              });
+              
+              console.log('[Chat] Story check result:', storyCheck);
+              
+              if (storyCheck.shouldPlayStory && storyCheck.story) {
+                console.log('[Chat] Story triggered:', storyCheck.reason);
+                
+                const storyPlayback = await storyIntegrationService.playStoryInsteadOfTTS(
+                  storyCheck.story,
+                  {
+                    enableStories: true,
+                    avatarId: avatarId || 'jonathan-demo',
+                    userId: isDemo ? DEMO_SYSTEM_USER_ID : undefined
+                  }
+                );
+                
+                if (storyPlayback.success) {
+                  storyTriggered = true;
+                  
+                  // Send story data to client
+                  safeWrite({
+                    event: 'story',
+                    data: JSON.stringify({
+                      triggered: true,
+                      audioUrl: storyPlayback.audioUrl || '',
+                      duration: storyPlayback.duration || 0,
+                      title: storyCheck.story.title,
+                      transcript: storyCheck.story.transcript
+                    })
+                  });
+                  
+                  console.log('[Chat] Story sent to client:', storyCheck.story.title);
+                  
+                  // End the stream since we're playing a story instead
+                  safeClose();
+                  return;
+                }
+              }
+            } catch (storyError) {
+              console.warn('[Chat] Story check failed:', storyError);
+              // Continue with normal TTS if story fails
+            }
+            
+            // Start Fast Lane streaming with clamps (only if no story triggered)
+            const fastMessages = [
+              { role: 'system', content: lightPrompt },
+              { role: 'user', content: singleMessage } // Use actual user message
+            ];
+            
+            const provider = process.env.OPENAI_USE_RESPONSES === 'true' ? 'openai-responses' : 'openai-chat';
+            
+            // Fast Lane hard limits with avatar auto-tuning
+            const fastAbort = new AbortController();
+            let fastTokenCount = 0;
+            let fastSentCount = 0;
+            
+            // 3) AVATAR AUTO-TUNING
+            const FAST_MAX_TOKENS_BASE = isDemo ? FAST_MAX_TOKENS_DEMO : FAST_MAX_TOKENS_NORMAL;
+            const fastMaxTokensPlanned = FAST_MAX_TOKENS_BASE + adj.fastTokensDelta;
+            const FAST_MAX_TOKENS = isDemo ? FAST_MAX_TOKENS_DEMO : getFastMaxForAvatar(avatarId ?? 'demo', fastMaxTokensPlanned);
+            const FAST_MAX_MS = isDemo ? FAST_MAX_MS_DEMO : FAST_MAX_MS_NORMAL;
+            const fastDeadline = Date.now() + FAST_MAX_MS;
+            
+            const fastResp = await createStreamingRequest(fastMessages, isDemo, provider, fastAbort.signal, true);
+            const writer = { 
+              write: (data: any) => {
+                if (!streamClosed) {
+                  try {
+                    controller.enqueue(data);
+                  } catch {
+                    streamClosed = true;
+                  }
+                }
+              }
+            };
+            
+            // Pipe Fast Lane with limiter
+            await pipeProviderStream(fastResp, writer, 'fast', provider, (delta) => {
+              fastTokenCount += 1;
+              // very cheap sentence boundary check
+              for (let i = 0; i < delta.length; i++) {
+                const c = delta[i];
+                if (c === '.' || c === '!' || c === '?') fastSentCount++;
+              }
+              if (fastTokenCount >= FAST_MAX_TOKENS) return 'stop_tokens';
+              if (fastSentCount >= FAST_MAX_SENTS) return 'stop_sentences';
+              if (Date.now() >= fastDeadline) return 'stop_time';
+              return null;
+            }, fastAbort);
+            
+            // DEEP LANE - Launch with timeout cap (skip if shouldSkipDeep)
+            
+            if (!shouldSkipDeep) {
+              t_deep_started_ms = Date.now() - t0;
+              
+              // Ensure political/opinion queries start deep within 100ms
+              if (shouldStartDeepImmediately && t_deep_started_ms > 100) {
+                console.warn('deep_start_late', { t_deep_started_ms, should_be_under: 100 });
+              }
+            } else {
+              t_deep_started_ms = -1; // Indicate deep was skipped
+            }
+            
+            // 2) MICRO-ALLOWANCE FOR DEEP (within remaining budget)
+            const deepMaxTokens = isDemo ? 400 : 300; // Increased for all avatars to allow complete stories
+            const deepStopAt = Date.now() + Math.min(remainingBudgetMs(HARD_DEADLINE), isDemo ? 2000 : 1500); // Increased time for all avatars for complete responses
+            
+            // 4) PREFER CACHED EPB + MEMOIZE FOR THE TURN
+            const epbMemo: { built?: { prompt: string; ctx: any } } = {};
+            
+            // Pipe with timeout flag
+            async function pipeWithFlag() {
+              try {
+                if (isDemo) {
+                  // Ultra-simplified demo mode: minimal processing
+                  const sessionKey = `session:${avatarId}:${visitorId}`;
+                  const sessionData = caches.sessionCtx.get(sessionKey);
+                  const recentTurns = sessionData?.lastTurns?.slice(-2) || []; // Just last 2 turns
+                  
+                  // Build simple continuation prompt with memory context
+                  const contextHint = recentTurns.length > 0 
+                    ? `\n\nPrevious: ${recentTurns[recentTurns.length - 1]?.userMsg || ''}`
+                    : '';
+                  
+                  const quickPrompt = `You are Jonathan Braden in Sofia, BG. You have a toy poodle named Romeo.${memoryContext}${continuityContext}${contextHint}\n\nUser: ${singleMessage}\nJonathan: ${fullResponse}`;
+                  
+                  const quickMessages = [
+                    { role: 'system', content: quickPrompt },
+                    { role: 'user', content: 'Continue naturally with more detail.' }
+                  ];
+                  
+                  const quickResp = await createStreamingRequest(quickMessages, isDemo, provider, deepAbort.signal);
+                  await pipeProviderStream(quickResp, writer, 'deep', provider, undefined, deepAbort, deepProducedAnyRef, deepStartTimer, deepStopAt, isDemo);
+                  
+                } else {
+                  // Full EPB for normal mode
+                  const sessionKey = `session:${avatarId}:${visitorId}`;
+                  const prefilledCtx = prefillFromSessionCache({ avatarId, sessionCtx: caches.sessionCtx });
+                  
+                  if (!epbMemo.built) {
+                    const limits = getLimits(isDemo);
+                    const enhancedBuilder = new EnhancedPromptBuilder();
+                    const built = await enhancedBuilder.buildEnhancedSystemPromptWithStyle(
+                      avatarId, // Use avatarId instead of avatarSlug
+                      singleMessage,
+                      prefilledCtx.lastTurns,
+                      {
+                        priorityFilter: limits.priorityFilter,
+                        memoryLimit: limits.memoryLimit,
+                        trackExpressions: false,
+                        fastMode: true,
+                        debug: false,
+                        demoMode: { isDemo }
+                      }
+                    );
+                    epbMemo.built = { prompt: built.prompt, ctx: built };
+                  }
+                  
+                  const { prompt: systemPrompt } = epbMemo.built;
+                  const locHint = `current_location: ${currentLocation}\nrule: If mentioning home, use origin; if mentioning where you are now, use current_location.`;
+                  const enhancedSystemPrompt = systemPrompt + `\n\n${locHint}`;
+                  
+                  const deepMessages = [
+                    { role: 'system', content: enhancedSystemPrompt },
+                    { role: 'user', content: singleMessage },
+                    { role: 'assistant', content: fullResponse },
+                    { role: 'user', content: 'Please continue with more context and personality.' }
+                  ];
+                  
+                  const deepResp = await createStreamingRequest(deepMessages, isDemo, provider, deepAbort.signal);
+                  await pipeProviderStream(deepResp, writer, 'deep', provider, undefined, deepAbort, deepProducedAnyRef, deepStartTimer, deepStopAt, isDemo);
+                }
+                
+              } catch (error) {
+                if (error.name === 'AbortError') {
+                  return;
+                }
+                console.warn('deep_lane_build_error', error);
+                // Fallback: simple continuation
+                const locHint = `current_location: ${currentLocation}\nrule: If mentioning home, use origin; if mentioning where you are now, use current_location.`;
+                const fallbackSystemPrompt = seed + `\n\n${locHint}`;
+                
+                const fallbackMessages = [
+                  { role: 'system', content: fallbackSystemPrompt },
+                  { role: 'user', content: singleMessage },
+                  { role: 'assistant', content: fullResponse },
+                  { role: 'user', content: 'Continue naturally.' }
+                ];
+                
+                const fallbackResp = await createStreamingRequest(fallbackMessages, isDemo, provider, deepAbort.signal);
+                await pipeProviderStream(fallbackResp, writer, 'deep', provider, undefined, deepAbort, deepProducedAnyRef, deepStartTimer, deepStopAt, isDemo);
+              }
+            }
+            
+            // Launch Deep Lane with hard timeout and fallback (only if not skipped)
+            let deepLanePromise: Promise<void> | null = null;
+            
+            if (!shouldSkipDeep) {
+              deepLanePromise = (async () => {
+                try {
+                  await Promise.race([
+                    pipeWithFlag(),
+                    timeoutPromise(microBudgetMs)
+                  ]);
+                } catch (e: any) {
+                  if (e?.message === 'deep_timeout') {
+                    console.log('deep_cancel_reason', 'timeout_fallback_used');
+                    // Don't return empty - let fast path handle with pinned memories
+                  } else {
+                    console.warn('deep_lane_error', e?.message || e);
+                  }
+                }
+              })();
+            } else {
+              console.log('deep_spawned', false);
+            }
+            
+            // Always update session cache regardless of Deep Lane success
+            const cacheKey = `session:${avatarId}:${visitorId}`;
+            
+            // Clean up the response for storage - remove opener if present
+            let cleanResponse = fullResponse;
+            const openerPattern = /^Hey there—it's \w+\. What's on your mind\?/;
+            if (openerPattern.test(fullResponse)) {
+              cleanResponse = fullResponse.replace(openerPattern, '').trim();
+            }
+            
+            console.log('updating_session_cache', { cacheKey, userMsg: singleMessage, assistantMsg: cleanResponse.substring(0, 50) });
+            updateSessionCache({
+              sessionKey: cacheKey,
+              userMsg: singleMessage,
+              assistantMsg: cleanResponse,
+              resolvedEntities: { friends: [], family: [] }
+            });
+            console.log('session_cache_updated', { cacheKey, cacheSize: caches.sessionCtx.size });
+
+            // 7. MERGE CONTRACT - Handle deepMustContribute properly
+            let shouldClose = !deepProducedAnyRef.value || deepAbort.signal.aborted;
+            
+            // If deep must contribute, wait for merge window before closing
+            if (deepMustContribute && !deepProducedAnyRef.value && remainingBudgetMs(HARD_DEADLINE) > MergeConfig.mergeWindowMs) {
+              console.log('deep_must_contribute_waiting', { merge_window_ms: MergeConfig.mergeWindowMs, remaining_budget: remainingBudgetMs(HARD_DEADLINE) });
+              
+              // Set up merge timer
+              const mergeTimer = setTimeout(() => {
+                console.log('merge_window_expired', { deep_produced: deepProducedAnyRef.value });
+              }, MergeConfig.mergeWindowMs);
+              mergeTimers.push(mergeTimer);
+              
+              // Wait for merge window
+              await new Promise(resolve => setTimeout(resolve, MergeConfig.mergeWindowMs));
+              shouldClose = !deepProducedAnyRef.value || deepAbort.signal.aborted;
+            }
+            
+            if (shouldClose) {
+              try {
+                safeWrite({ event: 'end' });
+                // Send final meta with deep merge status
+                safeWrite({ 
+                  event: 'meta_final', 
+                  deep_merge: deepProducedAnyRef.value 
+                });
+                safeClose();
+              } catch (closeError) {
+                console.warn('Controller already closed:', closeError);
+              }
+              
+              // Cleanup
+              clearTimeout(deadlineTimer);
+              if (deepStartTimer) {
+                clearTimeout(deepStartTimer);
+              }
+              mergeTimers.forEach(timer => clearTimeout(timer));
+            }
+              
+              // 4) METRICS ADDITIONS - Include Fast truncation reason and auto-tuning
+              const t_deep_merged_ms = Date.now() - t0;
+              const tuned_fast_max_tokens = recordFastUsage(avatarId ?? 'demo', fastTokenCount);
+              
+              console.log('metrics', {
+                trace_id,
+                path: isDemo ? 'demo' : 'normal',
+                intent_label,
+                t_fast_first_byte_ms,
+                t_deep_started_ms,
+                t_deep_merged_ms,
+                deep_tokens_any: deepProducedAnyRef.value,
+                deep_merge: deepProducedAnyRef.value,
+                deep_cancel_reason: deepAbort.signal.reason ?? null,
+                latency_budget_ms: BUDGET_MS,
+                fast_truncated: fastAbort.signal.aborted ? (fastAbort.signal.reason || true) : false,
+                tuned_fast_max_tokens,
+                deep_micro_budget_ms: microBudgetMs,
+                style_prefetch_fired,
+                memory_injection_queued,
+                current_location: currentLocation,
+                political_query: /\b(trump|biden|political|politics)\b/i.test(singleMessage),
+                intent: intent,
+                should_start_deep_immediately: shouldStartDeepImmediately,
+                deep_must_contribute: deepMustContribute,
+                fast_pinned_injected: fastPinnedInjected,
+                memory_injection_queued: memoryInjectionQueued,
+                pinned_count: pinnedCount,
+                deep_spawned: !shouldSkipDeep,
+                micro_budget_ms: microBudgetMs,
+                runtime: 'nodejs'
+              });
+              
+              // 5) MEMORY WRITES - Fire-and-forget persistence
+              safeSpawn(async () => {
+                  if (isDemo) {
+                    // Demo mode: minimal row with expiration
+                    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+                    await supabase.from('memory_fragments').insert([
+                      {
+                        user_id: DEMO_SYSTEM_USER_ID,
+                        avatar_id: avatarId,
+                        fragment_text: singleMessage.trim(),
+                        conversation_context: {
+                          conversation_id: 'jonathan-demo',
+                          visitor_id: visitorId,
+                          expires_at: expiresAt,
+                          type: 'user'
+                        }
+                      },
+                      {
+                        user_id: DEMO_SYSTEM_USER_ID,
+                        avatar_id: avatarId,
+                        fragment_text: fullResponse.trim(),
+                        conversation_context: {
+                          conversation_id: 'jonathan-demo',
+                          visitor_id: visitorId,
+                          expires_at: expiresAt,
+                          type: 'assistant'
+                        }
+                      }
+                    ]);
+                  } else {
+                    // Normal mode: full persistent pipeline (exclude demo rows)
+                    await supabase.from('memory_fragments').insert([
+                      {
+                        avatar_id: avatarId,
+                        fragment_text: singleMessage.trim(),
+                        conversation_context: {
+                          conversation_id: conversationId,
+                          visitor_id: visitorId,
+                          type: 'user'
+                        }
+                      },
+                      {
+                        avatar_id: avatarId,
+                        fragment_text: fullResponse.trim(),
+                        conversation_context: {
+                          conversation_id: conversationId,
+                          visitor_id: visitorId,
+                          type: 'assistant'
+                        }
+                      }
+                    ]);
+                  }
+                });
+                
+                // Session cache already updated above
+                
+                // End stream gracefully
+                if (!deepAbort.signal.aborted || deepProducedAnyRef.value) {
+                  safeWrite({ event: 'end' });
+                }
+                safeClose();
+            }
+            
+            // Start Deep Lane (only if spawned)
+            if (deepLanePromise) {
+              void deepLanePromise;
+            }
+            
+          } catch (error) {
+            console.error('Streaming error:', error);
+            try {
+              controller.error(error);
+            } catch (controllerError) {
+              console.warn('Controller already closed, cannot send error:', controllerError);
+            }
+          }
+        }
+      });
+
+      return new Response(readable, { headers });
+    }
+
+    // Fallback to existing implementation
+    return NextResponse.json({ error: 'Hybrid streaming not enabled' }, { status: 501 });
+
+  } catch (error: any) {
+    console.error('Chat API error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+// Pre-warm demo seeds on boot (feature-flagged)
+if (FEATURE_HYBRID_STREAMING) {
+  (async () => {
+    try {
+      // Create mock avatar for development
+      const demoAvatarId = '0585f43b-4b49-4e16-b2a7-91c8e1e3850c'; // Real Jonathan Braden UUID
+      caches.avatarId.set(DEMO_AVATAR_SLUG, demoAvatarId);
+      await prewarmDemoSeeds(demoAvatarId);
+      console.log('prewarm_demo_seeds_ok');
+    } catch (e) {
+      console.warn('prewarm_demo_seeds_fail', e);
+    }
+  })();
+}

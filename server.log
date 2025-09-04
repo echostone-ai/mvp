@@ -1,0 +1,121 @@
+
+> echostone@0.1.0 dev
+> next dev
+
+   ▲ Next.js 15.3.4
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.1.42:3000
+   - Environments: .env.local, .env
+
+ ✓ Starting...
+ ✓ Ready in 1591ms
+ ○ Compiling /api/chat ...
+ ✓ Compiled /api/chat in 731ms (630 modules)
+turn_start {
+  trace_id: '351f2018',
+  intent: 'opinion',
+  should_start_deep: true,
+  pinned_count: 3,
+  micro_budget_ms: 10980,
+  merge_window_ms: 900
+}
+deep_lane_starting {
+  t_deep_started_ms: 3,
+  micro_budget_at_spawn: 10980,
+  merge_window_ms: 900
+}
+memory_search_started { query: 'What do you think about Trump?' }
+extracted_keywords { words: [ 'trump' ], query: 'What do you think about Trump?' }
+keyword_search_success { found: 15, new: 15, sample: 'what do you think of trump?' }
+memory_search_completed {
+  total_found: 15,
+  sorted_count: 15,
+  filtered_count: 4,
+  final_count: 4,
+  conversation_turns_included: 2,
+  elapsed_ms: 1572,
+  top_types: [ 'opinion', 'opinion', 'user' ],
+  sample_texts: [
+    'Opinion on politics: Trump is a miserable mother fucker, a rat bastard with little regard for anybod',
+    "I left America in 2018 due to the political climate. I couldn't handle being in Trump's America - th"
+  ]
+}
+pinned_memories_injected {
+  count: 4,
+  intent: 'opinion',
+  memory_types: [ 'opinion', 'opinion', 'user', 'user' ]
+}
+fast_lane_memories {
+  count: 4,
+  samples: [
+    'Opinion on politics: Trump is a miserable mother fucker, a rat bastard with little regard for anybod',
+    "I left America in 2018 due to the political climate. I couldn't handle being in Trump's America - th",
+    'what do you think of trump?',
+    'what do you think of trump?'
+  ]
+}
+memory_analysis_completed {
+  count: 4,
+  elapsed_ms: 2,
+  avg_hook_potential: 0.8999999999999999,
+  content_type_distribution: { opinion: 4, story: 2, context: 2 }
+}
+fast_hook_selected {
+  content_type: 'opinion',
+  hook_length: 138,
+  expand_on_count: 1,
+  avoid_repeating_count: 5,
+  suggested_tone: 'enthusiastic',
+  related_memories_count: 1
+}
+deep_must_contribute_waiting Waiting for deep lane to start
+deep_lane_started { trace_id: '351f2018' }
+deep_using_enriched_memories {
+  trace_id: '351f2018',
+  count: 4,
+  has_trump: true,
+  has_austin: false,
+  memory_types: [ 'opinion', 'opinion', 'user' ],
+  sample_texts: [
+    'Opinion on politics: Trump is a miserable mother fucker, a rat bastard with little regard for anybod',
+    "I left America in 2018 due to the political climate. I couldn't handle being in Trump's America - th"
+  ]
+}
+deep_lane_memories {
+  trace_id: '351f2018',
+  count: 4,
+  sorted_count: 4,
+  context_length: 908,
+  top_types: [ 'opinion', 'opinion', 'user', 'user' ],
+  sample: "Opinion on politics: Trump is a miserable mother fucker, a rat bastard with little regard for anybody but himself, his ego, his legacy, and his bank account. I left America because I couldn't handle b",
+  memory_samples: [
+    'Opinion on politics: Trump is a miserable mother fucker, a rat bastard with little regard for anybod',
+    "I left America in 2018 due to the political climate. I couldn't handle being in Trump's America - th",
+    'what do you think of trump?'
+  ]
+}
+deep_coordination_hints {
+  trace_id: '351f2018',
+  expand_on: 1,
+  avoid_repeating: 5,
+  suggested_tone: 'enthusiastic',
+  related_memories: 1
+}
+deep_generation_attempt { trace_id: '351f2018', attempt: 1, max_attempts: 3 }
+repetition_analysis {
+  trace_id: '351f2018',
+  overlap_percentage: 0,
+  should_regenerate: false,
+  overlapping_ngrams_count: 0,
+  total_ngrams: 140,
+  fast_content_length: 138,
+  deep_content_length: 1875,
+  sample_overlaps: []
+}
+deep_repetition_check_passed { trace_id: '351f2018', overlap_percentage: 0, attempt: 1 }
+deep_first_token { trace_id: '351f2018' }
+deep_completion_wait Giving deep lane time to complete
+budget_deadline_reached { trace_id: '351f2018', deep_produced: true, elapsed_ms: 12003 }
+ POST /api/chat 200 in 13904ms
+deep_lane_completed { trace_id: '351f2018', produced_content: true }
+[?25h
