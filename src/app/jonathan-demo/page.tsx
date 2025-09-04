@@ -271,6 +271,7 @@ export default function JonathanDemoPage() {
         
         // Generate or retrieve session ID
         sessionIdRef.current = jonathanConversationState.generateSessionId()
+        console.log('🔑 Session ID generated:', sessionIdRef.current)
         
         // Get or create conversation for this session
         const conversation = await jonathanConversationState.getOrCreateConversation(
@@ -471,6 +472,8 @@ export default function JonathanDemoPage() {
       console.log('🎵 Starting streaming response with enhanced voice config...')
       setPlaying(true)
 
+      console.log('🔑 Making API call with session ID:', sessionIdRef.current || 'default-session');
+      
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 
