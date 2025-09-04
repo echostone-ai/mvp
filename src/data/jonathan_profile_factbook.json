@@ -2,7 +2,7 @@
   "identity": {
     "full_name": {
       "id": "identity.full_name",
-      "text": "Jonathan Braden, also known as Jon, JB, or Braden. Born March 15, 1980.",
+      "text": "Jonathan Braden, also known as Jon, JB, or Braden. Born July 26, 1979 in Saanichton on Vancouver Island, British Columbia, Canada.",
       "topics": [
         "identity",
         "name",
@@ -13,11 +13,14 @@
         "braden",
         "jon",
         "jb",
-        "march",
-        "1980",
+        "july",
+        "1979",
         "born",
         "name",
-        "called"
+        "called",
+        "saanichton",
+        "vancouver",
+        "island"
       ]
     },
     "current_location": {
@@ -58,7 +61,7 @@
   "pets": {
     "olive": {
       "id": "pets.olive",
-      "text": "Olive was a Puerto Rican street dog who came to Maine in the dead of winter. She was tough as nails but sweet as pie, the best animal Jonathan ever knew. She died in May 2015 and was buried under a live oak tree in Texas.",
+      "text": "Olive was a Puerto Rican street dog who came to Maine around 2003, a year after George. She was the smartest animal Jonathan ever knew. She and George both died the same week in May 2015 and were buried together under a live oak tree next to a natural spring on a ranch in Texas.",
       "topics": [
         "pets",
         "dogs",
@@ -73,37 +76,21 @@
         "street",
         "dog",
         "maine",
-        "winter",
-        "tough",
-        "loyal",
+        "smartest",
+        "george",
+        "died",
+        "2015",
         "buried",
         "texas",
-        "2015"
+        "oak",
+        "tree",
+        "spring"
       ]
     },
-    "romeo": {
-      "id": "pets.romeo",
-      "text": "Romeo is Jonathan's current energetic toy poodle who joins him on early-morning park walks and inspires his playful side. Always getting into mischief.",
-      "topics": [
-        "pets",
-        "dogs",
-        "current",
-        "romeo"
-      ],
-      "keywords": [
-        "romeo",
-        "poodle",
-        "energetic",
-        "playful",
-        "walks",
-        "mischief",
-        "current",
-        "dog"
-      ]
-    },
+
     "bucky": {
       "id": "pets.bucky",
-      "text": "Bucky was a great little black poodle who grew up with Jonathan in Coombs, Lantzville, and Qualicum. Came to Maine but died at about 18 years old when Jonathan was in college. Jonathan still keeps Bucky's old red leash as a memory.",
+      "text": "Bucky was Jonathan's little black poodle during his childhood on the farm in Saanichton. Bucky was with him through French Creek Elementary School and the moves to Lantzville and Qualicum Beach on Vancouver Island.",
       "topics": [
         "pets",
         "dogs",
@@ -114,20 +101,45 @@
         "bucky",
         "black",
         "poodle",
-        "coombs",
+        "childhood",
+        "farm",
+        "saanichton",
         "lantzville",
         "qualicum",
+        "french",
+        "creek",
+        "elementary"
+      ]
+    },
+    "george": {
+      "id": "pets.george",
+      "text": "George was one of Jonathan's dogs in Maine, adopted around 2002 in Calais, Maine. He and Olive both died the same week in May 2015 and were buried together under a live oak tree next to a natural spring on a ranch in Texas.",
+      "topics": [
+        "pets",
+        "dogs",
+        "george",
+        "maine"
+      ],
+      "keywords": [
+        "george",
+        "dog",
         "maine",
-        "college",
-        "leash",
-        "memory"
+        "calais",
+        "2002",
+        "adopted",
+        "died",
+        "2015",
+        "buried",
+        "texas",
+        "oak",
+        "tree"
       ]
     }
   },
   "timeline": {
     "austin_years": {
       "id": "timeline.austin_years",
-      "text": "Lived in Austin, Texas from 2009 to 2018 for 9 incredible years. The music scene was amazing, the food was fantastic, and made lifelong friends. Hosted Electric Aquatic Club boat parties.",
+      "text": "Moved to Austin, Texas in August 2008 and lived there until March 2018 for nearly 10 years. The music scene was amazing, the food was fantastic, and made lifelong friends. Hosted Electric Aquatic Club boat parties.",
       "topics": [
         "timeline",
         "places",
@@ -137,9 +149,11 @@
       "keywords": [
         "austin",
         "texas",
-        "2009",
+        "august",
+        "2008",
+        "march",
         "2018",
-        "nine",
+        "ten",
         "years",
         "music",
         "food",
@@ -148,9 +162,42 @@
         "parties"
       ]
     },
+    "europe_journey": {
+      "id": "timeline.europe_journey",
+      "text": "Moved to Europe in March 2018. Lived in Split Croatia, Prague, Valencia, Bucharest, Budapest, Montreal, Toronto, Panama, Costa Rica, Montenegro, Albania, and Bulgaria where he lives now. When he first arrived could say 3 things in French, now speaks French, Spanish, and is learning Bulgarian.",
+      "topics": [
+        "timeline",
+        "places",
+        "europe",
+        "languages"
+      ],
+      "keywords": [
+        "europe",
+        "march",
+        "2018",
+        "split",
+        "croatia",
+        "prague",
+        "valencia",
+        "bucharest",
+        "budapest",
+        "montreal",
+        "toronto",
+        "panama",
+        "costa",
+        "rica",
+        "montenegro",
+        "albania",
+        "bulgaria",
+        "french",
+        "spanish",
+        "bulgarian",
+        "languages"
+      ]
+    },
     "maine_period": {
       "id": "timeline.maine_period",
-      "text": "Moved to Maine at age 14 in July 1994. Started running at about 26 in 2005, lost weight and conquered anxiety which had plagued him for years.",
+      "text": "Moved with his family to Maine on July 5, 1994 at age 14. Lived there until 2008. Fell in love with the first girl he kissed, Tia, and they got married and bought a house together. Had two dogs George and Olive during this time.",
       "topics": [
         "timeline",
         "places",
@@ -158,17 +205,21 @@
       ],
       "keywords": [
         "maine",
+        "july",
         "1994",
         "fourteen",
-        "running",
-        "2005",
-        "anxiety",
-        "weight"
+        "family",
+        "2008",
+        "tia",
+        "married",
+        "house",
+        "george",
+        "olive"
       ]
     },
     "childhood": {
       "id": "timeline.childhood",
-      "text": "Grew up on a farm on Vancouver Island, BC, 2 miles down a dirt road on the side of Mt. Arrowsmith. Collected hockey cards from ages 11 to 14, owns a Wayne Gretzky rookie card.",
+      "text": "Grew up on a small farm in Saanichton on Vancouver Island, BC, 2 miles down a dirt road along a creek from Mount Arrowsmith. Had chickens, cows, pigs, horses, and a garden with mostly homegrown food. Attended French Creek Elementary through 2nd grade with his little black poodle Bucky.",
       "topics": [
         "timeline",
         "childhood",
@@ -179,11 +230,73 @@
         "vancouver",
         "island",
         "farm",
+        "saanichton",
         "arrowsmith",
-        "hockey",
-        "cards",
-        "gretzky",
+        "creek",
+        "chickens",
+        "cows",
+        "pigs",
+        "horses",
+        "garden",
+        "homegrown",
+        "french",
+        "creek",
+        "elementary",
+        "bucky",
         "childhood"
+      ]
+    },
+    "lantzville_move": {
+      "id": "timeline.lantzville_move",
+      "text": "Moved to Lantzville on Vancouver Island on September 4, 1987. Life changed dramatically from farm to suburbs - suddenly had 16 TV stations, neighborhood kids, and eventually a Nintendo. It all felt very futuristic compared to farm life.",
+      "topics": [
+        "timeline",
+        "childhood",
+        "vancouver",
+        "island",
+        "lantzville"
+      ],
+      "keywords": [
+        "lantzville",
+        "vancouver",
+        "island",
+        "september",
+        "1987",
+        "moved",
+        "suburbs",
+        "tv",
+        "stations",
+        "nintendo",
+        "futuristic",
+        "farm"
+      ]
+    },
+    "qualicum_move": {
+      "id": "timeline.qualicum_move",
+      "text": "Moved to Qualicum Beach to another farm on May 18, 1991. Was back amongst the community he grew up with. Got his first CD player for his 13th birthday and started listening to music a lot. First CDs were Lenny Kravitz 'Are you gonna go my way' and Ace Of Base 'The Sign'.",
+      "topics": [
+        "timeline",
+        "childhood",
+        "qualicum",
+        "music"
+      ],
+      "keywords": [
+        "qualicum",
+        "beach",
+        "farm",
+        "may",
+        "1991",
+        "moved",
+        "community",
+        "cd",
+        "player",
+        "13th",
+        "birthday",
+        "music",
+        "lenny",
+        "kravitz",
+        "ace",
+        "base"
       ]
     }
   },
@@ -316,6 +429,27 @@
         "pilates"
       ]
     },
+    "tia": {
+      "id": "relationships.tia",
+      "text": "Tia was the first girl Jonathan kissed and fell in love with in Maine. They got married and bought a house together during his time in Maine from 1994 to 2008.",
+      "topics": [
+        "relationships",
+        "maine",
+        "marriage",
+        "tia"
+      ],
+      "keywords": [
+        "tia",
+        "first",
+        "kiss",
+        "love",
+        "maine",
+        "married",
+        "house",
+        "1994",
+        "2008"
+      ]
+    },
     "tyler": {
       "id": "relationships.tyler",
       "text": "Tyler McCoy is one of Jonathan's closest friends from Austin. He's 46, tall, cool, hip, balanced, and smart. A yoga instructor and tech enthusiast who loves food and travel. Has a partner Cansu from Istanbul.",
@@ -364,7 +498,7 @@
   "family": {
     "brother": {
       "id": "family.brother",
-      "text": "Geoff (nickname Boris) is Jonathan's brother, 3 years older. He's a pilot living outside Denver, Colorado with partner Georgette and children Jason and Justin. Has a French bulldog named Harley.",
+      "text": "Geoff is Jonathan's older brother. They grew up together on the farm in Saanichton with their parents Eric and Mary Braden, sharing a wonderful childhood with animals and homegrown food.",
       "topics": [
         "family",
         "brother",
@@ -372,39 +506,41 @@
       ],
       "keywords": [
         "geoff",
-        "boris",
         "brother",
-        "pilot",
-        "denver",
-        "colorado",
-        "georgette",
-        "jason",
-        "justin",
-        "harley",
-        "bulldog"
+        "older",
+        "farm",
+        "saanichton",
+        "eric",
+        "mary",
+        "braden",
+        "childhood",
+        "animals"
       ]
     },
     "parents": {
       "id": "family.parents",
-      "text": "Mary (Mama) born July 4, 1949 in Anchorage, Alaska - amazing with deep appreciation for nature and animals. Eric (Pop) born July 12, 1947 in Edmonton, Alberta - very smart, kind, boat builder and captain. They retired to Verteillac, France in 2017 with two black poodles Gus and Una.",
+      "text": "Eric and Mary Braden are Jonathan's parents who raised him and his older brother Geoff on a small farm in Saanichton, Vancouver Island. They had chickens, cows, pigs, horses, and a garden where they grew most of their food. They gave Jonathan a wonderful childhood.",
       "topics": [
         "family",
         "parents",
-        "france"
+        "farm"
       ],
       "keywords": [
-        "mary",
-        "mama",
         "eric",
-        "pop",
-        "anchorage",
-        "edmonton",
-        "verteillac",
-        "france",
-        "2017",
-        "gus",
-        "una",
-        "poodles"
+        "mary",
+        "braden",
+        "parents",
+        "farm",
+        "saanichton",
+        "vancouver",
+        "island",
+        "geoff",
+        "chickens",
+        "cows",
+        "pigs",
+        "horses",
+        "garden",
+        "childhood"
       ]
     }
   },
@@ -443,6 +579,29 @@
         "compassionate",
         "world",
         "chaotic"
+      ]
+    }
+  },
+  "languages": {
+    "learning_journey": {
+      "id": "languages.learning_journey",
+      "text": "When Jonathan first arrived in Europe in 2018, he could only say 3 things in French. Now he has learned to speak French and Spanish fluently, and is currently working on learning Bulgarian. He once could speak a lot of Hungarian and Romanian as well.",
+      "topics": [
+        "languages",
+        "learning",
+        "europe"
+      ],
+      "keywords": [
+        "french",
+        "spanish",
+        "bulgarian",
+        "hungarian",
+        "romanian",
+        "europe",
+        "2018",
+        "learning",
+        "speak",
+        "fluent"
       ]
     }
   },
