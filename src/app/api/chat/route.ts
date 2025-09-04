@@ -201,6 +201,11 @@ export async function POST(request: Request) {
       }
     });
     
+    // Get or create conversation state
+    const { jonathanConversationState } = await import('@/lib/services/jonathanDemoConversationState');
+    const sessionId = request.headers.get('x-session-id') || 'default-session';
+    const conversation = await jonathanConversationState.getOrCreateConversation('jonathan-demo', sessionId);
+
     // Early intent detection and budget calculation
     const intent = detectIntent(singleMessage);
     const shouldStartDeepImmediately = requiresImmediateDeep(intent);
@@ -250,6 +255,12 @@ export async function POST(request: Request) {
       });
       deepStartTimer = setTimeout(async () => {
         try {
+          // Build conversation context from recent turns
+          const recentTurns = conversation.turns.slice(-3); // Last 3 turns for context
+          const conversationHistory = recentTurns.map(turn => 
+            `${turn.role}: ${turn.content}`
+          ).join('\n');
+          
           await runDeepLane({
             query: singleMessage,
             avatarId: '0585f43b-4b49-4e16-b2a7-91c8e1e3850c',
@@ -262,7 +273,7 @@ export async function POST(request: Request) {
             onSnippetsSelected: (snippets) => { snippets_selected = snippets; },
             conversationContext: {
               memoryContext: memoryContext || '',
-              continuityContext: continuityContext || ''
+              continuityContext: conversationHistory || continuityContext || ''
             }
           });
         } catch (e) {
@@ -278,8 +289,15 @@ export async function POST(request: Request) {
       }
     }, Math.max(0, HARD_DEADLINE - Date.now()));
     
-    // Fast path with non-blocking pinned memory injection
-    const fastHello = fastHelloFromCacheOrTemplate({ name: 'Jonathan' });
+    // Only send greeting for new conversations (no previous turns)
+    let fastHello = '';
+    if (conversation.turns.length === 0) {
+      fastHello = fastHelloFromCacheOrTemplate({ name: 'Jonathan' });
+    } else {
+      // For continuing conversations, start with a thinking indicator
+      fastHello = "I'm thinking about that...";
+    }
+    
     await streamWriter!.write(encodeSSE({ 
       channel: 'fast', 
       delta: fastHello 
@@ -368,6 +386,34 @@ export async function POST(request: Request) {
     
     await streamWriter!.write(encodeSSE({ event: 'end' }));
     
+    // Store conversation turn
+    try {
+      await jonathanConversationState.addConversationTurn(
+        conversation.id,
+        'user',
+        singleMessage,
+        {
+          processingTimeMs: Date.now() - t0,
+          memoryFragmentsReferenced: snippets_selected
+        }
+      );
+      
+      // Store assistant response (reconstruct from deep lane if available)
+      if (deepProducedAny.value) {
+        await jonathanConversationState.addConversationTurn(
+          conversation.id,
+          'assistant',
+          'Response generated from factbook', // This would need to be captured from the stream
+          {
+            processingTimeMs: t_deep_done_ms,
+            memoryFragmentsReferenced: snippets_selected
+          }
+        );
+      }
+    } catch (error) {
+      console.warn('conversation_turn_storage_failed', error);
+    }
+
     // Record final metrics
     metricsCollector.recordChatMetrics({
       trace_id: traceId,

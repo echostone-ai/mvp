@@ -4,7 +4,7 @@
  */
 
 export const MergeConfig = {
-  mergeWindowMs: 1200,        // was ~3500; tightened for faster response
+  mergeWindowMs: 3000,        // increased to 3000ms to ensure complete factbook responses
   minDeepBudgetMs: 400,       // was ~650; reduced for faster startup
   safetyMs: 120,              // buffer to avoid negative budgets
   fastMaxTokens: 80           // was ~60; give fast lane a touch more room

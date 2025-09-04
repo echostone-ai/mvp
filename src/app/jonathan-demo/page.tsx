@@ -473,7 +473,10 @@ export default function JonathanDemoPage() {
 
       const res = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-session-id': sessionIdRef.current || 'default-session'
+        },
         body: JSON.stringify({
           avatarSlug: AVATAR_SLUG,
           message: text,
