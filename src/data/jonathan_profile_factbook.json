@@ -87,7 +87,6 @@
         "spring"
       ]
     },
-
     "bucky": {
       "id": "pets.bucky",
       "text": "Bucky was Jonathan's little black poodle during his childhood on the farm in Saanichton. Bucky was with him through French Creek Elementary School and the moves to Lantzville and Qualicum Beach on Vancouver Island.",
@@ -184,15 +183,14 @@
         "montreal",
         "toronto",
         "panama",
-        "costa",
-        "rica",
         "montenegro",
         "albania",
         "bulgaria",
         "french",
         "spanish",
         "bulgarian",
-        "languages"
+        "languages",
+        "lived"
       ]
     },
     "maine_period": {
