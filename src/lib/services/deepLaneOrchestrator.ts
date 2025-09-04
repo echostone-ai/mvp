@@ -86,7 +86,7 @@ Be warm, friendly, and conversational.`;
             }
           ],
           stream: true,
-          max_tokens: 150,
+          max_tokens: 250,
           temperature: 0.7
         }, {
           signal: abortSignal
@@ -160,7 +160,7 @@ Be warm, friendly, and conversational.`;
               }
             ],
             stream: true,
-            max_tokens: 150,
+            max_tokens: 250,
             temperature: 0.7
           }, {
             signal: abortSignal
@@ -246,7 +246,7 @@ Respond as Jonathan using the facts and conversation context above. Be conversat
         }
       ],
       stream: true,
-      max_tokens: 300,
+      max_tokens: 400,
       temperature: 0.6
     }, {
       signal: abortSignal
