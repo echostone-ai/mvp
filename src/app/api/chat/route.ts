@@ -201,32 +201,11 @@ export async function POST(request: Request) {
       }
     });
     
-    // Get or create conversation state (non-blocking for performance)
-    let conversation: any = { turns: [] }; // Default to new conversation
-    let conversationPromise: Promise<any>;
+    // Simple session-based greeting logic (fast performance)
+    const sessionId = request.headers.get('x-session-id') || 'default-session';
+    const isFirstInteraction = !request.headers.get('x-has-interacted');
     
-    try {
-      const { jonathanConversationState } = await import('@/lib/services/jonathanDemoConversationState');
-      const sessionId = request.headers.get('x-session-id') || 'default-session';
-      
-      // Start conversation lookup but don't wait for it
-      conversationPromise = jonathanConversationState.getOrCreateConversation('jonathan-demo', sessionId);
-      
-      // Try to get it quickly with a timeout
-      const quickConversation = await Promise.race([
-        conversationPromise,
-        new Promise(resolve => setTimeout(() => resolve({ turns: [] }), 50)) // 50ms timeout
-      ]);
-      
-      if (quickConversation && 'turns' in quickConversation) {
-        conversation = quickConversation;
-        console.log('conversation_state_quick_load', { turns: conversation.turns.length, sessionId });
-      } else {
-        console.log('conversation_state_timeout_fallback', { sessionId });
-      }
-    } catch (error) {
-      console.warn('conversation_state_error_fallback', error);
-    }
+    console.log('session_greeting_check', { sessionId, isFirstInteraction });
 
     // Early intent detection and budget calculation
     const intent = detectIntent(singleMessage);
@@ -311,17 +290,9 @@ export async function POST(request: Request) {
       }
     }, Math.max(0, HARD_DEADLINE - Date.now()));
     
-    // Only send greeting for new conversations (no previous turns)
+    // Only send greeting for first interaction in session
     let fastHello = '';
-    const isNewConversation = !conversation.turns || conversation.turns.length === 0;
-    
-    console.log('conversation_greeting_check', { 
-      turns: conversation.turns?.length || 0, 
-      isNewConversation,
-      sessionId: request.headers.get('x-session-id') || 'default-session'
-    });
-    
-    if (isNewConversation) {
+    if (isFirstInteraction) {
       fastHello = fastHelloFromCacheOrTemplate({ name: 'Jonathan' });
     } else {
       // For continuing conversations, start with a thinking indicator
@@ -416,41 +387,7 @@ export async function POST(request: Request) {
     
     await streamWriter!.write(encodeSSE({ event: 'end' }));
     
-    // Store conversation turn asynchronously (non-blocking)
-    if (conversationPromise) {
-      conversationPromise.then(async (fullConversation) => {
-        try {
-          const { jonathanConversationState } = await import('@/lib/services/jonathanDemoConversationState');
-          
-          await jonathanConversationState.addConversationTurn(
-            fullConversation.id,
-            'user',
-            singleMessage,
-            {
-              processingTimeMs: Date.now() - t0,
-              memoryFragmentsReferenced: snippets_selected
-            }
-          );
-          
-          // Store assistant response (reconstruct from deep lane if available)
-          if (deepProducedAny.value) {
-            await jonathanConversationState.addConversationTurn(
-              fullConversation.id,
-              'assistant',
-              'Response generated from factbook',
-              {
-                processingTimeMs: t_deep_done_ms,
-                memoryFragmentsReferenced: snippets_selected
-              }
-            );
-          }
-        } catch (error) {
-          console.warn('conversation_turn_storage_failed', error);
-        }
-      }).catch(error => {
-        console.warn('conversation_promise_failed', error);
-      });
-    }
+    // Note: Conversation state disabled for performance - using simple session tracking
 
     // Record final metrics
     metricsCollector.recordChatMetrics({

@@ -474,11 +474,18 @@ export default function JonathanDemoPage() {
 
       console.log('🔑 Making API call with session ID:', sessionIdRef.current || 'default-session');
       
+      // Track if user has interacted before in this session
+      const hasInteracted = sessionStorage.getItem('jonathan-demo-has-interacted') === 'true';
+      if (!hasInteracted) {
+        sessionStorage.setItem('jonathan-demo-has-interacted', 'true');
+      }
+      
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'x-session-id': sessionIdRef.current || 'default-session'
+          'x-session-id': sessionIdRef.current || 'default-session',
+          'x-has-interacted': hasInteracted ? 'true' : 'false'
         },
         body: JSON.stringify({
           avatarSlug: AVATAR_SLUG,
