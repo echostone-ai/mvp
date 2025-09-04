@@ -324,21 +324,8 @@ export async function POST(request: Request) {
       });
     }
     
-    // Generate fast response with pinned memories if available
-    let fastResponse = '';
-    if (pinnedMemories.length > 0) {
-      // Use pinned memories to generate specific response
-      const memoryContext = pinnedMemories.map(m => m.fragment_text).join(' ');
-      fastResponse = `Based on my memories: ${memoryContext.substring(0, 200)}...`;
-    } else {
-      // Fallback to generic response that doesn't hallucinate
-      fastResponse = "I'm thinking about that...";
-    }
-    
-    await streamWriter!.write(encodeSSE({ 
-      channel: 'fast', 
-      delta: fastResponse 
-    }));
+    // Skip additional fast response in factbook-only mode to avoid duplication
+    // The initial fastHello is sufficient, deep lane will provide the real response
     
     // Merge window logic - always wait for deep lane to search factbook
     if (!shouldSkipDeep) {
