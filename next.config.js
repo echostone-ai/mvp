@@ -10,9 +10,7 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   
-  // Enable static export for GitHub Pages
-  output: 'export',
-  trailingSlash: true,
+  // Configuration for Vercel deployment
   images: {
     unoptimized: true,
   },
