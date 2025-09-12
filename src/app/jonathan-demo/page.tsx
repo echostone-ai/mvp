@@ -8,7 +8,7 @@ import { globalAudioManager } from '@/lib/globalAudioManager'
 import { stopAllAudio } from '@/lib/streamingUtils'
 import { createSeamlessStreamingManager, stopAllSeamlessAudio, splitTextForSeamlessStreaming, SeamlessStreamingManager } from '@/lib/seamlessStreamingUtils'
 import { getContextualVoiceSettings, getHomepageDemoSettings } from '@/lib/naturalVoiceSettings'
-
+ 
 export default function JonathanDemoPage() {
   const [question, setQuestion] = useState('')
   const [answer, setAnswer] = useState('')
@@ -441,7 +441,7 @@ export default function JonathanDemoPage() {
               <div className="answer-actions">
                 {!playing && (
                   <button onClick={handleReplay} className="play-btn">
-                    🔊 Play Again
+                    🔊 Replay
                   </button>
                 )}
                 {playing && (
