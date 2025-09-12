@@ -26,16 +26,25 @@ export class FactbookHookSelector {
     if (!snippets || snippets.length === 0) {
       return this.createFallbackHook(query, intent);
     }
-    
-    // Score and rank snippets for hook potential
-    const scoredSnippets = snippets.map(snippet => ({
+
+    const qTokens = query.toLowerCase().split(/\s+/).map(w => w.replace(/[^\w]/g, '')).filter(Boolean);
+
+    // Filter: require at least one keyword/entity overlap with query
+    const overlapping = snippets.filter(s =>
+      (s.keywords || []).some(k => qTokens.includes(k.toLowerCase())) ||
+      (s.topics || []).some(t => qTokens.includes(t.toLowerCase()))
+    );
+
+    const candidates = overlapping.length > 0 ? overlapping : snippets;
+
+    // Score and rank snippets for hook potential (bias timeline)
+    const scoredSnippets = candidates.map(snippet => ({
       snippet,
-      score: this.calculateHookScore(snippet, query)
+      score: this.calculateHookScore(snippet, query) + (snippet.topics.includes('timeline') ? 6 : 0)
     }));
-    
-    // Sort by score (highest first)
+
     scoredSnippets.sort((a, b) => b.score - a.score);
-    
+
     const bestSnippet = scoredSnippets[0].snippet;
     
     // Generate hook from best snippet
@@ -49,6 +58,37 @@ export class FactbookHookSelector {
       snippetIds: [bestSnippet.id],
       coordinationHints
     };
+  }
+
+  selectFromRetrieval(
+    rankedFactIds: string[],
+    idToSnippet: Map<string, FactbookSnippet>,
+    query: string,
+    expandedTokens: string[]
+  ): FactbookHookSelection {
+    // Prefer timeline facts first
+    const candidates: FactbookSnippet[] = [];
+    for (const id of rankedFactIds) {
+      const sn = idToSnippet.get(id);
+      if (sn) candidates.push(sn);
+    }
+
+    const prioritized = [
+      ...candidates.filter(c => c.topics.includes('timeline')),
+      ...candidates.filter(c => !c.topics.includes('timeline'))
+    ];
+
+    const expanded = new Set(expandedTokens.map(t => t.toLowerCase()));
+    const best = prioritized.find(sn =>
+      (sn.keywords || []).some(k => expanded.has(k.toLowerCase())) ||
+      (sn.topics || []).some(t => expanded.has(t.toLowerCase()))
+    ) || prioritized[0];
+
+    if (!best) return this.createFallbackHook(query, 'factual');
+
+    const hook = this.generateHookFromSnippet(best, query, 'factual');
+    const coordinationHints = this.createCoordinationHints(candidates, hook, best);
+    return { hook, snippetIds: [best.id], coordinationHints };
   }
   
   generateHookFromSnippet(snippet: FactbookSnippet, query: string, intent?: string): string {
@@ -121,8 +161,9 @@ export class FactbookHookSelector {
     const textMatches = queryWords.filter(word => lowerText.includes(word)).length;
     score += textMatches * 1;
     
-    // Bonus for high-engagement topics (but lower than exact matches)
+    // Bonus for high-engagement topics (but lower than timeline bias above)
     if (snippet.topics.includes('austin') && lowerQuery.includes('austin')) score += 2.0;
+    if (snippet.topics.includes('texas') && (lowerQuery.includes('texas') || lowerQuery.includes('us') || lowerQuery.includes('america'))) score += 2.0;
     if (snippet.topics.includes('olive') && lowerQuery.includes('olive')) score += 2.0;
     if (snippet.topics.includes('trump') && lowerQuery.includes('trump')) score += 2.0;
     

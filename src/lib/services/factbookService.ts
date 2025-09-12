@@ -3,6 +3,7 @@
 
 import Ajv from 'ajv';
 import factbookSchema from '@/data/factbook.schema.json';
+import type { Fact } from '@/lib/factbook/buildIndex';
 
 export interface FactbookSnippet {
   id: string;
@@ -114,6 +115,142 @@ export class FactbookService {
     }
     
     return { snippets, keywordMap, topicFences };
+  }
+
+  // Convenience to expose all snippets as Facts for FBIndex builder
+  getAllSnippets(): FactbookSnippet[] {
+    if (!this.index) return [];
+    return Array.from(this.index.snippets.values());
+  }
+
+  /**
+   * Main retrieval method that integrates with hybrid retrieval system
+   * Maintains backward compatibility with retrieve(userText): Fact[] interface
+   */
+  async retrieve(userText: string): Promise<Fact[]> {
+    const startTime = Date.now();
+    
+    try {
+      // Import hybrid retrieval dynamically to avoid circular dependencies
+      const { hybridRetriever } = await import('./hybridRetrieval');
+      
+      // Check if hybrid retriever is available and properly initialized
+      const healthStatus = hybridRetriever.getHealthStatus();
+      
+      if (healthStatus.status === 'healthy' || healthStatus.status === 'degraded') {
+        // Use hybrid retrieval system
+        const result = await hybridRetriever.retrieve(userText);
+        
+        // Convert RetrievalResult[] to Fact[]
+        const facts: Fact[] = result.results.map(retrievalResult => ({
+          ...retrievalResult.snippet,
+          type: retrievalResult.source,
+          weight: retrievalResult.confidence
+        }));
+        
+        const elapsedMs = Date.now() - startTime;
+        
+        console.log('factbook_hybrid_retrieve', {
+          query: userText,
+          result_count: facts.length,
+          methods_used: result.metrics.methodsUsed,
+          total_time_ms: elapsedMs,
+          hybrid_time_ms: result.metrics.totalTimeMs,
+          expansion_triggered: result.metrics.expansionTriggered,
+          reranking_applied: result.metrics.rerankingApplied,
+          fallback_used: result.metrics.fallbackUsed
+        });
+        
+        return facts;
+        
+      } else {
+        // Fallback to legacy retrieval when hybrid system is unhealthy
+        console.warn('factbook_hybrid_fallback', {
+          reason: 'hybrid_system_unhealthy',
+          health_status: healthStatus.status,
+          details: healthStatus.details
+        });
+        
+        return this.legacyRetrieve(userText);
+      }
+      
+    } catch (error) {
+      // Fallback to legacy retrieval on any error
+      console.error('factbook_hybrid_error', {
+        error: error instanceof Error ? error.message : error,
+        fallback_to_legacy: true
+      });
+      
+      return this.legacyRetrieve(userText);
+    }
+  }
+
+  /**
+   * Legacy retrieval method using the original querySnippets approach
+   * Used as fallback when hybrid retrieval is unavailable
+   */
+  private legacyRetrieve(userText: string): Fact[] {
+    const startTime = Date.now();
+    
+    try {
+      // Extract keywords using simple tokenization
+      const keywords = this.extractKeywords(userText);
+      
+      // Use existing querySnippets method
+      const snippets = this.querySnippets(keywords, 6);
+      
+      // Convert FactbookSnippet[] to Fact[]
+      const facts: Fact[] = snippets.map(snippet => ({
+        ...snippet,
+        type: 'legacy',
+        weight: 0.5 // Default weight for legacy results
+      }));
+      
+      const elapsedMs = Date.now() - startTime;
+      
+      console.log('factbook_legacy_retrieve', {
+        query: userText,
+        keywords,
+        result_count: facts.length,
+        time_ms: elapsedMs,
+        snippet_ids: facts.map(f => f.id)
+      });
+      
+      return facts;
+      
+    } catch (error) {
+      console.error('factbook_legacy_retrieve_error', {
+        error: error instanceof Error ? error.message : error
+      });
+      
+      return [];
+    }
+  }
+
+  /**
+   * Extract keywords from user text for legacy retrieval
+   */
+  private extractKeywords(userText: string): string[] {
+    if (!userText || typeof userText !== 'string') {
+      return [];
+    }
+    
+    // Simple keyword extraction - normalize and split
+    const normalized = userText.toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+      .replace(/[^\w\s]/g, ' ') // Replace non-word chars with spaces
+      .replace(/\s+/g, ' ') // Collapse multiple spaces
+      .trim();
+    
+    // Split into tokens and filter out short words and common stop words
+    const stopWords = new Set(['a', 'an', 'and', 'are', 'as', 'at', 'be', 'by', 'for', 'from', 'has', 'he', 'in', 'is', 'it', 'its', 'of', 'on', 'that', 'the', 'to', 'was', 'will', 'with']);
+    
+    const keywords = normalized.split(' ')
+      .filter(word => word.length > 2 && !stopWords.has(word))
+      .slice(0, 10); // Limit to 10 keywords
+    
+    return keywords;
   }
   
   querySnippets(keywords: string[], maxResults: number = 3): FactbookSnippet[] {
@@ -286,6 +423,40 @@ export class FactbookService {
     }
     
     return results;
+  }
+
+  // Lightweight label search (exact topic/keyword label match)
+  getSnippetsByLabel(label: string): FactbookSnippet[] {
+    if (!this.index) return [];
+    const key = this.normalizeToken(label);
+    const out: FactbookSnippet[] = [];
+    for (const snippet of this.index.snippets.values()) {
+      if (snippet.topics.some(t => this.normalizeToken(t) === key) ||
+          snippet.keywords.some(k => this.normalizeToken(k) === key)) {
+        out.push(snippet);
+      }
+    }
+    return out;
+  }
+
+  /**
+   * Return a set of normalized tokens that should never be stemmed/altered
+   * Includes all keywords and topics present in the factbook index
+   */
+  getProtectedTokens(): Set<string> {
+    const protectedSet = new Set<string>();
+    if (!this.index) return protectedSet;
+    // All keyword map keys are already normalized
+    for (const key of this.index.keywordMap.keys()) {
+      protectedSet.add(key);
+    }
+    // Topics need normalization
+    for (const snippet of this.index.snippets.values()) {
+      for (const topic of snippet.topics) {
+        protectedSet.add(this.normalizeToken(topic));
+      }
+    }
+    return protectedSet;
   }
   
   getIndexStats(): { snippets: number; keywords: number; topics: number } {

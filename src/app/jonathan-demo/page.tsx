@@ -473,6 +473,21 @@ export default function JonathanDemoPage() {
       setPlaying(true)
 
       console.log('🔑 Making API call with session ID:', sessionIdRef.current || 'default-session');
+
+      // Build rolling message history for better continuity/pronoun resolution
+      let rollingMessages: { role: 'system' | 'user' | 'assistant'; content: string }[] = [];
+      try {
+        const hist = sessionIdRef.current
+          ? jonathanConversationState.getConversationHistory(sessionIdRef.current, 8)
+          : [];
+        // Map to chat API format, newest last
+        rollingMessages = (hist || [])
+          .slice(-8)
+          .map((h: any) => ({ role: (h.role === 'assistant' ? 'assistant' : 'user') as 'assistant' | 'user', content: String(h.content || '') }))
+          .filter(m => m.content && (m.role === 'user' || m.role === 'assistant'));
+      } catch (e) {
+        console.warn('Failed to build rolling message history:', e);
+      }
       
       // Track if user has interacted before in this session
       const hasInteracted = sessionStorage.getItem('jonathan-demo-has-interacted') === 'true';
@@ -480,7 +495,7 @@ export default function JonathanDemoPage() {
         sessionStorage.setItem('jonathan-demo-has-interacted', 'true');
       }
       
-      const res = await fetch('/api/chat', {
+      const res = await fetch('/api/demo-chat', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -490,6 +505,10 @@ export default function JonathanDemoPage() {
         body: JSON.stringify({
           avatarSlug: AVATAR_SLUG,
           message: text,
+          messages: rollingMessages,
+          profileData: jonathanProfile,
+          usePersona: true,
+          useFBIndex: true,
           stream: true,
           storeMemory: true,
           memoryContext: memoryContext.memoryContext,
@@ -661,20 +680,43 @@ export default function JonathanDemoPage() {
         );
         
       } else {
-        // Fallback for non-streaming
-        const data = await res.json().catch(() => ({}))
-        const reply = data.answer || '😕 No answer.'
+        // Fallback handling: try parsing, then fallback to /api/chat
+        let reply = ''
+        try {
+          const data = await res.json()
+          reply = data.answer || data.text || ''
+        } catch {}
+
+        if (!reply) {
+          try {
+            const r2 = await fetch('/api/chat', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                question: text,
+                history: newHistory,
+                stream: false,
+                avatar: AVATAR_SLUG,
+                avatarSlug: AVATAR_SLUG,
+                memoryContext: memoryContext.memoryContext,
+                continuityContext: memoryContext.continuityContext
+              })
+            })
+            const d2 = await r2.json().catch(() => ({} as any))
+            reply = d2.answer || d2.text || ''
+          } catch {}
+        }
+
+        if (!reply) reply = '😕 No answer.'
         setAnswer(reply)
-        
+
         if (reply && streamingManagerRef.current) {
-          // Split reply into sentences for streaming playback
           const sentences = splitIntoSentences(reply)
           for (const sentence of sentences) {
             await streamingManagerRef.current.addSentence(sentence)
           }
         }
-        
-        // Add assistant turn to conversation state for fallback case
+
         if (conversationStateRef.current) {
           await jonathanConversationState.addConversationTurn(
             conversationStateRef.current.id,
@@ -682,8 +724,7 @@ export default function JonathanDemoPage() {
             reply
           )
         }
-        
-        // Store conversation turn asynchronously for fallback case (Requirement 4.3)
+
         memoryAPI.storeConversationTurn(
           text,
           reply,

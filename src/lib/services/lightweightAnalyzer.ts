@@ -17,14 +17,15 @@ const STOPWORDS = new Set([
   'a', 'an', 'and', 'are', 'as', 'at', 'be', 'by', 'for', 'from', 'has', 'he', 'in', 'is', 'it',
   'its', 'of', 'on', 'that', 'the', 'to', 'was', 'will', 'with', 'you', 'your', 'me', 'my',
   'what', 'when', 'where', 'how', 'why', 'who', 'did', 'do', 'does', 'can', 'could', 'would',
-  'should', 'tell', 'about', 'like', 'think', 'know', 'want', 'get', 'got', 'have', 'had', 'but', 'or'
+  'should', 'tell', 'about', 'like', 'think', 'know', 'want', 'get', 'got', 'have', 'had', 'but', 'or',
+  'specifically'
 ]);
 
 // Entity patterns for recognition
 const ENTITY_PATTERNS = {
-  people: /\b(jonathan|jon|jb|braden|tyler|krissy|trump|biden)\b/gi,
-  places: /\b(austin|texas|maine|sofia|bulgaria|vancouver|island|america|verteillac|france)\b/gi,
-  pets: /\b(olive|romeo|dog|cat|pet)\b/gi,
+  people: /\b(jonathan|jon|jb|braden|tyler|krissy|geoff|boris|eric|carter|matheus)\b/gi,
+  places: /\b(austin|texas|maine|sofia|bulgaria|vancouver|island|america|usa|u\.s\.|united\s*states|verteillac|france|saanichton|canada|bc|british\s*columbia|denver|colorado)\b/gi,
+  pets: /\b(olive|romeo|dog|cat|pet|poodle|gus|una)\b/gi,
   years: /\b(19\d{2}|20\d{2})\b/g,
   timeframes: /\b(2009.*2018|nine.*years|years?)\b/gi
 };
@@ -33,9 +34,9 @@ const ENTITY_PATTERNS = {
 const TOPIC_PATTERNS = {
   pets: /\b(olive|romeo|dog|cat|pet|animal|puppy|doggy)\b/gi,
   politics: /\b(trump|biden|politics|political|immigration|america|president)\b/gi,
-  places: /\b(austin|texas|maine|sofia|bulgaria|live|lived|city|place|where)\b/gi,
-  timeline: /\b(when|year|time|period|2009|2018|lived|moved|born)\b/gi,
-  relationships: /\b(tyler|krissy|friend|partner|relationship|meet|met)\b/gi,
+  places: /\b(austin|texas|maine|sofia|bulgaria|live|lived|city|place|where|grew\s*up|grow\s*up|hometown|childhood)\b/gi,
+  timeline: /\b(when|year|time|period|2009|2018|lived|moved|born|grew|childhood)\b/gi,
+  relationships: /\b(tyler|krissy|geoff|boris|eric|carter|matheus|friend|partner|relationship|meet|met|brother|sister|mother|father|parents)\b/gi,
   identity: /\b(name|who|jonathan|jon|jb|braden|age|birthday|born)\b/gi,
   opinions: /\b(think|opinion|believe|feel|stance|view|hate|love|terrible|amazing)\b/gi
 };
@@ -114,13 +115,25 @@ export class LightweightAnalyzer {
   extractKeywords(text: string): string[] {
     // Normalize and tokenize
     const normalized = this.normalizeText(text);
-    const tokens = normalized.split(/\s+/).filter(token => token.length > 2);
+    const rawTokens = normalized.split(/\s+/);
+    // Lemmatize common verbs/nouns first to avoid broken stems like "liv"
+    const lemmatized = rawTokens.map(t => this.lemmatize(t)).filter(t => t.length > 2);
     
     // Remove stopwords
-    const keywords = tokens.filter(token => !STOPWORDS.has(token));
+    const keywords = lemmatized.filter(token => !STOPWORDS.has(token));
     
-    // Light stemming (remove common suffixes)
-    const stemmed = keywords.map(keyword => this.lightStem(keyword));
+    // Load protected tokens from factbook so we don't stem proper entities (texas, austin, sofia...)
+    let protectedSet: Set<string> = new Set();
+    try {
+      protectedSet = this.factbookService.getProtectedTokens();
+    } catch {}
+
+    // Light stemming (remove common suffixes), but never stem protected tokens
+    const stemmed = keywords.map(keyword => {
+      const norm = this.normalizeToken(keyword);
+      if (protectedSet.has(norm)) return keyword; // keep as-is
+      return this.lightStem(keyword);
+    });
     
     // Apply consistent token normalization (matches FactbookService)
     const normalizedKeywords = stemmed.map(keyword => this.normalizeToken(keyword));
@@ -246,8 +259,11 @@ export class LightweightAnalyzer {
     
     for (const suffix of suffixes) {
       if (word.endsWith(suffix) && word.length > suffix.length + 2) {
-        const stemmed = word.slice(0, -suffix.length);
-        // Special case: if removing 'es' or 's' from adventures -> adventur
+        let stemmed = word.slice(0, -suffix.length);
+        // Preserve silent 'e' for common verbs (live → live, not liv)
+        if (stemmed === 'liv') return 'live';
+        if (stemmed === 'mov') return 'move';
+        if (stemmed === 'leav') return 'leave';
         if (suffix === 'es' && word === 'adventures') {
           return 'adventur';
         }
@@ -256,6 +272,28 @@ export class LightweightAnalyzer {
     }
     
     return word;
+  }
+
+  // Very small lemmatizer for high-impact verbs/entities we care about
+  private lemmatize(word: string): string {
+    switch (word) {
+      case 'lived':
+      case 'living':
+      case 'lives':
+        return 'live';
+      case 'moved':
+      case 'moving':
+      case 'moves':
+        return 'move';
+      case 'grew':
+      case 'growing':
+        return 'grow';
+      case 'born':
+        return 'born';
+      default:
+        // Collapses "grew up"/"grow up" tokens later via topic patterns
+        return word;
+    }
   }
   
   // Deterministic query analysis that maps to ≤3 relevant snippets using weighted scoring

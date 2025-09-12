@@ -142,7 +142,7 @@ export class EnhancedPromptBuilder extends PromptBuilder {
                     }
                     
                     // Boost for specific friend names mentioned in query
-                    const friendNames = ['tyler', 'kate', 'katie', 'anna', 'taylor', 'eric', 'carter', 'matheus'];
+                    const friendNames = ['tyler', 'kate', 'katie', 'anna', 'taylor', 'eric', 'carter', 'matheus', 'geoff', 'krissy', 'tia'];
                     const queryLower = query.toLowerCase();
                     for (const name of friendNames) {
                         if (queryLower.includes(name) && text.includes(name)) {

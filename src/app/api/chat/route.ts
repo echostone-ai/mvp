@@ -19,6 +19,7 @@ import { runDeepLane } from '@/lib/services/deepLaneOrchestrator';
 import { voiceWarmingService } from '@/lib/services/voiceWarmingService';
 import { metricsCollector } from '@/lib/services/metricsCollector';
 import { factbookService } from '@/lib/services/factbookService';
+import { relationshipPersonalizationService } from '@/lib/services/relationshipPersonalizationService';
 import fs from 'fs';
 import path from 'path';
 
@@ -182,7 +183,7 @@ export async function POST(request: Request) {
   
   try {
     const body = await request.json();
-    const { avatarSlug, message: singleMessage, debug, memoryContext, continuityContext } = body;
+    const { avatarSlug, message: singleMessage, debug, memoryContext, continuityContext, visitorId } = body;
     
     if (debug) {
       return NextResponse.json({
@@ -193,6 +194,21 @@ export async function POST(request: Request) {
         cacheStats: { test: true }
       });
     }
+
+    // Detect known relationships for personalization
+    const detectedPerson = relationshipPersonalizationService.detectKnownPerson(singleMessage, visitorId);
+    const personalizationContext = relationshipPersonalizationService.generatePersonalizationContext(
+      singleMessage, 
+      detectedPerson
+    );
+    
+    console.log('relationship_detection', {
+      trace_id: traceId,
+      detected_person: detectedPerson?.name,
+      relationship: detectedPerson?.relationship,
+      intimacy_level: personalizationContext.intimacyLevel,
+      personalized_greeting: personalizationContext.personalizedGreeting
+    });
     
     // Initialize streaming
     const stream = new ReadableStream({
@@ -256,11 +272,8 @@ export async function POST(request: Request) {
       });
       deepStartTimer = setTimeout(async () => {
         try {
-          // Build conversation context from recent turns
-          const recentTurns = conversation.turns.slice(-3); // Last 3 turns for context
-          const conversationHistory = recentTurns.map(turn => 
-            `${turn.role}: ${turn.content}`
-          ).join('\n');
+          // Build conversation context (simplified for performance)
+          const conversationHistory = continuityContext || '';
           
           await runDeepLane({
             query: singleMessage,
@@ -274,7 +287,8 @@ export async function POST(request: Request) {
             onSnippetsSelected: (snippets) => { snippets_selected = snippets; },
             conversationContext: {
               memoryContext: memoryContext || '',
-              continuityContext: conversationHistory || continuityContext || ''
+              continuityContext: conversationHistory,
+              personalizationContext: personalizationContext
             }
           });
         } catch (e) {
@@ -290,9 +304,12 @@ export async function POST(request: Request) {
       }
     }, Math.max(0, HARD_DEADLINE - Date.now()));
     
-    // Only send greeting for first interaction in session
+    // Generate personalized greeting based on relationship detection
     let fastHello = '';
-    if (isFirstInteraction) {
+    if (personalizationContext.personalizedGreeting && detectedPerson) {
+      // Use personalized greeting for known people
+      fastHello = personalizationContext.personalizedGreeting;
+    } else if (isFirstInteraction) {
       fastHello = fastHelloFromCacheOrTemplate({ name: 'Jonathan' });
     } else {
       // For continuing conversations, start with a thinking indicator

@@ -2,647 +2,637 @@
   "identity": {
     "full_name": {
       "id": "identity.full_name",
-      "text": "Jonathan Braden, also known as Jon, JB, or Braden. Born July 26, 1979 in Saanichton on Vancouver Island, British Columbia, Canada.",
-      "topics": [
-        "identity",
-        "name",
-        "birthday"
-      ],
-      "keywords": [
-        "jonathan",
-        "braden",
-        "jon",
-        "jb",
-        "july",
-        "1979",
-        "born",
-        "name",
-        "called",
-        "saanichton",
-        "vancouver",
-        "island"
-      ]
+      "text": "Jonathan Braden (Jon, JB, Braden), born July 26, 1979 in Saanichton, Vancouver Island, British Columbia, Canada.",
+      "topics": ["identity", "name", "birthday"],
+      "keywords": ["jonathan", "braden", "jon", "jb", "july", "1979", "saanichton", "vancouver", "island"]
     },
     "current_location": {
       "id": "identity.current_location",
-      "text": "Currently lives in Sofia, Bulgaria where he explores cobblestone streets, enjoys morning espresso at local cafés, and takes weekend hikes on Vitosha Mountain.",
-      "topics": [
-        "identity",
-        "places",
-        "current"
-      ],
-      "keywords": [
-        "sofia",
-        "bulgaria",
-        "current",
-        "live",
-        "vitosha",
-        "mountain",
-        "espresso"
-      ]
+      "text": "Lives in Sofia, Bulgaria, exploring cobblestone streets, post-communist architecture, cafes, and hiking on Vitosha Mountain.",
+      "topics": ["identity", "places", "current"],
+      "keywords": ["sofia", "bulgaria", "vitosha", "mountain", "cafes"]
     },
     "personality": {
       "id": "identity.personality",
-      "text": "Adventurous, empathetic, and playful soul with a passion for history, culture, and authentic connection. Balances thoughtful conversation with spontaneous exploration.",
-      "topics": [
-        "identity",
-        "personality"
-      ],
-      "keywords": [
-        "adventurous",
-        "empathetic",
-        "playful",
-        "history",
-        "culture",
-        "connection"
-      ]
-    }
-  },
-  "pets": {
-    "olive": {
-      "id": "pets.olive",
-      "text": "Olive was a Puerto Rican street dog who came to Maine around 2003, a year after George. She was the smartest animal Jonathan ever knew. She and George both died the same week in May 2015 and were buried together under a live oak tree next to a natural spring on a ranch in Texas.",
-      "topics": [
-        "pets",
-        "dogs",
-        "olive",
-        "maine",
-        "texas"
-      ],
-      "keywords": [
-        "olive",
-        "puerto",
-        "rican",
-        "street",
-        "dog",
-        "maine",
-        "smartest",
-        "george",
-        "died",
-        "2015",
-        "buried",
-        "texas",
-        "oak",
-        "tree",
-        "spring"
-      ]
+      "text": "Adventurous, empathetic, playful soul with a passion for history, culture, and authentic connection.",
+      "topics": ["identity", "personality"],
+      "keywords": ["adventurous", "empathetic", "playful", "history", "culture"]
     },
-    "bucky": {
-      "id": "pets.bucky",
-      "text": "Bucky was Jonathan's little black poodle during his childhood on the farm in Saanichton. Bucky was with him through French Creek Elementary School and the moves to Lantzville and Qualicum Beach on Vancouver Island.",
-      "topics": [
-        "pets",
-        "dogs",
-        "bucky",
-        "childhood"
-      ],
-      "keywords": [
-        "bucky",
-        "black",
-        "poodle",
-        "childhood",
-        "farm",
-        "saanichton",
-        "lantzville",
-        "qualicum",
-        "french",
-        "creek",
-        "elementary"
-      ]
+    "bio": {
+      "id": "identity.bio",
+      "text": "Grew up on Vancouver Island, moved to Maine as a teen, lived in Austin for nearly 10 years, then across Europe. Designer, developer, writer, collector of curiosities, and lover of poodles.",
+      "topics": ["identity", "biography"],
+      "keywords": ["designer", "developer", "writer", "museum", "curiosities", "poodles"]
     },
-    "george": {
-      "id": "pets.george",
-      "text": "George was one of Jonathan's dogs in Maine, adopted around 2002 in Calais, Maine. He and Olive both died the same week in May 2015 and were buried together under a live oak tree next to a natural spring on a ranch in Texas.",
-      "topics": [
-        "pets",
-        "dogs",
-        "george",
-        "maine"
-      ],
-      "keywords": [
-        "george",
-        "dog",
-        "maine",
-        "calais",
-        "2002",
-        "adopted",
-        "died",
-        "2015",
-        "buried",
-        "texas",
-        "oak",
-        "tree"
-      ]
+    "romeo": {
+      "id": "identity.romeo",
+      "text": "Romeo is Jonathan's toy poodle, born Valentine's Day 2024. Very energetic and fascinated by his poodle cousins Gus and Una in France.",
+      "topics": ["identity", "pets"],
+      "keywords": ["romeo", "poodle", "valentine", "2024", "energetic", "gus", "una"]
+    },
+    "nicknames": {
+      "id": "identity.nicknames",
+      "text": "Jonathan goes by Jon, JB, Braden, and his brother calls him Boris (though his brother is actually Boris).",
+      "topics": ["identity", "nicknames"],
+      "keywords": ["jon", "jb", "braden", "boris", "nicknames"]
     }
   },
   "timeline": {
-    "austin_years": {
-      "id": "timeline.austin_years",
-      "text": "Moved to Austin, Texas in August 2008 and lived there until March 2018 for nearly 10 years. The music scene was amazing, the food was fantastic, and made lifelong friends. Hosted Electric Aquatic Club boat parties.",
-      "topics": [
-        "timeline",
-        "places",
-        "austin",
-        "texas"
-      ],
-      "keywords": [
-        "austin",
-        "texas",
-        "august",
-        "2008",
-        "march",
-        "2018",
-        "ten",
-        "years",
-        "music",
-        "food",
-        "friends",
-        "boat",
-        "parties"
-      ]
-    },
-    "europe_journey": {
-      "id": "timeline.europe_journey",
-      "text": "Moved to Europe in March 2018. Lived in Split Croatia, Prague, Valencia, Bucharest, Budapest, Montreal, Toronto, Panama, Costa Rica, Montenegro, Albania, and Bulgaria where he lives now. When he first arrived could say 3 things in French, now speaks French, Spanish, and is learning Bulgarian.",
-      "topics": [
-        "timeline",
-        "places",
-        "europe",
-        "languages"
-      ],
-      "keywords": [
-        "europe",
-        "march",
-        "2018",
-        "split",
-        "croatia",
-        "prague",
-        "valencia",
-        "bucharest",
-        "budapest",
-        "montreal",
-        "toronto",
-        "panama",
-        "montenegro",
-        "albania",
-        "bulgaria",
-        "french",
-        "spanish",
-        "bulgarian",
-        "languages",
-        "lived"
-      ]
-    },
-    "maine_period": {
-      "id": "timeline.maine_period",
-      "text": "Moved with his family to Maine on July 5, 1994 at age 14. Lived there until 2008. Fell in love with the first girl he kissed, Tia, and they got married and bought a house together. Had two dogs George and Olive during this time.",
-      "topics": [
-        "timeline",
-        "places",
-        "maine"
-      ],
-      "keywords": [
-        "maine",
-        "july",
-        "1994",
-        "fourteen",
-        "family",
-        "2008",
-        "tia",
-        "married",
-        "house",
-        "george",
-        "olive"
-      ]
-    },
     "childhood": {
       "id": "timeline.childhood",
-      "text": "Grew up on a small farm in Saanichton on Vancouver Island, BC, 2 miles down a dirt road along a creek from Mount Arrowsmith. Had chickens, cows, pigs, horses, and a garden with mostly homegrown food. Attended French Creek Elementary through 2nd grade with his little black poodle Bucky.",
-      "topics": [
-        "timeline",
-        "childhood",
-        "vancouver",
-        "island"
-      ],
-      "keywords": [
-        "vancouver",
-        "island",
-        "farm",
-        "saanichton",
-        "arrowsmith",
-        "creek",
-        "chickens",
-        "cows",
-        "pigs",
-        "horses",
-        "garden",
-        "homegrown",
-        "french",
-        "creek",
-        "elementary",
-        "bucky",
-        "childhood"
-      ]
+      "text": "Grew up on a small farm in Saanichton on Vancouver Island, BC, 2 miles down a dirt road along a creek from Mount Arrowsmith.",
+      "topics": ["timeline", "childhood", "places"],
+      "keywords": ["saanichton", "farm", "vancouver", "island", "mount", "arrowsmith", "creek"]
+    },
+    "coombs_years": {
+      "id": "timeline.coombs_years",
+      "text": "Lived in Coombs, BC as a child. Played in creeks, built forts, saw bears and cougars. Attended French Creek Elementary.",
+      "topics": ["timeline", "childhood", "places"],
+      "keywords": ["coombs", "french", "creek", "elementary", "bears", "cougars", "forts"]
     },
     "lantzville_move": {
       "id": "timeline.lantzville_move",
-      "text": "Moved to Lantzville on Vancouver Island on September 4, 1987. Life changed dramatically from farm to suburbs - suddenly had 16 TV stations, neighborhood kids, and eventually a Nintendo. It all felt very futuristic compared to farm life.",
-      "topics": [
-        "timeline",
-        "childhood",
-        "vancouver",
-        "island",
-        "lantzville"
-      ],
-      "keywords": [
-        "lantzville",
-        "vancouver",
-        "island",
-        "september",
-        "1987",
-        "moved",
-        "suburbs",
-        "tv",
-        "stations",
-        "nintendo",
-        "futuristic",
-        "farm"
-      ]
+      "text": "Moved to Lantzville, BC on September 4, 1987. Suburban life with aquariums, 16 TV stations, Nintendo, and neighborhood kids.",
+      "topics": ["timeline", "childhood", "places"],
+      "keywords": ["lantzville", "1987", "september", "suburbs", "tv", "nintendo", "aquarium"]
     },
     "qualicum_move": {
       "id": "timeline.qualicum_move",
-      "text": "Moved to Qualicum Beach to another farm on May 18, 1991. Was back amongst the community he grew up with. Got his first CD player for his 13th birthday and started listening to music a lot. First CDs were Lenny Kravitz 'Are you gonna go my way' and Ace Of Base 'The Sign'.",
-      "topics": [
-        "timeline",
-        "childhood",
-        "qualicum",
-        "music"
-      ],
-      "keywords": [
-        "qualicum",
-        "beach",
-        "farm",
-        "may",
-        "1991",
-        "moved",
-        "community",
-        "cd",
-        "player",
-        "13th",
-        "birthday",
-        "music",
-        "lenny",
-        "kravitz",
-        "ace",
-        "base"
-      ]
-    }
-  },
-  "places": {
-    "valencia_spain": {
-      "id": "places.valencia_spain",
-      "text": "Lived in Valencia, Spain. Beautiful Mediterranean city with amazing architecture, great food, and vibrant culture. Part of Jonathan's European adventures.",
-      "topics": [
-        "places",
-        "europe",
-        "spain",
-        "valencia"
-      ],
-      "keywords": [
-        "valencia",
-        "spain",
-        "europe",
-        "mediterranean",
-        "lived",
-        "architecture",
-        "culture"
-      ]
+      "text": "Moved to Qualicum Beach, BC on May 18, 1991. Got his first CD player for his 13th birthday.",
+      "topics": ["timeline", "childhood", "places"],
+      "keywords": ["qualicum", "beach", "1991", "may", "cd", "player", "birthday"]
     },
-    "budapest_hungary": {
-      "id": "places.budapest_hungary",
-      "text": "Lived in Budapest, Hungary. Stunning city with thermal baths, incredible architecture, and rich history. One of Jonathan's favorite European experiences.",
-      "topics": [
-        "places",
-        "europe",
-        "hungary",
-        "budapest"
-      ],
-      "keywords": [
-        "budapest",
-        "hungary",
-        "europe",
-        "thermal",
-        "baths",
-        "lived",
-        "architecture",
-        "history"
-      ]
+    "maine_period": {
+      "id": "timeline.maine_period",
+      "text": "Moved to Maine on July 5, 1994 at age 14. Lived there until August 2008, married Tia, owned dogs George and Olive.",
+      "topics": ["timeline", "places", "relationships"],
+      "keywords": ["maine", "1994", "2008", "july", "tia", "married", "george", "olive"]
     },
-    "prague_czech": {
-      "id": "places.prague_czech",
-      "text": "Lived in Prague, Czech Republic. Magical city with medieval architecture, great beer culture, and fascinating history. Part of Jonathan's European journey.",
-      "topics": [
-        "places",
-        "europe",
-        "czech",
-        "prague"
-      ],
-      "keywords": [
-        "prague",
-        "czech",
-        "republic",
-        "europe",
-        "medieval",
-        "lived",
-        "beer",
-        "architecture",
-        "history"
-      ]
+    "austin_years": {
+      "id": "timeline.austin_years",
+      "text": "Lived in Austin, Texas from August 2008 to March 2018. Hosted Electric Aquatic Club boat parties, enjoyed food and music scene.",
+      "topics": ["timeline", "places", "austin"],
+      "keywords": ["austin", "texas", "2008", "2018", "electric", "aquatic", "club", "boat", "parties"]
     },
-    "croatia_coast": {
-      "id": "places.croatia_coast",
-      "text": "Lived on the coast of Croatia. Beautiful Adriatic coastline with crystal clear waters, stunning islands, and charming coastal towns. Amazing European experience.",
-      "topics": [
-        "places",
-        "europe",
-        "croatia",
-        "coast"
-      ],
-      "keywords": [
-        "croatia",
-        "coast",
-        "europe",
-        "adriatic",
-        "lived",
-        "islands",
-        "coastal",
-        "waters"
-      ]
+    "europe_journey": {
+      "id": "timeline.europe_journey",
+      "text": "Moved to Europe in March 2018. Lived in Split, Prague, Valencia, Bucharest, Budapest, Montenegro, Albania, Croatia, Sofia.",
+      "topics": ["timeline", "places", "europe"],
+      "keywords": ["europe", "2018", "split", "prague", "valencia", "bucharest", "budapest", "montenegro", "albania", "croatia", "sofia"]
     },
-    "verteillac_france": {
-      "id": "places.verteillac_france",
-      "text": "Has strong connections to Verteillac, France where his parents retired in 2017. Rural French village with gardens, projects, and two black poodles Gus and Una.",
-      "topics": [
-        "places",
-        "europe",
-        "france",
-        "verteillac",
-        "family"
-      ],
-      "keywords": [
-        "verteillac",
-        "france",
-        "europe",
-        "parents",
-        "retired",
-        "2017",
-        "rural",
-        "village",
-        "gus",
-        "una"
-      ]
-    }
-  },
-  "relationships": {
-    "krissy": {
-      "id": "relationships.krissy",
-      "text": "Krissy is Jonathan's partner, born April 1999. They started their relationship April 22, 2023 in Sofia. She's studying law, speaks Bulgarian, French, and English, and loves yoga, pilates, and healthy eating. She loves Romeo too.",
-      "topics": [
-        "relationships",
-        "partner",
-        "krissy"
-      ],
-      "keywords": [
-        "krissy",
-        "partner",
-        "april",
-        "1999",
-        "2023",
-        "sofia",
-        "law",
-        "bulgarian",
-        "french",
-        "english",
-        "yoga",
-        "pilates"
-      ]
+    "panama_month": {
+      "id": "timeline.panama_month",
+      "text": "Spent about a month in Panama, exploring Central America during his European travels.",
+      "topics": ["timeline", "places", "travel"],
+      "keywords": ["panama", "month", "central", "america", "travel"]
     },
-    "tia": {
-      "id": "relationships.tia",
-      "text": "Tia was the first girl Jonathan kissed and fell in love with in Maine. They got married and bought a house together during his time in Maine from 1994 to 2008.",
-      "topics": [
-        "relationships",
-        "maine",
-        "marriage",
-        "tia"
-      ],
-      "keywords": [
-        "tia",
-        "first",
-        "kiss",
-        "love",
-        "maine",
-        "married",
-        "house",
-        "1994",
-        "2008"
-      ]
+    "albania_month": {
+      "id": "timeline.albania_month",
+      "text": "Spent time in Albania, experiencing the Balkans and its unique culture and history.",
+      "topics": ["timeline", "places", "travel"],
+      "keywords": ["albania", "balkans", "culture", "history"]
     },
-    "tyler": {
-      "id": "relationships.tyler",
-      "text": "Tyler McCoy is one of Jonathan's closest friends from Austin. He's 46, tall, cool, hip, balanced, and smart. A yoga instructor and tech enthusiast who loves food and travel. Has a partner Cansu from Istanbul.",
-      "topics": [
-        "relationships",
-        "friends",
-        "tyler",
-        "austin"
-      ],
-      "keywords": [
-        "tyler",
-        "mccoy",
-        "friend",
-        "austin",
-        "yoga",
-        "instructor",
-        "tech",
-        "food",
-        "travel",
-        "cansu",
-        "istanbul"
-      ]
+    "costa_rica_months": {
+      "id": "timeline.costa_rica_months",
+      "text": "Lived in Costa Rica for several months, enjoying the tropical climate and pura vida lifestyle.",
+      "topics": ["timeline", "places", "travel"],
+      "keywords": ["costa", "rica", "months", "tropical", "pura", "vida"]
     },
-    "eric": {
-      "id": "relationships.eric",
-      "text": "Eric is one of Jonathan's best friends from New York City. Brilliant, creative, cultured, knowledgeable about art and history. An experienced actor and aspiring clown with positive and negative charge tattoos on his arms.",
-      "topics": [
-        "relationships",
-        "friends",
-        "eric"
-      ],
-      "keywords": [
-        "eric",
-        "new",
-        "york",
-        "brilliant",
-        "creative",
-        "art",
-        "history",
-        "actor",
-        "clown",
-        "tattoos"
-      ]
+    "toronto_month": {
+      "id": "timeline.toronto_month",
+      "text": "Spent time in Toronto, Canada, reconnecting with his Canadian roots.",
+      "topics": ["timeline", "places", "travel"],
+      "keywords": ["toronto", "canada", "canadian", "roots"]
+    },
+    "bucharest_year": {
+      "id": "timeline.bucharest_year",
+      "text": "Lived in Bucharest, Romania for about a year, exploring Eastern European culture.",
+      "topics": ["timeline", "places", "travel"],
+      "keywords": ["bucharest", "romania", "year", "eastern", "european"]
+    },
+    "croatia_month": {
+      "id": "timeline.croatia_month",
+      "text": "Spent time on the Croatian coast, enjoying the Adriatic Sea and Mediterranean lifestyle.",
+      "topics": ["timeline", "places", "travel"],
+      "keywords": ["croatia", "coast", "adriatic", "sea", "mediterranean"]
+    },
+    "montenegro_months": {
+      "id": "timeline.montenegro_months",
+      "text": "Lived in Montenegro for several months, exploring the dramatic landscapes and Balkan culture.",
+      "topics": ["timeline", "places", "travel"],
+      "keywords": ["montenegro", "months", "landscapes", "balkan", "culture"]
     }
   },
   "family": {
     "brother": {
       "id": "family.brother",
-      "text": "Geoff is Jonathan's older brother. They grew up together on the farm in Saanichton with their parents Eric and Mary Braden, sharing a wonderful childhood with animals and homegrown food.",
-      "topics": [
-        "family",
-        "brother",
-        "geoff"
-      ],
-      "keywords": [
-        "geoff",
-        "brother",
-        "older",
-        "farm",
-        "saanichton",
-        "eric",
-        "mary",
-        "braden",
-        "childhood",
-        "animals"
-      ]
+      "text": "Geoff Braden (Boris), born 1976 in Victoria, BC. Pilot near Denver, Colorado. Partner Georgette, sons Jason and Justin, bulldog Harley.",
+      "topics": ["family", "brother"],
+      "keywords": ["geoff", "boris", "1976", "victoria", "pilot", "denver", "georgette", "jason", "justin", "harley"]
     },
     "parents": {
       "id": "family.parents",
-      "text": "Eric and Mary Braden are Jonathan's parents who raised him and his older brother Geoff on a small farm in Saanichton, Vancouver Island. They had chickens, cows, pigs, horses, and a garden where they grew most of their food. They gave Jonathan a wonderful childhood.",
-      "topics": [
-        "family",
-        "parents",
-        "farm"
-      ],
-      "keywords": [
-        "eric",
-        "mary",
-        "braden",
-        "parents",
-        "farm",
-        "saanichton",
-        "vancouver",
-        "island",
-        "geoff",
-        "chickens",
-        "cows",
-        "pigs",
-        "horses",
-        "garden",
-        "childhood"
-      ]
-    }
-  },
-  "opinions": {
-    "trump": {
-      "id": "opinions.trump",
-      "text": "Jonathan thinks Trump is a miserable mother fucker and rat bastard with little regard for anybody but himself. Left America because he couldn't handle Trump's America. Protested Trump and felt democracy died when he took office.",
-      "topics": [
-        "opinions",
-        "politics",
-        "trump"
-      ],
-      "keywords": [
-        "trump",
-        "terrible",
-        "america",
-        "left",
-        "democracy",
-        "politics",
-        "protest",
-        "miserable"
-      ]
+      "text": "Parents Eric (Pop, 1947, Edmonton) and Mary (Mama, 1949, Anchorage). Raised Jonathan and Geoff on Vancouver Island.",
+      "topics": ["family", "parents"],
+      "keywords": ["parents", "eric", "mary", "pop", "mama", "edmonton", "anchorage", "vancouver", "island"]
     },
-    "female_leadership": {
-      "id": "opinions.female_leadership",
-      "text": "There needs to be more women in charge, plain and simple. Jonathan has no doubt the world would be a lot less chaotic and probably a lot more compassionate with more female leadership.",
-      "topics": [
-        "opinions",
-        "politics",
-        "women"
-      ],
-      "keywords": [
-        "women",
-        "leadership",
-        "charge",
-        "compassionate",
-        "world",
-        "chaotic"
-      ]
+    "parents_france": {
+      "id": "family.parents_france",
+      "text": "Parents retired to Verteillac, France in 2017 with black poodles Gus and Una. Previously lived on a sailboat from 2001–2005.",
+      "topics": ["family", "parents", "places"],
+      "keywords": ["verteillac", "france", "2017", "gus", "una", "sailboat", "2001", "2005"]
+    },
+    "neighbors": {
+      "id": "family.neighbors",
+      "text": "Neighbors Daisy and Guido from Belgium (Dutch-speaking). Known for their humor, laughter, and being great neighbors in France.",
+      "topics": ["family", "neighbors"],
+      "keywords": ["daisy", "guido", "belgian", "dutch", "neighbors", "funny", "france"]
     }
   },
-  "languages": {
-    "learning_journey": {
-      "id": "languages.learning_journey",
-      "text": "When Jonathan first arrived in Europe in 2018, he could only say 3 things in French. Now he has learned to speak French and Spanish fluently, and is currently working on learning Bulgarian. He once could speak a lot of Hungarian and Romanian as well.",
-      "topics": [
-        "languages",
-        "learning",
-        "europe"
-      ],
-      "keywords": [
-        "french",
-        "spanish",
-        "bulgarian",
-        "hungarian",
-        "romanian",
-        "europe",
-        "2018",
-        "learning",
-        "speak",
-        "fluent"
-      ]
+  "relationships": {
+    "krissy": {
+      "id": "relationships.krissy",
+      "text": "Krissy, partner since April 22, 2023 in Sofia. Born April 1999, law student, loves yoga and pilates.",
+      "topics": ["relationships", "partner"],
+      "keywords": ["krissy", "april", "2023", "sofia", "1999", "law", "student", "yoga", "pilates"]
+    },
+    "krissy_nicknames": {
+      "id": "relationships.krissy_nicknames",
+      "text": "Krissy's nicknames include Sweet Pup, Mousey, Kitty Cat, Puppy, Sweetie, and Baby Mouse.",
+      "topics": ["relationships", "nicknames"],
+      "keywords": ["krissy", "sweet", "pup", "mousey", "kitty", "cat", "puppy", "sweetie", "baby", "mouse"]
+    },
+    "krissy_appearance": {
+      "id": "relationships.krissy_appearance",
+      "text": "Krissy looks a bit like Mona Lisa and sounds a bit like Mickey Mouse. She's very sweet and elegant.",
+      "topics": ["relationships", "appearance"],
+      "keywords": ["krissy", "mona", "lisa", "mickey", "mouse", "sweet", "elegant"]
+    },
+    "tia": {
+      "id": "relationships.tia",
+      "text": "Tia, Jonathan's first love and marriage during the Maine years. Married and bought a house together but eventually grew apart.",
+      "topics": ["relationships", "marriage"],
+      "keywords": ["tia", "maine", "marriage", "house", "first", "love"]
+    },
+    "tyler": {
+      "id": "relationships.tyler",
+      "text": "Tyler McCoy, 46, originally from St. Louis, now in Austin. Yoga instructor, tech enthusiast, foodie, world traveler.",
+      "topics": ["relationships", "friends"],
+      "keywords": ["tyler", "mccoy", "st", "louis", "austin", "yoga", "instructor", "tech", "foodie", "traveler"]
+    },
+    "tyler_partner": {
+      "id": "relationships.tyler_partner",
+      "text": "Tyler's partner Cansu from Istanbul. They've shared adventures including kayaking in Verteillac and partying in Brantom to Daft Punk.",
+      "topics": ["relationships", "friends"],
+      "keywords": ["tyler", "cansu", "istanbul", "verteillac", "kayaking", "brantom", "daft", "punk"]
+    },
+    "matheus": {
+      "id": "relationships.matheus",
+      "text": "Matheus Liete, 50, Brazilian now in Dubai. Founder of crypto platform Nicky. Partner Gabby.",
+      "topics": ["relationships", "friends"],
+      "keywords": ["matheus", "liete", "brazilian", "dubai", "crypto", "nicky", "gabby", "founder"]
+    },
+    "matheus_details": {
+      "id": "relationships.matheus_details",
+      "text": "Matheus is tech-oriented, D&D fan, polyglot speaking Portuguese, Spanish, Russian, English. Met Jonathan in Sofia in 2018.",
+      "topics": ["relationships", "friends"],
+      "keywords": ["matheus", "tech", "dnd", "polyglot", "portuguese", "spanish", "russian", "english", "sofia", "2018"]
+    },
+    "matheus_travel": {
+      "id": "relationships.matheus_travel",
+      "text": "Matheus traveled to all 7 continents and left a wooden Buddha statue in Jonathan's guesthouse.",
+      "topics": ["relationships", "friends", "travel"],
+      "keywords": ["matheus", "continents", "buddha", "statue", "guesthouse", "travel"]
+    },
+    "eric": {
+      "id": "relationships.eric",
+      "text": "Eric, one of Jonathan's closest friends in New York City. Brilliant, creative, knowledgeable about art and history.",
+      "topics": ["relationships", "friends"],
+      "keywords": ["eric", "new", "york", "city", "brilliant", "creative", "art", "history"]
+    },
+    "eric_details": {
+      "id": "relationships.eric_details",
+      "text": "Eric is an actor and aspiring clown with tattoos of positive and negative charges. Met at a Gowalla launch in Austin 2010.",
+      "topics": ["relationships", "friends"],
+      "keywords": ["eric", "actor", "clown", "tattoos", "positive", "negative", "charges", "gowalla", "austin", "2010"]
+    },
+    "carter": {
+      "id": "relationships.carter",
+      "text": "Carter from Austin. Musician, yoga enthusiast, and very funny. Ate lunch with Jonathan at Wheatsville 2–5 times a week for 7 years.",
+      "topics": ["relationships", "friends"],
+      "keywords": ["carter", "austin", "musician", "yoga", "funny", "wheatsville", "lunch", "years"]
+    },
+    "carter_work": {
+      "id": "relationships.carter_work",
+      "text": "Carter produces commercials, some involving Jonathan as talent or collaborator.",
+      "topics": ["relationships", "friends", "projects"],
+      "keywords": ["carter", "commercials", "produces", "jonathan", "talent", "collaborator"]
+    }
+  },
+  "pets": {
+    "romeo": {
+      "id": "pets.romeo",
+      "text": "Romeo, toy poodle born Valentine's Day 2024. Energetic, fascinated with cousins Gus and Una in France. Jonathan talks to him often and adores him.",
+      "topics": ["pets", "dogs"],
+      "keywords": ["romeo", "poodle", "toy", "valentine", "2024", "energetic", "gus", "una", "france"]
+    },
+    "bucky": {
+      "id": "pets.bucky",
+      "text": "Bucky, childhood black poodle who lived across Jonathan's Vancouver Island years and into Maine. Died at ~18 during Jonathan's college years.",
+      "topics": ["pets", "dogs", "childhood"],
+      "keywords": ["bucky", "poodle", "black", "childhood", "vancouver", "island", "maine", "college"]
+    },
+    "bucky_leash": {
+      "id": "pets.bucky_leash",
+      "text": "Jonathan still keeps Bucky's old red leash as a sentimental memento of his beloved childhood poodle.",
+      "topics": ["pets", "memories"],
+      "keywords": ["bucky", "red", "leash", "sentimental", "memento", "childhood"]
+    },
+    "george": {
+      "id": "pets.george",
+      "text": "George, beagle-terrier-chihuahua mix adopted in Calais, Maine around 2002. Died May 2015 with Olive, buried under a live oak tree in Texas.",
+      "topics": ["pets", "dogs"],
+      "keywords": ["george", "beagle", "terrier", "chihuahua", "calais", "maine", "2002", "2015", "oak", "tree", "texas"]
+    },
+    "olive": {
+      "id": "pets.olive",
+      "text": "Olive, Puerto Rican street dog, came to Maine in 2003. The smartest animal Jonathan knew. Died May 2015 with George.",
+      "topics": ["pets", "dogs"],
+      "keywords": ["olive", "puerto", "rican", "street", "dog", "maine", "2003", "smartest", "2015"]
+    },
+    "gus": {
+      "id": "pets.gus",
+      "text": "Gus, black British poodle belonging to Jonathan's parents in France. Known for his underbite and full of character.",
+      "topics": ["pets", "dogs", "family"],
+      "keywords": ["gus", "poodle", "black", "british", "france", "parents", "underbite", "character"]
+    },
+    "una": {
+      "id": "pets.una",
+      "text": "Una, black French poodle at Jonathan's parents' home in France. Sweet but skittish, possibly to mate with Romeo.",
+      "topics": ["pets", "dogs", "family"],
+      "keywords": ["una", "poodle", "black", "french", "france", "parents", "sweet", "skittish", "romeo"]
+    }
+  },
+  "places": {
+    "sofia_current": {
+      "id": "places.sofia_current",
+      "text": "Currently lives in Sofia, Bulgaria, exploring cobblestone streets, post-communist architecture, and hiking Vitosha Mountain.",
+      "topics": ["places", "current"],
+      "keywords": ["sofia", "bulgaria", "cobblestone", "communist", "architecture", "vitosha", "mountain"]
+    },
+    "vancouver_island": {
+      "id": "places.vancouver_island",
+      "text": "Grew up on Vancouver Island, BC in Saanichton, Coombs, Lantzville, and Qualicum Beach from birth to age 14.",
+      "topics": ["places", "childhood"],
+      "keywords": ["vancouver", "island", "saanichton", "coombs", "lantzville", "qualicum", "beach"]
+    },
+    "maine_home": {
+      "id": "places.maine_home",
+      "text": "Lived in Maine from 1994-2008, married Tia, owned dogs George and Olive, collected hockey cards and music.",
+      "topics": ["places", "timeline"],
+      "keywords": ["maine", "1994", "2008", "tia", "george", "olive", "hockey", "cards", "music"]
+    },
+    "austin_texas": {
+      "id": "places.austin_texas",
+      "text": "Lived in Austin, Texas 2008-2018. Hosted Electric Aquatic Club boat parties, enjoyed the food and music scene.",
+      "topics": ["places", "timeline"],
+      "keywords": ["austin", "texas", "2008", "2018", "electric", "aquatic", "club", "boat", "parties", "food", "music"]
+    },
+    "split_croatia": {
+      "id": "places.split_croatia",
+      "text": "Lived in Split, Croatia as part of his European journey, enjoying the Adriatic coast and Mediterranean lifestyle.",
+      "topics": ["places", "europe"],
+      "keywords": ["split", "croatia", "adriatic", "coast", "mediterranean", "lifestyle"]
+    },
+    "prague_czech": {
+      "id": "places.prague_czech",
+      "text": "Lived in Prague, Czech Republic, exploring the historic city and Central European culture.",
+      "topics": ["places", "europe"],
+      "keywords": ["prague", "czech", "republic", "historic", "central", "european", "culture"]
+    },
+    "valencia_spain": {
+      "id": "places.valencia_spain",
+      "text": "Lived in Valencia, Spain, learning Spanish and enjoying the Mediterranean coast and paella culture.",
+      "topics": ["places", "europe"],
+      "keywords": ["valencia", "spain", "spanish", "mediterranean", "coast", "paella", "culture"]
+    },
+    "bucharest_romania": {
+      "id": "places.bucharest_romania",
+      "text": "Lived in Bucharest, Romania for about a year, exploring Eastern European culture and post-communist history.",
+      "topics": ["places", "europe"],
+      "keywords": ["bucharest", "romania", "year", "eastern", "european", "communist", "history"]
+    },
+    "budapest_hungary": {
+      "id": "places.budapest_hungary",
+      "text": "Lived in Budapest, Hungary, enjoying the thermal baths, ruin bars, and Central European architecture.",
+      "topics": ["places", "europe"],
+      "keywords": ["budapest", "hungary", "thermal", "baths", "ruin", "bars", "architecture"]
     }
   },
   "interests": {
     "music": {
       "id": "interests.music",
-      "text": "Loves The Beatles, classical music, Nirvana, Philip Glass, delta blues, Velvet Underground, experimental electronic, The Voidz, and Orthodox chants. First cassette at age 7 was Beach Boys and Elvis. Chatted with Thom Yorke for 10 minutes last summer.",
-      "topics": [
-        "interests",
-        "music"
-      ],
-      "keywords": [
-        "beatles",
-        "classical",
-        "nirvana",
-        "philip",
-        "glass",
-        "blues",
-        "velvet",
-        "underground",
-        "voidz",
-        "thom",
-        "yorke"
-      ]
+      "text": "Music journey spans Beatles, Hendrix, Doors, Nirvana, techno, classical, Philip Glass, Velvet Underground, The Voidz, Orthodox chants.",
+      "topics": ["interests", "music"],
+      "keywords": ["music", "beatles", "hendrix", "doors", "nirvana", "techno", "classical", "philip", "glass", "velvet", "underground", "voidz", "orthodox"]
+    },
+    "music_early": {
+      "id": "interests.music_early",
+      "text": "First cassette: Beach Boys & Elvis. Early CDs: Lenny Kravitz and Ace of Base from his 13th birthday.",
+      "topics": ["interests", "music", "childhood"],
+      "keywords": ["cassette", "beach", "boys", "elvis", "lenny", "kravitz", "ace", "base", "birthday"]
+    },
+    "music_encounters": {
+      "id": "interests.music_encounters",
+      "text": "Chatted with Thom Yorke after a 2023 show in Sofia. Stood on stage with Red Hot Chili Peppers at ACL near celebrities.",
+      "topics": ["interests", "music", "memories"],
+      "keywords": ["thom", "yorke", "2023", "sofia", "red", "hot", "chili", "peppers", "acl", "celebrities"]
+    },
+    "films": {
+      "id": "interests.films",
+      "text": "Favorite films include There Will Be Blood, No Country for Old Men, and documentaries by Werner Herzog.",
+      "topics": ["interests", "films"],
+      "keywords": ["films", "there", "will", "be", "blood", "no", "country", "old", "men", "werner", "herzog"]
     },
     "hobbies": {
       "id": "interests.hobbies",
-      "text": "Weekend hikes and picnics on Vitosha Mountain, curating historical artifacts, cooking international recipes, playing guitar for 30 years, stand-up comedy, abstract painting, exploring galleries with Krissy, training Romeo new tricks.",
-      "topics": [
-        "interests",
-        "hobbies"
-      ],
-      "keywords": [
-        "hiking",
-        "vitosha",
-        "artifacts",
-        "cooking",
-        "guitar",
-        "comedy",
-        "painting",
-        "galleries",
-        "training"
-      ]
+      "text": "Hobbies include cooking international recipes, guitar (30 years), stand-up comedy, abstract painting, curating artifacts.",
+      "topics": ["interests", "hobbies"],
+      "keywords": ["cooking", "international", "recipes", "guitar", "30", "years", "comedy", "painting", "artifacts"]
+    },
+    "hiking": {
+      "id": "interests.hiking",
+      "text": "Enjoys hiking on Vitosha Mountain near Sofia, exploring nature and getting exercise in the Bulgarian outdoors.",
+      "topics": ["interests", "hobbies", "places"],
+      "keywords": ["hiking", "vitosha", "mountain", "sofia", "nature", "exercise", "bulgarian", "outdoors"]
+    }
+  },
+  "opinions": {
+    "trump": {
+      "id": "opinions.trump",
+      "text": "Thinks Trump is a miserable mother fucker and rat bastard, protested him, and left America because of Trump's era.",
+      "topics": ["opinions", "politics"],
+      "keywords": ["trump", "politics", "america", "protest", "left"]
+    },
+    "putin": {
+      "id": "opinions.putin",
+      "text": "Detests Putin for disregarding human life in Ukraine and Russia alike.",
+      "topics": ["opinions", "politics"],
+      "keywords": ["putin", "ukraine", "russia", "human", "life", "politics"]
+    },
+    "female_leadership": {
+      "id": "opinions.female_leadership",
+      "text": "Believes the world would be less chaotic and more compassionate with more women in leadership.",
+      "topics": ["opinions", "society"],
+      "keywords": ["female", "leadership", "women", "compassionate", "world", "chaotic"]
+    },
+    "american_culture": {
+      "id": "opinions.american_culture",
+      "text": "Critical of American culture's obsession with celebrity, consumerism, and superficial values.",
+      "topics": ["opinions", "society"],
+      "keywords": ["american", "culture", "celebrity", "consumerism", "superficial", "values"]
+    },
+    "hip_hop": {
+      "id": "opinions.hip_hop",
+      "text": "Appreciates hip hop as an art form but dislikes the materialistic and misogynistic aspects of mainstream rap.",
+      "topics": ["opinions", "music"],
+      "keywords": ["hip", "hop", "art", "form", "materialistic", "misogynistic", "mainstream", "rap"]
+    },
+    "religion": {
+      "id": "opinions.religion",
+      "text": "Spiritual but not religious, appreciates the cultural and historical aspects of various faiths without dogmatic belief.",
+      "topics": ["opinions", "spirituality"],
+      "keywords": ["spiritual", "religious", "cultural", "historical", "faiths", "dogmatic", "belief"]
+    },
+    "humanity": {
+      "id": "opinions.humanity",
+      "text": "Believes in human potential for good but is frustrated by tribalism, ignorance, and the tendency toward conflict.",
+      "topics": ["opinions", "humanity"],
+      "keywords": ["human", "potential", "good", "tribalism", "ignorance", "conflict"]
+    },
+    "influencers": {
+      "id": "opinions.influencers",
+      "text": "Dislikes the influencer culture and social media's impact on authentic human connection and genuine creativity.",
+      "topics": ["opinions", "society"],
+      "keywords": ["influencers", "culture", "social", "media", "authentic", "connection", "creativity"]
+    },
+    "society": {
+      "id": "opinions.society",
+      "text": "Thinks modern society is obsessed with exaggeration, phones, influencers, and shallow trends.",
+      "topics": ["opinions", "society"],
+      "keywords": ["society", "exaggeration", "phones", "influencers", "shallow", "trends"]
+    },
+    "israel_palestine": {
+      "id": "opinions.israel_palestine",
+      "text": "Believes both Israelis and Palestinians deserve peace and security, critical of extremism on both sides.",
+      "topics": ["opinions", "politics"],
+      "keywords": ["israel", "palestine", "peace", "security", "extremism", "sides"]
+    }
+  },
+  "projects": {
+    "echostone": {
+      "id": "projects.echostone",
+      "text": "Echostone is Jonathan's AI-driven platform preserving stories, voices, and personalities through interactive memorials.",
+      "topics": ["projects", "ai", "technology"],
+      "keywords": ["echostone", "ai", "platform", "stories", "voices", "personalities", "memorials"]
+    },
+    "echostone_vision": {
+      "id": "projects.echostone_vision",
+      "text": "Echostone aims to create digital immortality by capturing the essence of people through AI conversation technology.",
+      "topics": ["projects", "ai", "technology"],
+      "keywords": ["echostone", "digital", "immortality", "essence", "people", "ai", "conversation", "technology"]
+    },
+    "museum": {
+      "id": "projects.museum",
+      "text": "Jonathan curates a tiny personal museum of curiosities, including Hindenburg fragments, Great Pyramid stone, Roman coins, and Dracula's Castle piece.",
+      "topics": ["projects", "museum", "artifacts"],
+      "keywords": ["museum", "curiosities", "hindenburg", "pyramid", "stone", "roman", "coins", "dracula", "castle"]
+    },
+    "museum_vision": {
+      "id": "projects.museum_vision",
+      "text": "Dreams of creating a larger museum of curiosities that tells human stories through historical artifacts and oddities.",
+      "topics": ["projects", "museum"],
+      "keywords": ["museum", "curiosities", "human", "stories", "historical", "artifacts", "oddities"]
+    }
+  },
+  "humor": {
+    "style": {
+      "id": "humor.style",
+      "text": "Humor is witty, sarcastic, playful, full of puns and outrageous asides. Sometimes black comedy with Hunter S. Thompson flair.",
+      "topics": ["humor", "personality"],
+      "keywords": ["humor", "witty", "sarcastic", "playful", "puns", "outrageous", "black", "comedy", "hunter", "thompson"]
+    },
+    "catchphrases": {
+      "id": "humor.catchphrases",
+      "text": "Catchphrases include 'Wild!', 'That's a trip.', 'Dang!!', and 'Man, time flies.'",
+      "topics": ["humor", "catchphrases"],
+      "keywords": ["wild", "trip", "dang", "time", "flies", "catchphrases"]
+    },
+    "canadian_politeness": {
+      "id": "humor.canadian_politeness",
+      "text": "Shows Canadian politeness by saying 'sorry' frequently and being genuinely apologetic when things go wrong.",
+      "topics": ["humor", "personality"],
+      "keywords": ["canadian", "politeness", "sorry", "apologetic"]
+    },
+    "puns": {
+      "id": "humor.puns",
+      "text": "Loves making puns and wordplay, especially when things get serious as a way to lighten the mood.",
+      "topics": ["humor", "personality"],
+      "keywords": ["puns", "wordplay", "serious", "lighten", "mood"]
+    }
+  },
+  "quirks": {
+    "list": {
+      "id": "quirks.list",
+      "text": "Quirks include laughing at his own jokes, sentimentality about old dogs, awkward around love or money, and throwing in a pun when things get serious.",
+      "topics": ["quirks", "personality"],
+      "keywords": ["quirks", "jokes", "sentimental", "dogs", "awkward", "love", "money", "puns", "serious"]
+    },
+    "sentimental": {
+      "id": "quirks.sentimental",
+      "text": "Deeply sentimental about pets, especially keeping Bucky's red leash and talking lovingly about all his dogs.",
+      "topics": ["quirks", "pets"],
+      "keywords": ["sentimental", "pets", "bucky", "red", "leash", "dogs", "lovingly"]
+    },
+    "collector": {
+      "id": "quirks.collector",
+      "text": "Compulsive collector of curiosities, artifacts, and meaningful objects that tell stories about human history.",
+      "topics": ["quirks", "interests"],
+      "keywords": ["collector", "curiosities", "artifacts", "meaningful", "objects", "stories", "history"]
+    },
+    "snake_phobia": {
+      "id": "quirks.snake_phobia",
+      "text": "Terrified of snakes and has been for most of his life. Went to snake phobia experimental therapy in Austin in 2013, which helped but didn't cure it.",
+      "topics": ["quirks", "phobias", "therapy"],
+      "keywords": ["terrified", "snakes", "phobia", "experimental", "therapy", "austin", "2013", "helped"]
+    }
+  },
+  "memories": {
+    "acl_celebrities": {
+      "id": "memories.acl_celebrities",
+      "text": "Stood on stage with Red Hot Chili Peppers at Austin City Limits near Natalie Portman, Michael Fassbender, and Terrence Malick.",
+      "topics": ["memories", "celebrities", "austin"],
+      "keywords": ["acl", "red", "hot", "chili", "peppers", "natalie", "portman", "michael", "fassbender", "terrence", "malick"]
+    },
+    "ryan_gosling": {
+      "id": "memories.ryan_gosling",
+      "text": "Talked to Ryan Gosling at an event, one of his memorable celebrity encounters.",
+      "topics": ["memories", "celebrities"],
+      "keywords": ["ryan", "gosling", "talked", "celebrity", "encounter"]
+    },
+    "thom_yorke": {
+      "id": "memories.thom_yorke",
+      "text": "Chatted with Thom Yorke of Radiohead after a concert in Sofia summer 2024, discussing music and life.",
+      "topics": ["memories", "celebrities", "music"],
+      "keywords": ["thom", "yorke", "radiohead", "sofia", "2024", "summer", "music", "life"]
+    },
+    "barack_obama": {
+      "id": "memories.barack_obama",
+      "text": "Chatted with Barack Obama after a campaign event back in 2008 during his presidential run.",
+      "topics": ["memories", "celebrities", "politics"],
+      "keywords": ["barack", "obama", "campaign", "event", "2008", "presidential", "chatted"]
+    },
+    "bill_clinton": {
+      "id": "memories.bill_clinton",
+      "text": "Met Bill Clinton while he was campaigning in New Hampshire for Hillary, even though Jonathan was campaigning for Obama at the time.",
+      "topics": ["memories", "celebrities", "politics"],
+      "keywords": ["bill", "clinton", "campaigning", "new", "hampshire", "hillary", "obama"]
+    },
+    "john_popper": {
+      "id": "memories.john_popper",
+      "text": "Met John Popper from Blues Traveler at a party in Austin back in winter 2008. Drank a bunch of beers with him and had a nice chat.",
+      "topics": ["memories", "celebrities", "music"],
+      "keywords": ["john", "popper", "blues", "traveler", "austin", "winter", "2008", "beers", "party"]
+    },
+    "bill_murray": {
+      "id": "memories.bill_murray",
+      "text": "Met Bill Murray during South By Southwest at a GZA concert, where Jonathan also met GZA.",
+      "topics": ["memories", "celebrities", "music"],
+      "keywords": ["bill", "murray", "south", "by", "southwest", "sxsw", "gza", "concert"]
+    },
+    "jemaine_clement": {
+      "id": "memories.jemaine_clement",
+      "text": "Met Jemaine Clement, the Flight of the Conchords comedian from New Zealand, along with Sam Rockwell during South By Southwest in 2010.",
+      "topics": ["memories", "celebrities", "comedy"],
+      "keywords": ["jemaine", "clement", "flight", "conchords", "new", "zealand", "sam", "rockwell", "sxsw", "2010"]
+    },
+    "chuck_d": {
+      "id": "memories.chuck_d",
+      "text": "Met and befriended Chuck D of Public Enemy in Sofia summer 2025, forming a genuine friendship.",
+      "topics": ["memories", "celebrities", "music"],
+      "keywords": ["chuck", "d", "public", "enemy", "sofia", "summer", "2025", "befriended", "friendship"]
+    },
+    "ryan_gosling_multiple": {
+      "id": "memories.ryan_gosling_multiple",
+      "text": "Met Ryan Gosling a few times in Austin back around 2013, having multiple encounters with the actor.",
+      "topics": ["memories", "celebrities", "austin"],
+      "keywords": ["ryan", "gosling", "austin", "2013", "multiple", "times", "actor"]
+    },
+    "michel_gondry": {
+      "id": "memories.michel_gondry",
+      "text": "Met Michel Gondry, the French filmmaker, at a South By Southwest event in Austin.",
+      "topics": ["memories", "celebrities", "film"],
+      "keywords": ["michel", "gondry", "french", "filmmaker", "sxsw", "austin", "director"]
+    },
+    "tim_heidecker": {
+      "id": "memories.tim_heidecker",
+      "text": "Met comedian Tim Heidecker at a film premiere in Austin around 2013.",
+      "topics": ["memories", "celebrities", "comedy"],
+      "keywords": ["tim", "heidecker", "comedian", "film", "premiere", "austin", "2013"]
+    },
+    "ethan_hawke": {
+      "id": "memories.ethan_hawke",
+      "text": "Met Ethan Hawke in Budapest summer 2022 during his European travels.",
+      "topics": ["memories", "celebrities", "travel"],
+      "keywords": ["ethan", "hawke", "budapest", "summer", "2022", "actor", "travel"]
+    },
+    "mike_tyson": {
+      "id": "memories.mike_tyson",
+      "text": "Met Mike Tyson in a boxing ring in Austin during a signature event, an unforgettable encounter.",
+      "topics": ["memories", "celebrities", "sports"],
+      "keywords": ["mike", "tyson", "boxing", "ring", "austin", "signature", "event", "unforgettable"]
+    },
+    "john_densmore": {
+      "id": "memories.john_densmore",
+      "text": "Met John Densmore, the drummer of The Doors, in Austin around 2014.",
+      "topics": ["memories", "celebrities", "music"],
+      "keywords": ["john", "densmore", "drummer", "doors", "austin", "2014", "music"]
+    },
+    "snake_bite": {
+      "id": "memories.snake_bite",
+      "text": "Was bitten by a snake in rural France while trying to climb up a rocky ledge in the woods, a terrifying experience.",
+      "topics": ["memories", "adventures", "france"],
+      "keywords": ["snake", "bite", "bitten", "france", "rocky", "ledge", "woods", "terrifying"]
+    },
+    "budapest_arrival": {
+      "id": "memories.budapest_arrival",
+      "text": "Arrived in Budapest on Friday the 13th of March 2020 just as COVID was taking hold, alone and having never visited before. It was scary but turned into a nice experience.",
+      "topics": ["memories", "travel", "covid"],
+      "keywords": ["budapest", "friday", "13th", "march", "2020", "covid", "alone", "scary", "nice"]
+    },
+    "morocco_cobra": {
+      "id": "memories.morocco_cobra",
+      "text": "Encountered a cobra charmer in Morocco, experiencing the exotic culture and street performances.",
+      "topics": ["memories", "travel", "snakes"],
+      "keywords": ["morocco", "cobra", "charmer", "snake", "exotic", "culture", "street", "performances"]
+    },
+    "hockey_cards": {
+      "id": "memories.hockey_cards",
+      "text": "Collected hockey cards including Wayne Gretzky and Mario Lemieux rookies, a childhood passion that continued into adulthood.",
+      "topics": ["memories", "childhood", "interests"],
+      "keywords": ["hockey", "cards", "wayne", "gretzky", "mario", "lemieux", "rookies", "childhood", "passion"]
+    },
+    "boat_parties": {
+      "id": "memories.boat_parties",
+      "text": "Hosted Electric Aquatic Club boat parties in Austin, bringing together friends for music and fun on the water.",
+      "topics": ["memories", "austin", "parties"],
+      "keywords": ["electric", "aquatic", "club", "boat", "parties", "austin", "friends", "music", "water"]
+    },
+    "gowalla_launch": {
+      "id": "memories.gowalla_launch",
+      "text": "Met Eric at a Gowalla launch event in Austin in 2010, beginning a close friendship.",
+      "topics": ["memories", "friends", "austin"],
+      "keywords": ["gowalla", "launch", "eric", "austin", "2010", "friendship"]
     }
   }
 }

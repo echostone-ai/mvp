@@ -33,7 +33,7 @@ export const Boosts = {
 export const IntentPatterns = {
   // Order matters - more specific patterns first
   pets: /\b(dog|dogs|pet|pets|cat|cats|animal|animals|romeo|bucky|george|olive|poodle)\b/i,
-  people: /\b(tyler|friend|friends|family|mom|dad|mother|father|brother|sister|girlfriend|boyfriend|partner|spouse|wife|husband|where does|how is|tell me about [A-Z][a-z]+|austin|what did you do)\b/i,
+  people: /\b(tyler|friend|friends|family|mom|dad|mother|father|brother|sister|girlfriend|boyfriend|partner|spouse|wife|husband|where does|how is|tell me about [A-Z][a-z]+|austin|what did you do|geoff|krissy|tia|eric|it's your|i'm your|it's me|boris)\b/i,
   opinion: /\b(think|opinion|feel|believe|view|trump|biden|political|politics|america|emigration|immigration)\b/i,
   languages: /\b(language|languages|speak|speaking|fluent|bilingual|multilingual|spanish|english|french)\b/i,
   travel: /\b(travel|traveled|trip|trips|visit|visited|country|countries|place|places|lived|live|living|moved|move|how long.*in|time in|years in|duration|how long were you|when did you|what years|which years|from when|until when|how long|when did you)\b/i,

@@ -1,202 +1,148 @@
-# Task 6 Implementation Summary: Expression Preloading and Buffer Management
+# Task 6 Implementation Summary: Query Expansion and Low-Confidence Detection
 
 ## Overview
+Successfully implemented low-confidence detection and query expansion triggering for the hybrid retrieval system. This enables the system to automatically expand queries when initial results have low confidence, improving semantic understanding and retrieval accuracy.
 
-Task 6 has been successfully implemented, adding comprehensive expression buffer preloading and management capabilities to the StreamingAudioManager. This enhancement ensures expressions are ready for immediate playback while providing robust error handling and memory management.
+## Components Implemented
 
-## Key Components Implemented
+### 1. QueryExpander Class (`src/lib/services/queryExpander.ts`)
+- **LLM Integration**: Uses OpenAI GPT-4 for semantic query expansion
+- **Structured Output**: Generates canonical_query, alternates (≤10), and related_concepts (≤10)
+- **Timeout Handling**: 200ms timeout with graceful fallback to original results
+- **Persistent Caching**: File-based cache that survives server restarts
+- **Validation**: Cleans and validates LLM responses, removes duplicates
+- **Configuration**: Configurable model, timeouts, and cache settings
 
-### 1. ExpressionBufferManager (`src/lib/expressionBufferManager.ts`)
+### 2. Confidence Detection Logic
+- **Low Confidence Criteria**: 
+  - Top score < 0.35 (configurable via `RETRIEVAL_LOW_CONFIDENCE_THRESHOLD`)
+  - OR fewer than 2 results above 0.3 similarity threshold (configurable via `RETRIEVAL_MIN_RESULTS_THRESHOLD`)
+- **Overall Confidence Calculation**: Combines top score and result count metrics
+- **Logging**: Detailed confidence check logging for debugging
 
-**Purpose**: Centralized management of expression audio buffer preloading, validation, and memory management.
+### 3. Integration with HybridRetriever
+- **Seamless Integration**: Query expansion integrated into main retrieval flow
+- **Fallback Chain**: Graceful degradation when expansion fails
+- **Metrics Tracking**: Comprehensive metrics for expansion timing and success
+- **Configuration**: Environment variable support for all expansion parameters
 
-**Key Features**:
-- **Concurrent Loading**: Configurable batch loading with concurrency limits (default: 5 concurrent loads)
-- **Buffer Validation**: Format checking (duration, sample rate, channels) and audio quality validation
-- **Memory Management**: Automatic enforcement of buffer count and memory usage limits with LRU eviction
-- **Error Handling**: Graceful degradation when individual expressions fail to load
-- **Timeout Protection**: Configurable timeouts (default: 10s) to prevent hanging loads
-- **Statistics Tracking**: Comprehensive metrics on loading performance and memory usage
+### 4. Enhanced Configuration
+New environment variables added:
+- `RETRIEVAL_EXPANSION_TIMEOUT_MS` (default: 200ms)
+- `RETRIEVAL_LOW_CONFIDENCE_THRESHOLD` (default: 0.35)
+- `RETRIEVAL_MIN_RESULTS_THRESHOLD` (default: 2)
 
-**Configuration Options**:
+## Key Features
+
+### Confidence Detection
 ```typescript
-interface BufferManagerOptions {
-  maxBuffers?: number;           // Default: 50
-  maxMemoryBytes?: number;       // Default: 50MB
-  enableValidation?: boolean;    // Default: true
-  loadTimeoutMs?: number;        // Default: 10s
-  maxConcurrentLoads?: number;   // Default: 5
-}
+// Low confidence triggers expansion when:
+const lowTopScore = topScore < this.config.lowConfidenceThreshold;
+const fewResults = resultsAboveThreshold < this.config.minResultsThreshold;
+return lowTopScore || fewResults;
 ```
 
-### 2. Enhanced ExpressionPackService (`src/lib/services/expressionPackService.ts`)
+### Query Expansion Process
+1. **Detection**: System detects low-confidence results
+2. **LLM Call**: Sends query to GPT-4 with structured prompt
+3. **Validation**: Validates and cleans LLM response
+4. **Re-retrieval**: Re-runs BM25 and vector search with expanded terms
+5. **Fusion**: Combines original and expanded results, removes duplicates
 
-**Improvements**:
-- **Integration with BufferManager**: Uses the new ExpressionBufferManager for robust preloading
-- **Graceful Degradation**: Returns expression packs without buffers if preloading fails
-- **Enhanced Error Handling**: Comprehensive error recovery and fallback mechanisms
+### Caching Strategy
+- **Memory Cache**: In-memory LRU cache for active queries
+- **Persistent Storage**: File-based cache in `.cache/query-expansion/`
+- **Cache Validation**: 7-day TTL with access count tracking
+- **Cache Statistics**: Monitoring for hit rates and performance
 
-### 3. StreamingAudioManager Integration (`src/lib/streamingUtils.ts`)
+## Error Handling
 
-**Enhancements**:
-- **Buffer Manager Integration**: Initializes global buffer manager during system startup
-- **Buffer Validation**: Validates buffers before storing in expression pack
-- **Enhanced Error Handling**: Continues TTS playback even when expression buffers are unavailable
-- **Memory Cleanup**: Proper cleanup of expression buffers when stopping
+### Timeout Handling
+- 200ms timeout for LLM calls
+- Graceful fallback to original results
+- Warning logged but retrieval continues
 
-## Implementation Details
+### Failure Recovery
+- LLM API errors handled gracefully
+- Invalid JSON responses cleaned and validated
+- Empty expansions fall back to original query
+- All errors logged with context
 
-### Buffer Preloading Process
+## Testing
 
-1. **Batch Processing**: Expressions are loaded in configurable batches to control concurrency
-2. **Parallel Loading**: Within each batch, expressions load concurrently with timeout protection
-3. **Validation Pipeline**: Each loaded buffer goes through format and quality validation
-4. **Memory Enforcement**: Automatic cleanup when buffer count or memory limits are exceeded
-5. **Result Filtering**: Only successfully loaded and validated buffers are returned
+### Unit Tests (`src/lib/services/__tests__/queryExpander.test.ts`)
+- ✅ Successful query expansion with valid LLM responses
+- ✅ Timeout handling with graceful fallback
+- ✅ Invalid response handling and validation
+- ✅ Response cleaning and duplicate removal
+- ✅ Configuration limits (max alternates/concepts)
+- ✅ Cache key generation consistency
+- ✅ Error handling for missing API keys
 
-### Error Handling Strategy
-
-**Network Failures**:
-- Individual expression failures don't block other expressions
-- Timeout protection prevents hanging on slow networks
-- Graceful degradation continues operation without failed expressions
-
-**Validation Failures**:
-- Invalid audio formats are rejected but don't stop the process
-- Quality validation failures are logged but allow graceful degradation
-- Buffer format constraints prevent problematic audio from being stored
-
-**Memory Constraints**:
-- LRU eviction removes oldest buffers when limits are exceeded
-- Memory usage is continuously monitored and enforced
-- Buffer count limits prevent excessive memory usage
-
-### Memory Management
-
-**Automatic Limits**:
-- **Buffer Count**: Maximum 50 buffers by default
-- **Memory Usage**: Maximum 50MB by default
-- **LRU Eviction**: Oldest buffers removed first when limits exceeded
-
-**Memory Tracking**:
-- Real-time calculation of buffer memory usage
-- Statistics on total buffers, loaded buffers, and memory consumption
-- Metrics integration for monitoring and alerting
-
-## Integration Points
-
-### 1. StreamingAudioManager Initialization
-
-```typescript
-// Enhanced initialization with buffer management
-private async initializeExpressionSystem(): Promise<void> {
-  // Initialize buffer manager
-  this.bufferManager = await getGlobalBufferManager({
-    maxBuffers: 50,
-    maxMemoryBytes: 50 * 1024 * 1024,
-    enableValidation: true
-  });
-  
-  // Initialize expression mixer
-  this.expressionMixer = await createExpressionMixer({...});
-}
-```
-
-### 2. Expression Pack Loading
-
-```typescript
-// Enhanced preloading with validation and error handling
-const buffers = await bufferManager.preloadExpressions(allExpressions);
-```
-
-### 3. Buffer Validation
-
-```typescript
-// Validation before storing in StreamingAudioManager
-const validatedBuffers = new Map<string, AudioBuffer>();
-for (const [id, buffer] of buffers) {
-  if (this.validateBuffer(buffer)) {
-    validatedBuffers.set(id, buffer);
-  }
-}
-```
-
-## Testing Coverage
-
-### Unit Tests (`src/lib/__tests__/expressionBufferManager.test.ts`)
-
-**Test Categories**:
-- **Initialization**: Successful and failed initialization scenarios
-- **Preloading**: Successful loading, fetch failures, decoding failures, timeout handling
-- **Buffer Management**: Buffer retrieval, cleanup, memory limit enforcement
-- **Statistics**: Accurate tracking of loading performance and memory usage
-- **Error Handling**: Network errors, invalid formats, oversized files
-
-### Integration Tests (`src/lib/__tests__/task6-verification.test.ts`)
-
-**Test Categories**:
-- **Buffer Manager Integration**: StreamingAudioManager integration
-- **Error Handling**: Graceful degradation scenarios
-- **Memory Management**: Buffer cleanup and limit enforcement
-- **Performance**: Concurrent loading and statistics tracking
-- **Validation**: Buffer format and quality validation
+### Integration Tests (`src/lib/services/__tests__/hybridRetrieval.expansion.test.ts`)
+- ✅ Confidence detection triggering expansion
+- ✅ Query expansion integration with hybrid retrieval
+- ✅ Result combination and deduplication
+- ✅ Health status reporting for expansion component
+- ✅ Configuration updates and runtime changes
+- ✅ Caching behavior verification
 
 ## Performance Characteristics
 
-### Loading Performance
-- **Concurrent Loading**: 5 expressions load simultaneously by default
-- **Batch Processing**: Large expression sets processed in manageable batches
-- **Timeout Protection**: 10-second timeout prevents hanging operations
-- **Memory Efficiency**: Automatic cleanup prevents memory leaks
+### Latency Impact
+- **Expansion Timeout**: 200ms maximum (configurable)
+- **Cache Hits**: Near-zero latency for repeated queries
+- **Fallback Speed**: Immediate fallback on timeout/failure
 
 ### Memory Usage
-- **Buffer Tracking**: Real-time memory usage calculation
-- **Automatic Limits**: 50MB default limit with configurable options
-- **LRU Eviction**: Intelligent removal of least recently used buffers
-- **Statistics**: Comprehensive metrics for monitoring
+- **Cache Size**: Limited to 1000 entries with LRU eviction
+- **Embedding Storage**: Reuses existing embedding cache
+- **Memory Footprint**: Minimal additional memory usage
 
-## Requirements Fulfilled
-
-### Requirement 3.6: Expression Buffer Preloading
-✅ **Implemented**: ExpressionBufferManager provides comprehensive preloading with validation and error handling
-
-### Requirement 6.2: Buffer Memory Management
-✅ **Implemented**: Automatic memory limits, LRU eviction, and cleanup mechanisms
-
-**Key Achievements**:
-- **Preloading Infrastructure**: Expressions are preloaded during StreamingAudioManager initialization
-- **Error Resilience**: Failed expression loads don't block TTS playback
-- **Memory Safety**: Automatic enforcement of memory limits prevents excessive usage
-- **Format Validation**: Comprehensive validation ensures only valid audio buffers are stored
-- **Performance Monitoring**: Detailed statistics for system health monitoring
-
-## Usage Example
+## Example Usage
 
 ```typescript
-// Initialize buffer manager
-const bufferManager = await getGlobalBufferManager({
-  maxBuffers: 50,
-  maxMemoryBytes: 50 * 1024 * 1024,
-  enableValidation: true
-});
+// Environment configuration
+process.env.RETRIEVAL_EXPANSION = 'auto';
+process.env.RETRIEVAL_LOW_CONFIDENCE_THRESHOLD = '0.35';
+process.env.RETRIEVAL_MIN_RESULTS_THRESHOLD = '2';
 
-// Preload expressions with error handling
-const expressions = await ExpressionStorageService.getExpressionsByOwner('avatar-id', 'avatar');
-const buffers = await bufferManager.preloadExpressions(expressions);
+// Query that triggers expansion
+const result = await hybridRetriever.retrieve('snake story');
 
-// Create StreamingAudioManager with preloaded expressions
-const streamingManager = createStreamingAudioManager('voice-id', settings, undefined, {
-  expressionPack: {
-    expressions: expressions,
-    buffers: buffers
-  }
-});
-
-// Expressions are now ready for immediate playback during conversations
+// Results include expanded terms
+console.log(result.metrics.expansionTriggered); // true
+console.log(result.metrics.methodsUsed); // ['bm25', 'vector', 'fusion', 'expansion']
 ```
+
+## Requirements Satisfied
+
+✅ **8.1**: Structured JSON output with canonical_query, alternates, and related_concepts  
+✅ **8.6**: Low confidence detection (top score < 0.35 OR < 2 results above 0.3)  
+✅ **8.7**: Noun-heavy, lowercase, focused expansion terms  
+✅ **9.1**: 200ms timeout with graceful fallback  
+✅ **9.2**: Persistent file-based caching by query hash  
+
+## Monitoring and Observability
+
+### Metrics Collected
+- Expansion trigger rate and reasons
+- LLM call timing and success rates
+- Cache hit rates and efficiency
+- Fallback usage patterns
+
+### Logging
+- Confidence check decisions with scores
+- Expansion results with term counts
+- Cache operations and performance
+- Error contexts and fallback reasons
 
 ## Next Steps
 
-Task 6 is now complete and ready for integration with Task 5 (Expression Overlays). The buffer management system provides a solid foundation for reliable expression playback with proper error handling and memory management.
+The query expansion system is now ready for:
+1. **Production Deployment**: With proper OpenAI API key configuration
+2. **A/B Testing**: Compare expansion vs. non-expansion performance
+3. **Monitoring**: Track expansion effectiveness and performance impact
+4. **Optimization**: Fine-tune confidence thresholds based on real usage
 
-The implementation ensures that expression audio is preloaded and validated before use, preventing delays during conversation and providing graceful degradation when individual expressions fail to load.
+The implementation provides a solid foundation for intelligent query expansion that enhances retrieval accuracy while maintaining system reliability and performance.
