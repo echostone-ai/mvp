@@ -56,6 +56,7 @@ function PersonalProfileEngineIcon() {
   )
 }
 
+
 function InteractiveStoryCollectorIcon() {
   return (
     <svg
