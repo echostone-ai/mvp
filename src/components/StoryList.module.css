@@ -1,0 +1,343 @@
+.storyListContainer {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: transparent;
+  color: white;
+}
+
+.storyHeader {
+  margin-bottom: 2rem;
+}
+
+.storyTitleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.storyTitle {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 0.5rem;
+}
+
+.storySubtitle {
+  font-size: 1rem;
+  color: #e2e2f6;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.refreshButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(147, 71, 255, 0.8);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  min-height: 36px;
+}
+
+.refreshButton:hover:not(:disabled) {
+  background: rgba(147, 71, 255, 1);
+  transform: translateY(-1px);
+}
+
+.refreshButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.refreshButton:disabled:hover {
+  transform: none;
+}
+
+.storyError {
+  background: rgba(220, 53, 69, 0.2);
+  color: #ff6b7a;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(220, 53, 69, 0.3);
+}
+
+.storyLoading {
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.loadingSpinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.storyEmpty {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #e2e2f6;
+}
+
+.storyEmptyIcon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.storyEmpty h3 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: white;
+}
+
+.storyList {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.storyCard {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+}
+
+.storyCard:hover {
+  box-shadow: 0 4px 20px rgba(147, 71, 255, 0.3);
+  transform: translateY(-2px);
+  border-color: rgba(147, 71, 255, 0.4);
+}
+
+.storyCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.storyInfo {
+  flex: 1;
+}
+
+.storyCategory {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #9147ff;
+  margin-bottom: 0.5rem;
+}
+
+.storyTitle {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 0.5rem;
+  line-height: 1.3;
+}
+
+.storyMeta {
+  font-size: 0.85rem;
+  color: #e2e2f6;
+  opacity: 0.8;
+}
+
+.storyStatus {
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.storyActions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.storyBtn {
+  padding: 0.5rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.storyBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.storyBtnSecondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.storyBtnSecondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.storyBtnPlaying {
+  background: rgba(147, 71, 255, 0.8) !important;
+  border-color: rgba(147, 71, 255, 1) !important;
+}
+
+.storyBtnDanger {
+  background: rgba(220, 53, 69, 0.8);
+  color: white;
+  border: 1px solid rgba(220, 53, 69, 1);
+}
+
+.storyBtnDanger:hover:not(:disabled) {
+  background: rgba(220, 53, 69, 1);
+  transform: translateY(-1px);
+}
+
+.storyDetails {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.storyDetails:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.storyTriggers {
+  margin-bottom: 1rem;
+}
+
+.storyTriggers strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: white;
+  font-size: 0.9rem;
+}
+
+.triggerTag {
+  display: inline-block;
+  background: rgba(147, 71, 255, 0.3);
+  color: #c9a9ff;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin: 0.25rem 0.25rem 0.25rem 0;
+}
+
+.storyTranscript {
+  margin-bottom: 1rem;
+}
+
+.storyTranscript strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: white;
+  font-size: 0.9rem;
+}
+
+.storyTranscript p {
+  margin: 0;
+  color: #e2e2f6;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  font-style: italic;
+}
+
+.storyPriority {
+  color: #e2e2f6;
+  font-size: 0.85rem;
+}
+
+.storyPriority strong {
+  color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .storyListContainer {
+    padding: 1rem;
+  }
+  
+  .storyTitle {
+    font-size: 1.5rem;
+  }
+  
+  .storyTitleRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  
+  .refreshButton {
+    align-self: flex-end;
+    width: fit-content;
+  }
+  
+  .storyCardHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .storyActions {
+    align-self: flex-end;
+  }
+  
+  .storyBtn {
+    min-width: 32px;
+    height: 32px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .storyCard {
+    padding: 1rem;
+  }
+  
+  .storyActions {
+    flex-wrap: wrap;
+    align-self: stretch;
+  }
+  
+  .storyBtn {
+    flex: 1;
+    min-width: 44px;
+  }
+  
+  .triggerTag {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.4rem;
+  }
+}

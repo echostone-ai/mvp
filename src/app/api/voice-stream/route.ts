@@ -1,139 +1,378 @@
-// src/app/api/voice-stream/route.ts
-import { NextResponse } from 'next/server'
-import { createUnifiedVoiceRequest, getUnifiedVoiceSettings } from '@/lib/unifiedVoiceConfig'
-import { normalizeTextForVoice } from '@/lib/voiceConsistency'
-import { getNaturalVoiceSettings } from '@/lib/naturalVoiceSettings'
+import { 
+  getEnhancedVoiceConfig, 
+  getFallbackVoiceConfig, 
+  createEnhancedVoiceRequest,
+  validateVoiceQuality,
+  normalizeAudioLevel,
+  type EnhancedVoiceConfig 
+} from '../../../lib/enhancedVoiceConfig';
+import { globalAudioLevelManager } from '../../../lib/audioLevelManager';
+import { voiceWarmingService } from '../../../lib/services/voiceWarmingService';
 
-export const runtime = 'edge'
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
-// Removed duplicate text normalization functions - using imported normalizeTextForVoice instead
-
-/**
- * Generate a consistent seed for voice generation based on conversation context
- * This ensures all segments of a conversation use the same voice characteristics
- */
-function generateConsistentSeed(conversationId?: string, voiceId?: string): number {
-  // Use a completely fixed seed for maximum voice consistency
-  // This ensures the same voice characteristics across all requests
-  return 123456789; // Fixed seed for consistent voice
+function sliceForEarlyStart(text: string) {
+  // For shorter text (under 300 chars), don't split at all to avoid choppy audio
+  if (text.length < 300) {
+    return [text, ''];
+  }
+  
+  // For longer text, aim for natural boundary within 200–400 chars
+  const n = Math.min(Math.max(200, Math.floor(text.length * 0.4)), 400);
+  const idx = Math.max(text.indexOf('. ', n), text.indexOf('! ', n), text.indexOf('? ', n));
+  return idx > 0 ? [text.slice(0, idx + 1), text.slice(idx + 1)] : [text, ''];
 }
 
-// Create a simple audio buffer for fallback
-function createFallbackAudioBuffer(): ArrayBuffer {
-  // This creates a minimal valid MP3 file that's essentially silent
-  const buffer = new Uint8Array([
-    0xFF, 0xFB, 0x90, 0x44, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-  ]);
-  return buffer.buffer;
+function preprocessTextForSpeech(text: string): string {
+  return text
+    // Remove written laughter entirely - let natural speech flow carry the emotion
+    .replace(/\bhaha\b/gi, '')                // Remove, let tone carry the humor
+    .replace(/\bhahaha\b/gi, '')              // Remove longer laughter
+    .replace(/\blol\b/gi, '')                 // Remove text-speak laughter
+    .replace(/\blmao\b/gi, '')                // Remove text-speak laughter
+    // Replace other text-speak with natural speech
+    .replace(/\bomg\b/gi, 'oh my god')
+    .replace(/\bwtf\b/gi, 'what the heck')
+    // Clean up any remaining artifacts and double spaces from removals
+    .replace(/[,!]\s*[,!]/g, '!')             // Fix double punctuation
+    .replace(/\s+/g, ' ')                     // Fix multiple spaces
+    .replace(/\s+([,.!?])/g, '$1')            // Fix spaces before punctuation
+    .trim();
 }
 
 export async function POST(req: Request) {
+  const t0 = Date.now();
+  
   try {
-    const { sentence, voiceId, settings, emotionalContext, accent, conversationId, previousContext } = await req.json()
+    const { text, avatar, useEnhancedQuality = true, conversationId, normalizeAudio = true } = await req.json();
     
-    console.log('Voice stream generation:', { 
-      sentenceLength: sentence?.length,
-      voiceId: voiceId?.substring(0, 8) + '...',
-      hasOptimizedSettings: !!settings,
-      hasContext: !!previousContext
-    })
-    
-    console.log('Voice stream API Key check:', {
-      has_public_key: !!process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY,
-      has_private_key: !!process.env.ELEVENLABS_API_KEY,
-      public_key_length: process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY?.length || 0,
-      private_key_length: process.env.ELEVENLABS_API_KEY?.length || 0
-    })
-    
-    if (!sentence) {
-      return NextResponse.json({ error: 'Sentence is required' }, { status: 400 })
+    if (!text) {
+      return new Response('Missing text', { status: 400 });
     }
     
-    // Use provided voiceId or fallback to environment variable
-    const finalVoiceId = voiceId || process.env.NEXT_PUBLIC_ELEVENLABS_VOICE_ID || process.env.ELEVENLABS_VOICE_ID || 'CO6pxVrMZfyL61ZIglyr'
-    
-    if (!finalVoiceId) {
-      console.warn('No voice ID provided, using fallback audio');
-      return new NextResponse(createFallbackAudioBuffer(), {
-        headers: {
-          'Content-Type': 'audio/mpeg',
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-        },
+    // 8) Voice route shouldn't poison chat - check TTS env/config
+    if (!process.env.ELEVENLABS_API_KEY) {
+      console.warn('voice_env_missing', 'ELEVENLABS_API_KEY not configured');
+      const fallback = voiceWarmingService.createTextFallbackResponse(text, 'API key not configured');
+      return new Response(JSON.stringify(fallback), {
+        status: 204,
+        headers: { 'Content-Type': 'application/json' }
       });
     }
     
-    const apiKey = process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY || process.env.ELEVENLABS_API_KEY
+    // Preprocess text for more natural speech
+    const processedText = preprocessTextForSpeech(text);
+    const [head, tail] = sliceForEarlyStart(processedText);
+
+    // 2. VOICE STREAMING ECONNREFUSED FIX - Verify environment and add logging
+    console.log('voice_env_check', {
+      elevenlabs_api_key: process.env.ELEVENLABS_API_KEY ? 'present' : 'missing',
+      elevenlabs_url: process.env.ELEVENLABS_URL || 'not_set',
+      base_url: process.env.BASE_URL || 'defaulting_to_localhost'
+    });
     
-    if (!apiKey) {
-      console.warn('ElevenLabs API key not configured, using fallback audio');
-      return new NextResponse(createFallbackAudioBuffer(), {
-        headers: {
-          'Content-Type': 'audio/mpeg',
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-        },
-      });
-    }
+    // resolve voice (cached) - use proper base URL with error handling
+    const baseUrl = process.env.BASE_URL || `http://localhost:3000`;
+    let voiceId = 'default';
+    let settings = {};
     
-    // Use original text with minimal processing for natural voice
-    const cleanedText = sentence.trim();
-    
-    // Use natural voice settings for authentic voice reproduction
-    const naturalSettings = settings || getNaturalVoiceSettings();
-    
-    const requestBody: any = {
-      text: cleanedText,
-      model_id: 'eleven_monolingual_v1', // Use monolingual model for better English and less accent variation
-      voice_settings: naturalSettings,
-    };
-    
-    // Call ElevenLabs API
-    console.log('Calling ElevenLabs API with unified settings...');
-    const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${finalVoiceId}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'xi-api-key': apiKey,
-        },
-        body: JSON.stringify(requestBody),
+    try {
+      const voiceRes = await fetch(`${baseUrl}/api/voice/resolve?avatar=${encodeURIComponent(avatar||'default')}`);
+      if (!voiceRes.ok) {
+        throw new Error(`Voice resolve failed: ${voiceRes.status}`);
       }
-    )
-    
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('ElevenLabs API error:', errorText)
-      
-      // Return fallback audio instead of an error
-      return new NextResponse(createFallbackAudioBuffer(), {
-        headers: {
-          'Content-Type': 'audio/mpeg',
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-        },
-      });
+      const voiceData = await voiceRes.json();
+      voiceId = voiceData.voiceId || 'default';
+      settings = voiceData.settings || {};
+    } catch (error) {
+      console.warn('voice_resolve_failed', error);
+      // Continue with defaults - don't crash
     }
-    
-    // Return the audio stream
-    const audioData = await response.arrayBuffer()
-    
-    return new NextResponse(audioData, {
+
+    // Get optimized voice configuration with warming
+    const { config: voiceConfig, isWarmed, estimatedDelay } = await voiceWarmingService.getOptimizedVoiceConfig(voiceId);
+    let fallbackAttempt = 0;
+    const maxFallbackAttempts = 3;
+
+    // Log warming status for monitoring
+    console.log('voice_warming_status', {
+      voiceId,
+      isWarmed,
+      estimatedDelay,
+      useEnhancedQuality,
+      targetDelay: 200
+    });
+
+    // Override config if not using enhanced quality
+    let finalConfig = voiceConfig;
+    if (!useEnhancedQuality) {
+      finalConfig = {
+        model_id: 'eleven_multilingual_v2',
+        voice_settings: settings,
+        output_format: 'mp3_22050_32',
+        optimize_streaming_latency: 2,
+        apply_text_normalization: 'auto'
+      };
+    }
+
+    // Function to attempt TTS with retry/backoff and warming optimization
+    const attemptTTS = async (text: string, config: EnhancedVoiceConfig, retryCount: number = 0): Promise<Response> => {
+      const requestBody = createEnhancedVoiceRequest(text, voiceId, config, conversationId);
+      const startTime = Date.now();
+      const url = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`;
+      
+      console.log('voice_fetch_attempt', { 
+        url, 
+        elapsed_ms: 0, 
+        retry: retryCount,
+        isWarmed,
+        estimatedDelay 
+      });
+      
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 
+            'xi-api-key': process.env.ELEVENLABS_API_KEY!, 
+            'Content-Type': 'application/json' 
+          },
+          body: JSON.stringify(requestBody)
+        });
+
+        const elapsed = Date.now() - startTime;
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.log('voice_fetch_failed', { 
+            code: response.status, 
+            message: errorText, 
+            elapsed_ms: elapsed,
+            retry: retryCount,
+            isWarmed
+          });
+          throw new Error(`TTS failed: ${response.status} - ${errorText}`);
+        }
+
+        console.log('voice_fetch_success', { 
+          elapsed_ms: elapsed, 
+          size: response.headers.get('content-length') || 'unknown',
+          retry: retryCount,
+          isWarmed,
+          withinTarget: elapsed < 200
+        });
+        
+        return response;
+        
+      } catch (error: any) {
+        const elapsed = Date.now() - startTime;
+        console.log('voice_fetch_failed', { 
+          code: error.code || 'UNKNOWN', 
+          message: error.message, 
+          elapsed_ms: elapsed,
+          retry: retryCount,
+          isWarmed
+        });
+        
+        // Retry up to 2 times with 200ms backoff
+        if (retryCount < 2 && (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND' || error.code === 'ETIMEDOUT')) {
+          console.log('voice_fetch_retry', { retry: retryCount + 1, backoff_ms: 200 });
+          await new Promise(resolve => setTimeout(resolve, 200));
+          return attemptTTS(text, config, retryCount + 1);
+        }
+        
+        throw error;
+      }
+    };
+
+    // Kick off first clip immediately (head) with automatic fallback and graceful degradation
+    let r1: Response;
+    try {
+      r1 = await attemptTTS(head, finalConfig);
+    } catch (error) {
+      console.warn('Enhanced quality failed for head, trying fallback:', error);
+      fallbackAttempt++;
+      
+      if (fallbackAttempt < maxFallbackAttempts) {
+        finalConfig = getFallbackVoiceConfig('quality');
+        try {
+          r1 = await attemptTTS(head, finalConfig);
+        } catch (fallbackError) {
+          console.warn('High-quality fallback failed, using standard:', fallbackError);
+          fallbackAttempt++;
+          finalConfig = getFallbackVoiceConfig('compatibility');
+          try {
+            r1 = await attemptTTS(head, finalConfig);
+          } catch (finalError) {
+            // Final failure - use voice warming service for graceful degradation
+            const fallback = voiceWarmingService.createTextFallbackResponse(
+              processedText, 
+              `TTS failed: ${error.message}`
+            );
+            
+            return new Response(JSON.stringify(fallback), {
+              status: 200, // Don't crash - return success with fallback
+              headers: {
+                'Content-Type': 'application/json',
+                'X-Voice-Fallback': 'text-only',
+                'X-Voice-Warmed': isWarmed.toString()
+              }
+            });
+          }
+        }
+      } else {
+        // Final failure - use voice warming service for graceful degradation
+        const fallback = voiceWarmingService.createTextFallbackResponse(
+          processedText, 
+          error.message
+        );
+        
+        return new Response(JSON.stringify(fallback), {
+          status: 200, // Don't crash - return success with fallback
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Voice-Fallback': 'text-only',
+            'X-Voice-Warmed': isWarmed.toString()
+          }
+        });
+      }
+    }
+
+    if (!r1.body) {
+      return new Response('TTS error: No audio data received', { status: 502 });
+    }
+
+    // If there is tail, start it shortly after to overlap
+    let r2: Response | null = null;
+    if (tail?.trim()) {
+      try {
+        r2 = await attemptTTS(tail, finalConfig);
+      } catch (error) {
+        console.warn('TTS error for tail, continuing with head only:', error);
+        // Continue with just the head audio rather than failing completely
+      }
+    }
+
+    // Merge streams (head first, then tail) with optional audio normalization
+    const { readable, writable } = new TransformStream();
+    const writer = writable.getWriter();
+
+    const pump = async (resp: Response) => {
+      const reader = resp.body!.getReader();
+      const chunks: Uint8Array[] = [];
+      
+      // Collect all chunks first if normalization is enabled
+      if (normalizeAudio) {
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          chunks.push(value);
+        }
+        
+        // Combine chunks and normalize if requested
+        if (chunks.length > 0) {
+          const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+          const combinedArray = new Uint8Array(totalLength);
+          let offset = 0;
+          
+          for (const chunk of chunks) {
+            combinedArray.set(chunk, offset);
+            offset += chunk.length;
+          }
+          
+          try {
+            // Attempt audio normalization (will fallback gracefully if not available)
+            const normalizedBuffer = await globalAudioLevelManager.normalizeAudioBuffer(combinedArray.buffer);
+            const normalizedArray = new Uint8Array(normalizedBuffer);
+            await writer.write(normalizedArray);
+          } catch (error) {
+            console.warn('Audio normalization failed, using original:', error);
+            await writer.write(combinedArray);
+          }
+        }
+      } else {
+        // Stream directly without normalization
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          await writer.write(value);
+        }
+      }
+    };
+
+    // Start pumping in background
+    (async () => {
+      try {
+        const tFirstByte = Date.now();
+        await pump(r1);
+        const firstByteLatency = tFirstByte - t0;
+        
+        if (r2) await pump(r2);
+        
+        const totalLatency = Date.now() - t0;
+        
+        // Log enhanced metrics with voice warming data
+        const warmingMetrics = voiceWarmingService.getMetrics();
+        console.log('voice_stream_metrics', {
+          tts_first_byte_ms: firstByteLatency,
+          tts_total_ms: totalLatency,
+          voice_cache_hit: true, // voice resolver has caching
+          voice_warmed: isWarmed,
+          estimated_delay: estimatedDelay,
+          actual_vs_estimated: firstByteLatency - estimatedDelay,
+          text_length: processedText.length,
+          head_length: head.length,
+          tail_length: tail?.length || 0,
+          original_length: text.length,
+          enhanced_quality: useEnhancedQuality,
+          fallback_attempts: fallbackAttempt,
+          voice_config: {
+            model: finalConfig.model_id,
+            format: finalConfig.output_format,
+            latency_mode: finalConfig.optimize_streaming_latency
+          },
+          conversation_id: conversationId,
+          audio_normalized: normalizeAudio,
+          conversation_stats: normalizeAudio ? globalAudioLevelManager.getConversationStats() : null,
+          warming_metrics: {
+            active_sessions: warmingMetrics.activeSessions,
+            cache_hit_rate: warmingMetrics.cacheHits / (warmingMetrics.cacheHits + warmingMetrics.cacheMisses) || 0,
+            average_warming_time: warmingMetrics.averageWarmingTime
+          }
+        });
+        
+      } finally {
+        await writer.close();
+      }
+    })();
+
+    return new Response(readable, {
       headers: {
         'Content-Type': 'audio/mpeg',
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-      },
-    })
-  } catch (error: any) {
-    console.error('Voice stream generation error:', error)
+        'Cache-Control': 'no-cache, no-transform',
+        'X-Accel-Buffering': 'no',
+        'X-Voice-Quality': useEnhancedQuality ? 'enhanced' : 'standard',
+        'X-Voice-Format': finalConfig.output_format,
+        'X-Voice-Warmed': isWarmed.toString(),
+        'X-Voice-Estimated-Delay': estimatedDelay.toString(),
+        'X-Fallback-Attempts': fallbackAttempt.toString()
+      }
+    });
     
-    // Return fallback audio instead of an error
-    return new NextResponse(createFallbackAudioBuffer(), {
-      headers: {
-        'Content-Type': 'audio/mpeg',
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-      },
+  } catch (error) {
+    console.error('Voice stream error:', error);
+    // 8) Voice route shouldn't poison chat - return graceful fallback using warming service
+    const fallback = voiceWarmingService.createTextFallbackResponse(
+      text, 
+      error instanceof Error ? error.message : 'Unknown error'
+    );
+    
+    return new Response(JSON.stringify(fallback), {
+      status: 200, // Don't crash - return success with fallback
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-Voice-Fallback': 'error-recovery'
+      }
     });
   }
 }

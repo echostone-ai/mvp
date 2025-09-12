@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { MemoryService } from '@/lib/memoryService';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
+
+const service = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  { auth: { persistSession: false } }
+);
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,7 +21,7 @@ export async function GET(request: NextRequest) {
     console.log('[api/memories] Fetching memories for user:', userId, 'avatar:', avatarId);
     
     // Build query
-    let query = supabase
+    let query = service
       .from('memory_fragments')
       .select('*')
       .eq('user_id', userId)
@@ -90,7 +96,7 @@ export async function DELETE(request: NextRequest) {
     
     console.log('[api/memories] Deleting memory:', memoryId, 'for user:', userId);
     
-    const { error } = await supabase
+    const { error } = await service
       .from('memory_fragments')
       .delete()
       .eq('id', memoryId)

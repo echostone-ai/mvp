@@ -12,10 +12,9 @@ import VoiceTraining from '@/components/VoiceTraining'
 import AvatarIdentity from '@/components/AvatarIdentity'
 import StoriesSection from '@/components/StoriesSection'
 import MemoryManagement from '@/components/MemoryManagement'
-import AccountMenu from '@/components/AccountMenu'
+// Account menu is provided globally by AppHeader
 import PageShell from '@/components/PageShell'
-import VoicePreview from '@/components/VoicePreview'
-import VoicePreviewTesting from '@/components/VoicePreviewTesting'
+// VoicePreview components have been archived
 import VoiceImprovementTool from '@/components/VoiceImprovementTool'
 import VoiceDebugInfo from '@/components/VoiceDebugInfo'
 import VoiceIdFixer from '@/components/VoiceIdFixer'
@@ -725,10 +724,17 @@ function ProfilePageContent() {
                     <p className="voice-section-description">
                       Preview how your avatar sounds with different text and settings.
                     </p>
-                    <VoicePreview
-                      voiceId={voiceId || selectedAvatar.voice_id || ''}
-                      userName={selectedAvatar.name}
-                    />
+                    <div className="voice-preview-placeholder" style={{
+                      background: 'rgba(106, 0, 255, 0.1)',
+                      border: '1px solid rgba(106, 0, 255, 0.3)',
+                      borderRadius: '8px',
+                      padding: '2rem',
+                      textAlign: 'center',
+                      color: '#a855f7'
+                    }}>
+                      <p>🎤 Voice preview functionality has been streamlined.</p>
+                      <p>Use the chat interface to test your avatar's voice responses.</p>
+                    </div>
                   </div>
 
                   {/* Voice Improvement */}
@@ -788,12 +794,18 @@ function ProfilePageContent() {
               <p className="voice-tuning-description">
                 Fine-tune {selectedAvatar.name}'s digital voice with advanced controls, emotional previews, and parameter adjustments.
               </p>
-              <VoicePreviewTesting
-                voiceId={voiceId || selectedAvatar.voice_id || ''}
-                userName={selectedAvatar.name}
-                userId={user?.id}
-                initialSettings={savedVoiceSettings}
-              />
+              <div className="voice-tuning-placeholder" style={{
+                background: 'rgba(106, 0, 255, 0.1)',
+                border: '1px solid rgba(106, 0, 255, 0.3)',
+                borderRadius: '8px',
+                padding: '2rem',
+                textAlign: 'center',
+                color: '#a855f7'
+              }}>
+                <p>🎛️ Advanced voice tuning has been streamlined.</p>
+                <p>Voice parameters are now automatically optimized for best quality.</p>
+                <p>Use the chat interface to interact with your avatar's voice.</p>
+              </div>
             </div>
           )}
 

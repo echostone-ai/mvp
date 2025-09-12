@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Factbook Schema",
+  "description": "JSON schema for validating factbook structure with AJV-compatible validation rules",
+  "type": "object",
+  "patternProperties": {
+    "^[a-z_]+$": {
+      "type": "object",
+      "patternProperties": {
+        "^[a-z_]+$": {
+          "type": "object",
+          "required": ["id", "text", "topics", "keywords"],
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[a-z_]+\\.[a-z_]+$",
+              "description": "Unique identifier in format section.item"
+            },
+            "text": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 400,
+              "description": "Factual content, maximum 400 characters"
+            },
+            "topics": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z_]+$"
+              },
+              "minItems": 1,
+              "maxItems": 10,
+              "description": "Topic tags for fencing and classification"
+            },
+            "keywords": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 50
+              },
+              "minItems": 1,
+              "maxItems": 20,
+              "description": "Searchable keywords for indexing"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "minProperties": 1
+}

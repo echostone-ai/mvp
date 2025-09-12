@@ -1,3 +1,8 @@
+// src/lib/cache.ts
+import { LRUCache } from 'lru-cache'
+
+export const quickFactsCache = new LRUCache<string, any>({ max: 500, ttl: 30_000 })
+
 /**
  * Simple in-memory cache for API responses
  */

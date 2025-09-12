@@ -1,0 +1,361 @@
+.uploaderContainer {
+  max-width: 600px;
+  margin: 0 auto 2rem;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.uploaderHeader {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.uploaderTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 0.5rem;
+}
+
+.uploaderSubtitle {
+  font-size: 1rem;
+  color: #e2e2f6;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Drop Zone */
+.dropZone {
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  position: relative;
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dropZone:hover {
+  border-color: rgba(147, 71, 255, 0.6);
+  background: rgba(147, 71, 255, 0.1);
+}
+
+.dropZoneActive {
+  border-color: #9147ff;
+  background: rgba(147, 71, 255, 0.2);
+  transform: scale(1.02);
+}
+
+.dropZoneHasFile {
+  border-color: rgba(40, 167, 69, 0.6);
+  background: rgba(40, 167, 69, 0.1);
+}
+
+.fileInput {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  width: 100%;
+  height: 100%;
+}
+
+.dropZoneContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dropZoneIcon {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+  opacity: 0.7;
+}
+
+.dropZoneText {
+  font-size: 1.1rem;
+  color: white;
+  margin-bottom: 0.25rem;
+}
+
+.dropZoneHint {
+  font-size: 0.9rem;
+  color: #e2e2f6;
+  opacity: 0.8;
+}
+
+/* Selected File Display */
+.selectedFile {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  max-width: 400px;
+}
+
+.fileIcon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.fileInfo {
+  flex: 1;
+  text-align: left;
+}
+
+.fileName {
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 0.25rem;
+  word-break: break-word;
+}
+
+.fileSize {
+  font-size: 0.85rem;
+  color: #e2e2f6;
+  opacity: 0.8;
+}
+
+.clearFileBtn {
+  background: rgba(220, 53, 69, 0.8);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.clearFileBtn:hover {
+  background: rgba(220, 53, 69, 1);
+  transform: scale(1.1);
+}
+
+/* Form Elements */
+.formGroup {
+  margin-bottom: 1.5rem;
+}
+
+.formLabel {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 0.5rem;
+}
+
+.formInput,
+.formSelect,
+.formTextarea {
+  width: 100%;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: white;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.formTextarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.formInput::placeholder,
+.formTextarea::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.formInput:focus,
+.formSelect:focus,
+.formTextarea:focus {
+  outline: none;
+  border-color: #9147ff;
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 0 3px rgba(147, 71, 255, 0.2);
+}
+
+.formSelect option {
+  background: #2a2a2a;
+  color: white;
+}
+
+.formHint {
+  font-size: 0.85rem;
+  color: #e2e2f6;
+  opacity: 0.8;
+  margin-top: 0.5rem;
+  line-height: 1.4;
+}
+
+/* Trigger Preview */
+.triggerPreview {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.triggerTag {
+  display: inline-block;
+  background: rgba(147, 71, 255, 0.3);
+  color: #c9a9ff;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin: 0.25rem 0.25rem 0.25rem 0;
+}
+
+/* Messages */
+.errorMessage {
+  background: rgba(220, 53, 69, 0.2);
+  color: #ff6b7a;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(220, 53, 69, 0.3);
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.successMessage {
+  background: rgba(40, 167, 69, 0.2);
+  color: #6bcf7f;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(40, 167, 69, 0.3);
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+/* Progress Bar */
+.progressContainer {
+  margin-bottom: 1.5rem;
+}
+
+.progressBar {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #9147ff, #667eea);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.progressText {
+  font-size: 0.9rem;
+  color: #e2e2f6;
+  text-align: center;
+}
+
+/* Upload Button */
+.uploaderActions {
+  text-align: center;
+}
+
+.uploadBtn {
+  background: linear-gradient(135deg, #9147ff, #667eea);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.875rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 160px;
+  box-shadow: 0 2px 8px rgba(147, 71, 255, 0.3);
+}
+
+.uploadBtn:hover:not(.uploadBtnDisabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(147, 71, 255, 0.4);
+}
+
+.uploadBtnDisabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .uploaderContainer {
+    padding: 1.5rem;
+    margin: 0 auto 1.5rem;
+  }
+  
+  .uploaderTitle {
+    font-size: 1.3rem;
+  }
+  
+  .dropZone {
+    padding: 1.5rem;
+    min-height: 100px;
+  }
+  
+  .dropZoneIcon {
+    font-size: 2.5rem;
+  }
+  
+  .selectedFile {
+    gap: 0.75rem;
+  }
+  
+  .uploadBtn {
+    width: 100%;
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .uploaderContainer {
+    padding: 1rem;
+  }
+  
+  .dropZone {
+    padding: 1rem;
+  }
+  
+  .selectedFile {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
+  }
+  
+  .fileInfo {
+    text-align: center;
+  }
+}

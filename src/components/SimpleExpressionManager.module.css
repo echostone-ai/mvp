@@ -1,0 +1,573 @@
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: transparent;
+  color: white;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  font-size: 1rem;
+  color: #e2e2f6;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Upload Section */
+.uploadSection {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  backdrop-filter: blur(10px);
+}
+
+.sectionTitle {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 1rem;
+}
+
+/* Drop Zone */
+.dropZone {
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  position: relative;
+  min-height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dropZone:hover {
+  border-color: rgba(147, 71, 255, 0.6);
+  background: rgba(147, 71, 255, 0.1);
+}
+
+.dropZoneActive {
+  border-color: #9147ff;
+  background: rgba(147, 71, 255, 0.2);
+  transform: scale(1.02);
+}
+
+.dropZoneHasFile {
+  border-color: rgba(40, 167, 69, 0.6);
+  background: rgba(40, 167, 69, 0.1);
+}
+
+.fileInput {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  width: 100%;
+  height: 100%;
+}
+
+.dropZoneContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dropZoneIcon {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  opacity: 0.7;
+}
+
+.dropZoneText {
+  font-size: 1rem;
+  color: white;
+  margin-bottom: 0.25rem;
+}
+
+.dropZoneHint {
+  font-size: 0.85rem;
+  color: #e2e2f6;
+  opacity: 0.8;
+}
+
+/* Selected File Display */
+.selectedFile {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  max-width: 400px;
+}
+
+.fileIcon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.fileInfo {
+  flex: 1;
+  text-align: left;
+}
+
+.fileName {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 0.25rem;
+  word-break: break-word;
+}
+
+.fileSize {
+  font-size: 0.8rem;
+  color: #e2e2f6;
+  opacity: 0.8;
+}
+
+.clearFileBtn {
+  background: rgba(220, 53, 69, 0.8);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.clearFileBtn:hover {
+  background: rgba(220, 53, 69, 1);
+  transform: scale(1.1);
+}
+
+/* Upload Form */
+.uploadForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.formLabel {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 0.5rem;
+}
+
+.formInput,
+.formSelect {
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: white;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.formInput::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.formInput:focus,
+.formSelect:focus {
+  outline: none;
+  border-color: #9147ff;
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 0 3px rgba(147, 71, 255, 0.2);
+}
+
+.formSelect option {
+  background: #2a2a2a;
+  color: white;
+}
+
+.uploadBtn {
+  background: linear-gradient(135deg, #9147ff, #667eea);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.875rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  align-self: center;
+  min-width: 180px;
+  box-shadow: 0 2px 8px rgba(147, 71, 255, 0.3);
+}
+
+.uploadBtn:hover:not(.uploadBtnDisabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(147, 71, 255, 0.4);
+}
+
+.uploadBtnDisabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Progress Bar */
+.progressContainer {
+  margin-top: 1rem;
+}
+
+.progressBar {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #9147ff, #667eea);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.progressText {
+  font-size: 0.85rem;
+  color: #e2e2f6;
+  text-align: center;
+}
+
+/* Messages */
+.errorMessage {
+  background: rgba(220, 53, 69, 0.2);
+  color: #ff6b7a;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(220, 53, 69, 0.3);
+  font-size: 0.9rem;
+}
+
+.successMessage {
+  background: rgba(40, 167, 69, 0.2);
+  color: #6bcf7f;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(40, 167, 69, 0.3);
+  font-size: 0.9rem;
+}
+
+/* List Section */
+.listSection {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  padding: 1.5rem;
+  backdrop-filter: blur(10px);
+}
+
+.listHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.refreshBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(147, 71, 255, 0.8);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.refreshBtn:hover:not(:disabled) {
+  background: rgba(147, 71, 255, 1);
+  transform: translateY(-1px);
+}
+
+.refreshBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Loading and Empty States */
+.loading {
+  text-align: center;
+  padding: 3rem 2rem;
+}
+
+.loadingSpinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.empty {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: #e2e2f6;
+}
+
+.emptyIcon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.empty h4 {
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+  color: white;
+}
+
+/* Expression Grid */
+.expressionGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.expressionCard {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 1rem;
+  transition: all 0.2s ease;
+}
+
+.expressionCard:hover {
+  box-shadow: 0 4px 20px rgba(145, 71, 255, 0.3);
+  transform: translateY(-2px);
+  border-color: rgba(145, 71, 255, 0.4);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+}
+
+.cardType {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #9147ff;
+}
+
+.cardActions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.actionBtn {
+  padding: 0.25rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.actionBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.playBtn {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.playBtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.playBtn.playing {
+  background: rgba(147, 71, 255, 0.8);
+  border-color: rgba(147, 71, 255, 1);
+}
+
+.activeBtn {
+  background: rgba(40, 167, 69, 0.8);
+  color: white;
+  border: 1px solid rgba(40, 167, 69, 1);
+}
+
+.activeBtn:hover:not(:disabled) {
+  background: rgba(40, 167, 69, 1);
+}
+
+.inactiveBtn {
+  background: rgba(108, 117, 125, 0.8);
+  color: white;
+  border: 1px solid rgba(108, 117, 125, 1);
+}
+
+.inactiveBtn:hover:not(:disabled) {
+  background: rgba(108, 117, 125, 1);
+}
+
+.deleteBtn {
+  background: rgba(220, 53, 69, 0.8);
+  color: white;
+  border: 1px solid rgba(220, 53, 69, 1);
+}
+
+.deleteBtn:hover:not(:disabled) {
+  background: rgba(220, 53, 69, 1);
+}
+
+.cardContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.cardFilename {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: white;
+  word-break: break-word;
+}
+
+.cardMeta {
+  font-size: 0.75rem;
+  color: #e2e2f6;
+  opacity: 0.8;
+}
+
+.cardHints {
+  font-size: 0.75rem;
+  color: #c9a9ff;
+  background: rgba(147, 71, 255, 0.2);
+  padding: 0.25rem 0.5rem;
+  border-radius: 8px;
+  margin-top: 0.25rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+  
+  .title {
+    font-size: 1.3rem;
+  }
+  
+  .uploadSection,
+  .listSection {
+    padding: 1rem;
+  }
+  
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+  
+  .listHeader {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  
+  .refreshBtn {
+    align-self: flex-end;
+    width: fit-content;
+  }
+  
+  .expressionGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .cardHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .cardActions {
+    align-self: flex-end;
+  }
+}
+
+@media (max-width: 480px) {
+  .selectedFile {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
+  }
+  
+  .fileInfo {
+    text-align: center;
+  }
+  
+  .uploadBtn {
+    width: 100%;
+  }
+  
+  .cardActions {
+    align-self: stretch;
+  }
+  
+  .actionBtn {
+    flex: 1;
+    min-width: 36px;
+  }
+}

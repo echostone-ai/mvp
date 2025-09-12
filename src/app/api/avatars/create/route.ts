@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { ProfileOptimizer } from '@/lib/profileOptimization';
+import { AvatarOnboardingService, AvatarOnboardingData } from '@/lib/services/avatarOnboardingService';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -10,55 +11,65 @@ const supabase = createClient(
 
 export async function POST(req: Request) {
   try {
-    const { profile, heygenConfig, userId = 'demo' } = await req.json();
+    const body = await req.json();
+    const { 
+      profile, 
+      heygenConfig, 
+      userId = 'demo',
+      // New style-related fields
+      expressions,
+      catchphrases,
+      address_terms,
+      speaking_style
+    } = body;
     
-    if (!profile || !heygenConfig) {
-      return NextResponse.json({ error: 'Profile and HeyGen config required' }, { status: 400 });
+    // Support both legacy and new creation methods
+    if (profile && heygenConfig) {
+      // Legacy creation method
+      return await createLegacyAvatar(profile, heygenConfig, userId);
     }
 
-    // Generate unique avatar ID
-    const avatarId = `${profile.name.toLowerCase().replace(/\s+/g, '_')}_${Date.now()}`;
-    
-    // Create optimized profile
-    const optimizedProfile = {
-      ...profile,
-      id: avatarId
+    // New enhanced creation method
+    const { name, core_facts } = body;
+    if (!name) {
+      return NextResponse.json({ error: 'Avatar name is required' }, { status: 400 });
+    }
+
+    const onboardingData: AvatarOnboardingData = {
+      name,
+      speaking_style,
+      expressions,
+      catchphrases,
+      address_terms,
+      core_facts
     };
 
-    // Save optimized profile
-    const { error: optimizedError } = await supabase
-      .from('optimized_profiles')
-      .insert(optimizedProfile);
+    const result = await AvatarOnboardingService.createAvatarWithStyle(onboardingData, userId);
 
-    if (optimizedError) {
-      throw new Error(`Failed to save optimized profile: ${optimizedError.message}`);
-    }
-
-    // Save avatar configuration
-    const { error: configError } = await supabase
-      .from('avatar_configs')
-      .insert({
-        id: avatarId,
-        user_id: userId,
-        avatar_name: profile.name,
-        heygen_avatar_id: heygenConfig.avatarId,
-        voice_id: heygenConfig.voiceId,
-        personality_prompt: profile.core_personality,
-        quick_facts: profile.quick_facts,
-        conversation_style: profile.conversation_style,
-        is_active: true
+    if (result.success) {
+      return NextResponse.json({
+        success: true,
+        avatarId: result.avatarId,
+        message: 'Avatar created successfully with enhanced onboarding integration',
+        factCount: result.factCount,
+        warnings: result.warnings.length > 0 ? result.warnings : undefined,
+        errors: result.errors.length > 0 ? result.errors : undefined,
+        features: [
+          'Immediate fact availability for first conversation',
+          'Validated fact categorization and prioritization',
+          'Seamless transition from setup to conversation mode',
+          'Pre-injected context for GPT-5 processing'
+        ]
       });
-
-    if (configError) {
-      throw new Error(`Failed to save avatar config: ${configError.message}`);
+    } else {
+      return NextResponse.json({
+        success: false,
+        message: 'Failed to create avatar',
+        errors: result.errors,
+        warnings: result.warnings.length > 0 ? result.warnings : undefined,
+        factCount: result.factCount
+      }, { status: 500 });
     }
-
-    return NextResponse.json({
-      success: true,
-      avatarId,
-      message: 'Avatar created successfully',
-      profile: optimizedProfile
-    });
 
   } catch (error) {
     console.error('Avatar creation error:', error);
@@ -67,6 +78,58 @@ export async function POST(req: Request) {
       details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
   }
+}
+
+// Legacy avatar creation function
+async function createLegacyAvatar(profile: any, heygenConfig: any, userId: string) {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
+  // Generate unique avatar ID
+  const avatarId = `${profile.name.toLowerCase().replace(/\s+/g, '_')}_${Date.now()}`;
+  
+  // Create optimized profile
+  const optimizedProfile = {
+    ...profile,
+    id: avatarId
+  };
+
+  // Save optimized profile
+  const { error: optimizedError } = await supabase
+    .from('optimized_profiles')
+    .insert(optimizedProfile);
+
+  if (optimizedError) {
+    throw new Error(`Failed to save optimized profile: ${optimizedError.message}`);
+  }
+
+  // Save avatar configuration
+  const { error: configError } = await supabase
+    .from('avatar_configs')
+    .insert({
+      id: avatarId,
+      user_id: userId,
+      avatar_name: profile.name,
+      heygen_avatar_id: heygenConfig.avatarId,
+      voice_id: heygenConfig.voiceId,
+      personality_prompt: profile.core_personality,
+      quick_facts: profile.quick_facts,
+      conversation_style: profile.conversation_style,
+      is_active: true
+    });
+
+  if (configError) {
+    throw new Error(`Failed to save avatar config: ${configError.message}`);
+  }
+
+  return NextResponse.json({
+    success: true,
+    avatarId,
+    message: 'Avatar created successfully',
+    profile: optimizedProfile
+  });
 }
 
 // Get user's avatars

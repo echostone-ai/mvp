@@ -1,0 +1,328 @@
+.expressionListContainer {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: transparent;
+  color: white;
+}
+
+.expressionHeader {
+  margin-bottom: 2rem;
+}
+
+.expressionTitleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.expressionTitle {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 0.5rem;
+}
+
+.expressionSubtitle {
+  font-size: 1rem;
+  color: #e2e2f6;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.refreshButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(147, 71, 255, 0.8);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  min-height: 36px;
+}
+
+.refreshButton:hover:not(:disabled) {
+  background: rgba(147, 71, 255, 1);
+  transform: translateY(-1px);
+}
+
+.refreshButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.refreshButton:disabled:hover {
+  transform: none;
+}
+
+.expressionError {
+  background: rgba(220, 53, 69, 0.2);
+  color: #ff6b7a;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(220, 53, 69, 0.3);
+}
+
+.expressionLoading {
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.loadingSpinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.expressionEmpty {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #e2e2f6;
+}
+
+.expressionEmptyIcon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.expressionEmpty h3 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: white;
+}
+
+.expressionList {
+  display: grid;
+  gap: 1rem;
+}
+
+.expressionCard {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+}
+
+.expressionCard:hover {
+  box-shadow: 0 4px 20px rgba(145, 71, 255, 0.3);
+  transform: translateY(-2px);
+  border-color: rgba(145, 71, 255, 0.4);
+}
+
+.expressionCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.expressionInfo {
+  flex: 1;
+}
+
+.expressionType {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #9147ff;
+  margin-bottom: 0.25rem;
+}
+
+.expressionFilename {
+  font-size: 1rem;
+  font-weight: 500;
+  color: white;
+  margin-bottom: 0.25rem;
+  word-break: break-word;
+}
+
+.expressionMeta {
+  font-size: 0.85rem;
+  color: #e2e2f6;
+  opacity: 0.8;
+}
+
+.expressionActions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.expressionBtn {
+  padding: 0.5rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.expressionBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.expressionBtnSecondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.expressionBtnSecondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.expressionBtnPlaying {
+  background: rgba(147, 71, 255, 0.8) !important;
+  border-color: rgba(147, 71, 255, 1) !important;
+}
+
+.expressionBtnActive {
+  background: rgba(40, 167, 69, 0.8);
+  color: white;
+  border: 1px solid rgba(40, 167, 69, 1);
+}
+
+.expressionBtnActive:hover:not(:disabled) {
+  background: rgba(40, 167, 69, 1);
+  transform: translateY(-1px);
+}
+
+.expressionBtnInactive {
+  background: rgba(108, 117, 125, 0.8);
+  color: white;
+  border: 1px solid rgba(108, 117, 125, 1);
+}
+
+.expressionBtnInactive:hover:not(:disabled) {
+  background: rgba(108, 117, 125, 1);
+  transform: translateY(-1px);
+}
+
+.expressionBtnDanger {
+  background: rgba(220, 53, 69, 0.8);
+  color: white;
+  border: 1px solid rgba(220, 53, 69, 1);
+}
+
+.expressionBtnDanger:hover:not(:disabled) {
+  background: rgba(220, 53, 69, 1);
+  transform: translateY(-1px);
+}
+
+.expressionDetails {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.expressionTone {
+  display: inline-block;
+  background: rgba(147, 71, 255, 0.2);
+  color: #c9a9ff;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-right: 0.5rem;
+}
+
+.expressionHints {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.1);
+  color: #e2e2f6;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.expressionPagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.expressionPaginationInfo {
+  font-weight: 500;
+  color: #e2e2f6;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .expressionListContainer {
+    padding: 1rem;
+  }
+  
+  .expressionTitle {
+    font-size: 1.5rem;
+  }
+  
+  .expressionTitleRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  
+  .refreshButton {
+    align-self: flex-end;
+    width: fit-content;
+  }
+  
+  .expressionCardHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .expressionActions {
+    align-self: flex-end;
+  }
+  
+  .expressionBtn {
+    min-width: 32px;
+    height: 32px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .expressionActions {
+    flex-wrap: wrap;
+    align-self: stretch;
+  }
+  
+  .expressionBtn {
+    flex: 1;
+    min-width: 44px;
+  }
+}

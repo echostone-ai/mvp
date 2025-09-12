@@ -19,12 +19,31 @@ interface AvatarConfig {
   currentSituation: string;
   heygenAvatarId: string;
   voiceId: string;
+  // Additional fields for seed endpoint
+  given_name?: string;
+  pronouns?: string;
+  home_city?: string;
+  home_country?: string;
+  timezone?: string;
+  birth_year?: string;
+  profession?: string;
+  passions?: string;
+  partner_name?: string;
+  children?: string;
+  parents?: string;
+  pets?: string;
+  tagline?: string;
+  tone_style?: string;
+  identity_pillars?: string;
+  signature_memories?: string;
 }
 
 export default function AvatarOnboarding() {
   const [currentStep, setCurrentStep] = useState(0);
   const [config, setConfig] = useState<Partial<AvatarConfig>>({});
   const [isCreating, setIsCreating] = useState(false);
+  const [basicsReady, setBasicsReady] = useState(false);
+  const [seedingBasics, setSeedingBasics] = useState(false);
 
   const steps: OnboardingStep[] = [
     {
@@ -65,10 +84,70 @@ export default function AvatarOnboarding() {
     }
   }, [currentStep]);
 
+  const handleSeedBasics = useCallback(async () => {
+    setSeedingBasics(true);
+    
+    try {
+      // Prepare form basics from config
+      const formBasics = {
+        full_name: config.name,
+        given_name: config.given_name || config.name?.split(' ')[0],
+        profession: config.profession,
+        tone_style: config.conversationStyle,
+        identity_pillars: config.personality,
+        signature_memories: config.background,
+        home_city: config.home_city,
+        home_country: config.home_country,
+        timezone: config.timezone,
+        birth_year: config.birth_year,
+        pronouns: config.pronouns,
+        passions: config.passions,
+        partner_name: config.partner_name,
+        children: config.children,
+        parents: config.parents,
+        pets: config.pets,
+        tagline: config.tagline
+      };
+
+      // Remove undefined values
+      const cleanedBasics = Object.fromEntries(
+        Object.entries(formBasics).filter(([_, value]) => value !== undefined && value !== '')
+      );
+
+      const response = await fetch('/api/onboarding/seed', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          avatarSlug: config.name?.toLowerCase().replace(/\s+/g, '-'),
+          formBasics: cleanedBasics,
+          freeText: config.background
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Basics seeded:', result);
+        setBasicsReady(true);
+      } else {
+        const error = await response.json();
+        console.error('Failed to seed basics:', error);
+      }
+    } catch (error) {
+      console.error('Failed to seed basics:', error);
+    } finally {
+      setSeedingBasics(false);
+    }
+  }, [config]);
+
   const handleCreateAvatar = useCallback(async () => {
     setIsCreating(true);
     
     try {
+      // First seed basics if not already done
+      if (!basicsReady) {
+        await handleSeedBasics();
+      }
+
       // Create optimized profile
       const optimizedProfile = ProfileOptimizer.optimizeProfile({
         full_name: config.name,
@@ -102,7 +181,7 @@ export default function AvatarOnboarding() {
     } finally {
       setIsCreating(false);
     }
-  }, [config]);
+  }, [config, basicsReady, handleSeedBasics]);
 
   const CurrentStepComponent = steps[currentStep].component;
 
@@ -132,6 +211,9 @@ export default function AvatarOnboarding() {
           isLast={currentStep === steps.length - 1}
           onCreateAvatar={handleCreateAvatar}
           isCreating={isCreating}
+          onSeedBasics={handleSeedBasics}
+          basicsReady={basicsReady}
+          seedingBasics={seedingBasics}
         />
       </div>
     </div>
@@ -139,7 +221,7 @@ export default function AvatarOnboarding() {
 }
 
 // Step Components
-function BasicInfoStep({ config, setConfig, onNext }: any) {
+function BasicInfoStep({ config, setConfig, onNext, onSeedBasics, basicsReady, seedingBasics }: any) {
   return (
     <div className="step-content">
       <h2>Basic Information</h2>
@@ -170,18 +252,64 @@ function BasicInfoStep({ config, setConfig, onNext }: any) {
           placeholder="e.g., Living in New York, working as a designer"
         />
       </div>
-      <button 
-        onClick={onNext}
-        disabled={!config.name || !config.background}
-        className="next-btn"
-      >
-        Next: Personality
-      </button>
+      
+      {/* Optional additional fields */}
+      <div className="form-group">
+        <label>Profession (optional)</label>
+        <input
+          type="text"
+          value={config.profession || ''}
+          onChange={(e) => setConfig({ ...config, profession: e.target.value })}
+          placeholder="e.g., Software Engineer, Teacher"
+        />
+      </div>
+      <div className="form-group">
+        <label>Location (optional)</label>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <input
+            type="text"
+            value={config.home_city || ''}
+            onChange={(e) => setConfig({ ...config, home_city: e.target.value })}
+            placeholder="City"
+          />
+          <input
+            type="text"
+            value={config.home_country || ''}
+            onChange={(e) => setConfig({ ...config, home_country: e.target.value })}
+            placeholder="Country"
+          />
+        </div>
+      </div>
+
+      <div className="button-group" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+        <button 
+          onClick={onSeedBasics}
+          disabled={!config.name || !config.background || seedingBasics || basicsReady}
+          className="seed-btn"
+          style={{ 
+            backgroundColor: basicsReady ? '#10b981' : '#3b82f6',
+            color: 'white',
+            padding: '10px 20px',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: basicsReady ? 'default' : 'pointer'
+          }}
+        >
+          {seedingBasics ? 'Seeding Basics...' : basicsReady ? '✓ Basics Ready' : 'Seed Basics'}
+        </button>
+        <button 
+          onClick={onNext}
+          disabled={!config.name || !config.background}
+          className="next-btn"
+        >
+          Next: Personality
+        </button>
+      </div>
     </div>
   );
 }
 
-function PersonalityStep({ config, setConfig, onNext, onBack }: any) {
+function PersonalityStep({ config, setConfig, onNext, onBack, basicsReady }: any) {
   const personalityOptions = [
     { id: 'friendly', label: 'Friendly & Warm', description: 'Welcoming and approachable' },
     { id: 'witty', label: 'Witty & Sarcastic', description: 'Quick with jokes and clever remarks' },
@@ -216,6 +344,11 @@ function PersonalityStep({ config, setConfig, onNext, onBack }: any) {
       </div>
       <div className="button-group">
         <button onClick={onBack} className="back-btn">Back</button>
+        {basicsReady && (
+          <div style={{ color: '#10b981', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+            ✓ Basics Ready
+          </div>
+        )}
         <button 
           onClick={onNext}
           disabled={!config.personality}
@@ -228,7 +361,7 @@ function PersonalityStep({ config, setConfig, onNext, onBack }: any) {
   );
 }
 
-function VoiceAvatarStep({ config, setConfig, onNext, onBack }: any) {
+function VoiceAvatarStep({ config, setConfig, onNext, onBack, basicsReady }: any) {
   const avatarOptions = [
     { id: 'avatar1', name: 'Professional Male', preview: '/avatars/male-professional.jpg' },
     { id: 'avatar2', name: 'Casual Female', preview: '/avatars/female-casual.jpg' },
@@ -281,6 +414,11 @@ function VoiceAvatarStep({ config, setConfig, onNext, onBack }: any) {
 
       <div className="button-group">
         <button onClick={onBack} className="back-btn">Back</button>
+        {basicsReady && (
+          <div style={{ color: '#10b981', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+            ✓ Basics Ready
+          </div>
+        )}
         <button 
           onClick={onNext}
           disabled={!config.heygenAvatarId || !config.voiceId}
@@ -293,7 +431,7 @@ function VoiceAvatarStep({ config, setConfig, onNext, onBack }: any) {
   );
 }
 
-function TestChatStep({ config, onBack, onCreateAvatar, isCreating }: any) {
+function TestChatStep({ config, onBack, onCreateAvatar, isCreating, basicsReady }: any) {
   const [testMessage, setTestMessage] = useState('');
   const [testResponse, setTestResponse] = useState('');
 
@@ -347,6 +485,11 @@ function TestChatStep({ config, onBack, onCreateAvatar, isCreating }: any) {
 
       <div className="button-group">
         <button onClick={onBack} className="back-btn">Back</button>
+        {basicsReady && (
+          <div style={{ color: '#10b981', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+            ✓ Basics Ready
+          </div>
+        )}
         <button 
           onClick={onCreateAvatar}
           disabled={isCreating}

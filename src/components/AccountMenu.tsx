@@ -1,143 +1,244 @@
 'use client'
 
-import React, { useState, useRef, useEffect } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { supabase } from "@/lib/supabase"
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import Link from 'next/link'
+import { usePathname, useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
+import { isFeatureEnabled } from '@/lib/featureFlags'
+import styles from './AccountMenu.module.css'
+import Toast from './Toast'
 
 export default function AccountMenu() {
-  const [open, setOpen] = useState(false)
-  const [imgError, setImgError] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [user, setUser] = useState<any>(null)
+  const [profile, setProfile] = useState<any>(null)
+  const [activeAvatar, setActiveAvatar] = useState<{ id: string; name?: string; display_name?: string; photo_url?: string } | null>(null)
+  const [toast, setToast] = useState<string | null>(null)
+  const menuRef = useRef<HTMLDivElement | null>(null)
+  const pathname = usePathname()
   const router = useRouter()
-  const closeTimeout = useRef<NodeJS.Timeout | null>(null)
-  const menuRef = useRef<HTMLDivElement>(null)
+  const voiceExpressionsEnabled = isFeatureEnabled('VOICE_OVERLAYS')
 
   useEffect(() => {
-    // Check initial auth state
-    const checkAuth = async () => {
+    let mounted = true
+    async function init() {
       const { data: { session } } = await supabase.auth.getSession()
+      if (!mounted) return
       setIsLoggedIn(!!session)
+      setUser(session?.user ?? null)
+      if (session?.user) {
+        const { data: prof } = await supabase
+          .from('profiles')
+          .select('user_id, primary_avatar_id, full_name')
+          .eq('user_id', session.user.id)
+          .maybeSingle()
+        if (!mounted) return
+        setProfile(prof || null)
+
+        let recentAvatarId: string | null = null
+        try {
+          const { data: conv } = await supabase
+            .from('conversations')
+            .select('avatar_id')
+            .eq('user_id', session.user.id)
+            .not('avatar_id', 'is', null)
+            .order('last_active', { ascending: false })
+            .limit(1)
+            .maybeSingle()
+          recentAvatarId = (conv?.avatar_id as string) || null
+        } catch {}
+
+        const candidateId = recentAvatarId || prof?.primary_avatar_id || null
+        if (candidateId) {
+          const { data: avatar } = await supabase
+            .from('avatar_profiles')
+            .select('id, name, display_name, photo_url')
+            .eq('id', candidateId)
+            .maybeSingle()
+          if (!mounted) return
+          if (avatar) setActiveAvatar(avatar)
+        } else {
+          const { data: avatars } = await supabase
+            .from('avatar_profiles')
+            .select('id, name, display_name, photo_url')
+            .eq('user_id', session.user.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+          if (!mounted) return
+          if (avatars && avatars.length > 0) setActiveAvatar(avatars[0])
+        }
+      } else {
+        setProfile(null)
+        setActiveAvatar(null)
+      }
       setLoading(false)
     }
-    
-    checkAuth()
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    init()
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_evt, session) => {
       setIsLoggedIn(!!session)
-      setLoading(false)
+      setUser(session?.user ?? null)
+      if (!session) {
+        setProfile(null)
+        setActiveAvatar(null)
+      } else {
+        init()
+      }
     })
-
-    return () => subscription.unsubscribe()
+    return () => { mounted = false; subscription.unsubscribe() }
   }, [])
 
-  // Temporary mock profileData
-  const profileData = {
-    personal_snapshot: {
-      full_legal_name: "Jonathan Ratty"
-    }
-  }
-  const firstName = profileData?.personal_snapshot?.full_legal_name
-    ? profileData.personal_snapshot.full_legal_name.split(' ')[0]
-    : 'EchoStone'
-
-  const handleMouseEnter = () => {
-    if (closeTimeout.current) {
-      clearTimeout(closeTimeout.current)
-      closeTimeout.current = null
-    }
-    setOpen(true)
-  }
-  const handleMouseLeave = () => {
-    closeTimeout.current = setTimeout(() => {
-      setOpen(false)
-      closeTimeout.current = null
-    }, 900)
-  }
-  const handleButtonFocus = () => setOpen(true)
-  const handleButtonBlur = (e: React.FocusEvent) => {
-    if (
-      menuRef.current &&
-      !menuRef.current.contains(e.relatedTarget as Node)
-    ) {
-      setOpen(false)
-    }
-  }
   const handleLogout = async () => {
     await supabase.auth.signOut()
-    setOpen(false)
-    router.push('/login')
+    setMobileOpen(false)
+    setMenuOpen(false)
+    router.push('/')
+    setToast('Signed out successfully')
+    setTimeout(() => setToast(null), 2000)
   }
 
+  const NavLink = ({ href, label }: { href: string, label: string }) => {
+    const active = pathname === href || (href !== '/' && pathname?.startsWith(href))
+    return (
+      <Link
+        href={href}
+        onClick={() => setMobileOpen(false)}
+        className={`${styles.navLink} ${active ? styles.navLinkActive : ''}`}
+      >{label}</Link>
+    )
+  }
+
+  const initials = useMemo(() => {
+    const name = profile?.full_name || user?.email || ''
+    const parts = String(name).trim().split(/[\s@._-]+/).filter(Boolean)
+    const chars = (parts[0]?.[0] || '') + (parts[1]?.[0] || '')
+    return chars.toUpperCase() || 'U'
+  }, [profile, user])
+
+  const chatHref = activeAvatar?.id ? `/profile/chat?avatarId=${activeAvatar.id}` : '/profile/chat'
+  const chatLabel = activeAvatar?.display_name || activeAvatar?.name ? `Chat with ${activeAvatar.display_name || activeAvatar.name}` : 'Chat'
+  const onboardingHref = activeAvatar?.name
+    ? `/avatars/${encodeURIComponent(activeAvatar.name)}/onboarding`
+    : '/onboarding/wizard'
+
+  useEffect(() => {
+    function onDocClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false)
+      }
+    }
+    document.addEventListener('click', onDocClick)
+    return () => document.removeEventListener('click', onDocClick)
+  }, [])
+
   return (
-    <div
-      className="inline-block relative"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    >
-      <button
-        className="border-none bg-transparent cursor-pointer p-0 outline-none"
-        aria-label="Account menu"
-        tabIndex={0}
-        onFocus={handleButtonFocus}
-        onBlur={handleButtonBlur}
-      >
-        {!imgError ? (
-          <Image
-            src="/user-avatar.png"
-            alt="Your avatar"
-            width={36}
-            height={36}
-            className="rounded-full"
-            onError={() => setImgError(true)}
-          />
-        ) : (
-          <span className="inline-block w-9 h-9 rounded-full bg-purple-900 text-white text-3xl text-center leading-9">
-            👤
-          </span>
+    <nav aria-label="Main navigation" style={{ position: 'relative' }}>
+      {/* Desktop */}
+      <div className="nav-desktop" style={{ display: 'none' }} />
+      <div className={`nav-desktop ${styles.navDesktop}`}>
+        {!loading && !isLoggedIn && (
+          <NavLink href="/login" label="Login" />
         )}
-      </button>
-      {open && (
-        <div
-          ref={menuRef}
-          className="account-menu-dropdown absolute right-0 mt-2 bg-purple-900/95 rounded-2xl shadow-2xl p-3 z-50 min-w-44 select-none animate-fade-in"
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
-        >
-          <div className="account-menu-list flex flex-col gap-1">
-            <Link href="/" className="account-menu-item" tabIndex={0} onClick={() => setOpen(false)}>
-              Home
-            </Link>
-            {isLoggedIn && (
-              <>
-                <Link href="/profile/chat" className="account-menu-item" tabIndex={0} onClick={() => setOpen(false)}>
-                  Chat with your avatar
-                </Link>
-                <Link href="/profile" className="account-menu-item" tabIndex={0} onClick={() => setOpen(false)}>
-                  Profile
-                </Link>
-              </>
-            )}
-            <Link href="/about" className="account-menu-item" tabIndex={0} onClick={() => setOpen(false)}>
-              About
-            </Link>
-            {!loading && (
-              isLoggedIn ? (
-                <button onClick={handleLogout} className="account-menu-item" tabIndex={0}>
-                  Logout
-                </button>
+        {!loading && isLoggedIn && (
+          <div ref={menuRef} style={{ position: 'relative' }}>
+            <button
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen(v => !v)}
+              className={styles.avatarButton}
+            >
+              {activeAvatar?.photo_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={activeAvatar.photo_url} alt="Avatar" className={styles.avatarThumb} />
               ) : (
-                <Link href="/login" className="account-menu-item" tabIndex={0} onClick={() => setOpen(false)}>
-                  Login
-                </Link>
-              )
+                <div className={styles.avatarFallback}>{initials}</div>
+              )}
+              {(activeAvatar?.display_name || activeAvatar?.name) && (
+                <span style={{ color: '#e5e7eb', fontWeight: 600 }}>{activeAvatar.display_name || activeAvatar.name}</span>
+              )}
+              <span aria-hidden>▾</span>
+            </button>
+            {menuOpen && (
+              <div role="menu" className={styles.menu}>
+                <div className={styles.menuList}>
+                  <NavLink href="/about" label="About" />
+                  <NavLink href="/profile" label="Profile" />
+                  <NavLink href={onboardingHref} label="Onboarding" />
+                  <NavLink href={chatHref} label={chatLabel} />
+                  <NavLink href="/memories" label="Memories" />
+                  {voiceExpressionsEnabled && (
+                    <NavLink href="/voice-expressions" label="Voice & Expressions" />
+                  )}
+                  <div className={styles.divider} />
+                  <button onClick={handleLogout} className={styles.buttonGhost}>Logout</button>
+                </div>
+              </div>
             )}
           </div>
+        )}
+      </div>
+
+      {/* Mobile */}
+      <div className="nav-mobile" style={{ display: 'none' }} />
+      <div className={`nav-mobile ${styles.navMobile}`}>
+        {!loading && !isLoggedIn && (
+          <button
+            aria-label="Menu"
+            onClick={() => setMobileOpen(v => !v)}
+            className={styles.avatarButton}
+          >☰</button>
+        )}
+        {!loading && isLoggedIn && (
+          <button
+            aria-label="Account menu"
+            onClick={() => setMobileOpen(v => !v)}
+            className={styles.avatarButton}
+          >
+            {activeAvatar?.photo_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={activeAvatar.photo_url} alt="Avatar" className={styles.avatarThumbMd} />
+            ) : (
+              <div className={styles.avatarFallbackMd}>{initials}</div>
+            )}
+            <span aria-hidden>▾</span>
+          </button>
+        )}
+      </div>
+      {mobileOpen && (
+        <div style={{ position: 'absolute', right: 16, top: 76, background: 'rgba(15, 15, 35, 0.98)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: 10, display: 'flex', flexDirection: 'column', gap: 6, minWidth: 240 }}>
+          {!loading && !isLoggedIn && (
+            <NavLink href="/login" label="Login" />
+          )}
+          {!loading && isLoggedIn && (
+            <>
+              <NavLink href="/about" label="About" />
+              <NavLink href="/profile" label="Profile" />
+              <NavLink href={onboardingHref} label="Onboarding" />
+              <NavLink href={chatHref} label={chatLabel} />
+              <NavLink href="/memories" label="Memories" />
+              {voiceExpressionsEnabled && (
+                <NavLink href="/voice-expressions" label="Voice & Expressions" />
+              )}
+              <div style={{ height: 1, background: 'rgba(255,255,255,0.08)' }} />
+              <button onClick={handleLogout} style={{
+                padding: '8px 12px',
+                borderRadius: 8,
+                background: 'transparent',
+                color: '#cbd5e1',
+                border: '1px solid rgba(255,255,255,0.2)',
+                cursor: 'pointer',
+                textAlign: 'left'
+              }}>Logout</button>
+            </>
+          )}
         </div>
       )}
-    </div>
+
+      {toast && (
+        <Toast message={toast} onClose={() => setToast(null)} />
+      )}
+    </nav>
   )
 }
