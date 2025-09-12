@@ -10,6 +10,13 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   
+  // Enable static export for GitHub Pages
+  output: 'export',
+  trailingSlash: true,
+  images: {
+    unoptimized: true,
+  },
+  
   // Other Next.js config options
   reactStrictMode: true,
 }

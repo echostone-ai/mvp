@@ -1,5 +1,5 @@
 // Simple script to clear HeyGen sessions
-const HEYGEN_API_KEY = 'Mjk0MmVjYTU0NTkwNGRjNThjYTQ2ZTNlMzk3YTgyMWUtMTc1NDIzNTI1NA==';
+const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
 
 async function clearAllSessions() {
   try {
